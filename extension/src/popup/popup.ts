@@ -137,8 +137,17 @@ function updateUI(report: PrivacyScanReport): void {
   selectedMode = report.redactionMode;
 }
 
+async function getActiveWebTab(): Promise<chrome.tabs.Tab | null> {
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (activeTab?.id && activeTab.url && !activeTab.url.startsWith('chrome-extension://') && !activeTab.url.startsWith('chrome://')) {
+    return activeTab;
+  }
+  const tabs = await chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] });
+  return tabs.length > 0 ? tabs[0] : (activeTab ?? null);
+}
+
 async function sendTabMessage(msg: ExtensionMessage): Promise<any> {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = await getActiveWebTab();
   if (!tab?.id) {
     console.warn('[PrivAgent Popup] No active tab found.');
     return null;
@@ -295,7 +304,7 @@ async function runVisualCapture(): Promise<void> {
   viewModeContainer.style.display = 'none';
 
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveWebTab();
     if (!tab?.id) {
       setCaptureStatus('❌ No active tab available.', true);
       return;
