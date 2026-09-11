@@ -41,6 +41,13 @@ export class LocalOCREngine implements OCREngine {
           workerPath: this.options.workerPath,
           corePath: this.options.corePath,
           langPath: this.options.langPath,
+          // CRITICAL: Must be false for Chrome extensions.
+          // When true (the default), Tesseract wraps the worker in a blob:// URL.
+          // The blob worker then calls importScripts('chrome-extension://...') which
+          // violates CSP because blob workers do not inherit 'self' from the
+          // extension origin. Setting false spawns the Worker directly from the
+          // chrome-extension:// URL, which is covered by 'self' in the manifest CSP.
+          workerBlobURL: false,
           logger: () => {}, // suppress telemetry
           errorHandler: (err) => console.error('[PrivAgent OCR Error]', err),
         });
