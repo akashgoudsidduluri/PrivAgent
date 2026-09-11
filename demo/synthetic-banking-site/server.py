@@ -33,12 +33,22 @@ def main():
     print("[*] Synthetic records active: Rahul Sharma, 4111 1111 1111 1111")
     print("============================================================")
     
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            print("\nShutting down demo server gracefully.")
+    socketserver.TCPServer.allow_reuse_address = True
+    try:
+        with socketserver.TCPServer(("", PORT), Handler) as httpd:
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt:
+                print("\nShutting down demo server gracefully.")
+                sys.exit(0)
+    except OSError as e:
+        if getattr(e, 'winerror', None) == 10048 or getattr(e, 'errno', None) in (98, 48):
+            print(f"\n[!] Port {PORT} is ALREADY running an active demo server instance!")
+            print(f"[*] You can already open and test the site at: http://localhost:{PORT}")
+            print("[*] (If you wish to restart it, stop the existing running process first.)\n")
             sys.exit(0)
+        else:
+            raise e
 
 if __name__ == "__main__":
     main()
