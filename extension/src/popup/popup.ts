@@ -4,11 +4,14 @@ import {
   RedactionMode,
   VisualCaptureReport,
   VisualDetectionResult,
+  AgentContextPayload,
+  buildAgentPayload,
 } from '../privacy/types';
 import { VisualCanvasRedactor } from '../capture/visualRedactor';
 import { LocalOCREngine } from '../ocr/ocrEngine';
 import { detectSensitiveOCRRegions } from '../ocr/ocrDetector';
 import { mapDOMToScreenshot } from '../capture/coordinateMapper';
+import { checkBackendHealth, sendSanitizedContext } from '../agent/agentBridge';
 
 type VisualViewMode = 'original' | 'detected' | 'sanitized';
 
@@ -78,6 +81,19 @@ const metaScale = document.getElementById('meta-scale')!;
 const metaPartialOffscreen = document.getElementById('meta-partial-offscreen')!;
 const metaCaptureStatus = document.getElementById('meta-capture-status')!;
 const btnViewVisualPayload = document.getElementById('btn-view-visual-payload')!;
+
+// UI Elements — Milestone 4 Agent API
+const btnSendAgent = document.getElementById('btn-send-agent') as HTMLButtonElement;
+const agentStatusEl = document.getElementById('agent-status')!;
+const agentMetaEl = document.getElementById('agent-meta')!;
+const agentDetectionCount = document.getElementById('agent-detection-count')!;
+const agentLastSent = document.getElementById('agent-last-sent')!;
+const healthDot = document.getElementById('health-dot')!;
+const healthLabel = document.getElementById('health-label')!;
+const btnViewAgentPayload = document.getElementById('btn-view-agent-payload')!;
+
+// Agent payload cache (for View JSON)
+let lastAgentPayload: AgentContextPayload | null = null;
 
 // ── DOM Scan UI helpers ─────────────────────────────────────────────────────
 
@@ -523,5 +539,82 @@ btnViewSanitized.addEventListener('click', () => {
 // Milestone 3 capture button
 btnCapture.addEventListener('click', runVisualCapture);
 
+// ── Milestone 4: Agent API ────────────────────────────────────────────────────
+
+function setHealthStatus(state: 'online' | 'offline' | 'checking', label: string): void {
+  healthDot.className = `health-dot ${state}`;
+  healthLabel.textContent = label;
+}
+
+function setAgentStatus(msg: string, isSuccess: boolean | null = null): void {
+  agentStatusEl.textContent = msg;
+  agentStatusEl.style.display = 'block';
+  agentStatusEl.className = 'agent-status';
+  if (isSuccess === true) agentStatusEl.classList.add('success');
+  if (isSuccess === false) agentStatusEl.classList.add('error');
+}
+
+async function runHealthCheck(): Promise<void> {
+  setHealthStatus('checking', 'Checking…');
+  const result = await checkBackendHealth();
+  if (result.online) {
+    setHealthStatus('online', `● Online (v${result.version})`);
+    btnSendAgent.disabled = false;
+  } else {
+    setHealthStatus('offline', '○ Offline');
+    btnSendAgent.disabled = true;
+  }
+}
+
+btnSendAgent.addEventListener('click', async () => {
+  if (!currentReport) {
+    setAgentStatus('❌ No DOM scan report. Run a scan first.', false);
+    return;
+  }
+
+  btnSendAgent.disabled = true;
+  btnSendAgent.textContent = '⏳ Sending…';
+  setAgentStatus('⏳ Building sanitized payload…');
+
+  try {
+    const result = await sendSanitizedContext(currentReport, currentVisualReport);
+
+    if (result.success) {
+      // Cache payload for JSON preview (re-build using allowlist)
+      lastAgentPayload = buildAgentPayload(currentReport, currentVisualReport);
+
+      setAgentStatus(`✅ Sanitized context sent — ${result.detectionCount} detection(s) transmitted.`, true);
+      agentDetectionCount.textContent = String(result.detectionCount);
+      agentLastSent.textContent = new Date(result.receivedAt).toLocaleTimeString();
+      agentMetaEl.style.display = 'block';
+    } else {
+      setAgentStatus(`❌ ${result.error}`, false);
+      // Re-check health in case backend went down
+      await runHealthCheck();
+    }
+  } catch (err) {
+    setAgentStatus(`❌ Unexpected error: ${err instanceof Error ? err.message : String(err)}`, false);
+  } finally {
+    btnSendAgent.textContent = '🤖 Send to Agent API';
+    // Re-enable only if backend is still online
+    const health = await checkBackendHealth();
+    btnSendAgent.disabled = !health.online;
+  }
+});
+
+btnViewAgentPayload.addEventListener('click', () => {
+  if (lastAgentPayload) {
+    payloadJson.textContent = JSON.stringify(lastAgentPayload, null, 2);
+    payloadModal.classList.add('open');
+  } else {
+    payloadJson.textContent = '// No agent payload yet. Run a scan and send to Agent API first.';
+    payloadModal.classList.add('open');
+  }
+});
+
 // Initialize on open
-document.addEventListener('DOMContentLoaded', initPopup);
+document.addEventListener('DOMContentLoaded', async () => {
+  await initPopup();
+  // Kick off health check without blocking popup init
+  runHealthCheck();
+});

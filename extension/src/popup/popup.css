@@ -553,3 +553,85 @@ body {
 
 .dot-pan { background: #f97316; }
 .dot-cvv { background: #eab308; }
+
+/* ── Milestone 4: Agent Safety API ─────────────────────────── */
+.agent-section {
+  border-top: 1px solid rgba(124, 58, 237, 0.25);
+}
+
+.agent-health-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.health-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+  transition: background 0.3s ease;
+}
+
+.health-dot.online  { background: #10b981; box-shadow: 0 0 4px #10b981; }
+.health-dot.offline { background: #ef4444; }
+.health-dot.checking {
+  background: #f59e0b;
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.btn-agent {
+  background: linear-gradient(135deg, #5b21b6, #7c3aed);
+  color: #fff;
+  border: 1px solid rgba(124, 58, 237, 0.5);
+  transition: all 0.2s ease;
+  width: 100%;
+}
+.btn-agent:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+}
+.btn-agent:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.agent-status {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.agent-status.success {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+
+.agent-status.error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.agent-meta {
+  margin-top: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+}

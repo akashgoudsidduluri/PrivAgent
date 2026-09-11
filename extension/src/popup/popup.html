@@ -192,7 +192,45 @@
       </div>
     </section>
 
-    <!-- JSON Payload Modal -->
+    <!-- ── Milestone 4: Agent Safety API ─────────────────────────────── -->
+    <section class="section-container agent-section" id="agent-section">
+      <div class="section-header-flex">
+        <label class="section-label">🤖 Agent Safety API</label>
+        <span class="agent-health-indicator" id="agent-health-indicator">
+          <span class="health-dot" id="health-dot"></span>
+          <span id="health-label">Checking…</span>
+        </span>
+      </div>
+      <p class="visual-desc">
+        Send the locally sanitized context (zero raw PII) to the local Agent API for browser-agent consumption.
+      </p>
+      <div class="capture-actions">
+        <button type="button" class="action-btn btn-agent" id="btn-send-agent" disabled>
+          🤖 Send to Agent API
+        </button>
+      </div>
+      <div class="agent-status" id="agent-status" style="display:none"></div>
+      <div class="agent-meta" id="agent-meta" style="display:none">
+        <div class="meta-row">
+          <span class="meta-key">Detections Sent</span>
+          <span class="meta-val" id="agent-detection-count">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Endpoint</span>
+          <span class="meta-val" style="font-size:10px">127.0.0.1:8010/api/v1/context</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Last Sent</span>
+          <span class="meta-val" id="agent-last-sent">—</span>
+        </div>
+        <div class="meta-actions">
+          <button type="button" class="action-btn btn-outline btn-sm" id="btn-view-agent-payload">
+            View Agent Payload JSON
+          </button>
+        </div>
+      </div>
+    </section>
+
     <div class="payload-modal" id="payload-modal">
       <div class="payload-card">
         <div class="payload-header">
