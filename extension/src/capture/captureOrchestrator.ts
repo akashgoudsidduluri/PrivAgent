@@ -28,11 +28,15 @@ import {
   ViewportGeometry,
   mapDOMToScreenshot,
 } from './coordinateMapper';
+import { OCREngine, LocalOCREngine } from '../ocr/ocrEngine';
+import { detectSensitiveOCRRegions } from '../ocr/ocrDetector';
 
 export interface OrchestratorResult {
   dataUrl: string;
   report: VisualCaptureReport;
 }
+
+let defaultOCREngine: OCREngine | null = null;
 
 /**
  * Loads an HTMLImageElement from a data URL.
@@ -126,16 +130,18 @@ function mapDetectionsToVisual(
 }
 
 /**
- * Full Milestone 2 pipeline:
- *   DOM scan → viewport geometry → screenshot → decode dimensions → map coordinates → visual report
+ * Full Milestone 3 pipeline:
+ *   DOM scan → viewport geometry → screenshot → decode dimensions → map DOM → run OCR → classify OCR → unified visual report
  *
  * @param tabId  The active tab ID to operate on.
  * @param currentMode  The current redaction mode (for scan request).
+ * @param ocrEngine Optional custom OCR engine (e.g. MockOCREngine for unit tests)
  * @returns OrchestratorResult containing the data URL and VisualCaptureReport
  */
 export async function runCaptureAndMap(
   tabId: number,
-  currentMode: 'blackout' | 'blur' | 'mask' = 'blackout'
+  currentMode: 'blackout' | 'blur' | 'mask' = 'blackout',
+  ocrEngine?: OCREngine
 ): Promise<OrchestratorResult> {
   const captureStart = performance.now();
 
@@ -181,21 +187,55 @@ export async function runCaptureAndMap(
   // Step 4: Decode screenshot to obtain AUTHORITATIVE actual pixel dimensions
   const { image, width: screenshotWidth, height: screenshotHeight } = await loadImageFromDataUrl(dataUrl);
 
-  // Suppress unused variable warning — image is returned to caller for rendering
-  void image;
-
   const screenshotDimensions: ActualScreenshotDimensions = { screenshotWidth, screenshotHeight };
 
-  // Step 5: Map detections to visual coordinates
-  const { visualDetections, totalPartiallyVisible, totalOffscreenFiltered } = mapDetectionsToVisual(
+  // Step 5: Map DOM detections to visual coordinates
+  const { visualDetections: domVisualDetections, totalPartiallyVisible: domPartial, totalOffscreenFiltered } = mapDetectionsToVisual(
     scanReport.detections,
     geometry,
     screenshotDimensions
   );
 
-  // Compute empirical scale factors (for diagnostic metadata only, not for calculations)
+  // Compute empirical scale factors
   const scaleX = screenshotWidth / geometry.viewportWidth;
   const scaleY = screenshotHeight / geometry.viewportHeight;
+
+  // Step 6 & 7: Execute Local OCR and Classify Sensitive Visual Regions
+  const engine = ocrEngine ?? (defaultOCREngine ??= new LocalOCREngine());
+  const ocrResult = await engine.recognize(image);
+  const ocrDetections = detectSensitiveOCRRegions(ocrResult, {
+    width: screenshotWidth,
+    height: screenshotHeight,
+  });
+
+  // Convert safe OCR detections to VisualDetectionResult objects
+  let ocrPartial = 0;
+  const ocrVisualDetections: VisualDetectionResult[] = ocrDetections.map(det => {
+    if (det.isPartiallyVisible) ocrPartial++;
+    const [sx, sy, sw, sh] = det.bbox;
+    // Map back to approximate viewport box for consistent interface
+    const vx = Math.round(sx / scaleX);
+    const vy = Math.round(sy / scaleY);
+    const vw = Math.round(sw / scaleX);
+    const vh = Math.round(sh / scaleY);
+
+    return {
+      id: det.id,
+      type: det.type,
+      confidence: det.confidence,
+      selector: 'canvas:visual-ocr',
+      viewportBBox: [vx, vy, vw, vh],
+      screenshotBBox: [sx, sy, sw, sh],
+      isPartiallyVisible: det.isPartiallyVisible,
+      source: 'ocr',
+    };
+  });
+
+  // Step 8: Unified visual detections (DOM + OCR)
+  const unifiedDetections: VisualDetectionResult[] = [
+    ...domVisualDetections,
+    ...ocrVisualDetections,
+  ];
 
   const captureMetadata: CaptureMetadata = {
     viewportWidth: geometry.viewportWidth,
@@ -212,17 +252,21 @@ export async function runCaptureAndMap(
 
   const visualReport: VisualCaptureReport = {
     captureMetadata,
-    visualDetections,
-    totalDetected: visualDetections.length,
-    totalPartiallyVisible,
+    visualDetections: unifiedDetections,
+    totalDetected: unifiedDetections.length,
+    totalPartiallyVisible: domPartial + ocrPartial,
     totalOffscreenFiltered,
+    ocrRegionsScanned: ocrResult.words.length,
+    sensitiveOCRDetected: ocrVisualDetections.length,
+    ocrLatencyMs: Number(ocrResult.latencyMs.toFixed(1)),
+    domSensitiveDetected: domVisualDetections.length,
     status: 'Local Visual Context Prepared',
   };
 
   console.info(
-    `[PrivAgent Capture] Pipeline complete in ${(performance.now() - captureStart).toFixed(1)} ms. ` +
-    `Detections: ${visualDetections.length} visible, ` +
-    `${totalPartiallyVisible} partial, ${totalOffscreenFiltered} off-screen.`
+    `[PrivAgent Capture + OCR] Pipeline complete in ${(performance.now() - captureStart).toFixed(1)} ms. ` +
+    `DOM: ${domVisualDetections.length}, OCR: ${ocrVisualDetections.length} sensitive ` +
+    `(scanned ${ocrResult.words.length} tokens in ${ocrResult.latencyMs.toFixed(1)} ms).`
   );
 
   return { dataUrl, report: visualReport };

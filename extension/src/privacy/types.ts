@@ -4,14 +4,18 @@ export type SensitiveEntityType =
   | 'phone' 
   | 'credit_card' 
   | 'account_number' 
-  | 'person_name';
+  | 'person_name'
+  | 'pan'
+  | 'otp'
+  | 'cvv';
 
 export type DetectionSource = 
   | 'dom_input_type' 
   | 'dom_autocomplete' 
   | 'dom_attribute' 
   | 'dom_label' 
-  | 'text_pattern';
+  | 'text_pattern'
+  | 'ocr';
 
 export type RedactionMode = 'blackout' | 'blur' | 'mask';
 
@@ -75,6 +79,10 @@ export interface VisualCaptureReport {
   totalDetected: number;
   totalPartiallyVisible: number;
   totalOffscreenFiltered: number;
+  ocrRegionsScanned: number;
+  sensitiveOCRDetected: number;
+  ocrLatencyMs: number;
+  domSensitiveDetected: number;
   status: 'Local Visual Context Prepared';
 }
 

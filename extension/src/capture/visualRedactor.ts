@@ -164,7 +164,7 @@ export class VisualCanvasRedactor {
   }
 
   /**
-   * Debug Badge: Draws coordinate box, entity type, confidence, and mapped pixel values.
+   * Debug Badge: Draws coordinate box, entity type, confidence, and source tag ([DOM] or [OCR]).
    */
   private renderDebugBadge(
     ctx: CanvasRenderingContext2D,
@@ -175,17 +175,22 @@ export class VisualCanvasRedactor {
     det: VisualDetectionResult
   ): void {
     ctx.save();
-    ctx.strokeStyle = '#3b82f6';
+    const isOCR = det.source === 'ocr';
+    const borderColor = isOCR ? '#a855f7' : '#3b82f6';
+    const badgeBg = isOCR ? '#6b21a8' : '#1d4ed8';
+    const sourceTag = isOCR ? '[OCR]' : '[DOM]';
+
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, w, h);
 
-    const label = `${det.type} (${(det.confidence * 100).toFixed(0)}%) [${det.screenshotBBox.join(', ')}]`;
+    const label = `${sourceTag} ${det.type.toUpperCase()} (${(det.confidence * 100).toFixed(0)}%)`;
     ctx.font = 'bold 10px monospace';
     const textMetrics = ctx.measureText(label);
     const labelWidth = textMetrics.width + 8;
     const labelHeight = 16;
 
-    ctx.fillStyle = '#1d4ed8';
+    ctx.fillStyle = badgeBg;
     ctx.fillRect(x, Math.max(0, y - labelHeight), labelWidth, labelHeight);
 
     ctx.fillStyle = '#ffffff';

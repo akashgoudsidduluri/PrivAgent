@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apex Vault — Canvas Visual Privacy Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <span class="brand-logo">🛡️</span>
+        <span class="brand-text">APEX VAULT</span>
+        <span class="brand-tag">Visual Canvas Statement</span>
+      </div>
+      <div class="nav-status">
+        <span class="status-pill">Synthetic Demo Environment</span>
+      </div>
+    </header>
+
+    <!-- Privacy Demonstration Banner -->
+    <section class="banner-privacy">
+      <div class="banner-icon">🎯</div>
+      <div class="banner-content">
+        <h2>Milestone 3 Test Ground: Pure Canvas Rendered PII</h2>
+        <p>
+          All sensitive financial details below are <strong>drawn directly to HTML5 &lt;canvas&gt; elements using 2D pixel rendering</strong>.
+          There are <strong>zero DOM text nodes, zero input fields, and zero HTML attributes</strong> containing these values.
+        </p>
+        <div class="pipeline-comparison">
+          <div class="comp-box comp-dom">
+            <span class="comp-title">DOM Privacy Scanner:</span>
+            <span class="comp-status">❌ Misses Canvas Text (0 detections)</span>
+          </div>
+          <div class="comp-box comp-ocr">
+            <span class="comp-title">Local OCR Engine:</span>
+            <span class="comp-status">✅ Detects Canvas Text On-Device</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="content-container">
+      <div class="statement-card">
+        <div class="card-header">
+          <h3>Customer Account Statement (Canvas Bitmap)</h3>
+          <div class="card-actions">
+            <button type="button" class="btn btn-secondary" id="btn-inspect-dom">
+              🔍 Inspect DOM Proof
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-redraw">
+              🔄 Redraw Canvas
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <!-- The sensitive text lives purely inside this canvas -->
+          <canvas id="statementCanvas" width="800" height="380"></canvas>
+        </div>
+
+        <div class="dom-proof-box" id="dom-proof-box" style="display:none">
+          <strong>DOM Inspector Verification:</strong>
+          <p id="dom-proof-text"></p>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="credit-card-container">
+          <div class="card-header">
+            <h3>Virtual Debit Card (Canvas Bitmap)</h3>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="cardCanvas" width="440" height="260"></canvas>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <h3>Why Visual OCR is Required</h3>
+          <p>
+            Lightweight AI browser agents frequently encounter rich web applications, PDF renderers,
+            financial charting dashboards, and graphical interfaces where personal data is rendered
+            as pure image pixels.
+          </p>
+          <ul class="bullet-list">
+            <li>DOM-only scanning cannot access &lt;canvas&gt; contents.</li>
+            <li>PrivAgent Milestone 3 captures the visible viewport bitmap.</li>
+            <li>On-device WebAssembly OCR recognizes text regions locally.</li>
+            <li>Contextual heuristics detect sensitive patterns (Cards, Emails, Phones, PAN, OTP, CVV).</li>
+            <li>Visual Canvas Redactor applies blackout, blur, or mask before agent transmission.</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+
+    <footer class="page-footer">
+      <span>PrivAgent • SIH26171 • ISRO • Local Visual Privacy Boundary</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

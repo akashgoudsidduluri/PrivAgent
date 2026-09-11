@@ -86,6 +86,8 @@
         <span class="cat-pill"><span class="cat-dot dot-account"></span>Accounts: <strong id="cat-account">0</strong></span>
         <span class="cat-pill"><span class="cat-dot dot-email"></span>Emails: <strong id="cat-email">0</strong></span>
         <span class="cat-pill"><span class="cat-dot dot-phone"></span>Phones: <strong id="cat-phone">0</strong></span>
+        <span class="cat-pill"><span class="cat-dot dot-pan"></span>PAN: <strong id="cat-pan">0</strong></span>
+        <span class="cat-pill"><span class="cat-dot dot-cvv"></span>CVV/OTP: <strong id="cat-cvv">0</strong></span>
         <span class="cat-pill"><span class="cat-dot dot-name"></span>Names: <strong id="cat-name">0</strong></span>
       </div>
     </section>
@@ -103,25 +105,65 @@
       </button>
     </section>
 
-    <!-- ── Milestone 2: Visual Capture & Preview ─────────────────────── -->
+    <!-- ── Milestone 3: Local OCR & Visual Capture ─────────────────────── -->
     <section class="section-container visual-section" id="visual-section">
-      <label class="section-label">📸 Visual Capture Preview</label>
+      <div class="section-header-flex">
+        <label class="section-label">📸 Visual Perception &amp; Local OCR</label>
+        <span class="badge-local-ocr">100% On-Device</span>
+      </div>
       <p class="visual-desc">
-        Captures the visible viewport locally and maps DOM detections onto screenshot pixel coordinates.
-        The image stays on-device. Nothing is sent remotely.
+        Local screenshot capture + on-device WebAssembly OCR detects sensitive text inside &lt;canvas&gt; and images.
       </p>
-      <button type="button" class="action-btn btn-capture" id="btn-capture">
-        📸 Capture &amp; Preview
-      </button>
+      <div class="capture-actions">
+        <button type="button" class="action-btn btn-capture" id="btn-capture">
+          📸 Capture &amp; Run Local OCR
+        </button>
+      </div>
       <div class="capture-status" id="capture-status" style="display:none"></div>
+
+      <!-- Visual Debug Mode Selector -->
+      <div class="view-mode-container" id="view-mode-container" style="display:none">
+        <span class="view-mode-label">Visual Preview Layer:</span>
+        <div class="mode-selector">
+          <button type="button" class="mode-btn view-btn" data-view="original" id="btn-view-original">
+            Original
+          </button>
+          <button type="button" class="mode-btn view-btn" data-view="detected" id="btn-view-detected">
+            Detected Badges
+          </button>
+          <button type="button" class="mode-btn view-btn active" data-view="sanitized" id="btn-view-sanitized">
+            Sanitized Preview
+          </button>
+        </div>
+      </div>
 
       <!-- Canvas preview container -->
       <div class="canvas-container" id="canvas-container" style="display:none">
         <canvas id="preview-canvas" class="preview-canvas"></canvas>
       </div>
 
-      <!-- Capture metadata -->
+      <!-- Capture metadata & OCR Telemetry -->
       <div class="capture-meta" id="capture-meta" style="display:none">
+        <div class="meta-row highlight-row">
+          <span class="meta-key">Combined Detections</span>
+          <span class="meta-val highlight-val" id="meta-combined">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">DOM Sensitive</span>
+          <span class="meta-val" id="meta-dom-detections">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Sensitive OCR Detections</span>
+          <span class="meta-val" id="meta-ocr-sensitive">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">OCR Scanned Tokens</span>
+          <span class="meta-val" id="meta-ocr-scanned">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">OCR Latency</span>
+          <span class="meta-val" id="meta-ocr-latency">—</span>
+        </div>
         <div class="meta-row">
           <span class="meta-key">Viewport</span>
           <span class="meta-val" id="meta-viewport">—</span>
@@ -135,28 +177,17 @@
           <span class="meta-val" id="meta-scale">—</span>
         </div>
         <div class="meta-row">
-          <span class="meta-key">Scroll (X,Y)</span>
-          <span class="meta-val" id="meta-scroll">—</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-key">DPR (diag)</span>
-          <span class="meta-val" id="meta-dpr">—</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-key">Detections</span>
-          <span class="meta-val" id="meta-detections">—</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-key">Partial</span>
-          <span class="meta-val" id="meta-partial">—</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-key">Off-screen</span>
-          <span class="meta-val" id="meta-offscreen">—</span>
+          <span class="meta-key">Partial / Off-screen</span>
+          <span class="meta-val" id="meta-partial-offscreen">—</span>
         </div>
         <div class="meta-row">
           <span class="meta-key">Status</span>
           <span class="meta-val meta-status" id="meta-capture-status">—</span>
+        </div>
+        <div class="meta-actions">
+          <button type="button" class="action-btn btn-outline btn-sm" id="btn-view-visual-payload">
+            View Visual Report JSON
+          </button>
         </div>
       </div>
     </section>

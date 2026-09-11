@@ -2,11 +2,13 @@ import { DetectionResult, PrivacyScanReport } from './types';
 
 // Forbidden property keys that directly leak raw input/text data
 const FORBIDDEN_VALUE_KEYS = new Set([
+  'text',
   'value',
   'textcontent',
   'innertext',
   'rawtext',
   'rawocr',
+  'ocrtext',
   'rawvalue',
   'secretvalue',
   'val',
@@ -21,6 +23,9 @@ const ALLOWED_DETECTION_KEYS = new Set([
   'bbox',
   'length',
   'source',
+  'viewportBBox',
+  'screenshotBBox',
+  'isPartiallyVisible',
 ]);
 
 /**

@@ -5,21 +5,72 @@ export const PATTERNS = {
   // Credit card: 13-19 digits, optional dashes/spaces
   CREDIT_CARD: /\b(?:\d[ -]*?){13,19}\b/,
 
-  // Phone: Indian (+91 or without, 10 digits starting with 6-9) and international formats
-  PHONE: /(?:(?:\+91|0)?[\s.-]?)?[6-9]\d{9}\b|\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/,
+  // Phone: Indian (+91 or without, 10 digits with optional 5-5 split) and international formats
+  PHONE: /(?:(?:\+91|0)?[\s.-]?)?[6-9]\d{4}[\s.-]?\d{5}\b|\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/,
 
   // Account number: 9 to 18 contiguous digits with banking context
   ACCOUNT_NUMBER: /\b\d{9,18}\b/,
+
+  // Indian PAN (Permanent Account Number): 5 letters + 4 digits + 1 letter (e.g., ABCDE1234F)
+  PAN: /\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b/,
+
+  // OTP: 4 to 8 digits
+  OTP: /\b\d{4,8}\b/,
+
+  // CVV / CVC: 3 or 4 digits
+  CVV: /\b\d{3,4}\b/,
 };
 
 export const KEYWORDS = {
   PASSWORD: ['password', 'passwd', 'pwd', 'secret', 'passcode', 'pin', 'cvv', 'cvc', 'security-code'],
   EMAIL: ['email', 'e-mail', 'mail_id', 'user_email'],
   PHONE: ['phone', 'mobile', 'cellphone', 'telephone', 'contact_number', 'phone_number', 'mobile_no', 'phone_no', 'cell', 'tel'],
-  CREDIT_CARD: ['card', 'cc-number', 'credit_card', 'debit_card', 'cardnumber', 'card-no', 'pan_card'],
-  ACCOUNT_NUMBER: ['account', 'account_no', 'account_number', 'acc_no', 'acc_num', 'acct'],
+  CREDIT_CARD: ['card', 'cc-number', 'credit_card', 'debit_card', 'cardnumber', 'card-no'],
+  ACCOUNT_NUMBER: ['account', 'account_no', 'account_number', 'acc_no', 'acc_num', 'acct', 'a/c'],
   PERSON_NAME: ['fullname', 'full_name', 'cardholder', 'holder_name', 'beneficiary', 'recipient_name', 'legal_name'],
+  PAN: ['pan', 'pan_card', 'pan_no', 'pan_number', 'pan-no', 'pancard', 'permanent account number'],
+  OTP: ['otp', 'one-time', 'passcode', 'verification code', 'verification_code', 'security code'],
+  CVV: ['cvv', 'cvc', 'cvv2', 'security code', 'card verification', 'security-code'],
 };
+
+/**
+ * Validates Indian PAN format strictly.
+ */
+export function isValidPAN(text: string): boolean {
+  return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(text.trim());
+}
+
+/**
+ * Validates potential CVV: must be 3-4 digits AND have nearby CVV/security keywords.
+ */
+export function isPotentialCVV(text: string, surroundingContext?: string): boolean {
+  const trimmed = text.trim();
+  if (!/^\d{3,4}$/.test(trimmed)) return false;
+  if (!surroundingContext) return false;
+  return matchesKeyword(surroundingContext, KEYWORDS.CVV);
+}
+
+/**
+ * Validates potential OTP: must be 4-8 digits AND have nearby OTP/verification keywords.
+ */
+export function isPotentialOTP(text: string, surroundingContext?: string): boolean {
+  const trimmed = text.trim();
+  if (!/^\d{4,8}$/.test(trimmed)) return false;
+  if (!surroundingContext) return false;
+  return matchesKeyword(surroundingContext, KEYWORDS.OTP);
+}
+
+/**
+ * Validates potential Bank Account Number: 9-18 digits AND has nearby account context.
+ */
+export function isPotentialAccountNumber(text: string, surroundingContext?: string): boolean {
+  const cleaned = text.replace(/[\s-]/g, '');
+  if (!/^\d{9,18}$/.test(cleaned)) return false;
+  // If Luhn valid, it's more likely a credit card, not an account number
+  if (isValidLuhn(cleaned)) return false;
+  if (!surroundingContext) return false;
+  return matchesKeyword(surroundingContext, KEYWORDS.ACCOUNT_NUMBER);
+}
 
 /**
  * Validates a potential credit card number using the standard Luhn algorithm (mod 10).

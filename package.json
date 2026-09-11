@@ -5,17 +5,20 @@
   "description": "PrivAgent: On-device Visual Perception & Privacy Engine for Lightweight Browser Agents (SIH26171, ISRO)",
   "scripts": {
     "dev:extension": "vite build --config extension/vite.config.ts --watch",
-    "build:extension": "vite build --config extension/vite.config.ts",
+    "build:extension": "vite build --config extension/vite.config.ts && cross-env VITE_BUILD_TARGET=contentScript vite build --config extension/vite.config.ts",
     "build": "npm run build:extension",
     "test": "vitest run",
     "test:watch": "vitest",
     "demo": "python demo/synthetic-banking-site/server.py",
-    "demo:node": "node demo/synthetic-banking-site/server.js"
+    "demo:node": "node demo/synthetic-banking-site/server.js",
+    "demo:canvas": "python demo/canvas-privacy-site/server.py",
+    "demo:canvas:node": "node demo/canvas-privacy-site/server.js"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.308",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.13.9",
+    "cross-env": "^10.1.0",
     "jsdom": "^26.0.0",
     "typescript": "^5.8.2",
     "vite": "^6.2.0",
@@ -30,5 +33,9 @@
     "dom-redaction"
   ],
   "author": "PrivAgent Team",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
+    "tesseract.js": "^5.1.1"
+  }
 }
