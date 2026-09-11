@@ -150,6 +150,19 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
     return true;
   }
 
+  // Milestone 2: Provide live viewport geometry for coordinate mapping
+  if (message.type === 'PRIVAGENT_GET_VIEWPORT_GEOMETRY') {
+    sendResponse({
+      type: 'PRIVAGENT_GET_VIEWPORT_GEOMETRY_RESPONSE',
+      viewportWidth: document.documentElement.clientWidth,
+      viewportHeight: document.documentElement.clientHeight,
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+      devicePixelRatio: window.devicePixelRatio,
+    });
+    return true;
+  }
+
   return false;
 });
 

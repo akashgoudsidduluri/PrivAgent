@@ -383,3 +383,103 @@ body {
   font-size: 9.5px;
   color: var(--text-muted);
 }
+
+/* ── Milestone 2: Visual Capture Section ──────────────────────────────── */
+
+.visual-section {
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.visual-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.btn-capture {
+  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s;
+}
+
+.btn-capture:hover {
+  opacity: 0.88;
+}
+
+.btn-capture:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.capture-status {
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: monospace;
+  color: #a3e635;
+  min-height: 16px;
+}
+
+/* Canvas container: scales the preview to fit popup width */
+.canvas-container {
+  margin-top: 10px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: #000;
+}
+
+.preview-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  object-fit: contain;
+}
+
+/* Capture metadata grid */
+.capture-meta {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.meta-key {
+  color: var(--text-muted);
+  font-weight: 500;
+  min-width: 90px;
+}
+
+.meta-val {
+  color: var(--text-main);
+  font-family: monospace;
+  font-size: 10.5px;
+  text-align: right;
+  word-break: break-all;
+}
+
+.meta-status {
+  color: #34d399;
+  font-weight: 600;
+}

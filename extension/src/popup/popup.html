@@ -103,6 +103,64 @@
       </button>
     </section>
 
+    <!-- ── Milestone 2: Visual Capture & Preview ─────────────────────── -->
+    <section class="section-container visual-section" id="visual-section">
+      <label class="section-label">📸 Visual Capture Preview</label>
+      <p class="visual-desc">
+        Captures the visible viewport locally and maps DOM detections onto screenshot pixel coordinates.
+        The image stays on-device. Nothing is sent remotely.
+      </p>
+      <button type="button" class="action-btn btn-capture" id="btn-capture">
+        📸 Capture &amp; Preview
+      </button>
+      <div class="capture-status" id="capture-status" style="display:none"></div>
+
+      <!-- Canvas preview container -->
+      <div class="canvas-container" id="canvas-container" style="display:none">
+        <canvas id="preview-canvas" class="preview-canvas"></canvas>
+      </div>
+
+      <!-- Capture metadata -->
+      <div class="capture-meta" id="capture-meta" style="display:none">
+        <div class="meta-row">
+          <span class="meta-key">Viewport</span>
+          <span class="meta-val" id="meta-viewport">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Screenshot</span>
+          <span class="meta-val" id="meta-screenshot">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Scale (X×Y)</span>
+          <span class="meta-val" id="meta-scale">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Scroll (X,Y)</span>
+          <span class="meta-val" id="meta-scroll">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">DPR (diag)</span>
+          <span class="meta-val" id="meta-dpr">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Detections</span>
+          <span class="meta-val" id="meta-detections">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Partial</span>
+          <span class="meta-val" id="meta-partial">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Off-screen</span>
+          <span class="meta-val" id="meta-offscreen">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Status</span>
+          <span class="meta-val meta-status" id="meta-capture-status">—</span>
+        </div>
+      </div>
+    </section>
+
     <!-- JSON Payload Modal -->
     <div class="payload-modal" id="payload-modal">
       <div class="payload-card">
