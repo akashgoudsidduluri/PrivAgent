@@ -41,7 +41,7 @@ export interface PrivacyScanReport {
   leakageCount: 0;
   categories: Record<SensitiveEntityType, number>;
   detections: DetectionResult[];
-  status: 'Sanitized Context — Local Privacy Check Passed' | 'Scanning' | 'Error';
+  status: 'Sanitized Context — Local Privacy Check Passed' | 'Scanning' | 'Error' | 'Excluded Site';
   redactionMode: RedactionMode;
 }
 

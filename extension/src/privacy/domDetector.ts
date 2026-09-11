@@ -97,6 +97,37 @@ function getAssociatedLabelText(input: HTMLElement): string {
   return '';
 }
 
+/**
+ * Checks if an element represents a generic chat prompt, search bar, or message composer
+ * that should not be classified as a phone field when empty.
+ */
+function isGenericComposerOrSearch(el: HTMLElement): boolean {
+  const tagName = el.tagName.toLowerCase();
+  const id = (el.id || '').toLowerCase();
+  const name = (el.getAttribute('name') || '').toLowerCase();
+  const placeholder = (el.getAttribute('placeholder') || '').toLowerCase();
+  const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+
+  const chatKeywords = ['prompt', 'composer', 'chat', 'search', 'query', 'comment', 'message', 'ask', 'discussion'];
+
+  // Check if placeholder or aria-label clearly indicates chat/search/prompt
+  if (chatKeywords.some(kw => placeholder.includes(kw) || ariaLabel.includes(kw))) {
+    return true;
+  }
+
+  // Check if id or name indicates prompt/composer/chat/search
+  if (chatKeywords.some(kw => id.includes(kw) || name.includes(kw))) {
+    return true;
+  }
+
+  // Multi-line <textarea> without explicit phone identifiers
+  if (tagName === 'textarea' && !id.includes('phone') && !name.includes('phone')) {
+    return true;
+  }
+
+  return false;
+}
+
 export interface ScanResult {
   detections: DetectionResult[];
   scanLatencyMs: number;
@@ -180,14 +211,35 @@ export function scanDOM(root: Document | HTMLElement = document): ScanResult {
     }
 
     // D. Phone Number Checks
-    else if (typeAttr === 'tel' || autocomplete.startsWith('tel')) {
+    // 1. Explicit HTML semantic input: <input type="tel">
+    else if (typeAttr === 'tel') {
       detectedType = 'phone';
       confidence = 0.98;
-      source = typeAttr === 'tel' ? 'dom_input_type' : 'dom_autocomplete';
-    } else if (matchesKeyword(name, KEYWORDS.PHONE) || matchesKeyword(id, KEYWORDS.PHONE) || matchesKeyword(labelText, KEYWORDS.PHONE)) {
+      source = 'dom_input_type';
+    }
+    // 2. Explicit HTML autocomplete: autocomplete="tel" or starts with "tel-"
+    else if (autocomplete === 'tel' || autocomplete.startsWith('tel-')) {
       detectedType = 'phone';
-      confidence = 0.93;
-      source = 'dom_label';
+      confidence = 0.98;
+      source = 'dom_autocomplete';
+    }
+    // 3. Input has actual value matching phone pattern
+    else if (rawValue && PATTERNS.PHONE.test(rawValue)) {
+      detectedType = 'phone';
+      confidence = 0.95;
+      source = 'text_pattern';
+    }
+    // 4. When value is absent, require strong explicit identifiers and reject generic chat/composer fields
+    else if (!rawValue && !isGenericComposerOrSearch(el)) {
+      if (matchesKeyword(name, KEYWORDS.PHONE) || matchesKeyword(id, KEYWORDS.PHONE)) {
+        detectedType = 'phone';
+        confidence = 0.92;
+        source = 'dom_attribute';
+      } else if (labelText && matchesKeyword(labelText, KEYWORDS.PHONE)) {
+        detectedType = 'phone';
+        confidence = 0.88;
+        source = 'dom_label';
+      }
     }
 
     // E. Bank Account Number Checks
@@ -267,8 +319,8 @@ export function scanDOM(root: Document | HTMLElement = document): ScanResult {
       confidence = 0.97;
       source = 'text_pattern';
     }
-    // Phone in text
-    else if (PATTERNS.PHONE.test(text)) {
+    // Phone in text (targeted leaf text, not long prose)
+    else if (PATTERNS.PHONE.test(text) && text.length <= 60) {
       detectedType = 'phone';
       confidence = 0.92;
       source = 'text_pattern';

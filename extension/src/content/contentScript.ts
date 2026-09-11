@@ -2,9 +2,18 @@ import { scanDOM } from '../privacy/domDetector';
 import { LocalRedactor } from '../redaction/redactor';
 import { OverlayManager } from '../redaction/overlayManager';
 import { createSanitizedExport } from '../privacy/securityBoundary';
+import { isUrlExcluded, getExclusionReason } from '../privacy/siteExclusions';
 import { ExtensionMessage, PrivacyScanReport, RedactionMode, SensitiveEntityType } from '../privacy/types';
 
-console.info('[PrivAgent] Initializing on-device privacy engine content script...');
+const currentUrl = window.location.href;
+const isCurrentSiteExcluded = isUrlExcluded(currentUrl);
+const exclusionReason = isCurrentSiteExcluded ? getExclusionReason(currentUrl) : null;
+
+if (isCurrentSiteExcluded) {
+  console.info(`[PrivAgent] URL excluded from automatic privacy scanning (${exclusionReason}): ${currentUrl}`);
+} else {
+  console.info('[PrivAgent] Initializing on-device privacy engine content script...');
+}
 
 const redactor = new LocalRedactor();
 const overlayManager = new OverlayManager(redactor);
@@ -13,11 +22,39 @@ let lastReport: PrivacyScanReport | null = null;
 let currentMode: RedactionMode = 'blackout';
 let isRedactionActive = true;
 
+function createExcludedReport(): PrivacyScanReport {
+  return {
+    timestamp: Date.now(),
+    url: currentUrl,
+    scanLatencyMs: 0,
+    redactionLatencyMs: 0,
+    totalElementsScanned: 0,
+    sensitiveElementsDetected: 0,
+    elementsProtected: 0,
+    leakageCount: 0,
+    categories: {
+      password: 0,
+      credit_card: 0,
+      account_number: 0,
+      email: 0,
+      phone: 0,
+      person_name: 0,
+    },
+    detections: [],
+    status: 'Excluded Site',
+    redactionMode: currentMode,
+  };
+}
+
 /**
  * Runs a full on-device DOM privacy scan, calculates exact metrics,
  * and enforces local redaction.
  */
 function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanReport {
+  if (isCurrentSiteExcluded) {
+    return createExcludedReport();
+  }
+
   currentMode = mode;
   
   // 1. DOM Scan with timing
@@ -116,15 +153,17 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
   return false;
 });
 
-// Auto-run initial lightweight scan when DOM is ready
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(() => {
-    performPrivacyScan('blackout');
-  }, 300);
-} else {
-  document.addEventListener('DOMContentLoaded', () => {
+// Auto-run initial lightweight scan when DOM is ready (only on non-excluded sites)
+if (!isCurrentSiteExcluded) {
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(() => {
       performPrivacyScan('blackout');
     }, 300);
-  });
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        performPrivacyScan('blackout');
+      }, 300);
+    });
+  }
 }

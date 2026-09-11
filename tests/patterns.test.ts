@@ -55,5 +55,19 @@ describe('PrivAgent Patterns & Heuristics', () => {
       expect(matchesKeyword('bank_acc_num', KEYWORDS.ACCOUNT_NUMBER)).toBe(true);
       expect(matchesKeyword('routing_number', KEYWORDS.ACCOUNT_NUMBER)).toBe(false);
     });
+
+    it('should NOT match words containing "tel" or "cell" as substrings (e.g. "tell", "intel", "cancelled")', () => {
+      expect(matchesKeyword('tell', KEYWORDS.PHONE)).toBe(false);
+      expect(matchesKeyword('Tell ChatGPT what you want', KEYWORDS.PHONE)).toBe(false);
+      expect(matchesKeyword('intel', KEYWORDS.PHONE)).toBe(false);
+      expect(matchesKeyword('hotel', KEYWORDS.PHONE)).toBe(false);
+      expect(matchesKeyword('excellence', KEYWORDS.PHONE)).toBe(false);
+
+      // But should match legitimate bounded phone tokens
+      expect(matchesKeyword('tel', KEYWORDS.PHONE)).toBe(true);
+      expect(matchesKeyword('user_tel', KEYWORDS.PHONE)).toBe(true);
+      expect(matchesKeyword('primary_phone', KEYWORDS.PHONE)).toBe(true);
+      expect(matchesKeyword('mobile_no', KEYWORDS.PHONE)).toBe(true);
+    });
   });
 });

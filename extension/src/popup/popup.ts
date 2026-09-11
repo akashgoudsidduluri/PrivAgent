@@ -30,8 +30,25 @@ const payloadModal = document.getElementById('payload-modal')!;
 const btnClosePayload = document.getElementById('btn-close-payload')!;
 const payloadJson = document.getElementById('payload-json')!;
 
+const statusTitle = document.getElementById('status-title')!;
+const statusSub = document.getElementById('status-sub')!;
+const statusCard = document.getElementById('status-card')!;
+
 function updateUI(report: PrivacyScanReport): void {
   currentReport = report;
+
+  if (report.status === 'Excluded Site') {
+    statusTitle.textContent = 'Site Excluded From Scanning';
+    statusSub.textContent = 'Development exclusion active (AI interface or browser protocol).';
+    statusCard.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+    statusCard.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+  } else {
+    statusTitle.textContent = 'Sanitized Context — Local Privacy Check Passed';
+    statusSub.textContent = 'Sensitive information masked locally on-device.';
+    statusCard.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+    statusCard.style.backgroundColor = 'rgba(16, 185, 129, 0.12)';
+  }
+
   metricDetected.textContent = String(report.sensitiveElementsDetected);
   metricProtected.textContent = String(report.elementsProtected);
   metricLeakage.textContent = String(report.leakageCount);
