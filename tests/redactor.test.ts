@@ -62,7 +62,7 @@ describe('PrivAgent Local Redaction Engine', () => {
     const container = document.getElementById('privagent-redaction-root');
     const masks = container!.querySelectorAll('.privagent-mode-mask');
     expect(masks.length).toBe(2);
-    expect(masks[0].textContent).toContain('[REDACTED: password]');
+    expect(masks[0]?.textContent).toContain('[REDACTED: password]');
   });
 
   it('should clear redactions cleanly when requested', () => {

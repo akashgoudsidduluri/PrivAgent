@@ -96,7 +96,7 @@ export class LocalRedactor {
       } else if (mode === 'blur') {
         maskEl.style.backgroundColor = 'rgba(15, 23, 42, 0.4)';
         maskEl.style.backdropFilter = 'blur(16px)';
-        maskEl.style.webkitBackdropFilter = 'blur(16px)';
+        maskEl.style.setProperty('-webkit-backdrop-filter', 'blur(16px)');
         maskEl.style.border = '1px dashed rgba(59, 130, 246, 0.6)';
       } else if (mode === 'mask') {
         maskEl.style.backgroundColor = '#18181b';
