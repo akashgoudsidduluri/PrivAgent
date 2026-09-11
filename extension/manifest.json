@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "PrivAgent — Local Visual Privacy Boundary",
+  "version": "0.1.0",
+  "description": "On-device visual perception and local DOM privacy redaction for browser agents (SIH26171, ISRO).",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "serviceWorker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"],
+      "css": ["contentStyles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

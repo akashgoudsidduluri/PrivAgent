@@ -1,0 +1,110 @@
+/* PrivAgent Injected Content Styles */
+
+#privagent-redaction-root,
+#privagent-inspect-root {
+  pointer-events: none;
+}
+
+.privagent-mask-box {
+  user-select: none;
+  z-index: 2147483641;
+}
+
+/* Floating Interactive Demo Bar */
+.privagent-demo-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 9999px;
+  padding: 8px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.2);
+  z-index: 2147483645;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color: #ffffff;
+}
+
+.privagent-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.privagent-bar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.privagent-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: privagentPulse 2s infinite;
+}
+
+@keyframes privagentPulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.privagent-stage-pill {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.privagent-stage-controls {
+  display: flex;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.privagent-stage-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.privagent-stage-btn:hover {
+  color: #ffffff;
+}
+
+.privagent-stage-btn.active {
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.privagent-bar-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.privagent-bar-close:hover {
+  color: #f1f5f9;
+}

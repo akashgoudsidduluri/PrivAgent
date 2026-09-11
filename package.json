@@ -1,0 +1,34 @@
+{
+  "name": "privagent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PrivAgent: On-device Visual Perception & Privacy Engine for Lightweight Browser Agents (SIH26171, ISRO)",
+  "scripts": {
+    "dev:extension": "vite build --config extension/vite.config.ts --watch",
+    "build:extension": "vite build --config extension/vite.config.ts",
+    "build": "npm run build:extension",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "demo": "python demo/synthetic-banking-site/server.py",
+    "demo:node": "node demo/synthetic-banking-site/server.js"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.308",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.13.9",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.7"
+  },
+  "keywords": [
+    "privacy",
+    "browser-agent",
+    "on-device-ai",
+    "sih2026",
+    "isro",
+    "dom-redaction"
+  ],
+  "author": "PrivAgent Team",
+  "license": "Apache-2.0"
+}

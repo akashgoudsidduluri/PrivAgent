@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PrivAgent — Local Privacy Boundary</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-wrapper">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="header-brand">
+        <div class="brand-shield">🛡️</div>
+        <div>
+          <h1 class="brand-title">PrivAgent</h1>
+          <span class="brand-subtitle">On-Device Privacy Boundary • SIH26171</span>
+        </div>
+      </div>
+      <div class="live-dot" title="Active on current tab"></div>
+    </header>
+
+    <!-- Main Status Badge -->
+    <div class="status-card" id="status-card">
+      <div class="status-icon">✅</div>
+      <div class="status-details">
+        <span class="status-title" id="status-title">Sanitized Context — Local Privacy Check Passed</span>
+        <span class="status-sub" id="status-sub">Sensitive information masked locally on-device.</span>
+      </div>
+    </div>
+
+    <!-- Core Metrics Grid -->
+    <section class="metrics-grid">
+      <div class="metric-box">
+        <span class="metric-label">Detected</span>
+        <span class="metric-value text-red" id="metric-detected">0</span>
+        <span class="metric-unit">Sensitive Elements</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Protected</span>
+        <span class="metric-value text-emerald" id="metric-protected">0</span>
+        <span class="metric-unit">Redacted Regions</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Leakage</span>
+        <span class="metric-value text-blue" id="metric-leakage">0</span>
+        <span class="metric-unit">Unmasked PII</span>
+      </div>
+    </section>
+
+    <!-- Benchmark Timing Row -->
+    <section class="benchmark-row">
+      <div class="benchmark-item">
+        <span class="bench-label">⚡ DOM Scan Latency:</span>
+        <span class="bench-value" id="bench-scan">0.00 ms</span>
+      </div>
+      <div class="benchmark-divider"></div>
+      <div class="benchmark-item">
+        <span class="bench-label">🎨 Redaction Latency:</span>
+        <span class="bench-value" id="bench-redact">0.00 ms</span>
+      </div>
+    </section>
+
+    <!-- Redaction Mode Selector -->
+    <section class="section-container">
+      <label class="section-label">Redaction Technique</label>
+      <div class="mode-selector">
+        <button type="button" class="mode-btn active" data-mode="blackout" id="btn-mode-blackout">
+          ◼ Blackout
+        </button>
+        <button type="button" class="mode-btn" data-mode="blur" id="btn-mode-blur">
+          💧 Blur
+        </button>
+        <button type="button" class="mode-btn" data-mode="mask" id="btn-mode-mask">
+          🔲 [REDACTED]
+        </button>
+      </div>
+    </section>
+
+    <!-- Category Breakdown Badges -->
+    <section class="section-container">
+      <label class="section-label">Detected Entity Breakdown</label>
+      <div class="categories-list" id="categories-container">
+        <span class="cat-pill"><span class="cat-dot dot-password"></span>Passwords: <strong id="cat-password">0</strong></span>
+        <span class="cat-pill"><span class="cat-dot dot-card"></span>Credit Cards: <strong id="cat-card">0</strong></span>
+        <span class="cat-pill"><span class="cat-dot dot-account"></span>Accounts: <strong id="cat-account">0</strong></span>
+        <span class="cat-pill"><span class="cat-dot dot-email"></span>Emails: <strong id="cat-email">0</strong></span>
+        <span class="cat-pill"><span class="cat-dot dot-phone"></span>Phones: <strong id="cat-phone">0</strong></span>
+        <span class="cat-pill"><span class="cat-dot dot-name"></span>Names: <strong id="cat-name">0</strong></span>
+      </div>
+    </section>
+
+    <!-- Action Toolbar -->
+    <section class="action-toolbar">
+      <button type="button" class="action-btn btn-primary" id="btn-rescan">
+        ⚡ Re-Scan DOM
+      </button>
+      <button type="button" class="action-btn btn-secondary" id="btn-toggle">
+        Toggle Redaction
+      </button>
+      <button type="button" class="action-btn btn-outline" id="btn-view-payload">
+        View JSON Payload
+      </button>
+    </section>
+
+    <!-- JSON Payload Modal -->
+    <div class="payload-modal" id="payload-modal">
+      <div class="payload-card">
+        <div class="payload-header">
+          <span>Sanitized Context (No Raw PII)</span>
+          <button type="button" class="payload-close" id="btn-close-payload">&times;</button>
+        </div>
+        <pre class="payload-pre" id="payload-json"></pre>
+      </div>
+    </div>
+
+    <!-- Security Boundary Guarantee Footer -->
+    <footer class="popup-footer">
+      <span>🔒 Local boundary enforced: Zero raw values transmitted or logged.</span>
+    </footer>
+  </div>
+
+  <script type="module" src="popup.ts"></script>
+</body>
+</html>

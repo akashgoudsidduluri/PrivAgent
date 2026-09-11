@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apex Horizon Bank — PrivAgent Demo Banking Portal</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="synthetic-watermark">
+    <span>🛡️ SIH26171 EVALUATION DEMO — 100% SYNTHETIC DATA ONLY</span>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Apex Horizon Bank</span>
+          <span class="brand-sub">PrivAgent Secure Banking Portal</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-item active" data-tab="overview">Dashboard</button>
+        <button class="nav-item" data-tab="transfer" id="btn-open-transfer">Transfer Money</button>
+        <button class="nav-item" data-tab="cards">Cards & Security</button>
+      </nav>
+
+      <div class="user-profile-badge">
+        <div class="avatar">RS</div>
+        <div class="profile-info">
+          <span class="profile-name" id="user-display-name">Rahul Sharma</span>
+          <span class="profile-role">Savings Prime • #9012</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Hero / Account Summary -->
+    <section class="account-hero-grid">
+      <!-- Balance Card -->
+      <div class="glass-card balance-card">
+        <div class="card-header-flex">
+          <div>
+            <span class="card-eyebrow">Available Balance</span>
+            <h1 class="balance-figure" id="account-balance">₹1,25,000.00</h1>
+          </div>
+          <span class="badge badge-success">Active & Verified</span>
+        </div>
+        <div class="account-meta-row">
+          <div class="meta-item">
+            <span class="meta-label">Account Number</span>
+            <span class="meta-value mono" id="account-number-text">123456789012</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Routing / IFSC</span>
+            <span class="meta-value mono">AHBK0004921</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Branch</span>
+            <span class="meta-value">Bengaluru Tech Park</span>
+          </div>
+        </div>
+        <div class="card-action-row">
+          <button class="btn btn-primary" id="btn-quick-transfer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            Transfer Money
+          </button>
+          <button class="btn btn-secondary" id="btn-statement">Download Statement</button>
+        </div>
+      </div>
+
+      <!-- Synthetic Credit / Debit Card -->
+      <div class="credit-card-container">
+        <div class="credit-card">
+          <div class="card-top">
+            <span class="card-type-label">HORIZON PLATINUM</span>
+            <span class="chip-icon"></span>
+          </div>
+          <div class="card-number mono" id="card-number-display">4111 1111 1111 1111</div>
+          <div class="card-bottom">
+            <div class="card-holder">
+              <span class="sub-label">CARDHOLDER</span>
+              <span class="holder-name" id="card-holder-name">RAHUL SHARMA</span>
+            </div>
+            <div class="card-expiry">
+              <span class="sub-label">EXPIRES</span>
+              <span class="expiry-date mono" id="card-expiry-display">09/28</span>
+            </div>
+            <div class="card-cvv">
+              <span class="sub-label">CVV</span>
+              <span class="cvv-val mono" id="card-cvv-display">892</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid: User Profile Details & Interactive Forms -->
+    <div class="dashboard-grid">
+      <!-- Profile & Sensitive Credentials Card -->
+      <section class="glass-card profile-card">
+        <div class="section-title">
+          <h2>Customer Identification & Security</h2>
+          <p class="section-desc">Personal details verified locally for on-device browser agent validation.</p>
+        </div>
+
+        <form class="profile-form" id="customer-profile-form" onsubmit="return false;">
+          <div class="form-group">
+            <label for="input-full-name">Full Legal Name</label>
+            <input 
+              type="text" 
+              id="input-full-name" 
+              name="fullname" 
+              autocomplete="name" 
+              value="Rahul Sharma" 
+              class="form-input" 
+            />
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="input-email">Primary Email Address</label>
+              <input 
+                type="email" 
+                id="input-email" 
+                name="email" 
+                autocomplete="email" 
+                value="rahul.sharma@example.com" 
+                class="form-input" 
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="input-phone">Registered Phone Number</label>
+              <input 
+                type="tel" 
+                id="input-phone" 
+                name="phone" 
+                autocomplete="tel" 
+                value="9876543210" 
+                class="form-input" 
+              />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="input-account-no">Linked Account Number</label>
+              <input 
+                type="text" 
+                id="input-account-no" 
+                name="account_number" 
+                autocomplete="off" 
+                value="123456789012" 
+                class="form-input mono" 
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="input-card-number">Primary Debit Card Number</label>
+              <input 
+                type="text" 
+                id="input-card-number" 
+                name="cardnumber" 
+                autocomplete="cc-number" 
+                value="4111 1111 1111 1111" 
+                class="form-input mono" 
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-residential-address">Residential Address</label>
+            <input 
+              type="text" 
+              id="input-residential-address" 
+              name="street-address" 
+              autocomplete="street-address" 
+              value="Flat 402, Nilgiri Heights, MG Road, Bengaluru 560001" 
+              class="form-input" 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="input-account-password">Online Banking Master Password</label>
+            <div class="password-wrapper">
+              <input 
+                type="password" 
+                id="input-account-password" 
+                name="password" 
+                autocomplete="current-password" 
+                value="DemoPassword123" 
+                class="form-input mono" 
+              />
+              <button type="button" class="btn-toggle-pass" id="btn-toggle-pass">👁️</button>
+            </div>
+            <span class="field-hint">Used for 2-factor transaction authorization.</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" id="btn-save-profile">Save Profile Locally</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Recent Transactions Table -->
+      <section class="glass-card ledger-card">
+        <div class="section-title">
+          <h2>Recent Activity & Transfers</h2>
+          <p class="section-desc">Live financial ledger with synthetic merchant and beneficiary entries.</p>
+        </div>
+
+        <div class="table-responsive">
+          <table class="ledger-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Recipient / Beneficiary</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="transaction-rows">
+              <tr>
+                <td>
+                  <div class="tx-title">Cloud Infrastructure VPS</div>
+                  <div class="tx-category">Business Services</div>
+                </td>
+                <td>
+                  <span class="mono">AWS India Technologies</span>
+                  <div class="tx-acc-meta">Acc: 987123450912</div>
+                </td>
+                <td class="tx-date">Today, 14:32</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="text-right tx-debit">-₹4,250.00</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tx-title">Vendor Payout — Hardware Dev</div>
+                  <div class="tx-category">Direct Transfer</div>
+                </td>
+                <td>
+                  <span>Dr. Vikram Sarabhai Labs</span>
+                  <div class="tx-acc-meta">vikram.lab@synthetic-vendor.in</div>
+                </td>
+                <td class="tx-date">Yesterday, 10:15</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="text-right tx-debit">-₹32,500.00</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tx-title">Client Project Milestone</div>
+                  <div class="tx-category">Inward NEFT</div>
+                </td>
+                <td>
+                  <span>ISRO Research Grant Inward</span>
+                  <div class="tx-acc-meta">Ref: NEFT-782194821</div>
+                </td>
+                <td class="tx-date">Sep 08, 2026</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="text-right tx-credit">+₹75,000.00</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="tx-title">Mobile & Fiber Recharge</div>
+                  <div class="tx-category">Utility</div>
+                </td>
+                <td>
+                  <span class="mono">Airtel Digital Broadband</span>
+                  <div class="tx-acc-meta">Ph: 9876543210</div>
+                </td>
+                <td class="tx-date">Sep 05, 2026</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="text-right tx-debit">-₹1,199.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Interactive Transfer Modal -->
+  <div class="modal-backdrop" id="transfer-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Initiate Fund Transfer</h3>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <form id="transfer-form" class="transfer-form" onsubmit="return false;">
+        <div class="form-group">
+          <label for="transfer-recipient-name">Beneficiary Full Name</label>
+          <input type="text" id="transfer-recipient-name" class="form-input" placeholder="e.g. Priya Iyer" required />
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="transfer-account-no">Beneficiary Account Number</label>
+            <input type="text" id="transfer-account-no" class="form-input mono" placeholder="12-digit Account No" required />
+          </div>
+          <div class="form-group">
+            <label for="transfer-ifsc">IFSC Code</label>
+            <input type="text" id="transfer-ifsc" class="form-input mono" value="HDFC0001244" required />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="transfer-amount">Amount (₹)</label>
+            <input type="number" id="transfer-amount" class="form-input" placeholder="5000" min="1" required />
+          </div>
+          <div class="form-group">
+            <label for="transfer-pin">Transaction Password / PIN</label>
+            <input type="password" id="transfer-pin" class="form-input mono" placeholder="••••••••" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="btn-cancel-transfer">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-transfer">Confirm & Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p><strong>PrivAgent Synthetic Banking Portal</strong> • SIH 2026 Problem Statement SIH26171 (ISRO)</p>
+      <p class="footer-notice">All displayed financial parameters, names, credit cards, and addresses are purely synthetic test records for verifying on-device privacy redaction boundaries.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
