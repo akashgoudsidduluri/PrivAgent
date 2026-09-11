@@ -32,8 +32,8 @@ FORBIDDEN_KEYS: frozenset[str] = frozenset({
     "pii",
 })
 
-# The ONLY accepted sanitized status string.
-REQUIRED_STATUS = "Sanitized Context — Local Privacy Check Passed"
+# The ONLY accepted sanitized status string in the API.
+REQUIRED_STATUS = "sanitized_only"
 
 
 class PayloadSecurityError(ValueError):

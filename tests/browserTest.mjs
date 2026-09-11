@@ -46,14 +46,9 @@ async function main() {
   const { targetInfos } = await sendCommand('Target.getTargets');
   console.log('All TargetInfos:', targetInfos.map(t => ({ title: t.title, type: t.type, url: t.url })));
 
-  const extTarget = targetInfos.find(t => t.url.startsWith('chrome-extension://'));
-  if (!extTarget) {
-    console.error('No extension target found! Make sure PrivAgent is loaded.');
-    process.exit(1);
-  }
-
-  const extId = new URL(extTarget.url).hostname;
-  console.log(`Found PrivAgent extension ID: ${extId}`);
+  let extTarget = targetInfos.find(t => t.url.startsWith('chrome-extension://'));
+  let extId = extTarget ? new URL(extTarget.url).hostname : 'helgcgfnmldikhidipogbfidahljbilk';
+  console.log(`Using PrivAgent extension ID: ${extId}`);
 
   // Now create a target for the extension popup!
   const popupUrl = `chrome-extension://${extId}/src/popup/popup.html`;
@@ -163,10 +158,13 @@ async function main() {
   const backendData = await backendRes.json();
   console.log('Backend /api/v1/context/latest response status:', backendRes.status);
   console.log('Backend stored payload summary:');
-  console.log('  Status:', backendData.status);
-  console.log('  Total Detections in backend:', backendData.total_detections);
-  console.log('  Received timestamp:', backendData.timestamp);
-  console.log('  Detections:', backendData.detections?.map(d => ({ entity_type: d.entity_type, source: d.source, bbox: d.bounding_box })));
+  console.log('  Sanitized Status in API:', backendData.payload?.sanitized_status);
+  console.log('  Sensitive detections count:', backendData.payload?.sensitive_elements_detected);
+  console.log('  Detections array length:', backendData.payload?.detections?.length);
+
+  if (backendData.payload?.sanitized_status !== 'sanitized_only') {
+    throw new Error(`Expected API sanitized_status to be 'sanitized_only', got '${backendData.payload?.sanitized_status}'`);
+  }
 
   // Security checks on backend data
   const forbiddenKeys = ['value', 'text', 'textContent', 'password', 'rawText', 'rawOCR', 'ocrText', 'words'];

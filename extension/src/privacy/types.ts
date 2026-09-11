@@ -161,7 +161,7 @@ export interface AgentContextPayload {
   detections: AgentDetection[];
   total_elements_scanned: number;
   sensitive_elements_detected: number;
-  sanitized_status: 'Sanitized Context — Local Privacy Check Passed';
+  sanitized_status: 'sanitized_only';
   ocr_metrics: AgentOCRMetrics | null;
 }
 
@@ -247,7 +247,7 @@ export function buildAgentPayload(
     detections,
     total_elements_scanned: domScanReport.totalElementsScanned,
     sensitive_elements_detected: domScanReport.sensitiveElementsDetected,
-    sanitized_status: 'Sanitized Context — Local Privacy Check Passed',
+    sanitized_status: 'sanitized_only',
     ocr_metrics,
   };
 }

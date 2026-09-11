@@ -30,9 +30,9 @@ describe('PrivAgent OCR Sensitive Data Detector', () => {
 
     const detections = detectSensitiveOCRRegions(ocrResult, defaultDims);
     expect(detections.length).toBe(1);
-    expect(detections[0].type).toBe('email');
-    expect(detections[0].source).toBe('ocr');
-    expect(detections[0].bbox).toEqual([130, 100, 250, 30]); // [x, y, w, h]
+    expect(detections[0]!.type).toBe('email');
+    expect(detections[0]!.source).toBe('ocr');
+    expect(detections[0]!.bbox).toEqual([130, 100, 250, 30]); // [x, y, w, h]
   });
 
   it('should detect Indian PAN card number (e.g. ABCDE1234F)', () => {
@@ -48,9 +48,9 @@ describe('PrivAgent OCR Sensitive Data Detector', () => {
 
     const detections = detectSensitiveOCRRegions(ocrResult, defaultDims);
     expect(detections.length).toBe(1);
-    expect(detections[0].type).toBe('pan');
-    expect(detections[0].confidence).toBeGreaterThanOrEqual(0.95);
-    expect(detections[0].bbox).toEqual([90, 200, 130, 25]);
+    expect(detections[0]!.type).toBe('pan');
+    expect(detections[0]!.confidence).toBeGreaterThanOrEqual(0.95);
+    expect(detections[0]!.bbox).toEqual([90, 200, 130, 25]);
   });
 
   it('should detect multi-word credit card with Luhn verification', () => {
@@ -76,8 +76,8 @@ describe('PrivAgent OCR Sensitive Data Detector', () => {
 
     const detections = detectSensitiveOCRRegions(ocrResult, defaultDims);
     expect(detections.length).toBe(1);
-    expect(detections[0].type).toBe('credit_card');
-    expect(detections[0].confidence).toBeGreaterThanOrEqual(0.98);
+    expect(detections[0]!.type).toBe('credit_card');
+    expect(detections[0]!.confidence).toBeGreaterThanOrEqual(0.98);
   });
 
   it('should REJECT fake card numbers that fail Luhn validation', () => {
@@ -128,7 +128,7 @@ describe('PrivAgent OCR Sensitive Data Detector', () => {
 
     const detections = detectSensitiveOCRRegions(ocrResult, defaultDims);
     expect(detections.length).toBe(1);
-    expect(detections[0].type).toBe('phone');
+    expect(detections[0]!.type).toBe('phone');
   });
 
   it('should detect bank account numbers when accompanied by account keyword context', () => {
@@ -236,8 +236,8 @@ describe('PrivAgent OCR Sensitive Data Detector', () => {
     const detections = detectSensitiveOCRRegions(ocrResult, defaultDims);
     // Only the partially visible one is kept, clamped to width=1000
     expect(detections.length).toBe(1);
-    expect(detections[0].isPartiallyVisible).toBe(true);
-    expect(detections[0].bbox[0]).toBe(950);
-    expect(detections[0].bbox[2]).toBe(50); // 1000 - 950 = 50 width
+    expect(detections[0]!.isPartiallyVisible).toBe(true);
+    expect(detections[0]!.bbox[0]).toBe(950);
+    expect(detections[0]!.bbox[2]).toBe(50); // 1000 - 950 = 50 width
   });
 });

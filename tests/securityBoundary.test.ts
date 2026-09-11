@@ -19,6 +19,9 @@ describe('PrivAgent Security Boundary Invariants', () => {
       credit_card: 0,
       account_number: 0,
       person_name: 0,
+      pan: 0,
+      otp: 0,
+      cvv: 0,
     },
     detections: [
       {

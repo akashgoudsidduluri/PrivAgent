@@ -13,7 +13,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 # ── Shared strict base ────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ class StrictModel(BaseModel):
     Base model with extra='forbid'. Unknown fields are REJECTED.
     This is critical: silently dropping an unknown sensitive field could hide a bug.
     """
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
 
 # ── Enums ─────────────────────────────────────────────────────────────────────
@@ -112,8 +112,8 @@ class OCRMetrics(StrictModel):
 
 # ── Main payload ──────────────────────────────────────────────────────────────
 
-# The ONLY accepted sanitized status string.
-_REQUIRED_STATUS = "Sanitized Context — Local Privacy Check Passed"
+# The ONLY accepted sanitized status string in the API.
+_REQUIRED_STATUS = "sanitized_only"
 
 
 class AgentContextPayload(StrictModel):
@@ -123,7 +123,7 @@ class AgentContextPayload(StrictModel):
 
     Security invariants:
       - extra='forbid': unknown fields cause a 422 rejection.
-      - sanitized_status must EXACTLY equal the required sentinel string.
+      - sanitized_status must EXACTLY equal the required sentinel string 'sanitized_only'.
       - detections are individually validated for forbidden keys.
       - The backend security.py runs an additional independent recursive scan.
     """
@@ -134,7 +134,9 @@ class AgentContextPayload(StrictModel):
     detections: List[SafeDetectionExport]
     total_elements_scanned: Annotated[int, Field(ge=0)]
     sensitive_elements_detected: Annotated[int, Field(ge=0)]
-    sanitized_status: str
+    sanitized_status: str = Field(
+        validation_alias=AliasChoices("sanitized_status", "sanitizedStatus"),
+    )
     ocr_metrics: Optional[OCRMetrics] = None
 
     @field_validator("sanitized_status")

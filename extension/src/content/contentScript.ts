@@ -39,6 +39,9 @@ function createExcludedReport(): PrivacyScanReport {
       email: 0,
       phone: 0,
       person_name: 0,
+      pan: 0,
+      otp: 0,
+      cvv: 0,
     },
     detections: [],
     status: 'Excluded Site',
@@ -68,6 +71,9 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
     email: 0,
     phone: 0,
     person_name: 0,
+    pan: 0,
+    otp: 0,
+    cvv: 0,
   };
 
   for (const det of detections) {

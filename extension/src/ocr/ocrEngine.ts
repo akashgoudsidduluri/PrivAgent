@@ -1,6 +1,8 @@
 import { createWorker, Worker } from 'tesseract.js';
 import { InternalOCRLine, InternalOCRResult, InternalOCRWord, OCREngine, OCRWordBox } from './types';
 
+export type { OCREngine, InternalOCRLine, InternalOCRResult, InternalOCRWord, OCRWordBox };
+
 export interface LocalOCREngineOptions {
   workerPath?: string;
   corePath?: string;

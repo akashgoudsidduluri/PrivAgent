@@ -143,7 +143,10 @@ async function getActiveWebTab(): Promise<chrome.tabs.Tab | null> {
     return activeTab;
   }
   const tabs = await chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] });
-  return tabs.length > 0 ? tabs[0] : (activeTab ?? null);
+  if (tabs.length > 0 && tabs[0]) {
+    return tabs[0];
+  }
+  return activeTab ?? null;
 }
 
 async function sendTabMessage(msg: ExtensionMessage): Promise<any> {

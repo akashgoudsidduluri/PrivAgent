@@ -48,7 +48,7 @@ describe('PrivAgent Local OCR Engine', () => {
     expect(result.lines.length).toBe(1);
     expect(result.fullText).toBe('Account Number: 1234 5678 9012');
     expect(result.latencyMs).toBeGreaterThan(0);
-    expect(result.words[0].bbox).toEqual({ x0: 40, y0: 100, x1: 100, y1: 125 });
+    expect(result.words[0]!.bbox).toEqual({ x0: 40, y0: 100, x1: 100, y1: 125 });
   });
 
   it('should handle empty OCR results gracefully without crashing', async () => {

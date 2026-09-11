@@ -36,7 +36,7 @@ const FORBIDDEN_KEYS = new Set([
   'words', 'lines', 'raw', 'input', 'sensitiveValue', 'pii',
 ]);
 
-const REQUIRED_STATUS = 'Sanitized Context — Local Privacy Check Passed' as const;
+const REQUIRED_STATUS = 'sanitized_only' as const;
 
 // ── Result types ──────────────────────────────────────────────────────────────
 

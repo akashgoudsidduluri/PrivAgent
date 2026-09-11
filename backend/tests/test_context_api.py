@@ -39,7 +39,7 @@ def _valid_payload(**overrides) -> dict:
         ],
         "total_elements_scanned": 40,
         "sensitive_elements_detected": 1,
-        "sanitized_status": "Sanitized Context — Local Privacy Check Passed",
+        "sanitized_status": "sanitized_only",
         "ocr_metrics": {
             "regions_scanned": 10,
             "sensitive_detected": 1,
@@ -101,7 +101,7 @@ def test_post_then_get_latest_returns_payload():
     data = get_resp.json()
     assert "payload" in data
     assert data["payload"]["url"] == "http://localhost:8002/"
-    assert data["payload"]["sanitized_status"] == "Sanitized Context — Local Privacy Check Passed"
+    assert data["payload"]["sanitized_status"] == "sanitized_only"
     assert len(data["payload"]["detections"]) == 1
     assert "received_at" in data
 
@@ -214,6 +214,22 @@ def test_post_with_empty_sanitized_status_rejected():
     bad = _valid_payload(sanitized_status="")
     resp = client.post("/api/v1/context", json=bad)
     assert resp.status_code in (400, 422)
+
+
+def test_post_with_human_readable_ui_status_rejected():
+    """Human-readable UI status string must NOT be accepted in the API payload."""
+    bad = _valid_payload(sanitized_status="Sanitized Context — Local Privacy Check Passed")
+    resp = client.post("/api/v1/context", json=bad)
+    assert resp.status_code in (400, 422)
+
+
+def test_post_with_camel_case_sanitized_status_accepted():
+    """CamelCase 'sanitizedStatus: sanitized_only' must be accepted."""
+    payload = _valid_payload()
+    del payload["sanitized_status"]
+    payload["sanitizedStatus"] = "sanitized_only"
+    resp = client.post("/api/v1/context", json=payload)
+    assert resp.status_code == 201
 
 
 # ── Unknown unexpected fields — extra='forbid' ───────────────────────────────

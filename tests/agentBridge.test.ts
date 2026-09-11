@@ -152,7 +152,7 @@ describe('buildAgentPayload — allowlist enforcement', () => {
 
   it('payload carries the correct sanitized_status sentinel', () => {
     const payload = buildAgentPayload(makeDomReport(), null)!;
-    expect(payload.sanitized_status).toBe('Sanitized Context — Local Privacy Check Passed');
+    expect(payload.sanitized_status).toBe('sanitized_only');
   });
 
   it('payload contains ONLY allowlisted top-level fields', () => {
@@ -184,13 +184,13 @@ describe('buildAgentPayload — DOM-only path', () => {
   it('detections come from DOM report when no visual report provided', () => {
     const payload = buildAgentPayload(makeDomReport(), null)!;
     expect(payload.detections).toHaveLength(2);
-    expect(payload.detections[0].type).toBe('email');
-    expect(payload.detections[1].type).toBe('credit_card');
+    expect(payload.detections[0]!.type).toBe('email');
+    expect(payload.detections[1]!.type).toBe('credit_card');
   });
 
   it('detection bbox is converted to object form {x,y,width,height}', () => {
     const payload = buildAgentPayload(makeDomReport(), null)!;
-    const bbox = payload.detections[0].bbox;
+    const bbox = payload.detections[0]!.bbox;
     expect(bbox).toHaveProperty('x', 100);
     expect(bbox).toHaveProperty('y', 200);
     expect(bbox).toHaveProperty('width', 220);
@@ -199,7 +199,7 @@ describe('buildAgentPayload — DOM-only path', () => {
 
   it('detection preserves length, confidence, source, selector', () => {
     const payload = buildAgentPayload(makeDomReport(), null)!;
-    const det = payload.detections[0];
+    const det = payload.detections[0]!;
     expect(det.confidence).toBe(0.98);
     expect(det.length).toBe(25);
     expect(det.source).toBe('dom_input_type');
