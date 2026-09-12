@@ -62,6 +62,8 @@ def verify_payload_invariants(raw: dict) -> None:
       1. Recursive forbidden-key scan across all dicts and lists.
       2. Validates sanitized_status is the exact required sentinel.
       3. Basic structural sanity checks on detections.
+      4. Milestone 7: scan of optional action-history entries — safe
+         browser-action metadata only.
 
     Raises:
         PayloadSecurityError: if any invariant is violated.
@@ -117,6 +119,30 @@ def verify_payload_invariants(raw: dict) -> None:
                     raise PayloadSecurityError(
                         f"[PrivAgent Backend Security] Detection[{i}].bbox missing '{dim}'."
                     )
+
+
+    # 4. Milestone 7: action history (safe metadata only)
+    history = raw.get("history", [])
+    if history:
+        if not isinstance(history, list):
+            raise PayloadSecurityError(
+                "[PrivAgent Backend Security] 'history' must be a list."
+            )
+        for i, entry in enumerate(history):
+            if not isinstance(entry, dict):
+                raise PayloadSecurityError(
+                    f"[PrivAgent Backend Security] history[{i}] is not an object."
+                )
+            if "action" not in entry:
+                raise PayloadSecurityError(
+                    f"[PrivAgent Backend Security] history[{i}] missing 'action'."
+                )
+            allowed = {"click", "scroll", "type", "select", "navigate"}
+            if entry.get("action") not in allowed:
+                raise PayloadSecurityError(
+                    f"[PrivAgent Backend Security] history[{i}].action "
+                    f"'{entry.get('action')}' is not an allowed action type."
+                )
 
 
 def _scan_keys_recursive(obj: object, path: str) -> None:

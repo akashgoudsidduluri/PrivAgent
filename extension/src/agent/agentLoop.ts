@@ -28,6 +28,7 @@ import { BrowserAction, ActionType } from './actionTypes';
 import { validateAction } from './actionValidator';
 import { canPerformAction, assertSanitizedContextSafe } from './privacyPolicy';
 import { AgentProvider } from './agentProvider';
+import { ProviderError } from './openRouterProvider';
 import { AgentContextPayload, SensitiveEntityType } from '../privacy/types';
 
 export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION';
@@ -56,6 +57,13 @@ export interface TaskState {
   retryCount: number;
   maxSteps: number;
   maxRetries: number;
+  /**
+   * M7 Phase 4: total provider reasoning attempts across the WHOLE task,
+   * tracked separately from `retryCount` (which counts validator/execution
+   * retries within M6). Observable and explicitly bounded:
+   * total ≤ maxSteps × (1 + providerRetries).
+   */
+  providerAttempts: number;
   reason?: string;
   requiresUserConfirmationAction?: BrowserAction;
 }
@@ -84,6 +92,14 @@ export interface AgentLoopOptions {
   maxRetries?: number;
   delayBetweenStepsMs?: number;
   requireConfirmationForExternalNavigation?: boolean;
+  /**
+   * M7: bounded retries for RETRYABLE provider failures (network, 5xx, rate
+   * limit, timeout) within a single reasoning step. This is NOT a second
+   * agent loop — M6 still owns iteration, perception, and all other bounds.
+   * Non-retryable failures (auth, malformed output) fail immediately.
+   */
+  providerRetries?: number;
+  providerRetryDelayMs?: number;
 }
 
 // Complete normalized forbidden key set that must never appear anywhere in TaskState
@@ -127,6 +143,8 @@ export class AgentLoop {
   private maxRetries: number;
   private delayBetweenStepsMs: number;
   private requireConfirmationForExternalNavigation: boolean;
+  private providerRetries: number;
+  private providerRetryDelayMs: number;
   private state: TaskState;
 
   constructor(
@@ -141,6 +159,8 @@ export class AgentLoop {
     this.delayBetweenStepsMs = options.delayBetweenStepsMs ?? 200;
     this.requireConfirmationForExternalNavigation =
       options.requireConfirmationForExternalNavigation ?? true;
+    this.providerRetries = options.providerRetries ?? 2;
+    this.providerRetryDelayMs = options.providerRetryDelayMs ?? 250;
 
     this.state = {
       task: '',
@@ -153,6 +173,7 @@ export class AgentLoop {
       retryCount: 0,
       maxSteps: this.maxSteps,
       maxRetries: this.maxRetries,
+      providerAttempts: 0,
     };
   }
 
@@ -175,6 +196,7 @@ export class AgentLoop {
     this.state.steps = [];
     this.state.visitedElementIds = [];
     this.state.retryCount = 0;
+    this.state.providerAttempts = 0;
     this.state.reason = undefined;
     this.state.requiresUserConfirmationAction = undefined;
 
@@ -208,11 +230,12 @@ export class AgentLoop {
         break;
       }
 
-      // 4. Agent Reasoning Layer
+      // 4. Agent Reasoning Layer (M6 calls the provider ONCE per step; a
+      // bounded retry wraps ONLY retryable provider/transport failures)
       this.state.currentStep++;
       let action: BrowserAction;
       try {
-        action = await this.provider.requestAction(task, context, this.state.previousActions);
+        action = await this.requestActionWithBoundedRetry(task, context);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.state.status = 'FAILED';
@@ -337,6 +360,32 @@ export class AgentLoop {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  /**
+   * M7: single reasoning request with bounded retry for retryable provider
+   * failures only. Never retries on invalid output/auth — those fail safely
+   * and M6 decides the next step (or terminates).
+   */
+  private async requestActionWithBoundedRetry(
+    task: string,
+    context: AgentContextPayload
+  ): Promise<BrowserAction> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= this.providerRetries; attempt++) {
+      this.state.providerAttempts++;
+      try {
+        return await this.provider.requestAction(task, context, this.state.previousActions);
+      } catch (err: unknown) {
+        lastError = err;
+        const retryable = err instanceof ProviderError ? err.retryable : false;
+        if (!retryable || attempt >= this.providerRetries) {
+          break;
+        }
+        await this.delay(this.providerRetryDelayMs);
+      }
+    }
+    throw lastError;
+  }
 
   private isConsequentialAction(action: BrowserAction, currentUrl: string): boolean {
     if (action.action === 'navigate' && this.requireConfirmationForExternalNavigation) {

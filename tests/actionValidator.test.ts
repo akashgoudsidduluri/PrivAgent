@@ -168,19 +168,30 @@ describe('PrivAgent Action Validator', () => {
   });
 
   // Test 9: Valid type action accepted
+  // M7 note: free-text is now scanned for sensitive content. A bare full name
+  // ("John Doe") is intentionally blocked as PII — the demo target is a name
+  // field, so the synthetic test text uses non-PII prose instead.
   it('9. accepts a valid type action on a known element', () => {
     const typeAction = {
       action: 'type',
       target: 'element_8',
-      text: 'John Doe',
-      reason: 'Enter user name',
+      text: 'billing inquiry about invoice 42',
+      reason: 'Enter search query',
     };
     const result = validateAction(typeAction, MOCK_CONTEXT);
     expect(result.allowed).toBe(true);
     if (result.allowed) {
       expect(result.action.action).toBe('type');
-      expect((result.action as any).text).toBe('John Doe');
+      expect((result.action as any).text).toBe('billing inquiry about invoice 42');
     }
+
+    // M7: full person names are treated as PII and rejected in free text
+    const nameLeak = {
+      action: 'type',
+      target: 'element_8',
+      text: 'John Doe',
+    };
+    expect(validateAction(nameLeak, MOCK_CONTEXT).allowed).toBe(false);
   });
 
   // Test 10: Valid select action accepted

@@ -13,6 +13,8 @@ import { detectSensitiveOCRRegions } from '../ocr/ocrDetector';
 import { mapDOMToScreenshot } from '../capture/coordinateMapper';
 import { checkBackendHealth, sendSanitizedContext } from '../agent/agentBridge';
 import { MockAgentProvider } from '../agent/mockAgentProvider';
+import { BackendAgentProvider } from '../agent/backendAgentProvider';
+import { AgentProvider } from '../agent/agentProvider';
 import { validateAction } from '../agent/actionValidator';
 import { canPerformAction } from '../agent/privacyPolicy';
 import { BrowserAction } from '../agent/actionTypes';
@@ -670,6 +672,42 @@ presetBtns.forEach((btn) => {
 
 const defaultAgentProvider = new MockAgentProvider();
 
+// ── M7: Provider selection (backend→Gemma default; mock for offline dev) ────
+type SelectedProviderType = 'backend' | 'mock';
+
+const providerSelect = document.getElementById('agent-provider-select') as HTMLSelectElement | null;
+const providerStatusEl = document.getElementById('m6-provider-status');
+const reasoningLatencyEl = document.getElementById('m6-reasoning-latency');
+
+function getSelectedProviderType(): SelectedProviderType {
+  return (providerSelect?.value as SelectedProviderType) || 'backend';
+}
+
+function createAgentLoopProvider(type: SelectedProviderType): AgentProvider {
+  // PRODUCTION: backend provider → local FastAPI → Gemma via OpenRouter.
+  // The API key NEVER reaches the extension. Mock stays for offline dev/tests.
+  if (type === 'mock') return new MockAgentProvider();
+  return new BackendAgentProvider({ timeoutMs: 30000 });
+}
+
+function updateProviderStatusLabel(): void {
+  if (providerStatusEl) {
+    const type = getSelectedProviderType();
+    providerStatusEl.textContent = type === 'mock' ? 'mock (offline)' : 'backend → Gemma (OpenRouter)';
+    providerStatusEl.style.color = type === 'mock' ? '#9ca3af' : '#34d399';
+  }
+}
+
+providerSelect?.addEventListener('change', updateProviderStatusLabel);
+updateProviderStatusLabel();
+
+function setReasoningLatency(label: string, isError = false): void {
+  if (reasoningLatencyEl) {
+    reasoningLatencyEl.textContent = label;
+    reasoningLatencyEl.style.color = isError ? '#ef4444' : '#9ca3af';
+  }
+}
+
 btnRunAgentTask?.addEventListener('click', async () => {
   const task = agentTaskInput?.value?.trim() || 'Find and click the account number field';
 
@@ -720,9 +758,15 @@ btnRunAgentTask?.addEventListener('click', async () => {
     return;
   }
 
+  // M7: selected provider (backend→Gemma is production; mock is offline dev)
+  const stepProvider = createAgentLoopProvider(getSelectedProviderType());
+
   try {
     // 3. Agent reasoning (produces structured action from sanitized context only)
-    const action = await defaultAgentProvider.requestAction(task, context);
+    const reasoningStart = performance.now();
+    const action = await stepProvider.requestAction(task, context);
+    const reasoningMs = performance.now() - reasoningStart;
+    setReasoningLatency(`${reasoningMs.toFixed(0)} ms`);
     const displayAction = formatActionForDisplay(action);
     if (m5ProposedAction) m5ProposedAction.textContent = displayAction;
 
@@ -924,16 +968,30 @@ async function runAutonomousLoop(task: string): Promise<void> {
     },
   };
 
-  activeLoopInstance = new AgentLoop(defaultAgentProvider, loopCallbacks, {
+  // M7: provider is selected in the UI (backend→Gemma default). One provider
+  // instance is reused across loop steps; M6 owns the loop itself.
+  const loopProvider = createAgentLoopProvider(getSelectedProviderType());
+  const reasoningStart = performance.now();
+
+  activeLoopInstance = new AgentLoop(loopProvider, loopCallbacks, {
     maxSteps: 10,
     maxRetries: 2,
     delayBetweenStepsMs: 400,
+    providerRetries: 2,
+    providerRetryDelayMs: 300,
   });
 
   try {
     const finalState = await activeLoopInstance.runTask(task);
+    const totalReasoningMs = performance.now() - reasoningStart;
+    // M7 Phase 4: honest telemetry — total loop wall time + observable,
+    // bounded provider attempt count (≤ maxSteps × (1 + providerRetries)).
+    setReasoningLatency(
+      `Σ ${totalReasoningMs.toFixed(0)} ms wall · ${finalState.providerAttempts} LLM call(s) · ${finalState.steps.length} step(s)`
+    );
     updateTelemetryFromState(finalState);
   } catch (err: unknown) {
+    setReasoningLatency('failed', true);
     if (m6TaskStatus) {
       m6TaskStatus.textContent = 'FAILED';
       m6TaskStatus.style.color = '#ef4444';

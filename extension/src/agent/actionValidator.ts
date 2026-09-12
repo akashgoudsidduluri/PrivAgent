@@ -27,6 +27,7 @@ import {
   MIN_SCROLL_AMOUNT,
 } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
+import { isValidLuhn } from '../privacy/patterns';
 
 // Sensitive keys that must not appear as properties anywhere in the action object
 const FORBIDDEN_SENSITIVE_KEYS = new Set([
@@ -43,6 +44,95 @@ const ALLOWED_ACTION_KEYS: Record<ActionType, ReadonlySet<string>> = {
   select: new Set(['action', 'target', 'option', 'reason']),
   navigate: new Set(['action', 'url', 'reason']),
 };
+
+// ── Sensitive-content scan for free-text action fields (M7) ───────────────
+//
+// The LLM is UNTRUSTED: a `type` action's `text` (and a `select` action's
+// `option`) must never become a smuggling channel for raw PII. Pattern-level
+// checks complement the forbidden-key scan above. These are deliberately
+// high-precision patterns (Luhn-validated cards, structured IDs, labeled
+// credentials) to avoid blocking legitimate non-sensitive text.
+
+const EMAIL_PATTERN = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
+const INDIAN_PHONE_PATTERN = /(?:^|[\s(-])(\+?91[-\s]?)?[6-9]\d{9}(?=$|[\s).,])/;
+// PAN: privacy-first over-approximation — the 4th character class accepts any
+// letter (the audit found the demo fixture 'ABCDE1234F' passed when 'D' was
+// excluded). Over-blocking a benign token here costs far less than leaking a PAN.
+const PAN_PATTERN = /\b[A-Z]{3}[A-Z][A-Z]\d{4}[A-Z]\b/;
+const LABELLED_CREDENTIAL_PATTERN = /(?:password|passcode|cvv|otp|pin)\s*[:=]\s*\S+/i;
+// Conservative, privacy-first heuristics (M7):
+//  - Full person names: two consecutive capitalized words. Over-blocks some
+//    benign proper-noun text — accepted tradeoff: privacy wins over convenience.
+//  - Credential-shaped tokens: 8+ char single token mixing upper, lower and
+//    digits (e.g. unlabelled passwords like "DemoPassword123").
+const FULL_NAME_PATTERN = /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/;
+const CREDENTIAL_TOKEN_PATTERN = /\b(?=[^\s]*[A-Z])(?=[^\s]*[a-z])(?=[^\s]*\d)[^\s]{8,}\b/;
+
+// M7 Phase 5 (HIGH-4, extension side): the `reason` field re-enters M6
+// previousActions and the next LLM prompt, so it is scanned too — with a
+// context-aware person-name rule mirroring backend text_safety.scan_reason_text:
+// benign UI reasons start with an action verb ("Clicked Account Details") and
+// stay exempt; verb-free reasons containing a TitleCase name bigram are blocked.
+const REASON_ACTION_VERBS = new Set([
+  'click', 'clicked', 'clicking', 'scroll', 'scrolled', 'scrolling',
+  'type', 'typed', 'typing', 'select', 'selected', 'selecting',
+  'navigate', 'navigated', 'navigating', 'open', 'opened', 'opening',
+  'close', 'closed', 'closing', 'submit', 'submitted', 'submitting',
+  'fill', 'filled', 'filling', 'enter', 'entered', 'entering',
+  'find', 'finding', 'found', 'locate', 'locating', 'located',
+  'reveal', 'revealing', 'search', 'searching', 'wait', 'waiting',
+  'retry', 'retrying', 'retried', 'proceed', 'proceeding', 'proceeded',
+  'skip', 'skipping', 'skipped', 'stop', 'stopped', 'stopping',
+  'target', 'targeting', 'focus', 'focusing', 'complete', 'completed',
+  'completing', 'finish', 'finished', 'verify', 'verified', 'verifying',
+  'task', 'step', 'action',
+]);
+
+function startsWithActionVerb(reason: string): boolean {
+  const firstWord = reason.trim().toLowerCase().split(/\s+/)[0] ?? '';
+  return REASON_ACTION_VERBS.has(firstWord.replace(/[.,;:!]$/, ''));
+}
+
+function containsSensitiveReasonContent(candidate: string): boolean {
+  if (!candidate) return false;
+  if (containsSensitiveContent(candidate)) return true;
+  if (!startsWithActionVerb(candidate) && FULL_NAME_PATTERN.test(candidate)) {
+    return true;
+  }
+  return false;
+}
+
+function containsSensitiveContent(candidate: string): boolean {
+  if (!candidate) return false;
+
+  // Luhn-validated credit card candidate (13-19 digits with optional separators)
+  const digitRuns = candidate.replace(/[-\s]/g, '').match(/\d{13,19}/g);
+  if (digitRuns && digitRuns.some((run) => isValidLuhn(run))) {
+    return true;
+  }
+
+  if (LABELLED_CREDENTIAL_PATTERN.test(candidate)) return true;
+  if (PAN_PATTERN.test(candidate)) return true;
+
+  // Structured account numbers only: 9+ digit runs (pure digit strings).
+  // Short numbers that could be amounts/dates/IDs are not treated as PII.
+  if (/\b\d{9,}\b/.test(candidate)) return true;
+
+  // Email addresses are PII in free text.
+  if (EMAIL_PATTERN.test(candidate)) return true;
+
+  // Indian mobile numbers (optionally +91 prefixed) — exclude bare amounts
+  // by requiring a boundary/separator context before the number.
+  if (INDIAN_PHONE_PATTERN.test(candidate)) return true;
+
+  // Full person names (privacy-first; see heuristic notes above).
+  if (FULL_NAME_PATTERN.test(candidate)) return true;
+
+  // Credential-shaped tokens (unlabelled passwords, API keys).
+  if (CREDENTIAL_TOKEN_PATTERN.test(candidate)) return true;
+
+  return false;
+}
 
 /**
  * Validates a proposed action against the current sanitized context and security rules.
@@ -94,9 +184,12 @@ export function validateAction(
     }
   }
 
-  // Reason field check (if present, must be string)
+  // Reason field check (if present, must be string + PII-free)
   if ('reason' in actionObj && actionObj.reason !== undefined && typeof actionObj.reason !== 'string') {
     return fail("Field 'reason' must be a string if provided.");
+  }
+  if (typeof actionObj.reason === 'string' && containsSensitiveReasonContent(actionObj.reason)) {
+    return fail("Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.");
   }
 
   // 5. Specific action validation
@@ -186,6 +279,11 @@ function validateType(
     return fail("Action 'type' text contains prohibited script injection syntax.");
   }
 
+  // M7: untrusted LLM must not smuggle raw PII through free-text fields
+  if (containsSensitiveContent(text)) {
+    return fail("Action 'type' text appears to contain sensitive values (PII). Values must never transit through agent actions.");
+  }
+
   const targetId = target.trim();
   const detection = findDetection(targetId, context);
   if (!detection) {
@@ -214,6 +312,11 @@ function validateSelect(
   const option = obj.option;
   if (typeof option !== 'string' || !option.trim()) {
     return fail("Action 'select' requires a non-empty string 'option'.");
+  }
+
+  // M7: untrusted LLM must not smuggle raw PII through the option field
+  if (containsSensitiveContent(option)) {
+    return fail("Action 'select' option appears to contain sensitive values (PII).");
   }
 
   const targetId = target.trim();

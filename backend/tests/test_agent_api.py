@@ -1,13 +1,17 @@
 """
-PrivAgent Backend Tests — Agent Reasoning API (Milestone 5)
+PrivAgent Backend Tests — Agent Reasoning API (Milestones 5 → 7, M7 semantics)
 
 Tests:
-  - POST /api/v1/agent/action accepts sanitized context and returns structured action.
-  - Task matching 'account number' targets account_number element.
-  - Task matching 'scroll' returns bounded scroll action.
-  - Forbidden keys anywhere in the request body result in 422 rejection.
+  - POST /api/v1/agent/action accepts sanitized context and returns a structured action.
+  - Mock reasoner targets only elements that exist in the sanitized context.
+  - No guessing: reasoning failure / unknown target / invalid model output fail safely.
+  - Forbidden keys anywhere in the request body result in rejection.
   - Context with invalid sanitized_status is rejected.
-  - LLM cannot receive raw PII through the agent route.
+  - Action-history metadata is accepted and validated.
+  - Telemetry contains provider/model/latency but never key material or prompts.
+
+The real-LLM path (OpenRouter) is exercised through mocks in test_reasoner.py;
+no test in this suite performs a live network call.
 """
 import pytest
 from fastapi.testclient import TestClient
@@ -50,34 +54,87 @@ VALID_CONTEXT = {
 }
 
 
+def _post_agent(body):
+    return client.post("/api/v1/agent/action", json=body)
+
+
 def test_agent_action_account_number_task():
-    """Valid task to find account number returns structured click action on det_acc_1."""
+    """Sanitized task returns a structured click action targeting the matching element."""
     req_body = {
         "task": "Find and click the account number field",
         "context": VALID_CONTEXT,
     }
-    resp = client.post("/api/v1/agent/action", json=req_body)
+    resp = _post_agent(req_body)
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
     assert data["action"]["action"] == "click"
     assert data["action"]["target"] == "det_acc_1"
-    assert "account number" in data["action"]["reason"].lower()
+    # M7: telemetry is present and key-free
+    assert data["telemetry"]["provider"] in ("mock", "openrouter")
+    assert "latency_ms" in data["telemetry"]
+    assert "OPENROUTER" not in resp.text and "sk-" not in resp.text
 
 
 def test_agent_action_scroll_task():
-    """Scroll task returns structured scroll action with bounded amount."""
+    """Scroll task returns a structured scroll action with bounded amount."""
     req_body = {
         "task": "Scroll down to see more transactions",
         "context": VALID_CONTEXT,
     }
-    resp = client.post("/api/v1/agent/action", json=req_body)
+    resp = _post_agent(req_body)
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True
     assert data["action"]["action"] == "scroll"
     assert data["action"]["direction"] == "down"
     assert 1 <= data["action"]["amount"] <= 5000
+
+
+def test_agent_action_with_safe_history_metadata():
+    """Safe action history is accepted and does not change the response shape."""
+    req_body = {
+        "task": "Open the account details and find the recent transactions",
+        "context": VALID_CONTEXT,
+        "history": [
+            {"action": "click", "target": "det_acc_1", "reason": "step 1"},
+            {"action": "scroll", "direction": "down", "amount": 500},
+        ],
+    }
+    resp = _post_agent(req_body)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["success"] is True
+    assert data["action"]["action"] in ("click", "scroll")
+
+
+def test_agent_action_rejects_unsafe_history_entry():
+    """History entries that are not allowlisted browser actions are rejected."""
+    req_body = {
+        "task": "Find account",
+        "context": VALID_CONTEXT,
+        "history": [{"action": "eval", "code": "alert(1)"}],
+    }
+    resp = _post_agent(req_body)
+    assert resp.status_code in (422, 400)
+
+
+def test_agent_action_no_guessing_without_matching_element():
+    """A task with no matching element in context fails safely instead of guessing."""
+    empty_context = dict(VALID_CONTEXT)
+    empty_context["detections"] = []
+    req_body = {
+        "task": "Find and click the account number field",
+        "context": empty_context,
+    }
+    resp = _post_agent(req_body)
+    # Fail closed: either 422 (validation) or 503 (reasoning unavailable).
+    assert resp.status_code in (422, 503)
+    body = resp.json()
+    detail = body.get("detail")
+    if isinstance(detail, dict):
+        assert detail.get("success") is False
+        assert "action" not in detail
 
 
 def test_agent_action_rejects_top_level_forbidden_key():
@@ -87,7 +144,7 @@ def test_agent_action_rejects_top_level_forbidden_key():
         "context": VALID_CONTEXT,
         "password": "secret_password_value",
     }
-    resp = client.post("/api/v1/agent/action", json=req_body)
+    resp = _post_agent(req_body)
     assert resp.status_code == 422
     assert "forbidden" in resp.text.lower() or "extra" in resp.text.lower()
 
@@ -112,7 +169,7 @@ def test_agent_action_rejects_value_in_context():
         "task": "Find account",
         "context": bad_context,
     }
-    resp = client.post("/api/v1/agent/action", json=req_body)
+    resp = _post_agent(req_body)
     assert resp.status_code == 422
     assert "forbidden" in resp.text.lower() or "value" in resp.text.lower()
 
@@ -125,5 +182,5 @@ def test_agent_action_rejects_invalid_sanitized_status():
         "task": "Find account",
         "context": bad_context,
     }
-    resp = client.post("/api/v1/agent/action", json=req_body)
+    resp = _post_agent(req_body)
     assert resp.status_code == 422

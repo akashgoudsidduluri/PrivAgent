@@ -16,6 +16,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from . import config
 from .models import HealthResponse
 from .routes.context import router as context_router
 from .routes.agent import router as agent_router
@@ -25,9 +26,10 @@ app = FastAPI(
     description=(
         "Local IPC gateway between the PrivAgent Chrome extension and external browser agents. "
         "Receives ONLY sanitized, zero-PII context payloads. "
-        "Acts as a security checkpoint before any agent or LLM can consume page context."
+        "M7: performs ONE structured Gemma (OpenRouter) reasoning request per "
+        "agent step, server-side, with the API key never leaving this process."
     ),
-    version="0.5.0",
+    version="0.7.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -54,7 +56,10 @@ app.include_router(agent_router)
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["health"])
 async def health() -> HealthResponse:
     """Liveness check — used by the extension popup to detect backend status."""
-    return HealthResponse()
+    return HealthResponse(
+        reasoner=config.REASONER_MODE,
+        reasoner_configured=config.has_api_key(),
+    )
 
 
 @app.get("/", include_in_schema=False)

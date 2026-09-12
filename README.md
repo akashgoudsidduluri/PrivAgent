@@ -44,11 +44,48 @@ Local DOM Detection (M1) ──► Local Visual Capture & Redaction (M2) ──�
 | **M2: Visual Capture & Redaction** | **COMPLETED** | Local viewport screenshot capture, empirical coordinate mapping (`scaleX`/`scaleY`), blackout/blur/mask redaction overlays. |
 | **M3: Local OCR & Visual Text Privacy** | **COMPLETED** | On-device Tesseract.js WebAssembly worker, canvas/image visual text extraction, coordinate transformation, OCR privacy detection. |
 | **M4: Agent Safety API & Sanitized Context** | **COMPLETED** | Safe context constructor, extension pre-flight validator, local FastAPI IPC backend (127.0.0.1:8010), ephemeral context store. |
-| **M5: Agent Reasoning & Structured Browser Actions** | ❌ *NOT YET IMPLEMENTED* | Future milestone: LLM/VLM planning, capability policy, structured action proposals. |
-| **M6: End-to-End Autonomous Agent** | ❌ *NOT YET IMPLEMENTED* | Future milestone: Full execution loop, multi-step browser tasks, confirmation safeguards. |
-| **M7: Evaluation & Optimization** | ❌ *NOT YET IMPLEMENTED* | Future milestone: Formal precision/recall benchmark dataset, model quantization, latency profiling. |
+| **M5: Agent Reasoning & Structured Browser Actions** | **COMPLETED** | Capability policy, structured action allowlist (`click`/`scroll`/`type`/`select`/`navigate`), authoritative local action validator, provider abstraction (mock / backend / direct OpenRouter dev provider). |
+| **M6: End-to-End Autonomous Agent** | **COMPLETED** | Autonomous multi-step loop with fresh perception, bounded steps/retries, validator + policy gates on every action, consequential-action user confirmation. |
+| **M7: Real LLM Reasoning, Hardening & Evaluation** | **COMPLETED** | Gemma (`google/gemma-4-31b-it:free`) via OpenRouter server-side, zero guessing (fail-safe), backend action validation, privacy/network payload tests, evaluation harness with measured (non-fabricated) metrics. |
 
 ---
+
+## 🧠 Milestone 7 — Real LLM Reasoning Architecture (Gemma via OpenRouter)
+
+The production reasoning path keeps the API key server-side. The extension never talks to OpenRouter directly:
+
+```
+Chrome Extension (M1–M3 perception)
+    ↓  sanitized AgentContextPayload (sanitized_only sentinel)
+Local FastAPI Backend (127.0.0.1:8010)  ← OPENROUTER_API_KEY lives ONLY here
+    ↓  security validation (Pydantic extra="forbid" + independent recursive scan)
+    ↓  structured reasoning request per M6 step (bounded, observable retries)
+Gemma 4 31B via OpenRouter  →  ONE BrowserAction (strict JSON, validated)
+    ↓  backend BrowserActionModel validation + target-ID grounding
+Extension
+    ↓  M5 Action Validator (authoritative) → M5 Privacy Policy → M6 Safety Check
+Browser execution → fresh perception → repeat (M6 owns the loop)
+```
+
+Key M7 properties:
+
+- **No guessing.** The previous deterministic "click the first detection" fallbacks were removed from the backend and the mock provider no longer represents production reasoning. If the reasoner cannot identify a valid target from sanitized metadata, the system fails safely (HTTP 503 with a typed error) and the M6 loop decides whether to re-perceive or stop.
+- **Structured output only.** The LLM must return a single JSON object matching the strict `BrowserAction` schema. JSON object mode (`response_format: json_object`) is requested from the provider, but this is BEST-EFFORT — it is **not** a JSON-Schema guarantee and is **not** itself a security control. The real guarantees are the defensive parser (markdown fences, embedded JSON, refusals, oversized-field rejection), strict schema validation by the backend `BrowserActionModel` (per-action field applicability, bounds, URL/protocol and script-injection checks), value-safety scanning of model-emitted free text (`type.text`, `select.option`, `reason`), and the extension's M5 validator. Malformed, oversized, or schema-invalid model output fails closed.
+- **Target-ID grounding.** The backend rejects actions whose `target` is not present in the current sanitized context (`unknown_target`, HTTP 422). Stale or hallucinated IDs never reach the browser.
+- **Prompt-injection defense.** The system prompt establishes that page-derived metadata is untrusted data, that only provided element IDs may be targeted, and that no arbitrary code/fields/sensitive values may be requested. Prompting is a mitigation, not a boundary — the M5/M6 validators remain the security authority.
+- **Bounded, observable provider retries.** M6 wraps provider calls in a bounded retry for retryable failures only (network, timeout, rate limit, 5xx). Auth errors and malformed model output fail immediately. Total provider calls are tracked separately from M6 step retries as `TaskState.providerAttempts` and are provably bounded by `maxSteps × (1 + providerRetries)`; a reasoning step whose attempts all fail terminates the task immediately (fail-closed). Backend-side attempts default to 1 per step (`PRIVAGENT_MAX_LLM_ATTEMPTS`).
+- **Typed failures.** Every provider failure mode maps to a typed, retryable-annotated error (`auth`, `rate_limit`, `timeout`, `network`, `http_error`, `invalid_json`, `unsupported_action`, `unknown_target`, `not_configured`) — in both TypeScript (`ProviderError`) and Python (`ReasoningError`). No failure path can produce arbitrary browser behavior.
+
+### M7 Configuration (backend only)
+
+| Env var | Default | Purpose |
+| :--- | :--- | :--- |
+| `OPENROUTER_API_KEY` | *(none)* | Server-side only. Required for real Gemma reasoning. Never committed, never logged, never sent to the extension. |
+| `OPENROUTER_MODEL` | `google/gemma-4-31b-it:free` | Reasoning model. |
+| `OPENROUTER_TIMEOUT_SECONDS` | `45` | Per-request LLM budget. |
+| `PRIVAGENT_REASONER` | `openrouter` | `openrouter` (production/demo) or `mock` (offline tests/CI). |
+
+The mock reasoner (`MockAgentProvider` on the extension side, `MockReasoner` on the backend) remains available for unit tests, offline development, CI, and deterministic regression tests — but it is clearly not production reasoning and it never guesses (it raises instead of picking a fallback element).
 
 ## 🔒 Verified Security Invariants
 
@@ -158,12 +195,25 @@ pip install -r backend/requirements.txt
 
 ### 3. Run Automated Tests
 ```bash
-# Run TypeScript / Vitest unit tests (104 tests)
+# Run TypeScript / Vitest unit tests (166 tests: M1–M6 + M7 provider/privacy suites)
 npm test
 
-# Run Backend Pytest suite (62 tests)
+# Run Backend Pytest suite (120 tests: M4/M5 + M7 reasoner/validation/evaluation)
 pytest backend/tests/ -v
 ```
+
+### 3b. Configure Real LLM Reasoning (M7)
+```bash
+# In your local, gitignored environment (or export in your shell):
+export OPENROUTER_API_KEY="sk-or-..."   # server-side ONLY — never in the extension
+# Optional:
+# export OPENROUTER_MODEL="google/gemma-4-31b-it:free"
+# export PRIVAGENT_REASONER=openrouter   # or "mock" for offline demos
+
+python backend/run.py
+# Health check now reports: {"reasoner": "openrouter", "reasoner_configured": true}
+```
+Without a configured key the backend fails closed (typed `not_configured` error) — it never falls back to guessing-based reasoning.
 
 ### 4. Build the Chrome Extension
 ```bash
@@ -236,23 +286,28 @@ All performance timings are measured directly via browser and runtime performanc
 | **Local OCR Worker Initial Startup** | `800 – 1400 ms` | One-time startup cost for WebAssembly worker compilation. |
 | **Local OCR Processing Latency** | `220 – 420 ms` | Per canvas region on typical desktop CPU. |
 | **API Transmission Latency** | `10 – 25 ms` | Local HTTP POST to `127.0.0.1:8010`. |
+| **LLM Reasoning Latency (Gemma via OpenRouter)** | *PENDING — measured live* | Free-tier Gemma adds network + inference latency per step; measured with a configured `OPENROUTER_API_KEY` and reported by the M7 evaluation harness. No value is fabricated. |
 
 ---
 
-## ⚠️ Known Limitations (Milestones M1–M4)
+## ⚠️ Known Limitations (Milestones M1–M7)
 
 1. **English OCR Model**:
-   - Current local OCR uses `eng.traineddata`. Multi-lingual or specialized script recognition is not configured in this milestone.
+   - Current local OCR uses `eng.traineddata`. Multi-lingual or specialized script recognition is not configured.
 2. **Stylized / Low-Contrast Canvas Text**:
    - Extreme fonts, heavy anti-aliasing, or very low contrast between text and background can degrade OCR confidence.
 3. **OCR Initial Startup Cost**:
    - Spawning the WebAssembly worker thread incurs an initial 1-second initialization overhead upon first capture. Subsequent captures reuse the warm worker.
-4. **No Agent Reasoning Loop (M5 Scope)**:
-   - Milestones M1–M4 establish the visual perception, redaction, and safe context boundary. PrivAgent does not make autonomous browsing decisions or call LLM reasoning APIs.
-5. **No Autonomous Browser Actions (M6 Scope)**:
-   - PrivAgent does not click, type, or navigate autonomously on behalf of the user.
-6. **No Formal Precision/Recall Benchmark (M7 Scope)**:
-   - While tested on representative synthetic banking and canvas portals, formal benchmark scoring across varied datasets belongs to Milestone 7.
+4. **LLM latency & availability**:
+   - Real Gemma reasoning adds network + inference latency (free-tier OpenRouter can be slow or rate-limited). The M6 loop respects its existing step/retry bounds and fails safely on provider errors; measured live-LLM latencies depend on provider conditions and are reported as PENDING until measured with a configured key.
+5. **Prompt injection is mitigated, not solved**:
+   - The system prompt establishes untrusted-data framing, ID-grounding, and no-code rules, but prompting alone is not a security boundary. The M5 validator, privacy policy, and M6 safety checks remain the enforcement layer. New injection techniques may get malformed actions past the prompt — they will still be rejected structurally.
+6. **Sensitive-content heuristics in `type`/`select` free text**:
+   - The M5 validator now rejects free text that pattern-matches PII (full names, emails, Indian phone numbers, Luhn-valid cards, PANs, labeled credentials, credential-shaped tokens). This is deliberately privacy-first and may over-block some benign text; legitimate flows use non-PII text.
+7. **No formal precision/recall benchmark on varied datasets**:
+   - The M7 evaluation harness (`backend/app/evaluation.py`) measures task success/valid-action/validator-rejection/leakage/step/retry/failure metrics reproducibly, and marks SIH perception metrics (PII precision/recall, redaction precision, visual context accuracy, client resource utilization) as PENDING until measured via the browser E2E harness on real pipelines. No numbers are fabricated.
+8. **Multimodal reasoning not implemented**:
+   - The LLM receives sanitized metadata only. Screenshots stay local. A future privacy-redacted-image pipeline is an extension point, not a current feature.
 
 ---
 

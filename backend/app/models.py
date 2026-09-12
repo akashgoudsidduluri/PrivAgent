@@ -11,9 +11,11 @@ Security Contract:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, List, Optional
+from typing import Annotated, Dict, List, Optional
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from .text_safety import scan_reason_text, scan_text
 
 
 # ── Shared strict base ────────────────────────────────────────────────────────
@@ -171,8 +173,10 @@ class ContextResponse(StrictModel):
 
 class HealthResponse(BaseModel):  # not strict — allow future additions
     status: str = "ok"
-    version: str = "0.5.0"
+    version: str = "0.7.0"
     service: str = "PrivAgent Agent Safety API"
+    reasoner: str = "openrouter"           # active reasoner mode (never the key)
+    reasoner_configured: bool = False      # whether an API key is present
 
 
 # ── Milestone 5: Structured Browser Action Models ────────────────────────────
@@ -189,24 +193,164 @@ class BrowserActionModel(StrictModel):
     """
     Strict Pydantic model for structured browser actions.
     extra='forbid' prevents arbitrary fields or code injection.
+
+    Milestone 7 hardening (defense-in-depth):
+      - Field applicability is enforced per action type (e.g. a 'click' with
+        a 'text' field, or a 'scroll' with a 'url', is rejected).
+      - scroll direction is restricted to up|down and amount is bounded.
+      - navigate URLs must be http(s) — javascript:/data:/file: are rejected.
+      - 'type' text is scanned for script-injection syntax.
+      - Model-emitted free text (type.text, select.option, reason) is scanned
+        for PII/credential-shaped content (text_safety.py) BEFORE it can
+        execute in the browser or enter action history / the next LLM prompt.
+      - Free-text fields are length-bounded; oversized values are REJECTED,
+        never silently truncated.
+
+    The extension-side M5 validator remains the authoritative gate; this model
+    stops malformed actions one boundary earlier at the backend.
     """
     action: BrowserActionType
     target: Optional[str] = None
     direction: Optional[str] = None
     amount: Optional[int] = None
-    text: Optional[str] = None
-    option: Optional[str] = None
+    text: Optional[Annotated[str, Field(max_length=500)]] = None
+    option: Optional[Annotated[str, Field(max_length=200)]] = None
     url: Optional[str] = None
-    reason: Optional[str] = None
+    reason: Optional[Annotated[str, Field(max_length=300)]] = None
+
+    # Which optional fields are ALLOWED for each action type.
+    _ALLOWED_FIELDS: Dict[BrowserActionType, frozenset] = {
+        BrowserActionType.click: frozenset({"target"}),
+        BrowserActionType.scroll: frozenset({"direction", "amount"}),
+        BrowserActionType.type: frozenset({"target", "text"}),
+        BrowserActionType.select: frozenset({"target", "option"}),
+        BrowserActionType.navigate: frozenset({"url"}),
+    }
+
+    # Which optional fields are REQUIRED for each action type.
+    _REQUIRED_FIELDS: Dict[BrowserActionType, frozenset] = {
+        BrowserActionType.click: frozenset({"target"}),
+        BrowserActionType.scroll: frozenset({"direction", "amount"}),
+        BrowserActionType.type: frozenset({"target", "text"}),
+        BrowserActionType.select: frozenset({"target", "option"}),
+        BrowserActionType.navigate: frozenset({"url"}),
+    }
+
+    MIN_SCROLL_AMOUNT: int = 1
+    MAX_SCROLL_AMOUNT: int = 5000
+
+    @model_validator(mode="after")
+    def validate_action_shape(self) -> "BrowserActionModel":
+        allowed = self._ALLOWED_FIELDS[self.action]
+        required = self._REQUIRED_FIELDS[self.action]
+
+        provided = {
+            "target": self.target,
+            "direction": self.direction,
+            "amount": self.amount,
+            "text": self.text,
+            "option": self.option,
+            "url": self.url,
+        }
+
+        # 1. Reject fields that do not belong to this action type.
+        for name, value in provided.items():
+            if value is not None and name not in allowed:
+                raise ValueError(
+                    f"[PrivAgent Security] Field '{name}' is not allowed on a "
+                    f"'{self.action.value}' action."
+                )
+
+        # 2. Require the fields this action type needs.
+        for name in required:
+            if provided[name] is None:
+                raise ValueError(
+                    f"[PrivAgent Security] Action '{self.action.value}' requires "
+                    f"a non-empty '{name}' field."
+                )
+
+        # 3. Per-field constraints.
+        if self.action is BrowserActionType.scroll:
+            if self.direction not in ("up", "down"):
+                raise ValueError(
+                    "[PrivAgent Security] scroll direction must be 'up' or 'down'."
+                )
+            if self.amount is None or not (self.MIN_SCROLL_AMOUNT <= self.amount <= self.MAX_SCROLL_AMOUNT):
+                raise ValueError(
+                    f"[PrivAgent Security] scroll amount must be between "
+                    f"{self.MIN_SCROLL_AMOUNT} and {self.MAX_SCROLL_AMOUNT}."
+                )
+
+        if self.action is BrowserActionType.navigate and self.url is not None:
+            from urllib.parse import urlparse
+
+            parsed = urlparse(self.url)
+            if parsed.scheme not in ("http", "https"):
+                raise ValueError(
+                    "[PrivAgent Security] navigate URL must use http or https."
+                )
+
+        if self.action is BrowserActionType.type and self.text is not None:
+            lowered = self.text.lower()
+            if "<script" in lowered or "javascript:" in lowered:
+                raise ValueError(
+                    "[PrivAgent Security] type text contains prohibited script injection syntax."
+                )
+
+        if self.target is not None and not self.target.strip():
+            raise ValueError("[PrivAgent Security] target must be a non-empty string.")
+
+        # 4. Value-scan model-emitted free text (defense-in-depth, Phase 2).
+        #    Structural metadata (target IDs, direction, amounts, URLs) is NOT
+        #    scanned — only human-readable free-text fields.
+        if self.text is not None:
+            finding = scan_text(self.text)
+            if finding:
+                raise ValueError(
+                    f"[PrivAgent Security] type text rejected by text-safety scan "
+                    f"(rule={finding.rule}). Sensitive values must never transit "
+                    "through agent actions."
+                )
+        if self.option is not None:
+            finding = scan_text(self.option)
+            if finding:
+                raise ValueError(
+                    f"[PrivAgent Security] select option rejected by text-safety scan "
+                    f"(rule={finding.rule}). Sensitive values must never transit "
+                    "through agent actions."
+                )
+        if self.reason is not None:
+            finding = scan_reason_text(self.reason)
+            if finding:
+                raise ValueError(
+                    f"[PrivAgent Security] action reason rejected by text-safety scan "
+                    f"(rule={finding.rule}). Reasons must not contain sensitive values."
+                )
+
+        return self
 
 
 class AgentActionRequest(StrictModel):
     """
     Incoming request to the Agent Reasoning API.
-    Contains ONLY task string and sanitized context.
+    Contains ONLY the task string, sanitized context, and safe action-history
+    metadata (previous structured browser actions — never raw values).
     """
     task: str
     context: AgentContextPayload
+    history: List[BrowserActionModel] = Field(default_factory=list)
+
+
+class ReasoningTelemetry(StrictModel):
+    """
+    Safe reasoning telemetry — identifiers and durations only.
+    Never contains prompts, model text, or API key material.
+    """
+    provider: str                      # "openrouter" | "mock"
+    model: str                         # e.g. "google/gemma-4-31b-it:free"
+    latency_ms: float
+    attempts: int = 1
+    error_kind: Optional[str] = None   # "timeout" | "auth" | "invalid_json" | ...
 
 
 class AgentActionResponse(StrictModel):
@@ -216,4 +360,5 @@ class AgentActionResponse(StrictModel):
     success: bool = True
     action: BrowserActionModel
     reason: str
+    telemetry: Optional[ReasoningTelemetry] = None
 
