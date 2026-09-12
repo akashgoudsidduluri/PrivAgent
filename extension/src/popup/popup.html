@@ -109,7 +109,7 @@
     <section class="section-container visual-section" id="visual-section">
       <div class="section-header-flex">
         <label class="section-label">📸 Visual Perception &amp; Local OCR</label>
-        <span class="badge-local-ocr">100% On-Device</span>
+        <span class="badge-local-ocr">On-Device Local</span>
       </div>
       <p class="visual-desc">
         Local screenshot capture + on-device WebAssembly OCR detects sensitive text inside &lt;canvas&gt; and images.
@@ -227,6 +227,88 @@
           <button type="button" class="action-btn btn-outline btn-sm" id="btn-view-agent-payload">
             View Agent Payload JSON
           </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Milestone 5 & 6: Autonomous Agent Loop & Structured Actions ── -->
+    <section class="section-container m5-agent-section" id="m5-agent-section">
+      <div class="section-header-flex">
+        <label class="section-label">🤖 Autonomous Privacy Agent</label>
+        <span class="badge-local-ocr" style="background:#065f46;color:#34d399">M6 Loop</span>
+      </div>
+      <p class="visual-desc">
+        Multi-step perception → reasoning → local validation → execution loop. Zero raw PII leaves device.
+      </p>
+
+      <!-- Task Input & Preset Buttons -->
+      <div class="agent-task-container">
+        <label for="agent-task-input" class="meta-key" style="margin-bottom:4px;display:block">User Task</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="agent-task-input" class="agent-input" placeholder="e.g. Open the account details and find the recent transactions" value="Open the account details and find the recent transactions" style="flex:1;padding:7px 10px;border-radius:6px;border:1px solid #374151;background:#111827;color:#f3f4f6;font-size:12px" />
+          <button type="button" class="action-btn btn-primary" id="btn-run-agent-loop" style="white-space:nowrap;padding:7px 12px;font-size:11px;background:#10b981">
+            ⚡ Run Loop
+          </button>
+          <button type="button" class="action-btn btn-secondary" id="btn-run-agent-task" style="white-space:nowrap;padding:7px 10px;font-size:11px">
+            Step
+          </button>
+        </div>
+
+        <div class="preset-tasks" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
+          <button type="button" class="preset-btn" data-task="Open the account details and find the recent transactions" style="background:#064e3b;color:#a7f3d0;border:1px solid #059669;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:600">
+            ★ M6 Demo: Details &amp; Transactions
+          </button>
+          <button type="button" class="preset-btn" data-task="Find and click the account number field" style="background:#1f2937;color:#9ca3af;border:1px solid #374151;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">
+            Preset: Click Account #
+          </button>
+          <button type="button" class="preset-btn" data-task="Scroll down and find the transaction section" style="background:#1f2937;color:#9ca3af;border:1px solid #374151;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">
+            Preset: Scroll Down
+          </button>
+          <button type="button" class="preset-btn" data-task="Open the account details" style="background:#1f2937;color:#9ca3af;border:1px solid #374151;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">
+            Preset: Account Details
+          </button>
+        </div>
+      </div>
+
+      <!-- Consequential Action Confirmation Prompt (Hidden by default) -->
+      <div class="confirm-container" id="m6-confirm-container" style="display:none;margin-top:8px;padding:10px;background:#451a03;border:1px solid #d97706;border-radius:6px;font-size:11px">
+        <span style="color:#fde68a;font-weight:600;display:block;margin-bottom:4px">⚠️ User Confirmation Required</span>
+        <span id="m6-confirm-msg" style="color:#fef3c7;display:block;margin-bottom:8px">This action navigates outside or executes a consequential task.</span>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="action-btn btn-primary" id="btn-confirm-action" style="padding:4px 10px;font-size:11px;background:#d97706">Confirm &amp; Proceed</button>
+          <button type="button" class="action-btn btn-outline" id="btn-cancel-action" style="padding:4px 10px;font-size:11px">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Agent Reasoning Telemetry Display -->
+      <div class="agent-telemetry" id="agent-telemetry" style="margin-top:10px;padding:10px;background:#111827;border-radius:6px;border:1px solid #1f2937;font-size:11px">
+        <div class="meta-row">
+          <span class="meta-key">Task Status:</span>
+          <span class="meta-val" id="m6-task-status" style="font-weight:700;color:#38bdf8">READY</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Step Progress:</span>
+          <span class="meta-val" id="m6-step-progress" style="font-weight:600;color:#f3f4f6">STEP —/10</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Privacy Boundary:</span>
+          <span class="meta-val" id="m5-privacy-status" style="color:#34d399;font-weight:600">Sanitized context only (0 raw PII)</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Proposed Action:</span>
+          <span class="meta-val" id="m5-proposed-action" style="font-family:monospace;color:#fbbf24">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Local Validator:</span>
+          <span class="meta-val" id="m5-validator-status" style="font-weight:600;color:#9ca3af">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Execution Status:</span>
+          <span class="meta-val" id="m5-execution-status" style="font-weight:600;color:#9ca3af">—</span>
+        </div>
+        <div class="meta-row" id="row-step-log" style="display:none;flex-direction:column;align-items:flex-start;margin-top:6px;border-top:1px solid #1f2937;padding-top:6px">
+          <span class="meta-key" style="margin-bottom:4px">Action Execution Trail:</span>
+          <div id="m6-step-trail" style="width:100%;font-family:monospace;font-size:10px;color:#9ca3af;max-height:80px;overflow-y:auto;line-height:1.4"></div>
         </div>
       </div>
     </section>

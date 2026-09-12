@@ -178,7 +178,37 @@ def test_post_with_nested_rawtext_in_list_rejected():
     assert resp.status_code in (400, 422)
 
 
-# ── Rejected payloads must NOT be stored ────────────────────────────────────
+# ── Forbidden key rejection — additional forbidden keys & case variations ───
+
+@pytest.mark.parametrize("forbidden_key", [
+    "token", "secret", "card", "cardNumber", "card_number",
+    "cvv", "pan", "accountNumber", "account_number", "raw",
+    "input", "sensitiveValue", "pii",
+    # Case variations
+    "PASSWORD", "Token", "CARD_NUMBER", "CardNumber", "Cvv", "PAN",
+    "TEXTCONTENT", "RawText", "INNERTEXT"
+])
+def test_post_with_forbidden_key_variations_rejected(forbidden_key: str):
+    """Any casing or underscore variation of forbidden keys must be rejected."""
+    bad = _valid_payload()
+    bad[forbidden_key] = "FAKE_PII_OR_SECRET"
+    resp = client.post("/api/v1/context", json=bad)
+    assert resp.status_code in (400, 422)
+
+
+@pytest.mark.parametrize("forbidden_key", [
+    "token", "secret", "card", "cardNumber", "cvv", "pan", "accountNumber",
+    "PASSWORD", "CARD_NUMBER", "Cvv", "PAN"
+])
+def test_post_with_nested_forbidden_key_in_detection_rejected(forbidden_key: str):
+    """Forbidden key inside detection object must be rejected."""
+    bad = _valid_payload()
+    bad["detections"][0][forbidden_key] = "FAKE_PII_VALUE"
+    resp = client.post("/api/v1/context", json=bad)
+    assert resp.status_code in (400, 422)
+
+
+# ── Rejected payloads must NOT be stored or overwrite valid context ─────────
 
 def test_rejected_payload_not_stored_as_latest():
     """After a rejected POST, GET /latest must still return 404 (not store bad data)."""
@@ -190,6 +220,24 @@ def test_rejected_payload_not_stored_as_latest():
     # Context must still be empty
     get_resp = client.get("/api/v1/context/latest")
     assert get_resp.status_code == 404
+
+
+def test_rejected_malicious_payload_does_not_overwrite_valid_context():
+    """If a valid context is stored, a subsequent rejected malicious payload must NOT replace it."""
+    valid = _valid_payload(url="http://localhost:8002/initial-clean-page")
+    post_resp = client.post("/api/v1/context", json=valid)
+    assert post_resp.status_code == 201
+
+    # Malicious attempt with forbidden key
+    bad = _valid_payload(url="http://localhost:8002/malicious-attack")
+    bad["detections"][0]["password"] = "StolenPassword123"
+    bad_resp = client.post("/api/v1/context", json=bad)
+    assert bad_resp.status_code in (400, 422)
+
+    # Latest context must still be the original valid context
+    get_resp = client.get("/api/v1/context/latest")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["payload"]["url"] == "http://localhost:8002/initial-clean-page"
 
 
 # ── Sanitized status validation ───────────────────────────────────────────────

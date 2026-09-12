@@ -15,6 +15,7 @@ from __future__ import annotations
 
 # ── Forbidden key set ─────────────────────────────────────────────────────────
 # These keys must NEVER appear anywhere in an incoming payload — at any depth.
+# Checked case-insensitively and with underscore-agnostic exact matching.
 FORBIDDEN_KEYS: frozenset[str] = frozenset({
     "value",
     "text",
@@ -26,11 +27,24 @@ FORBIDDEN_KEYS: frozenset[str] = frozenset({
     "password",
     "words",
     "lines",
+    "token",
+    "secret",
+    "card",
+    "cardNumber",
+    "card_number",
+    "cvv",
+    "pan",
+    "accountNumber",
+    "account_number",
     "raw",
     "input",
     "sensitiveValue",
     "pii",
 })
+
+FORBIDDEN_KEYS_NORMALIZED: frozenset[str] = frozenset(
+    k.lower().replace("_", "") for k in FORBIDDEN_KEYS
+)
 
 # The ONLY accepted sanitized status string in the API.
 REQUIRED_STATUS = "sanitized_only"
@@ -112,7 +126,8 @@ def _scan_keys_recursive(obj: object, path: str) -> None:
     """
     if isinstance(obj, dict):
         for key, value in obj.items():
-            if key in FORBIDDEN_KEYS:
+            norm_key = str(key).lower().replace("_", "")
+            if norm_key in FORBIDDEN_KEYS_NORMALIZED or key in FORBIDDEN_KEYS:
                 raise PayloadSecurityError(
                     f"[PrivAgent Backend Security] Forbidden key '{key}' found at path '{path}.{key}'. "
                     "Raw PII values must NEVER be transmitted to the backend."

@@ -33,8 +33,15 @@ const HEALTH_TIMEOUT_MS = 2000;
 const FORBIDDEN_KEYS = new Set([
   'value', 'text', 'textContent', 'innerText',
   'rawText', 'rawOCR', 'ocrText', 'password',
-  'words', 'lines', 'raw', 'input', 'sensitiveValue', 'pii',
+  'words', 'lines', 'token', 'secret', 'card',
+  'cardNumber', 'card_number', 'cvv', 'pan',
+  'accountNumber', 'account_number', 'raw', 'input',
+  'sensitiveValue', 'sensitive_value', 'pii',
 ]);
+
+const FORBIDDEN_KEYS_NORMALIZED = new Set(
+  Array.from(FORBIDDEN_KEYS).map((k) => k.toLowerCase().replace(/_/g, ''))
+);
 
 const REQUIRED_STATUS = 'sanitized_only' as const;
 
@@ -61,7 +68,8 @@ function assertNoForbiddenKeys(obj: unknown, path = '<root>'): void {
       obj.forEach((item, i) => assertNoForbiddenKeys(item, `${path}[${i}]`));
     } else {
       for (const key of Object.keys(obj as Record<string, unknown>)) {
-        if (FORBIDDEN_KEYS.has(key)) {
+        const normKey = key.toLowerCase().replace(/_/g, '');
+        if (FORBIDDEN_KEYS.has(key) || FORBIDDEN_KEYS_NORMALIZED.has(normKey)) {
           throw new Error(
             `[PrivAgent AgentBridge] Security violation: forbidden key '${key}' at path '${path}.${key}'. ` +
             'Payload blocked — raw PII must never be sent to the agent API.'

@@ -169,8 +169,151 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
     return true;
   }
 
+  // Milestone 5: Structured Browser Action Execution
+  if (message.type === 'PRIVAGENT_EXECUTE_ACTION') {
+    const result = executeBrowserAction(message.action);
+    sendResponse({
+      type: 'PRIVAGENT_EXECUTE_ACTION_RESPONSE',
+      result,
+    });
+    return true;
+  }
+
   return false;
 });
+
+/**
+ * Visual highlight indicator over the element being acted upon.
+ */
+function highlightActionElement(el: HTMLElement): void {
+  const originalOutline = el.style.outline;
+  const originalTransition = el.style.transition;
+  const originalBoxShadow = el.style.boxShadow;
+
+  el.style.transition = 'all 0.3s ease';
+  el.style.outline = '3px solid #10b981';
+  el.style.boxShadow = '0 0 12px rgba(16, 185, 129, 0.6)';
+
+  setTimeout(() => {
+    el.style.outline = originalOutline;
+    el.style.transition = originalTransition;
+    el.style.boxShadow = originalBoxShadow;
+  }, 1800);
+}
+
+/**
+ * Locate target DOM element by ID from previous scan detections or direct DOM search.
+ */
+function findElementByTarget(targetId: string): HTMLElement | null {
+  if (lastReport && lastReport.detections) {
+    const det = lastReport.detections.find((d) => d.id === targetId);
+    if (det && det.selector) {
+      const el = document.querySelector<HTMLElement>(det.selector);
+      if (el) return el;
+    }
+  }
+
+  // Fallback 1: direct ID
+  const elById = document.getElementById(targetId);
+  if (elById) return elById;
+
+  // Fallback 2: data attribute
+  const elByData = document.querySelector<HTMLElement>(`[data-privagent-id="${targetId}"]`);
+  if (elByData) return elByData;
+
+  // Fallback 3: try selector directly
+  try {
+    const elByQuery = document.querySelector<HTMLElement>(targetId);
+    if (elByQuery) return elByQuery;
+  } catch {
+    // ignore invalid selector syntax
+  }
+
+  return null;
+}
+
+/**
+ * Deterministically execute a validated BrowserAction using DOM APIs.
+ * NO eval(), NO dynamic code execution.
+ */
+function executeBrowserAction(action: import('../agent/actionTypes').BrowserAction): import('../agent/actionTypes').ActionExecutionResult {
+  try {
+    switch (action.action) {
+      case 'click': {
+        const el = findElementByTarget(action.target);
+        if (!el) {
+          return { success: false, error: `Target element '${action.target}' not found in DOM.` };
+        }
+        highlightActionElement(el);
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+        el.click();
+        return { success: true, action, message: `Clicked element '${action.target}'.` };
+      }
+
+      case 'scroll': {
+        const top = action.direction === 'down' ? action.amount : -action.amount;
+        window.scrollBy({ top, behavior: 'smooth' });
+        return { success: true, action, message: `Scrolled ${action.direction} by ${action.amount}px.` };
+      }
+
+      case 'type': {
+        const el = findElementByTarget(action.target);
+        if (!el) {
+          return { success: false, error: `Target element '${action.target}' not found in DOM.` };
+        }
+        highlightActionElement(el);
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+          el.value = action.text;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          return { success: true, action, message: `Typed text into element '${action.target}'.` };
+        }
+        return { success: false, error: `Target element '${action.target}' is not an input or textarea.` };
+      }
+
+      case 'select': {
+        const el = findElementByTarget(action.target);
+        if (!el) {
+          return { success: false, error: `Target element '${action.target}' not found in DOM.` };
+        }
+        highlightActionElement(el);
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+
+        if (el instanceof HTMLSelectElement) {
+          let matched = false;
+          for (let i = 0; i < el.options.length; i++) {
+            const opt = el.options[i];
+            if (opt && (opt.text === action.option || opt.value === action.option)) {
+              el.selectedIndex = i;
+              matched = true;
+              break;
+            }
+          }
+          if (!matched && el.options.length > 0) {
+            el.value = action.option;
+          }
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          return { success: true, action, message: `Selected option '${action.option}' on element '${action.target}'.` };
+        }
+        return { success: false, error: `Target element '${action.target}' is not a select element.` };
+      }
+
+      case 'navigate': {
+        window.location.href = action.url;
+        return { success: true, action, message: `Navigating to ${action.url}.` };
+      }
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: `Browser action execution failed: ${msg}` };
+  }
+}
+
 
 // Auto-run initial lightweight scan when DOM is ready (only on non-excluded sites)
 if (!isCurrentSiteExcluded) {

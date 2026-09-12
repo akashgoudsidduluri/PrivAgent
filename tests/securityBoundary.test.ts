@@ -74,6 +74,17 @@ describe('PrivAgent Security Boundary Invariants', () => {
     expect(verifySanitizedPayload(leakyReport)).toBe(false);
   });
 
+  it('should REJECT payload if token, secret, card, cardnumber, cvv, pan, or accountnumber is present', () => {
+    const forbiddenKeys = ['token', 'secret', 'card', 'cardNumber', 'cvv', 'pan', 'accountNumber'];
+    for (const key of forbiddenKeys) {
+      const leakyReport = {
+        ...mockValidReport,
+        [key]: 'synthetic_secret_val',
+      };
+      expect(verifySanitizedPayload(leakyReport)).toBe(false);
+    }
+  });
+
   it('should create a frozen, sanitized export', () => {
     const exported = createSanitizedExport(mockValidReport);
     expect(Object.isFrozen(exported)).toBe(true);

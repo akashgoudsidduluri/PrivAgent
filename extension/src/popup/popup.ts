@@ -12,6 +12,13 @@ import { LocalOCREngine } from '../ocr/ocrEngine';
 import { detectSensitiveOCRRegions } from '../ocr/ocrDetector';
 import { mapDOMToScreenshot } from '../capture/coordinateMapper';
 import { checkBackendHealth, sendSanitizedContext } from '../agent/agentBridge';
+import { MockAgentProvider } from '../agent/mockAgentProvider';
+import { validateAction } from '../agent/actionValidator';
+import { canPerformAction } from '../agent/privacyPolicy';
+import { BrowserAction } from '../agent/actionTypes';
+import { AgentLoop, TaskState } from '../agent/agentLoop';
+
+
 
 type VisualViewMode = 'original' | 'detected' | 'sanitized';
 
@@ -623,6 +630,353 @@ btnViewAgentPayload.addEventListener('click', () => {
     payloadModal.classList.add('open');
   }
 });
+
+// ── Milestone 5: Agent Reasoning & Browser Actions ──────────────────────────
+
+const agentTaskInput = document.getElementById('agent-task-input') as HTMLInputElement | null;
+const btnRunAgentTask = document.getElementById('btn-run-agent-task') as HTMLButtonElement | null;
+const m5AgentStatus = document.getElementById('m5-agent-status');
+const m5TaskDisplay = document.getElementById('m5-task-display');
+const m5PrivacyStatus = document.getElementById('m5-privacy-status');
+const m5ProposedAction = document.getElementById('m5-proposed-action');
+const m5ValidatorStatus = document.getElementById('m5-validator-status');
+const m5ExecutionStatus = document.getElementById('m5-execution-status');
+const presetBtns = document.querySelectorAll('.preset-btn');
+
+function formatActionForDisplay(action: BrowserAction): string {
+  switch (action.action) {
+    case 'click':
+      return `click(${action.target})`;
+    case 'scroll':
+      return `scroll(${action.direction}, ${action.amount}px)`;
+    case 'type':
+      return `type(${action.target}, "${action.text}")`;
+    case 'select':
+      return `select(${action.target}, "${action.option}")`;
+    case 'navigate':
+      return `navigate("${action.url}")`;
+  }
+}
+
+// Preset button click handlers
+presetBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const task = (btn as HTMLElement).dataset.task;
+    if (task && agentTaskInput) {
+      agentTaskInput.value = task;
+    }
+  });
+});
+
+const defaultAgentProvider = new MockAgentProvider();
+
+btnRunAgentTask?.addEventListener('click', async () => {
+  const task = agentTaskInput?.value?.trim() || 'Find and click the account number field';
+
+  if (m5TaskDisplay) m5TaskDisplay.textContent = task;
+  if (m5AgentStatus) {
+    m5AgentStatus.textContent = 'Reasoning…';
+    m5AgentStatus.style.color = '#38bdf8';
+  }
+  if (m5PrivacyStatus) m5PrivacyStatus.textContent = 'Sanitized context only (0 raw values)';
+  if (m5ProposedAction) m5ProposedAction.textContent = '…';
+  if (m5ValidatorStatus) {
+    m5ValidatorStatus.textContent = 'Validating…';
+    m5ValidatorStatus.style.color = '#9ca3af';
+  }
+  if (m5ExecutionStatus) {
+    m5ExecutionStatus.textContent = 'Pending';
+    m5ExecutionStatus.style.color = '#9ca3af';
+  }
+
+  // 1. Context check: must have run DOM scan
+  if (!currentReport) {
+    if (m5AgentStatus) {
+      m5AgentStatus.textContent = 'Scan Required';
+      m5AgentStatus.style.color = '#ef4444';
+    }
+    if (m5ValidatorStatus) {
+      m5ValidatorStatus.textContent = 'BLOCKED: No active DOM scan report. Run scan first.';
+      m5ValidatorStatus.style.color = '#ef4444';
+    }
+    if (m5ExecutionStatus) {
+      m5ExecutionStatus.textContent = 'BLOCKED';
+      m5ExecutionStatus.style.color = '#ef4444';
+    }
+    return;
+  }
+
+  // 2. Build sanitized context
+  const context = buildAgentPayload(currentReport, currentVisualReport);
+  if (!context) {
+    if (m5AgentStatus) {
+      m5AgentStatus.textContent = 'Context Error';
+      m5AgentStatus.style.color = '#ef4444';
+    }
+    if (m5ValidatorStatus) {
+      m5ValidatorStatus.textContent = 'BLOCKED: Missing required sanitized_status sentinel.';
+      m5ValidatorStatus.style.color = '#ef4444';
+    }
+    return;
+  }
+
+  try {
+    // 3. Agent reasoning (produces structured action from sanitized context only)
+    const action = await defaultAgentProvider.requestAction(task, context);
+    const displayAction = formatActionForDisplay(action);
+    if (m5ProposedAction) m5ProposedAction.textContent = displayAction;
+
+    // 4. Local Action Validator (ALLOWLIST, context verification, bounding)
+    const validation = validateAction(action, context);
+    if (!validation.allowed) {
+      if (m5ValidatorStatus) {
+        m5ValidatorStatus.textContent = `BLOCKED: ${validation.reason}`;
+        m5ValidatorStatus.style.color = '#ef4444';
+      }
+      if (m5ExecutionStatus) {
+        m5ExecutionStatus.textContent = 'SKIPPED (Action rejected by local validator)';
+        m5ExecutionStatus.style.color = '#ef4444';
+      }
+      if (m5AgentStatus) {
+        m5AgentStatus.textContent = 'Rejected';
+        m5AgentStatus.style.color = '#ef4444';
+      }
+      return;
+    }
+
+    // 5. Capability Privacy Policy Check
+    const targetDet = 'target' in action ? context.detections.find((d) => d.id === (action as any).target) : undefined;
+    const policy = canPerformAction(action, targetDet, 'agent_llm');
+    if (!policy.granted) {
+      if (m5ValidatorStatus) {
+        m5ValidatorStatus.textContent = `POLICY BLOCKED: ${policy.reason}`;
+        m5ValidatorStatus.style.color = '#ef4444';
+      }
+      if (m5ExecutionStatus) {
+        m5ExecutionStatus.textContent = 'BLOCKED (Capability Denied)';
+        m5ExecutionStatus.style.color = '#ef4444';
+      }
+      if (m5AgentStatus) {
+        m5AgentStatus.textContent = 'Policy Blocked';
+        m5AgentStatus.style.color = '#ef4444';
+      }
+      return;
+    }
+
+    if (m5ValidatorStatus) {
+      m5ValidatorStatus.textContent = 'ALLOWED';
+      m5ValidatorStatus.style.color = '#10b981';
+    }
+
+    // 6. Browser DOM Execution via Content Script
+    if (m5ExecutionStatus) {
+      m5ExecutionStatus.textContent = 'Executing…';
+      m5ExecutionStatus.style.color = '#38bdf8';
+    }
+
+    const execResponse = await sendTabMessage({
+      type: 'PRIVAGENT_EXECUTE_ACTION',
+      action,
+    }) as { result?: import('../agent/actionTypes').ActionExecutionResult } | null;
+
+    const res = execResponse?.result;
+    if (res && res.success) {
+      if (m5ExecutionStatus) {
+        m5ExecutionStatus.textContent = 'SUCCESS';
+        m5ExecutionStatus.style.color = '#10b981';
+      }
+      if (m5AgentStatus) {
+        m5AgentStatus.textContent = 'Ready';
+        m5AgentStatus.style.color = '#10b981';
+      }
+    } else {
+      const err = res && !res.success ? res.error : 'Execution returned failure';
+      if (m5ExecutionStatus) {
+        m5ExecutionStatus.textContent = `FAILED: ${err}`;
+        m5ExecutionStatus.style.color = '#ef4444';
+      }
+      if (m5AgentStatus) {
+        m5AgentStatus.textContent = 'Failed';
+        m5AgentStatus.style.color = '#ef4444';
+      }
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (m5AgentStatus) {
+      m5AgentStatus.textContent = 'Error';
+      m5AgentStatus.style.color = '#ef4444';
+    }
+    if (m5ExecutionStatus) {
+      m5ExecutionStatus.textContent = `ERROR: ${msg}`;
+      m5ExecutionStatus.style.color = '#ef4444';
+    }
+  }
+});
+
+// ── Milestone 6: Autonomous Agent Loop UI ───────────────────────────────────
+
+const btnRunAgentLoop = document.getElementById('btn-run-agent-loop') as HTMLButtonElement | null;
+const m6TaskStatus = document.getElementById('m6-task-status');
+const m6StepProgress = document.getElementById('m6-step-progress');
+const m6ConfirmContainer = document.getElementById('m6-confirm-container');
+const m6ConfirmMsg = document.getElementById('m6-confirm-msg');
+const btnConfirmAction = document.getElementById('btn-confirm-action');
+const btnCancelAction = document.getElementById('btn-cancel-action');
+const rowStepLog = document.getElementById('row-step-log');
+const m6StepTrail = document.getElementById('m6-step-trail');
+
+let activeLoopInstance: AgentLoop | null = null;
+
+async function runAutonomousLoop(task: string): Promise<void> {
+  if (btnRunAgentLoop) {
+    btnRunAgentLoop.disabled = true;
+    btnRunAgentLoop.textContent = '⏳ Running…';
+  }
+  if (btnRunAgentTask) btnRunAgentTask.disabled = true;
+
+  if (m6ConfirmContainer) m6ConfirmContainer.style.display = 'none';
+  if (rowStepLog) rowStepLog.style.display = 'flex';
+  if (m6StepTrail) m6StepTrail.innerHTML = '';
+  if (m6TaskStatus) {
+    m6TaskStatus.textContent = 'IN_PROGRESS';
+    m6TaskStatus.style.color = '#38bdf8';
+  }
+  if (m6StepProgress) m6StepProgress.textContent = 'STEP 1/10';
+
+  const updateTelemetryFromState = (state: TaskState) => {
+    if (m6TaskStatus) {
+      m6TaskStatus.textContent = state.status;
+      if (state.status === 'SUCCESS') m6TaskStatus.style.color = '#10b981';
+      else if (state.status === 'FAILED') m6TaskStatus.style.color = '#ef4444';
+      else if (state.status === 'NEEDS_USER_CONFIRMATION') m6TaskStatus.style.color = '#f59e0b';
+      else m6TaskStatus.style.color = '#38bdf8';
+    }
+
+    if (m6StepProgress) {
+      m6StepProgress.textContent = `STEP ${state.currentStep}/${state.maxSteps}`;
+    }
+
+    const latestStep = state.steps[state.steps.length - 1];
+    if (latestStep) {
+      if (m5ProposedAction) m5ProposedAction.textContent = formatActionForDisplay(latestStep.action);
+      if (m5ValidatorStatus) {
+        m5ValidatorStatus.textContent = latestStep.validationAllowed
+          ? 'ALLOWED'
+          : `BLOCKED: ${latestStep.validationReason}`;
+        m5ValidatorStatus.style.color = latestStep.validationAllowed ? '#10b981' : '#ef4444';
+      }
+      if (m5ExecutionStatus) {
+        m5ExecutionStatus.textContent = latestStep.executionSuccess
+          ? 'SUCCESS'
+          : `FAILED: ${latestStep.executionError || 'Failed'}`;
+        m5ExecutionStatus.style.color = latestStep.executionSuccess ? '#10b981' : '#ef4444';
+      }
+    }
+
+    if (m6StepTrail) {
+      m6StepTrail.innerHTML = state.steps
+        .map(
+          (s) =>
+            `<div>[Step ${s.step}] ${formatActionForDisplay(s.action)} → ${s.executionSuccess ? '✓' : '✗'}</div>`
+        )
+        .join('');
+      m6StepTrail.scrollTop = m6StepTrail.scrollHeight;
+    }
+
+    if (state.status === 'NEEDS_USER_CONFIRMATION' && m6ConfirmContainer) {
+      m6ConfirmContainer.style.display = 'block';
+      if (m6ConfirmMsg && state.requiresUserConfirmationAction) {
+        m6ConfirmMsg.textContent = `Proposed action requires user confirmation: ${formatActionForDisplay(
+          state.requiresUserConfirmationAction
+        )}`;
+      }
+    }
+  };
+
+  const loopCallbacks = {
+    perceivePage: async (): Promise<AgentContextPayload | null> => {
+      const scanRes = (await sendTabMessage({ type: 'PRIVAGENT_SCAN_REQUEST' })) as {
+        report?: PrivacyScanReport;
+      } | null;
+      if (scanRes?.report) {
+        currentReport = scanRes.report;
+        updateUI(currentReport);
+      }
+      if (!currentReport) return null;
+      return buildAgentPayload(currentReport, currentVisualReport);
+    },
+
+    executeAction: async (action: BrowserAction) => {
+      const execResponse = (await sendTabMessage({
+        type: 'PRIVAGENT_EXECUTE_ACTION',
+        action,
+      })) as { result?: import('../agent/actionTypes').ActionExecutionResult } | null;
+
+      const res = execResponse?.result;
+      if (res && res.success) {
+        return { success: true };
+      }
+      return { success: false, error: res && !res.success ? res.error : 'Execution returned false' };
+    },
+
+    onStepProgress: (state: TaskState) => {
+      updateTelemetryFromState(state);
+    },
+  };
+
+  activeLoopInstance = new AgentLoop(defaultAgentProvider, loopCallbacks, {
+    maxSteps: 10,
+    maxRetries: 2,
+    delayBetweenStepsMs: 400,
+  });
+
+  try {
+    const finalState = await activeLoopInstance.runTask(task);
+    updateTelemetryFromState(finalState);
+  } catch (err: unknown) {
+    if (m6TaskStatus) {
+      m6TaskStatus.textContent = 'FAILED';
+      m6TaskStatus.style.color = '#ef4444';
+    }
+    if (m5ExecutionStatus) {
+      m5ExecutionStatus.textContent = `ERROR: ${err instanceof Error ? err.message : String(err)}`;
+      m5ExecutionStatus.style.color = '#ef4444';
+    }
+  } finally {
+    if (btnRunAgentLoop) {
+      btnRunAgentLoop.disabled = false;
+      btnRunAgentLoop.textContent = '⚡ Run Loop';
+    }
+    if (btnRunAgentTask) btnRunAgentTask.disabled = false;
+  }
+}
+
+btnRunAgentLoop?.addEventListener('click', async () => {
+  const task =
+    agentTaskInput?.value?.trim() ||
+    'Open the account details and find the recent transactions';
+  await runAutonomousLoop(task);
+});
+
+btnConfirmAction?.addEventListener('click', async () => {
+  if (activeLoopInstance && m6ConfirmContainer) {
+    m6ConfirmContainer.style.display = 'none';
+    if (m6TaskStatus) {
+      m6TaskStatus.textContent = 'RESUMING…';
+      m6TaskStatus.style.color = '#38bdf8';
+    }
+    await activeLoopInstance.resumeWithConfirmation();
+  }
+});
+
+btnCancelAction?.addEventListener('click', () => {
+  if (m6ConfirmContainer) m6ConfirmContainer.style.display = 'none';
+  if (m6TaskStatus) {
+    m6TaskStatus.textContent = 'CANCELLED';
+    m6TaskStatus.style.color = '#ef4444';
+  }
+});
+
 
 // Initialize on open
 document.addEventListener('DOMContentLoaded', async () => {

@@ -128,6 +128,9 @@ function findForbiddenKeys(obj: unknown, forbidden: Set<string>, path = ''): str
 const FORBIDDEN_KEYS = new Set([
   'value', 'text', 'textContent', 'innerText',
   'rawText', 'rawOCR', 'ocrText', 'password', 'words', 'lines',
+  'token', 'secret', 'card', 'cardNumber', 'card_number', 'cvv',
+  'pan', 'accountNumber', 'account_number', 'raw', 'input',
+  'sensitiveValue', 'pii',
 ]);
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

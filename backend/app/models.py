@@ -82,13 +82,18 @@ class SafeDetectionExport(StrictModel):
         FORBIDDEN = frozenset({
             "value", "text", "textContent", "innerText",
             "rawText", "rawOCR", "ocrText", "password", "words", "lines",
+            "token", "secret", "card", "cardNumber", "card_number", "cvv",
+            "pan", "accountNumber", "account_number", "raw", "input",
+            "sensitiveValue", "sensitive_value", "pii",
         })
-        found = FORBIDDEN & set(data.keys())
-        if found:
-            raise ValueError(
-                f"[PrivAgent Security] SafeDetectionExport contains forbidden PII key(s): {found}. "
-                "Raw sensitive values must never be included in the agent payload."
-            )
+        FORBIDDEN_NORMALIZED = frozenset(k.lower().replace("_", "") for k in FORBIDDEN)
+        for key in data.keys():
+            norm = str(key).lower().replace("_", "")
+            if norm in FORBIDDEN_NORMALIZED or key in FORBIDDEN:
+                raise ValueError(
+                    f"[PrivAgent Security] SafeDetectionExport contains forbidden PII key: '{key}'. "
+                    "Raw sensitive values must never be included in the agent payload."
+                )
         return data
 
 
@@ -166,5 +171,49 @@ class ContextResponse(StrictModel):
 
 class HealthResponse(BaseModel):  # not strict — allow future additions
     status: str = "ok"
-    version: str = "0.4.0"
+    version: str = "0.5.0"
     service: str = "PrivAgent Agent Safety API"
+
+
+# ── Milestone 5: Structured Browser Action Models ────────────────────────────
+
+class BrowserActionType(str, Enum):
+    click = "click"
+    scroll = "scroll"
+    type = "type"
+    select = "select"
+    navigate = "navigate"
+
+
+class BrowserActionModel(StrictModel):
+    """
+    Strict Pydantic model for structured browser actions.
+    extra='forbid' prevents arbitrary fields or code injection.
+    """
+    action: BrowserActionType
+    target: Optional[str] = None
+    direction: Optional[str] = None
+    amount: Optional[int] = None
+    text: Optional[str] = None
+    option: Optional[str] = None
+    url: Optional[str] = None
+    reason: Optional[str] = None
+
+
+class AgentActionRequest(StrictModel):
+    """
+    Incoming request to the Agent Reasoning API.
+    Contains ONLY task string and sanitized context.
+    """
+    task: str
+    context: AgentContextPayload
+
+
+class AgentActionResponse(StrictModel):
+    """
+    Response containing the structured browser action and reasoning summary.
+    """
+    success: bool = True
+    action: BrowserActionModel
+    reason: str
+

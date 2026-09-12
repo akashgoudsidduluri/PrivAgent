@@ -14,6 +14,18 @@ const FORBIDDEN_VALUE_KEYS = new Set([
   'val',
 ]);
 
+// Sensitive credential keys that must never carry raw values
+const CREDENTIAL_KEYS = new Set([
+  'password',
+  'secret',
+  'token',
+  'card',
+  'cardnumber',
+  'cvv',
+  'pan',
+  'accountnumber',
+]);
+
 // Strict allowlist for DetectionResult objects
 const ALLOWED_DETECTION_KEYS = new Set([
   'id',
@@ -62,9 +74,9 @@ export function verifySanitizedPayload(data: unknown): boolean {
       return false;
     }
 
-    // Check if an accidental string password or credential was placed directly
-    if ((lowerKey === 'password' || lowerKey === 'secret') && typeof val === 'string') {
-      console.error(`[PrivAgent Security Violation] Direct string credential leaked under key "${key}"`);
+    // Check if an accidental credential was placed directly (only numbers allowed in category counts)
+    if (CREDENTIAL_KEYS.has(lowerKey) && typeof val !== 'number') {
+      console.error(`[PrivAgent Security Violation] Direct credential leaked under key "${key}"`);
       return false;
     }
 

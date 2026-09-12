@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .models import HealthResponse
 from .routes.context import router as context_router
+from .routes.agent import router as agent_router
 
 app = FastAPI(
     title="PrivAgent Agent Safety API",
@@ -26,7 +27,7 @@ app = FastAPI(
         "Receives ONLY sanitized, zero-PII context payloads. "
         "Acts as a security checkpoint before any agent or LLM can consume page context."
     ),
-    version="0.4.0",
+    version="0.5.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -46,6 +47,8 @@ app.add_middleware(
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 app.include_router(context_router)
+app.include_router(agent_router)
+
 
 
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["health"])

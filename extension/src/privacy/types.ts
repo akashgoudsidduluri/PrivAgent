@@ -103,7 +103,11 @@ export type ExtensionMessage =
       scrollX: number; 
       scrollY: number; 
       devicePixelRatio: number; 
-    };
+    }
+  | { type: 'PRIVAGENT_EXECUTE_ACTION'; action: import('../agent/actionTypes').BrowserAction }
+  | { type: 'PRIVAGENT_EXECUTE_ACTION_RESPONSE'; result: import('../agent/actionTypes').ActionExecutionResult };
+
+
 
 // ── Milestone 4: Agent Context Payload ────────────────────────────────────────
 
