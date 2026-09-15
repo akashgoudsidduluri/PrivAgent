@@ -31,7 +31,7 @@ import { AgentProvider } from './agentProvider';
 import { ProviderError } from './openRouterProvider';
 import { AgentContextPayload, SensitiveEntityType } from '../privacy/types';
 
-export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION';
+export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION' | 'STOPPED';
 
 export interface StepRecord {
   step: number;
@@ -146,6 +146,7 @@ export class AgentLoop {
   private providerRetries: number;
   private providerRetryDelayMs: number;
   private state: TaskState;
+  private isStopped = false;
 
   constructor(
     provider: AgentProvider,
@@ -177,6 +178,18 @@ export class AgentLoop {
     };
   }
 
+  /**
+   * Safely halt the running task loop.
+   */
+  stop(): void {
+    this.isStopped = true;
+    if (this.state.status === 'IN_PROGRESS') {
+      this.state.status = 'STOPPED';
+      this.state.reason = 'Task stopped by user.';
+      this.notifyProgress();
+    }
+  }
+
   getState(): TaskState {
     return {
       ...this.state,
@@ -189,6 +202,7 @@ export class AgentLoop {
    * Run the complete autonomous task loop until SUCCESS, FAILED, or NEEDS_USER_CONFIRMATION.
    */
   async runTask(task: string): Promise<TaskState> {
+    this.isStopped = false;
     this.state.task = task;
     this.state.currentStep = 0;
     this.state.status = 'IN_PROGRESS';
@@ -201,6 +215,13 @@ export class AgentLoop {
     this.state.requiresUserConfirmationAction = undefined;
 
     while (this.state.status === 'IN_PROGRESS') {
+      if (this.isStopped) {
+        this.state.status = 'STOPPED';
+        this.state.reason = this.state.reason || 'Task stopped by user.';
+        this.notifyProgress();
+        break;
+      }
+
       // 1. Check max steps bound (endless-loop prevention)
       if (this.state.currentStep >= this.maxSteps) {
         this.state.status = 'FAILED';
@@ -325,6 +346,12 @@ export class AgentLoop {
 
       // 10. Bounded observation delay to allow DOM to settle before next perception
       await this.delay(this.delayBetweenStepsMs);
+      if (this.isStopped) {
+        this.state.status = 'STOPPED';
+        this.state.reason = this.state.reason || 'Task stopped by user.';
+        this.notifyProgress();
+        break;
+      }
     }
 
     return this.getState();

@@ -259,4 +259,31 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
     expect(state.requiresUserConfirmationAction).toBeDefined();
     expect(executeAction).not.toHaveBeenCalled(); // Paused: did not execute automatically
   });
+
+  // Test 17: Stop / Cancel action transitions status to STOPPED
+  it('17. safely halts execution when stop() is called on AgentLoop', async () => {
+    const provider = new MockAgentProvider();
+    provider.setCustomHandler(() => ({ action: 'click', target: 'element_details_0' }));
+
+    const perceivePage = vi.fn(async () => createMockContext(0));
+    const executeAction = vi.fn(async () => ({ success: true }));
+
+    let loopInstance: AgentLoop;
+    const onProgress = vi.fn((state: TaskState) => {
+      if (state.currentStep >= 1) {
+        loopInstance.stop();
+      }
+    });
+
+    loopInstance = new AgentLoop(
+      provider,
+      { perceivePage, executeAction, onStepProgress: onProgress },
+      { maxSteps: 10, delayBetweenStepsMs: 20 }
+    );
+
+    const state = await loopInstance.runTask('Complex multi-step investigation');
+    expect(state.status).toBe('STOPPED');
+    expect(state.reason).toContain('stopped by user');
+  });
 });
+

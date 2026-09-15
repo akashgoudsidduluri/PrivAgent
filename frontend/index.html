@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PrivAgent — Privacy-Preserving Browser Agent Dashboard</title>
+    <meta
+      name="description"
+      content="Desktop dashboard for PrivAgent on-device visual perception and browser agent safety boundary"
+    />
+    <link rel="icon" type="image/png" href="../extension/public/icons/icon48.png" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Global Top Header -->
+      <header class="app-header">
+        <div class="brand-section">
+          <div class="brand-logo">🛡️</div>
+          <div class="brand-text-block">
+            <span class="brand-title">PrivAgent</span>
+            <span class="brand-subtitle">Private browser automation</span>
+          </div>
+          <span id="mode-badge" class="mode-badge live-disconnected" title="Connecting to PrivAgent Extension...">
+            ● Extension Disconnected
+          </span>
+        </div>
+
+        <div class="header-status-area">
+          <div id="backend-indicator" class="backend-indicator">
+            <span id="backend-status-dot" class="backend-dot offline"></span>
+            <span id="backend-status-label">Checking Backend…</span>
+          </div>
+
+          <div id="header-privacy-pill" class="privacy-shield-badge" title="Click to open Privacy Center">
+            <span class="pulse-dot cyan"></span>
+            <span>🔒 On-device privacy</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Layout -->
+      <div class="app-body">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+          <nav class="sidebar-nav">
+            <div class="nav-item active" data-tab="agent">
+              <span class="nav-icon">💬</span>
+              <span>Agent</span>
+            </div>
+            <div class="nav-item" data-tab="activity">
+              <span class="nav-icon">⚡</span>
+              <span>Activity</span>
+            </div>
+            <div class="nav-item" data-tab="privacy">
+              <span class="nav-icon">🛡️</span>
+              <span>Privacy Center</span>
+            </div>
+            <div class="nav-item" data-tab="receipts">
+              <span class="nav-icon">🧾</span>
+              <span>Privacy Receipts</span>
+            </div>
+            <div class="nav-item" data-tab="settings">
+              <span class="nav-icon">⚙️</span>
+              <span>Settings</span>
+            </div>
+          </nav>
+
+          <div class="sidebar-footer">
+            <div class="footer-privacy-summary">
+              <div class="footer-privacy-title">On-Device Privacy</div>
+              <div id="footer-sensitive-stat" class="footer-privacy-stat">
+                <span>🔒</span> 6 items protected
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="app-content">
+          <section id="view-agent" class="view-container active"></section>
+          <section id="view-activity" class="view-container"></section>
+          <section id="view-privacy" class="view-container"></section>
+          <section id="view-receipts" class="view-container"></section>
+          <section id="view-settings" class="view-container"></section>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

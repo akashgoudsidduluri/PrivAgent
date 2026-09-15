@@ -179,7 +179,60 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
     return true;
   }
 
+  // Dashboard Progress Relay from background worker to web UI
+  if ((message as any).type === 'PRIVAGENT_DASHBOARD_PROGRESS') {
+    window.postMessage(
+      {
+        source: 'privagent-extension',
+        type: 'TASK_PROGRESS',
+        payload: (message as any).payload,
+      },
+      '*'
+    );
+    sendResponse({ ok: true });
+    return true;
+  }
+
   return false;
+});
+
+// ── Dashboard Web UI Bridge ─────────────────────────────────────────────────
+window.addEventListener('message', (event) => {
+  if (event.source !== window || !event.data || event.data.source !== 'privagent-dashboard') return;
+
+  const { type, task, allowed } = event.data;
+
+  // Immediate handshake ping response
+  if (type === 'PING_EXTENSION') {
+    window.postMessage(
+      {
+        source: 'privagent-extension',
+        type: 'PONG_EXTENSION',
+        version: '0.4.0',
+        connected: true,
+      },
+      '*'
+    );
+    return;
+  }
+
+  // Forward dashboard commands to background service worker
+  if (type === 'START_TASK') {
+    chrome.runtime.sendMessage({
+      type: 'PRIVAGENT_DASHBOARD_START_TASK',
+      task,
+      originUrl: window.location.href,
+    });
+  } else if (type === 'STOP_TASK') {
+    chrome.runtime.sendMessage({
+      type: 'PRIVAGENT_DASHBOARD_STOP_TASK',
+    });
+  } else if (type === 'CONFIRM_ACTION') {
+    chrome.runtime.sendMessage({
+      type: 'PRIVAGENT_DASHBOARD_CONFIRM_ACTION',
+      allowed,
+    });
+  }
 });
 
 /**
