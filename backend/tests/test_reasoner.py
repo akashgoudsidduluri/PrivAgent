@@ -23,10 +23,14 @@ import pytest
 
 from app import reasoner as reasoner_mod
 from app.reasoner import (
+    REASONER_REGISTRY,
     MockReasoner,
     OpenRouterReasoner,
+    ReasonerProvider,
     ReasoningError,
+    build_reasoner,
     parse_model_action,
+    resolve_reasoner_name,
 )
 
 API_KEY = "test-key-not-a-real-secret"
@@ -330,3 +334,127 @@ class TestMockReasoner:
         with pytest.raises(ReasoningError) as exc:
             r.request_action(task="t", url="u", detections=SAMPLE_DETECTIONS)
         assert exc.value.kind == "mock_failure"
+
+
+# ── Rate limits are never retried (M7 hotfix) ─────────────────────────────────
+
+class TestRateLimitZeroRetry:
+    """HTTP 429 must cost exactly ONE provider request, even when the bounded
+    attempt budget for transient failures is configured higher."""
+
+    def test_429_is_non_retryable_and_makes_exactly_one_request(self, monkeypatch):
+        calls = {"n": 0}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls["n"] += 1
+            return httpx.Response(429, json={"error": {"message": "rate limit exceeded"}})
+
+        _patch_post(monkeypatch, handler)
+        # A generous attempt budget that must NOT be consumed by a rate limit.
+        monkeypatch.setattr(reasoner_mod.config, "MAX_LLM_ATTEMPTS", 3)
+
+        r = make_reasoner()
+        with pytest.raises(ReasoningError) as exc:
+            r.request_action(task="t", url="u", detections=SAMPLE_DETECTIONS)
+
+        assert exc.value.kind == "rate_limit"
+        assert exc.value.retryable is False
+        assert calls["n"] == 1
+
+    def test_429_fails_closed_without_inventing_an_action(self, monkeypatch):
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(429, json={"error": {"message": "rate limit exceeded"}})
+
+        _patch_post(monkeypatch, handler)
+        r = make_reasoner()
+        with pytest.raises(ReasoningError) as exc:
+            r.request_action(task="t", url="u", detections=SAMPLE_DETECTIONS)
+        # A ReasoningError carries NO action payload, so the route has nothing
+        # to fall back to — it can only fail closed with a typed 503.
+        assert exc.value.kind == "rate_limit"
+        assert not hasattr(exc.value, "raw_action")
+
+    def test_transient_5xx_still_uses_the_bounded_retry_policy(self, monkeypatch):
+        calls = {"n": 0}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls["n"] += 1
+            return httpx.Response(503, json={"error": {"message": "temporarily unavailable"}})
+
+        _patch_post(monkeypatch, handler)
+        monkeypatch.setattr(reasoner_mod.config, "MAX_LLM_ATTEMPTS", 3)
+
+        r = make_reasoner()
+        with pytest.raises(ReasoningError) as exc:
+            r.request_action(task="t", url="u", detections=SAMPLE_DETECTIONS)
+
+        assert exc.value.kind == "http_server_error"
+        assert exc.value.retryable is True
+        assert calls["n"] == 3  # unchanged bounded retry behavior for 5xx
+
+    def test_auth_failures_do_not_retry(self, monkeypatch):
+        calls = {"n": 0}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls["n"] += 1
+            return httpx.Response(401, json={"error": {"message": "invalid credentials"}})
+
+        _patch_post(monkeypatch, handler)
+        monkeypatch.setattr(reasoner_mod.config, "MAX_LLM_ATTEMPTS", 3)
+
+        r = make_reasoner()
+        with pytest.raises(ReasoningError):
+            r.request_action(task="t", url="u", detections=SAMPLE_DETECTIONS)
+        assert calls["n"] == 1
+
+
+# ── Reasoner registry: configuration-driven provider selection ────────────────
+
+class TestReasonerRegistry:
+    """The agent route resolves its provider from the registry, so swapping the
+    reasoning model is configuration, not an architecture change."""
+
+    def test_registry_declares_production_and_offline_providers(self):
+        assert "openrouter" in REASONER_REGISTRY   # production: Gemma via OpenRouter
+        assert "mock" in REASONER_REGISTRY         # offline tests / CI
+
+    def test_build_reasoner_selects_by_name(self):
+        assert isinstance(build_reasoner("openrouter"), OpenRouterReasoner)
+        assert isinstance(build_reasoner("mock"), MockReasoner)
+
+    def test_unknown_name_fails_closed_to_the_production_provider(self):
+        assert resolve_reasoner_name("not-a-provider") == "openrouter"
+        # Fail-closed means: the production provider (which refuses to run
+        # without a key) — never a deterministic/guessing fallback.
+        assert isinstance(build_reasoner("not-a-provider"), OpenRouterReasoner)
+        assert resolve_reasoner_name("") == "openrouter"
+
+    def test_resolved_name_reports_what_will_actually_run(self):
+        assert resolve_reasoner_name(" MOCK ") == "mock"
+        assert resolve_reasoner_name("openrouter") == "openrouter"
+
+    def test_every_registered_provider_satisfies_the_contract(self):
+        for name in REASONER_REGISTRY:
+            provider = build_reasoner(name)
+            assert isinstance(provider, ReasonerProvider), name
+            assert isinstance(provider.configured, bool), name
+            assert callable(provider.request_action), name
+
+    def test_each_build_returns_a_fresh_instance(self):
+        assert build_reasoner("mock") is not build_reasoner("mock")
+
+    def test_mock_and_production_providers_share_one_call_signature(self):
+        """A provider swap cannot change the route's call site."""
+        kwargs = dict(
+            task="Find and click the account number field",
+            url="https://bank.example.com/portal",
+            detections=SAMPLE_DETECTIONS,
+            history=[],
+            viewport={"width": 1280, "height": 800, "scroll_x": 0, "scroll_y": 0},
+            screenshot_dimensions=None,
+            steps_used=0,
+            max_steps=10,
+        )
+        result = build_reasoner("mock").request_action(**kwargs)
+        assert result.raw_action["action"] in ("click", "scroll")
+        assert result.attempts >= 1

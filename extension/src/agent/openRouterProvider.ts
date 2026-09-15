@@ -76,9 +76,10 @@ interface ChatCompletionResponse {
 
 export class OpenRouterProvider implements AgentProvider {
   readonly name = 'OpenRouterProvider';
+  /** Provider-agnostic telemetry identity (see providerRegistry.describeProvider). */
+  readonly model: string;
 
   private apiKey: string;
-  private model: string;
   private baseUrl: string;
   private timeoutMs: number;
 
@@ -176,10 +177,16 @@ export class OpenRouterProvider implements AgentProvider {
           : response.status === 429
             ? 'rate_limit'
             : 'http_error';
+      // M7 hotfix: HTTP 429 is NON-retryable. A rate-limited (free-tier) model
+      // cannot succeed on an immediate retry, and every extra attempt spends
+      // the shared OpenRouter quota. The step fails closed immediately.
       throw new ProviderError(
         `OpenRouter API error (HTTP ${response.status})${hint ? `: ${hint}` : ''}`,
         kind,
-        { retryable: kind === 'rate_limit', status: response.status }
+        {
+          retryable: kind !== 'rate_limit' && kind !== 'auth',
+          status: response.status,
+        }
       );
     }
 

@@ -14,6 +14,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { OpenRouterProvider, ProviderError, parseLLMAction } from '../extension/src/agent/openRouterProvider';
 import { BackendAgentProvider } from '../extension/src/agent/backendAgentProvider';
+import { AgentLoop } from '../extension/src/agent/agentLoop';
+import { BrowserAction } from '../extension/src/agent/actionTypes';
 import { AgentContextPayload } from '../extension/src/privacy/types';
 
 const SAFE_CONTEXT: AgentContextPayload = {
@@ -72,13 +74,41 @@ describe('OpenRouterProvider failure handling (Phase E)', () => {
     });
   });
 
-  it('throws typed rate_limit error on HTTP 429 and marks it retryable', async () => {
+  it('throws typed rate_limit error on HTTP 429 and marks it NON-retryable (hotfix)', async () => {
     stubFetch(() => Promise.resolve(jsonResponse(429, { error: { message: 'slow down' } })));
     await expect(makeOpenRouter().requestAction('task', SAFE_CONTEXT)).rejects.toMatchObject({
       kind: 'rate_limit',
-      retryable: true,
+      retryable: false,
       status: 429,
     });
+  });
+
+  it('an HTTP 429 costs exactly ONE provider request, even with M6 retries enabled', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(429, { error: { message: 'slow down' } })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const provider = makeOpenRouter();
+    const executed: BrowserAction[] = [];
+    const loop = new AgentLoop(provider, {
+      perceivePage: async () => SAFE_CONTEXT,
+      executeAction: async (action) => {
+        executed.push(action);
+        return { success: true };
+      },
+    }, {
+      maxSteps: 10,
+      providerRetries: 2, // would have produced 3 requests before the hotfix
+      providerRetryDelayMs: 1,
+      delayBetweenStepsMs: 1,
+    });
+
+    const state = await loop.runTask('Find and click the account number field');
+
+    // Zero immediate retries: one request, one attempt, fail-closed, nothing executed.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(state.providerAttempts).toBe(1);
+    expect(state.status).toBe('FAILED');
+    expect(executed).toEqual([]);
   });
 
   it('throws typed http_error on HTTP 500', async () => {
@@ -172,8 +202,36 @@ describe('BackendAgentProvider failure handling (Phase E)', () => {
     return new BackendAgentProvider({ timeoutMs: 1000 });
   }
 
-  it('maps backend 503 structured reasoning failure to a typed retryable error', async () => {
+  it('maps backend 503 structured rate-limit failure to a NON-retryable error (hotfix)', async () => {
     stubFetch(() =>
+      Promise.resolve(
+        jsonResponse(503, {
+          detail: {
+            success: false,
+            reason: 'Reasoning unavailable: OpenRouter rate limit reached (HTTP 429).',
+            error_kind: 'rate_limit',
+            retryable: true, // a remote claim the extension must NOT trust
+          },
+        })
+      )
+    );
+    await expect(makeBackend().requestAction('task', SAFE_CONTEXT)).rejects.toMatchObject({
+      kind: 'rate_limit',
+      retryable: false,
+    });
+  });
+
+  it('maps a bare backend HTTP 429 to a NON-retryable rate_limit error', async () => {
+    stubFetch(() => Promise.resolve(jsonResponse(429, { detail: 'too many requests' })));
+    await expect(makeBackend().requestAction('task', SAFE_CONTEXT)).rejects.toMatchObject({
+      kind: 'rate_limit',
+      retryable: false,
+      status: 429,
+    });
+  });
+
+  it('a backend rate limit costs exactly ONE request through the M6 loop', async () => {
+    const fetchMock = vi.fn(() =>
       Promise.resolve(
         jsonResponse(503, {
           detail: {
@@ -185,8 +243,29 @@ describe('BackendAgentProvider failure handling (Phase E)', () => {
         })
       )
     );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const loop = new AgentLoop(makeBackend(), {
+      perceivePage: async () => SAFE_CONTEXT,
+      executeAction: async () => ({ success: true }),
+    }, {
+      maxSteps: 10,
+      providerRetries: 2,
+      providerRetryDelayMs: 1,
+      delayBetweenStepsMs: 1,
+    });
+
+    const state = await loop.runTask('Find and click the account number field');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(state.providerAttempts).toBe(1);
+    expect(state.status).toBe('FAILED');
+  });
+
+  it('still retries a transient backend 5xx within the existing bounded policy', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(503, { detail: 'gateway hiccup' })));
+    vi.stubGlobal('fetch', fetchMock);
+
     await expect(makeBackend().requestAction('task', SAFE_CONTEXT)).rejects.toMatchObject({
-      kind: 'rate_limit',
       retryable: true,
     });
   });

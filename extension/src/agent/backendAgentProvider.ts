@@ -133,13 +133,22 @@ export class BackendAgentProvider implements AgentProvider {
       kind = 'auth';
     } else if (resp.status === 429) {
       kind = 'rate_limit';
-      retryable = true;
+      retryable = false; // M7 hotfix: rate limits are never retried
     } else if (resp.status >= 500 && !structuredKindFound) {
       // Backend 5xx without a structured body is a transient server-side
       // failure — retryable. A structured error_kind from the body is
       // preferred (e.g. a 503 carrying error_kind=rate_limit stays rate_limit).
       kind = 'http_error';
       retryable = true;
+    }
+
+    // M7 hotfix — defense in depth: the extension NEVER trusts a remote
+    // `retryable` flag for rate limiting. Even if the backend/compat layer
+    // reports error_kind=rate_limit with retryable=true (or a 429 body is
+    // absent), the step fails closed with ZERO retries so that a
+    // rate-limited free-tier pool cannot be multiplied by M6 retries.
+    if (kind === 'rate_limit') {
+      retryable = false;
     }
 
     return { detail, kind, retryable };

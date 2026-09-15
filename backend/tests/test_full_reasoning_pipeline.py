@@ -64,11 +64,16 @@ SAMPLE_CONTEXT = {
 
 
 def _patch_openrouter(monkeypatch, completions):
-    """Patch httpx.post to return a queue of fabricated completion responses."""
+    """Patch httpx.post to return a queue of fabricated completion responses.
+
+    Returns the captured request metadata plus `calls`, the exact number of
+    provider requests made (used to prove retry/zero-retry behavior).
+    """
     queue = list(completions)
-    captured = {}
+    captured = {"calls": 0}
 
     def fake_post(url, **kwargs):
+        captured["calls"] += 1
         captured["url"] = url
         raw = kwargs.get("json")
         captured["body"] = json.loads(raw) if isinstance(raw, str) else raw
@@ -223,13 +228,17 @@ class TestFullPipelineFailures:
         assert resp.status_code == 503
         assert resp.json()["detail"]["error_kind"] == "http_server_error"
 
-    def test_openrouter_429_maps_to_retryable_503(self, monkeypatch, openrouter_mode):
-        _patch_openrouter(monkeypatch, [httpx.Response(429, json={"error": {"message": "slow down"}})])
+    def test_openrouter_429_maps_to_non_retryable_503(self, monkeypatch, openrouter_mode):
+        """M7 hotfix: HTTP 429 fails closed as NON-retryable (zero quota burn)."""
+        captured = _patch_openrouter(
+            monkeypatch, [httpx.Response(429, json={"error": {"message": "slow down"}})])
         resp = client.post("/api/v1/agent/action", json=_agent_body("Find anything"))
         assert resp.status_code == 503
         detail = resp.json()["detail"]
         assert detail["error_kind"] == "rate_limit"
-        assert detail["retryable"] is True
+        assert detail["retryable"] is False
+        # Exactly one provider request: a rate limit is never retried.
+        assert captured["calls"] == 1
 
     def test_openrouter_auth_failure_fails_closed(self, monkeypatch, openrouter_mode):
         _patch_openrouter(monkeypatch, [httpx.Response(401, json={"error": {"message": "bad key"}})])

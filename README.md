@@ -44,7 +44,7 @@ Local DOM Detection (M1) ──► Local Visual Capture & Redaction (M2) ──�
 | **M2: Visual Capture & Redaction** | **COMPLETED** | Local viewport screenshot capture, empirical coordinate mapping (`scaleX`/`scaleY`), blackout/blur/mask redaction overlays. |
 | **M3: Local OCR & Visual Text Privacy** | **COMPLETED** | On-device Tesseract.js WebAssembly worker, canvas/image visual text extraction, coordinate transformation, OCR privacy detection. |
 | **M4: Agent Safety API & Sanitized Context** | **COMPLETED** | Safe context constructor, extension pre-flight validator, local FastAPI IPC backend (127.0.0.1:8010), ephemeral context store. |
-| **M5: Agent Reasoning & Structured Browser Actions** | **COMPLETED** | Capability policy, structured action allowlist (`click`/`scroll`/`type`/`select`/`navigate`), authoritative local action validator, provider abstraction (mock / backend / direct OpenRouter dev provider). |
+| **M5: Agent Reasoning & Structured Browser Actions** | **COMPLETED** | Capability policy, structured action allowlist (`click`/`scroll`/`type`/`select`/`navigate`), authoritative local action validator, provider abstraction (`mock` / `backend` / direct OpenRouter dev provider) plus a configuration-driven provider registry for future models. |
 | **M6: End-to-End Autonomous Agent** | **COMPLETED** | Autonomous multi-step loop with fresh perception, bounded steps/retries, validator + policy gates on every action, consequential-action user confirmation. |
 | **M7: Real LLM Reasoning, Hardening & Evaluation** | **COMPLETED** | Gemma (`google/gemma-4-31b-it:free`) via OpenRouter server-side, zero guessing (fail-safe), backend action validation, privacy/network payload tests, evaluation harness with measured (non-fabricated) metrics. |
 
@@ -73,7 +73,8 @@ Key M7 properties:
 - **Structured output only.** The LLM must return a single JSON object matching the strict `BrowserAction` schema. JSON object mode (`response_format: json_object`) is requested from the provider, but this is BEST-EFFORT — it is **not** a JSON-Schema guarantee and is **not** itself a security control. The real guarantees are the defensive parser (markdown fences, embedded JSON, refusals, oversized-field rejection), strict schema validation by the backend `BrowserActionModel` (per-action field applicability, bounds, URL/protocol and script-injection checks), value-safety scanning of model-emitted free text (`type.text`, `select.option`, `reason`), and the extension's M5 validator. Malformed, oversized, or schema-invalid model output fails closed.
 - **Target-ID grounding.** The backend rejects actions whose `target` is not present in the current sanitized context (`unknown_target`, HTTP 422). Stale or hallucinated IDs never reach the browser.
 - **Prompt-injection defense.** The system prompt establishes that page-derived metadata is untrusted data, that only provided element IDs may be targeted, and that no arbitrary code/fields/sensitive values may be requested. Prompting is a mitigation, not a boundary — the M5/M6 validators remain the security authority.
-- **Bounded, observable provider retries.** M6 wraps provider calls in a bounded retry for retryable failures only (network, timeout, rate limit, 5xx). Auth errors and malformed model output fail immediately. Total provider calls are tracked separately from M6 step retries as `TaskState.providerAttempts` and are provably bounded by `maxSteps × (1 + providerRetries)`; a reasoning step whose attempts all fail terminates the task immediately (fail-closed). Backend-side attempts default to 1 per step (`PRIVAGENT_MAX_LLM_ATTEMPTS`).
+- **Bounded, observable provider retries.** M6 wraps provider calls in a bounded retry for genuinely transient failures only (network, timeout, 5xx). Total provider calls are tracked separately from M6 step retries as `TaskState.providerAttempts` and are provably bounded by `maxSteps × (1 + providerRetries)`; a reasoning step whose attempts all fail terminates the task immediately (fail-closed). Backend-side attempts default to 1 per step (`PRIVAGENT_MAX_LLM_ATTEMPTS`).
+- **Rate limits are never retried (HTTP 429).** A 429/`rate_limit` failure is classified NON-retryable on both boundaries (extension `ProviderError.retryable === false`, backend `ReasoningError(retryable=False)`), so it costs exactly ONE provider request and then fails the step closed. Retrying a rate-limited free-tier pool cannot succeed and would silently multiply quota consumption. The extension additionally ignores any `retryable: true` a remote response claims for a rate-limit error.
 - **Typed failures.** Every provider failure mode maps to a typed, retryable-annotated error (`auth`, `rate_limit`, `timeout`, `network`, `http_error`, `invalid_json`, `unsupported_action`, `unknown_target`, `not_configured`) — in both TypeScript (`ProviderError`) and Python (`ReasoningError`). No failure path can produce arbitrary browser behavior.
 
 ### M7 Configuration (backend only)
@@ -83,9 +84,28 @@ Key M7 properties:
 | `OPENROUTER_API_KEY` | *(none)* | Server-side only. Required for real Gemma reasoning. Never committed, never logged, never sent to the extension. |
 | `OPENROUTER_MODEL` | `google/gemma-4-31b-it:free` | Reasoning model. |
 | `OPENROUTER_TIMEOUT_SECONDS` | `45` | Per-request LLM budget. |
-| `PRIVAGENT_REASONER` | `openrouter` | `openrouter` (production/demo) or `mock` (offline tests/CI). |
+| `PRIVAGENT_REASONER` | `openrouter` | Registered reasoning provider name: `openrouter` (production/demo, Gemma) or `mock` (offline tests/CI). Names come from the provider registry; an unregistered name fails closed to `openrouter`. |
 
 The mock reasoner (`MockAgentProvider` on the extension side, `MockReasoner` on the backend) remains available for unit tests, offline development, CI, and deterministic regression tests — but it is clearly not production reasoning and it never guesses (it raises instead of picking a fallback element).
+
+### Reasoning provider abstraction (swapping/adding a model)
+
+There is exactly ONE orchestration loop (extension `AgentLoop`, M6). It depends only on the provider interface, so changing the reasoning model is a configuration change rather than an architecture change:
+
+```
+M6 AgentLoop
+      │  (AgentProvider contract only — no model names, endpoints, or SDKs)
+      ▼
+  provider registry
+      ├── backend    → local FastAPI → Gemma via OpenRouter   (PRODUCTION, key stays server-side)
+      ├── mock       → deterministic offline reasoning        (tests / CI / offline demo)
+      └── openrouter → direct vendor call                     (dev/test only — requires a browser-side key)
+```
+
+- **Extension side:** `extension/src/agent/providerRegistry.ts` declares every provider (`AGENT_PROVIDERS`), builds it from configuration (`createAgentProvider({ provider, model? })`), and reports provider-agnostic telemetry identity (`describeProvider`). The popup resolves its selection through this registry and **cannot** construct a provider that needs a client-side API key (no `allowClientSideApiKey` opt-in), so the OpenRouter key never enters the extension.
+- **Backend side:** `backend/app/reasoner.py` defines the `ReasonerProvider` contract and `REASONER_REGISTRY`; the agent route resolves its provider through `build_reasoner()`, and `/api/v1/health` + response telemetry report the resolved provider name and model.
+- **Unchanged by design:** the M5 action validator, the capability privacy policy, target-ID grounding, the M6 loop, the sanitized-context boundary, and the `BrowserAction` schema are provider-independent and are never modified to accommodate a model.
+- **To add a provider:** implement the contract in a new file, register a descriptor/entry (3 documented steps in each registry file), and select it by configuration. No agent-loop duplication, and no raw DOM/OCR/screenshot/sensitive data ever becomes available to a non-local provider — every provider re-asserts `assertSanitizedContextSafe` before formatting a prompt or opening a socket.
 
 ## 🔒 Verified Security Invariants
 
@@ -195,10 +215,10 @@ pip install -r backend/requirements.txt
 
 ### 3. Run Automated Tests
 ```bash
-# Run TypeScript / Vitest unit tests (166 tests: M1–M6 + M7 provider/privacy suites)
+# Run TypeScript / Vitest unit tests (216 tests: M1–M6 + M7 provider/privacy/pipeline suites)
 npm test
 
-# Run Backend Pytest suite (120 tests: M4/M5 + M7 reasoner/validation/evaluation)
+# Run Backend Pytest suite (186 tests: M4/M5 + M7 reasoner/registry/validation/evaluation)
 pytest backend/tests/ -v
 ```
 

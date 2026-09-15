@@ -27,7 +27,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Protocol, runtime_checkable
 
 import httpx
 
@@ -100,6 +100,49 @@ class ReasoningResult:
     model: str
     latency_ms: float
     attempts: int
+
+
+# ── Provider contract (server side) ───────────────────────────────────────────
+
+@runtime_checkable
+class ReasonerProvider(Protocol):
+    """The ONE server-side reasoning contract.
+
+    The agent route depends only on this interface, so the reasoning model can
+    be swapped by configuration (`PRIVAGENT_REASONER` → `REASONER_REGISTRY`)
+    without touching the route, the request/response models, the security
+    validator, or the extension. Mirrors the extension-side `AgentProvider`.
+
+    Contract obligations for any implementation:
+      1. Perform at most ONE provider request per call — the M6 AgentLoop owns
+         iteration, bounds, retries and termination.
+      2. Receive ONLY sanitized metadata (task, URL, element IDs/types/
+         confidence/geometry, counts, safe action history). Never request or
+         accept raw DOM/OCR text, screenshots, or sensitive values.
+      3. Return a `ReasoningResult` whose raw_action is STILL UNTRUSTED, or
+         raise `ReasoningError` with a typed, key-free kind/retryable pair.
+      4. Never guess: if the sanitized context does not support the task, fail.
+      5. Never hold the extension hostage to credentials: API keys live in this
+         process only and never appear in results, errors, or responses.
+    """
+
+    @property
+    def configured(self) -> bool:
+        """Whether this provider can currently run (e.g. credentials present)."""
+        ...
+
+    def request_action(
+        self,
+        task: str,
+        url: str,
+        detections: List[Dict[str, Any]],
+        history: Optional[List[Dict[str, Any]]] = None,
+        viewport: Optional[Dict[str, Any]] = None,
+        screenshot_dimensions: Optional[Dict[str, Any]] = None,
+        steps_used: int = 0,
+        max_steps: int = 10,
+    ) -> ReasoningResult:
+        ...
 
 
 # ── Prompt construction (sanitized metadata only) ─────────────────────────────
@@ -391,9 +434,14 @@ class OpenRouterReasoner:
                     kind="auth",
                 )
             if response.status_code == 429:
+                # M7 hotfix: HTTP 429 is NON-retryable. This raise happens BEFORE
+                # any retry branch, so a rate limit always costs exactly ONE
+                # provider request even when PRIVAGENT_MAX_LLM_ATTEMPTS > 1.
+                # Retrying a rate-limited free-tier model cannot succeed and
+                # only burns shared quota. The step fails closed instead.
                 raise ReasoningError(
                     f"OpenRouter rate limit reached (HTTP 429). {detail}",
-                    retryable=True,
+                    retryable=False,
                     kind="rate_limit",
                 )
             if 400 <= response.status_code < 500:
@@ -512,3 +560,56 @@ class MockReasoner:
             raise ReasoningError("Mock: task not recognized; refusing to guess.", kind="no_target")
 
         return ReasoningResult(raw_action=action, model="mock", latency_ms=0.0, attempts=1)
+
+
+# ── Reasoner registry (the ONE place providers are declared) ──────────────────
+#
+# The agent route resolves its provider from here by name, so adding a reasoning
+# model is a CONFIGURATION + registration change — not an architecture change.
+#
+# HOW TO ADD A NEW SERVER-SIDE PROVIDER
+#   1. Implement `ReasonerProvider` (one request per call, sanitized metadata
+#      only, typed `ReasoningError` on every failure, never guess).
+#   2. Register it below under a new name.
+#   3. Select it with `PRIVAGENT_REASONER=<name>` (see app/config.py) and add a
+#      test in backend/tests/test_reasoner.py proving the same route contract.
+#
+# Do NOT add a second loop, a second validator, or a fallback that guesses: the
+# route and the extension M5/M6 gates remain authoritative for every provider.
+
+REASONER_REGISTRY: Dict[str, Callable[[], ReasonerProvider]] = {
+    "openrouter": OpenRouterReasoner,   # PRODUCTION: Gemma via OpenRouter (server-side key)
+    "mock": MockReasoner,               # Offline/deterministic: tests, CI, demos without a key
+}
+
+# Fail-closed default: the production path, which itself refuses to run without
+# an API key. There is no guessing-based fallback anywhere in this module.
+DEFAULT_REASONER_NAME = "openrouter"
+
+
+def resolve_reasoner_name(name: str) -> str:
+    """Resolve a configured reasoner name to a registered provider name.
+
+    Unknown/unsupported names resolve to the fail-closed production default, so
+    health/telemetry report exactly which provider will actually run.
+    """
+    candidate = (name or "").strip().lower()
+    if candidate in REASONER_REGISTRY:
+        return candidate
+    if candidate:
+        logger.warning(
+            "Unknown reasoner '%s' requested; falling back to '%s' (fail-closed).",
+            name,
+            DEFAULT_REASONER_NAME,
+        )
+    return DEFAULT_REASONER_NAME
+
+
+def build_reasoner(name: str) -> ReasonerProvider:
+    """Construct the registered provider for `name`, failing closed when unknown.
+
+    An unknown/unsupported name resolves to the production reasoner rather than
+    to any deterministic fallback, preserving the M7 fail-closed guarantee
+    (no fabricated actions when reasoning is unavailable).
+    """
+    return REASONER_REGISTRY[resolve_reasoner_name(name)]()

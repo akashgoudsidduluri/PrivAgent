@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import config
 from .models import HealthResponse
+from .reasoner import resolve_reasoner_name
 from .routes.context import router as context_router
 from .routes.agent import router as agent_router
 
@@ -55,9 +56,14 @@ app.include_router(agent_router)
 
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["health"])
 async def health() -> HealthResponse:
-    """Liveness check — used by the extension popup to detect backend status."""
+    """Liveness check — used by the extension popup to detect backend status.
+
+    `reasoner` is the RESOLVED provider name (from the reasoner registry), so it
+    always reports the model path that will actually serve agent requests. The
+    API key itself is never exposed — only whether one is configured.
+    """
     return HealthResponse(
-        reasoner=config.REASONER_MODE,
+        reasoner=resolve_reasoner_name(config.REASONER_MODE),
         reasoner_configured=config.has_api_key(),
     )
 

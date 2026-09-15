@@ -35,7 +35,7 @@ from ..models import (
     BrowserActionModel,
     ReasoningTelemetry,
 )
-from ..reasoner import MockReasoner, OpenRouterReasoner, ReasoningError
+from ..reasoner import ReasoningError, build_reasoner, resolve_reasoner_name
 from ..security import PayloadSecurityError, verify_payload_invariants
 
 router = APIRouter(prefix="/api/v1/agent", tags=["agent"])
@@ -43,14 +43,14 @@ logger = logging.getLogger("privagent.agent")
 
 
 def _build_reasoner():
-    """Select the reasoner based on server-side configuration.
+    """Select the reasoner from SERVER-SIDE configuration only.
 
-    Fail-closed: unsupported modes resolve to the OpenRouter reasoner, which
-    itself refuses to run without an API key. No guessing-based fallback exists.
+    Resolution happens in `reasoner.build_reasoner` (the provider registry), so
+    swapping the reasoning model is a configuration change. Fail-closed: an
+    unknown mode resolves to the production reasoner, which refuses to run
+    without an API key. No guessing-based fallback exists.
     """
-    if config.REASONER_MODE == "mock":
-        return MockReasoner()
-    return OpenRouterReasoner()
+    return build_reasoner(config.REASONER_MODE)
 
 
 @router.post(
@@ -158,7 +158,9 @@ async def generate_action(
         )
 
     telemetry = ReasoningTelemetry(
-        provider=("mock" if config.REASONER_MODE == "mock" else "openrouter"),
+        # Provider id comes from the registry selection, so a newly registered
+        # provider is reported correctly without changing this route.
+        provider=resolve_reasoner_name(config.REASONER_MODE),
         model=result.model,
         latency_ms=round(result.latency_ms, 1),
         attempts=result.attempts,

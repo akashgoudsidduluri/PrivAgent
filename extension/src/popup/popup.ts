@@ -12,9 +12,8 @@ import { LocalOCREngine } from '../ocr/ocrEngine';
 import { detectSensitiveOCRRegions } from '../ocr/ocrDetector';
 import { mapDOMToScreenshot } from '../capture/coordinateMapper';
 import { checkBackendHealth, sendSanitizedContext } from '../agent/agentBridge';
-import { MockAgentProvider } from '../agent/mockAgentProvider';
-import { BackendAgentProvider } from '../agent/backendAgentProvider';
 import { AgentProvider } from '../agent/agentProvider';
+import { createAgentProvider, getProviderDescriptor } from '../agent/providerRegistry';
 import { validateAction } from '../agent/actionValidator';
 import { canPerformAction } from '../agent/privacyPolicy';
 import { BrowserAction } from '../agent/actionTypes';
@@ -670,9 +669,11 @@ presetBtns.forEach((btn) => {
   });
 });
 
-const defaultAgentProvider = new MockAgentProvider();
-
 // ── M7: Provider selection (backend→Gemma default; mock for offline dev) ────
+//
+// Provider construction is delegated to the provider registry so that adding a
+// new reasoning model requires only a registry entry — M6's loop, the M5
+// validator, and the privacy policy stay completely provider-agnostic.
 type SelectedProviderType = 'backend' | 'mock';
 
 const providerSelect = document.getElementById('agent-provider-select') as HTMLSelectElement | null;
@@ -685,15 +686,22 @@ function getSelectedProviderType(): SelectedProviderType {
 
 function createAgentLoopProvider(type: SelectedProviderType): AgentProvider {
   // PRODUCTION: backend provider → local FastAPI → Gemma via OpenRouter.
-  // The API key NEVER reaches the extension. Mock stays for offline dev/tests.
-  if (type === 'mock') return new MockAgentProvider();
-  return new BackendAgentProvider({ timeoutMs: 30000 });
+  // The API key NEVER reaches the extension, so `allowClientSideApiKey` is
+  // deliberately not passed here: a client-side-key provider can never be
+  // constructed from the popup.
+  return createAgentProvider({ provider: type });
 }
 
 function updateProviderStatusLabel(): void {
   if (providerStatusEl) {
     const type = getSelectedProviderType();
-    providerStatusEl.textContent = type === 'mock' ? 'mock (offline)' : 'backend → Gemma (OpenRouter)';
+    const descriptor = getProviderDescriptor(type);
+    const model = descriptor?.defaultModel;
+    providerStatusEl.textContent = descriptor
+      ? model
+        ? `${descriptor.label} · ${model}`
+        : descriptor.label
+      : type;
     providerStatusEl.style.color = type === 'mock' ? '#9ca3af' : '#34d399';
   }
 }

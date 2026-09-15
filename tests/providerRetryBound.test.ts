@@ -127,6 +127,48 @@ describe('Provider retry bound proof (Phase 4)', () => {
     expect(state.providerAttempts).toBe(1);
   });
 
+  it('M7 hotfix: a rate_limit failure is non-retryable — ONE request for the whole task', async () => {
+    let calls = 0;
+    const rateLimited: AgentProvider = {
+      name: 'RateLimited',
+      async requestAction(): Promise<BrowserAction> {
+        calls++;
+        throw new ProviderError('429 slow down', 'rate_limit', { retryable: false, status: 429 });
+      },
+    };
+
+    const loop = makeLoop(rateLimited, { maxSteps: 10, providerRetries: 3 });
+    const state = await loop.runTask('Open the account details and find the recent transactions');
+
+    // No immediate retry, no nested retry: exactly one provider request.
+    expect(calls).toBe(1);
+    expect(state.providerAttempts).toBe(1);
+    // Fail-closed: no action is invented or executed when reasoning is unavailable.
+    expect(state.status).toBe('FAILED');
+    expect(state.previousActions).toEqual([]);
+    expect(state.reason).toMatch(/reasoning/i);
+  });
+
+  it('M7 hotfix: genuinely transient failures still retry per the bounded policy', async () => {
+    for (const kind of ['network', 'timeout', 'http_error'] as const) {
+      let calls = 0;
+      const transient: AgentProvider = {
+        name: `Transient-${kind}`,
+        async requestAction(): Promise<BrowserAction> {
+          calls++;
+          throw new ProviderError(`transient ${kind}`, kind, { retryable: true });
+        },
+      };
+
+      const loop = makeLoop(transient, { maxSteps: 10, providerRetries: 2 });
+      const state = await loop.runTask('Find the account number field');
+
+      expect(calls).toBe(3); // 1 + providerRetries
+      expect(state.providerAttempts).toBe(3);
+      expect(state.status).toBe('FAILED');
+    }
+  });
+
   it('retryable failure retries are bounded per step (1 + providerRetries)', async () => {
     let calls = 0;
     const flakyThenSuccess: AgentProvider = {

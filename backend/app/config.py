@@ -25,10 +25,17 @@ except ImportError:  # pragma: no cover - dotenv is a soft dependency
 
 
 # ── Reasoner mode ─────────────────────────────────────────────────────────────
-# "openrouter" — real Gemma reasoning via OpenRouter (production/demo mode)
-# "mock"       — deterministic offline reasoner (tests / CI only, never guessing)
+# Selects the SERVER-SIDE reasoning provider by name. The authoritative list of
+# valid names is `reasoner.REASONER_REGISTRY`:
+#   "openrouter" — real Gemma reasoning via OpenRouter (production/demo mode)
+#   "mock"       — deterministic offline reasoner (tests / CI only, never guessing)
+#                   plus any future provider registered there.
+# Adding a provider is a registry entry + this env var — no change to the agent
+# route, the request/response models, the security validator, or the extension.
+# An unregistered name FAILS CLOSED to the production provider (see
+# reasoner.build_reasoner) rather than to any deterministic fallback.
 REASONER_MODE = os.environ.get("PRIVAGENT_REASONER", "openrouter").strip().lower()
-if REASONER_MODE not in ("openrouter", "mock"):
+if not REASONER_MODE:
     REASONER_MODE = "openrouter"
 
 
