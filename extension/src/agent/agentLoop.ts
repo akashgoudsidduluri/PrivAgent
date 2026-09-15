@@ -238,6 +238,7 @@ export class AgentLoop {
         this.notifyProgress();
         break;
       }
+      console.info('[AgentTrace] perception complete');
 
       // Defense-in-depth: enforce zero raw PII in newly perceived context
       assertSanitizedContextSafe(context);
@@ -248,6 +249,7 @@ export class AgentLoop {
         this.state.status = 'SUCCESS';
         this.state.reason = 'Task goal successfully achieved.';
         this.notifyProgress();
+        console.info('[AgentTrace] M6 completed');
         break;
       }
 
@@ -256,7 +258,9 @@ export class AgentLoop {
       this.state.currentStep++;
       let action: BrowserAction;
       try {
+        console.info('[AgentTrace] requesting reasoning');
         action = await this.requestActionWithBoundedRetry(task, context);
+        console.info('[AgentTrace] reasoning response received');
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.state.status = 'FAILED';
@@ -290,6 +294,7 @@ export class AgentLoop {
         await this.delay(this.delayBetweenStepsMs);
         continue;
       }
+      console.info('[AgentTrace] action validated');
 
       // 7. Privacy Capability Policy Check
       const targetDet = 'target' in action ? context.detections.find((d) => d.id === (action as any).target) : undefined;
@@ -309,7 +314,9 @@ export class AgentLoop {
       }
 
       // 8. Deterministic Browser Execution
+      console.info('[AgentTrace] executeAction started');
       const execResult = await this.callbacks.executeAction(action);
+      console.info('[AgentTrace] executeAction response received');
       if (!execResult.success) {
         this.state.retryCount++;
         this.recordStep(action, true, validation.reason, false, execResult.error, targetDet?.type);
@@ -341,10 +348,12 @@ export class AgentLoop {
         this.state.status = 'SUCCESS';
         this.state.reason = 'Task goal successfully achieved.';
         this.notifyProgress();
+        console.info('[AgentTrace] M6 completed');
         break;
       }
 
       // 10. Bounded observation delay to allow DOM to settle before next perception
+      console.info('[AgentTrace] M6 next step');
       await this.delay(this.delayBetweenStepsMs);
       if (this.isStopped) {
         this.state.status = 'STOPPED';
@@ -354,6 +363,7 @@ export class AgentLoop {
       }
     }
 
+    console.info('[AgentTrace] M6 completed');
     return this.getState();
   }
 
@@ -370,7 +380,9 @@ export class AgentLoop {
     this.state.status = 'IN_PROGRESS';
 
     // Execute the confirmed action
+    console.info('[AgentTrace] executeAction started');
     const execResult = await this.callbacks.executeAction(action);
+    console.info('[AgentTrace] executeAction response received');
     if (!execResult.success) {
       this.state.status = 'FAILED';
       this.state.reason = `Confirmed action execution failed: ${execResult.error}`;
@@ -401,7 +413,21 @@ export class AgentLoop {
     for (let attempt = 0; attempt <= this.providerRetries; attempt++) {
       this.state.providerAttempts++;
       try {
-        return await this.provider.requestAction(task, context, this.state.previousActions);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new ProviderError('Reasoning provider request timed out after 25s.', 'timeout', {
+                  retryable: true,
+                })
+              ),
+            25000
+          )
+        );
+        return await Promise.race([
+          this.provider.requestAction(task, context, this.state.previousActions),
+          timeoutPromise,
+        ]);
       } catch (err: unknown) {
         lastError = err;
         const retryable = err instanceof ProviderError ? err.retryable : false;

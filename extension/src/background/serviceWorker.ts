@@ -3,6 +3,7 @@ import { createAgentProvider } from '../agent/providerRegistry';
 import { buildAgentPayload, PrivacyScanReport, AgentContextPayload } from '../privacy/types';
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
+import { resolveTargetWebTab } from './targetResolver';
 
 // PrivAgent Background Service Worker (Manifest V3)
 let activeLoop: AgentLoop | null = null;
@@ -15,27 +16,32 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 /**
- * Resolve target web tab for browser automation.
- * CRITICAL RULE: NEVER target the dashboard tab (localhost:5173).
+ * Ensures the target tab has the content script injected and responsive.
+ * If the tab was opened prior to extension reload, dynamically injects contentScript.
  */
-async function resolveTargetWebTab(dashboardUrl?: string): Promise<chrome.tabs.Tab | null> {
-  const tabs = await chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] });
-
-  const eligibleTabs = tabs.filter((t) => {
-    if (!t.url || !t.id) return false;
-    if (dashboardUrl && t.url.startsWith(dashboardUrl)) return false;
-    if (t.url.includes(':5173')) return false; // Dashboard exclusion
-    return true;
-  });
-
-  if (eligibleTabs.length === 0) return null;
-
-  // Prioritize the synthetic banking demo site (localhost:4173) or active tab
-  const demoTab = eligibleTabs.find((t) => t.url?.includes(':4173') || t.url?.includes('bank'));
-  if (demoTab) return demoTab;
-
-  const activeTab = eligibleTabs.find((t) => t.active);
-  return activeTab || eligibleTabs[0];
+async function ensureTargetTabReady(tabId: number): Promise<boolean> {
+  try {
+    const res = await chrome.tabs.sendMessage(tabId, { type: 'PRIVAGENT_GET_VIEWPORT_GEOMETRY' });
+    if (res) return true;
+  } catch {
+    // Content script not yet attached; inject dynamically
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['contentScript.js'],
+      });
+      await chrome.scripting.insertCSS({
+        target: { tabId },
+        files: ['contentStyles.css'],
+      });
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      return true;
+    } catch (e) {
+      console.warn('[PrivAgent SW] Content script auto-injection warning:', e);
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -98,12 +104,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // ── Real M6 Agent Loop from Web Dashboard ────────────────────────────────
   if (message.type === 'PRIVAGENT_DASHBOARD_START_TASK') {
+    console.info('[AgentTrace] dashboard START_TASK received');
     const task = message.task as string;
-    const dashboardTabId = sender.tab?.id;
-    if (dashboardTabId) currentDashboardTabId = dashboardTabId;
+    const dashboardTabId = sender.tab?.id || currentDashboardTabId;
+    if (sender.tab?.id) currentDashboardTabId = sender.tab.id;
+
+    // Send immediate acknowledgement
+    sendResponse({ started: true });
 
     (async () => {
-      const targetTab = await resolveTargetWebTab(message.originUrl);
+      // Query all tabs with no restrictive URL pattern so all localhost ports & schemes are returned
+      const allTabs = await chrome.tabs.query({});
+      const resolution = resolveTargetWebTab(allTabs, task, message.originUrl || 'http://localhost:5173');
+
+      // Development diagnostics: tab IDs & origins only — strictly zero PII, no DOM, no passwords
+      console.info('[PrivAgent SW] Discovered tabs:', resolution.discoveredTabs);
+      console.info('[PrivAgent SW] Target tab selected:', {
+        tabId: resolution.selectedTab?.id,
+        origin: resolution.selectedTab?.url ? new URL(resolution.selectedTab.url).origin : null,
+        reason: resolution.reason,
+      });
+
+      const targetTab = resolution.selectedTab;
       if (!targetTab || !targetTab.id) {
         if (dashboardTabId) {
           chrome.tabs.sendMessage(dashboardTabId, {
@@ -114,22 +136,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               maxSteps: 10,
               task,
               steps: [],
-              reason: 'No target web tab found. Please open http://localhost:4173 in another tab.',
+              reason: resolution.reason || 'No browser tab is available for this task. Open the webpage you want PrivAgent to work with and try again.',
             },
-          });
+          }).catch(() => {});
         }
         return;
       }
 
       const targetTabId = targetTab.id;
+      console.info('[AgentTrace] target tab resolved', {
+        tabId: targetTabId,
+        origin: targetTab.url ? new URL(targetTab.url).origin : null,
+      });
 
-      // Bring target tab into view briefly if desired, or focus
+      // Ensure content script is active and responsive in the target tab
+      await ensureTargetTabReady(targetTabId);
+
+      const withTimeout = <T>(promise: Promise<T>, ms: number, timeoutMsg: string): Promise<T> =>
+        new Promise((resolve, reject) => {
+          const t = setTimeout(() => reject(new Error(timeoutMsg)), ms);
+          promise
+            .then((res) => {
+              clearTimeout(t);
+              resolve(res);
+            })
+            .catch((err) => {
+              clearTimeout(t);
+              reject(err);
+            });
+        });
+
       const loopCallbacks = {
         perceivePage: async (): Promise<AgentContextPayload | null> => {
           try {
-            const scanRes = (await chrome.tabs.sendMessage(targetTabId, {
-              type: 'PRIVAGENT_SCAN_REQUEST',
-            })) as { report?: PrivacyScanReport } | null;
+            const scanRes = (await withTimeout(
+              chrome.tabs.sendMessage(targetTabId, { type: 'PRIVAGENT_SCAN_REQUEST' }),
+              10000,
+              'Page perception timed out (10s).'
+            )) as { report?: PrivacyScanReport } | null;
 
             if (!scanRes?.report) return null;
             const built = buildAgentPayload(scanRes.report, null);
@@ -143,10 +187,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         executeAction: async (action: BrowserAction) => {
           try {
-            const execRes = (await chrome.tabs.sendMessage(targetTabId, {
-              type: 'PRIVAGENT_EXECUTE_ACTION',
-              action,
-            })) as { result?: { success: boolean; error?: string } } | null;
+            const execRes = (await withTimeout(
+              chrome.tabs.sendMessage(targetTabId, { type: 'PRIVAGENT_EXECUTE_ACTION', action }),
+              10000,
+              'Browser action execution timed out (10s).'
+            )) as { result?: { success: boolean; error?: string } } | null;
 
             if (execRes?.result && execRes.result.success) {
               return { success: true };
@@ -183,6 +228,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
 
       try {
+        console.info('[AgentTrace] M6 loop started');
         const finalState = await activeLoop.runTask(task);
         if (dashboardTabId) {
           chrome.tabs.sendMessage(dashboardTabId, {
@@ -207,8 +253,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     })();
 
-    sendResponse({ started: true });
-    return true;
+    return false;
   }
 
   // ── Stop real task execution ─────────────────────────────────────────────

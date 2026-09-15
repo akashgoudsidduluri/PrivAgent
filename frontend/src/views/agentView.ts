@@ -1,5 +1,6 @@
 import { AgentAdapter } from '../adapters/agentAdapter';
 import { DashboardAgentState, PipelineStage } from '../types/dashboard';
+import { classifyUserIntent, extractExplicitTargetFromTask } from '../routing/intentClassifier';
 
 export class AgentView {
   private container: HTMLElement;
@@ -9,6 +10,7 @@ export class AgentView {
   private conversationHistory: Array<{
     sender: 'user' | 'assistant';
     text: string;
+    isBrowserTask?: boolean;
     state?: DashboardAgentState;
   }> = [];
 
@@ -111,17 +113,41 @@ export class AgentView {
       const welcome = this.container.querySelector('#chat-welcome') as HTMLElement;
       if (welcome) welcome.style.display = 'none';
 
-      // 3. Add User message to conversation
+      // 3. Classify intent: CHAT vs BROWSER_TASK
+      const classification = classifyUserIntent(task);
+
+      if (classification.intent === 'CHAT') {
+        this.conversationHistory.push({
+          sender: 'user',
+          text: task,
+          isBrowserTask: false,
+        });
+
+        this.conversationHistory.push({
+          sender: 'assistant',
+          text:
+            classification.suggestedResponse ||
+            'Hi. I can help you automate tasks in your browser while keeping sensitive information protected on-device.',
+          isBrowserTask: false,
+        });
+
+        this.renderConversation();
+        this.isSubmitting = false;
+        return;
+      }
+
+      // 4. Browser Automation Task
       this.conversationHistory.push({
         sender: 'user',
         text: task,
+        isBrowserTask: true,
       });
 
-      // 4. Add Assistant initial lead response
       const leadResponse = this.generateLeadResponse(task);
       this.conversationHistory.push({
         sender: 'assistant',
         text: leadResponse,
+        isBrowserTask: true,
       });
 
       this.isActivityExpanded = true;
@@ -183,6 +209,10 @@ export class AgentView {
 
   private generateLeadResponse(task: string): string {
     const lower = task.toLowerCase();
+    const explicit = extractExplicitTargetFromTask(task);
+    if (explicit && (explicit.port || explicit.hostname)) {
+      return "I'll navigate to the requested page while keeping sensitive information protected on-device.";
+    }
     if (lower.includes('transaction')) {
       return "I'll find your recent transactions while keeping sensitive financial information protected on-device.";
     }
@@ -247,6 +277,7 @@ export class AgentView {
         `;
       } else if (msg.sender === 'assistant') {
         const isLatest = i === this.conversationHistory.length - 1;
+        const isTask = msg.isBrowserTask === true;
 
         html += `
           <div class="assistant-message-row">
@@ -257,9 +288,9 @@ export class AgentView {
                 ${escapeHtml(msg.text)}
               </div>
 
-              ${isLatest ? this.renderActivityBlock(state) : ''}
+              ${isLatest && isTask ? this.renderActivityBlock(state) : ''}
 
-              ${isLatest && state.status === 'SUCCESS' ? `
+              ${isLatest && isTask && state.status === 'SUCCESS' ? `
                 <div class="task-completion-banner">
                   <span style="font-size: 16px;">✓</span>
                   <div>
@@ -271,7 +302,7 @@ export class AgentView {
                 </div>
               ` : ''}
 
-              ${isLatest && state.status === 'FAILED' ? `
+              ${isLatest && isTask && state.status === 'FAILED' ? `
                 <div class="task-failed-banner">
                   <span style="font-size: 16px;">✕</span>
                   <div>
@@ -283,7 +314,7 @@ export class AgentView {
                 </div>
               ` : ''}
 
-              ${isLatest && state.status === 'STOPPED' ? `
+              ${isLatest && isTask && state.status === 'STOPPED' ? `
                 <div style="background-color: var(--status-stopped-bg); border: 1px solid var(--status-stopped-border); padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; color: var(--status-stopped);">
                   <strong>■ Task stopped</strong>
                   <div style="color: var(--text-secondary); margin-top: 2px;">
@@ -369,6 +400,8 @@ export class AgentView {
       previewText = '■ Task stopped by user';
     }
 
+    const failedEarly = state.status === 'FAILED' && state.steps.length === 0;
+
     // Dynamic thinking steps based on REAL execution steps
     const stepItemsHtml = state.steps.map((s) => `
       <div class="activity-step-row done">
@@ -396,24 +429,33 @@ export class AgentView {
         </div>
 
         <div id="activity-drawer" class="activity-details-drawer" style="display: ${this.isActivityExpanded ? 'flex' : 'none'};">
-          <div class="activity-step-row done">
-            <div class="activity-step-marker">✓</div>
-            <div>
-              <strong>Page perception</strong> — DOM & Visual OCR scanned
+          ${failedEarly ? `
+            <div class="activity-step-row failed">
+              <div class="activity-step-marker" style="color: var(--status-failed);">✕</div>
+              <div>
+                <strong>Target tab resolution</strong> — ${escapeHtml(state.reason || 'No browser tab available')}
+              </div>
             </div>
-          </div>
-          <div class="activity-step-row done">
-            <div class="activity-step-marker">✓</div>
-            <div>
-              <strong>On-device privacy protection</strong> — ${state.sensitiveItemsCount > 0 ? `${state.sensitiveItemsCount} sensitive items protected locally` : 'Local firewall verified zero leakage'}
+          ` : `
+            <div class="activity-step-row done">
+              <div class="activity-step-marker">✓</div>
+              <div>
+                <strong>Page perception</strong> — DOM & Visual OCR scanned
+              </div>
             </div>
-          </div>
-          <div class="activity-step-row done">
-            <div class="activity-step-marker">✓</div>
-            <div>
-              <strong>Context minimization</strong> — Outbound context sanitized & bounded (M8)
+            <div class="activity-step-row done">
+              <div class="activity-step-marker">✓</div>
+              <div>
+                <strong>On-device privacy protection</strong> — ${state.sensitiveItemsCount > 0 ? `${state.sensitiveItemsCount} sensitive items protected locally` : 'Local firewall verified zero leakage'}
+              </div>
             </div>
-          </div>
+            <div class="activity-step-row done">
+              <div class="activity-step-marker">✓</div>
+              <div>
+                <strong>Context minimization</strong> — Outbound context sanitized & bounded (M8)
+              </div>
+            </div>
+          `}
           ${stepItemsHtml}
           ${state.status === 'RUNNING' ? `
             <div class="activity-step-row active">

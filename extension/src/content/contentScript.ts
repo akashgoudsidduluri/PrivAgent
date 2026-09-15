@@ -176,7 +176,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       type: 'PRIVAGENT_EXECUTE_ACTION_RESPONSE',
       result,
     });
-    return true;
+    return false;
   }
 
   // Dashboard Progress Relay from background worker to web UI
@@ -190,11 +190,19 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       '*'
     );
     sendResponse({ ok: true });
-    return true;
+    return false;
   }
 
   return false;
 });
+
+function isExtensionContextValid(): boolean {
+  try {
+    return Boolean(typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id);
+  } catch {
+    return false;
+  }
+}
 
 // ── Dashboard Web UI Bridge ─────────────────────────────────────────────────
 window.addEventListener('message', (event) => {
@@ -204,34 +212,97 @@ window.addEventListener('message', (event) => {
 
   // Immediate handshake ping response
   if (type === 'PING_EXTENSION') {
+    const valid = isExtensionContextValid();
     window.postMessage(
       {
         source: 'privagent-extension',
         type: 'PONG_EXTENSION',
         version: '0.4.0',
-        connected: true,
+        connected: valid,
+        error: valid ? undefined : 'Extension context invalidated. Please refresh this tab.',
       },
       '*'
     );
     return;
   }
 
-  // Forward dashboard commands to background service worker
-  if (type === 'START_TASK') {
-    chrome.runtime.sendMessage({
-      type: 'PRIVAGENT_DASHBOARD_START_TASK',
-      task,
-      originUrl: window.location.href,
-    });
-  } else if (type === 'STOP_TASK') {
-    chrome.runtime.sendMessage({
-      type: 'PRIVAGENT_DASHBOARD_STOP_TASK',
-    });
-  } else if (type === 'CONFIRM_ACTION') {
-    chrome.runtime.sendMessage({
-      type: 'PRIVAGENT_DASHBOARD_CONFIRM_ACTION',
-      allowed,
-    });
+  if (!isExtensionContextValid()) {
+    console.warn('[PrivAgent] Extension context invalidated while handling:', type);
+    window.postMessage(
+      {
+        source: 'privagent-extension',
+        type: 'TASK_PROGRESS',
+        payload: {
+          status: 'FAILED',
+          currentStep: 0,
+          maxSteps: 10,
+          task: task || '',
+          steps: [],
+          reason: 'Extension was reloaded. Please refresh this tab to reconnect to the extension.',
+        },
+      },
+      '*'
+    );
+    return;
+  }
+
+  // Forward dashboard commands to background service worker with error handling
+  try {
+    if (type === 'START_TASK') {
+      chrome.runtime.sendMessage(
+        {
+          type: 'PRIVAGENT_DASHBOARD_START_TASK',
+          task,
+          originUrl: window.location.href,
+        },
+        (_response) => {
+          if (chrome.runtime.lastError) {
+            console.warn('[PrivAgent] START_TASK error:', chrome.runtime.lastError.message);
+            window.postMessage(
+              {
+                source: 'privagent-extension',
+                type: 'TASK_PROGRESS',
+                payload: {
+                  status: 'FAILED',
+                  currentStep: 0,
+                  maxSteps: 10,
+                  task: task || '',
+                  steps: [],
+                  reason: chrome.runtime.lastError.message || 'Failed to dispatch task to background service worker.',
+                },
+              },
+              '*'
+            );
+          }
+        }
+      );
+    } else if (type === 'STOP_TASK') {
+      chrome.runtime.sendMessage({
+        type: 'PRIVAGENT_DASHBOARD_STOP_TASK',
+      });
+    } else if (type === 'CONFIRM_ACTION') {
+      chrome.runtime.sendMessage({
+        type: 'PRIVAGENT_DASHBOARD_CONFIRM_ACTION',
+        allowed,
+      });
+    }
+  } catch (err) {
+    console.warn('[PrivAgent] Failed to send message to background worker:', err);
+    window.postMessage(
+      {
+        source: 'privagent-extension',
+        type: 'TASK_PROGRESS',
+        payload: {
+          status: 'FAILED',
+          currentStep: 0,
+          maxSteps: 10,
+          task: task || '',
+          steps: [],
+          reason: 'Extension context invalidated. Please refresh this tab.',
+        },
+      },
+      '*'
+    );
   }
 });
 
