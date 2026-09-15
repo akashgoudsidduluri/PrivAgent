@@ -22,6 +22,7 @@ import { AgentProvider } from './agentProvider';
 import { BrowserAction, SUPPORTED_ACTION_TYPES } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { assertSanitizedContextSafe } from './privacyPolicy';
+import { buildModelFacingContext } from '../privacy/contextMinimizer';
 
 export const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it:free';
 
@@ -91,16 +92,15 @@ export class OpenRouterProvider implements AgentProvider {
   }
 
   async requestAction(task: string, context: AgentContextPayload): Promise<BrowserAction> {
-    // 1. Enforce local privacy boundary on outgoing payload
+    // 1. Enforce local privacy boundary on outgoing payload (M5 assertion +
+    //    M8 raw-value firewall, shared by every provider implementation).
     assertSanitizedContextSafe(context);
 
-    // 2. Prepare safe element summaries (strictly allowlisted fields: id, type, bbox, confidence)
-    const elementSummaries = context.detections.map((d) => ({
-      id: d.id,
-      type: d.type,
-      confidence: d.confidence,
-      bbox: d.bbox,
-    }));
+    // 2. Prepare the MINIMAL model-facing view via the single shared
+    //    minimization path (M8). Structurally excludes selectors, counters,
+    //    character lengths, viewport detail, OCR text and images.
+    const modelView = buildModelFacingContext(context, task);
+    const elementSummaries = modelView.elements;
 
     const systemPrompt = [
       'You are a lightweight browser automation agent.',

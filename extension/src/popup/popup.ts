@@ -12,6 +12,7 @@ import { LocalOCREngine } from '../ocr/ocrEngine';
 import { detectSensitiveOCRRegions } from '../ocr/ocrDetector';
 import { mapDOMToScreenshot } from '../capture/coordinateMapper';
 import { checkBackendHealth, sendSanitizedContext } from '../agent/agentBridge';
+import { minimizeAgentContext, MinimizationResult } from '../privacy/contextMinimizer';
 import { AgentProvider } from '../agent/agentProvider';
 import { createAgentProvider, getProviderDescriptor } from '../agent/providerRegistry';
 import { validateAction } from '../agent/actionValidator';
@@ -102,6 +103,37 @@ const btnViewAgentPayload = document.getElementById('btn-view-agent-payload')!;
 
 // Agent payload cache (for View JSON)
 let lastAgentPayload: AgentContextPayload | null = null;
+
+// M8: last minimization report (for the Privacy Fusion telemetry row)
+const m8FusionStatus = document.getElementById('m8-fusion-status');
+
+function setFusionStatus(label: string, isError = false): void {
+  if (m8FusionStatus) {
+    m8FusionStatus.textContent = label;
+    m8FusionStatus.style.color = isError ? '#ef4444' : '#34d399';
+  }
+}
+
+/**
+ * M8 Privacy Fusion + Context Minimization: takes the allowlisted M4 payload
+ * and produces the MINIMIZED payload actually sent to providers. Deterministic
+ * rules only (fusion → policy → task-relevance → bound); no LLM, no retrieval.
+ * The result is re-verified by the raw-value firewall before use.
+ */
+function minimizedContext(payload: AgentContextPayload, task = ''): AgentContextPayload {
+  try {
+    const result: MinimizationResult = minimizeAgentContext(payload, { task });
+    const r = result.report;
+    setFusionStatus(
+      `✓ ${r.findings_detected}→${r.exported_detections} · fused ${r.fused_groups} · FC ${r.fail_closed_dropped}`
+    );
+    return result.payload;
+  } catch (err: unknown) {
+    // Fail closed: on any minimization/firewall error, refuse to hand out context.
+    setFusionStatus(`BLOCKED: ${err instanceof Error ? err.message : String(err)}`, true);
+    throw err;
+  }
+}
 
 // ── DOM Scan UI helpers ─────────────────────────────────────────────────────
 
@@ -597,11 +629,21 @@ btnSendAgent.addEventListener('click', async () => {
   setAgentStatus('⏳ Building sanitized payload…');
 
   try {
-    const result = await sendSanitizedContext(currentReport, currentVisualReport);
+    // M8: the network boundary carries the MINIMIZED context, never the raw build.
+    const built = buildAgentPayload(currentReport, currentVisualReport);
+    if (!built) {
+      setAgentStatus('❌ Cannot build sanitized payload: run a successful scan first.', false);
+      return;
+    }
+    const minimizedPayload = minimizedContext(
+      built,
+      agentTaskInput?.value?.trim() || ''
+    );
+    const result = await sendSanitizedContext(currentReport, currentVisualReport, minimizedPayload);
 
     if (result.success) {
-      // Cache payload for JSON preview (re-build using allowlist)
-      lastAgentPayload = buildAgentPayload(currentReport, currentVisualReport);
+      // Cache the minimized payload for JSON preview (exactly what was sent)
+      lastAgentPayload = minimizedPayload;
 
       setAgentStatus(`✅ Sanitized context sent — ${result.detectionCount} detection(s) transmitted.`, true);
       agentDetectionCount.textContent = String(result.detectionCount);
@@ -752,15 +794,30 @@ btnRunAgentTask?.addEventListener('click', async () => {
     return;
   }
 
-  // 2. Build sanitized context
-  const context = buildAgentPayload(currentReport, currentVisualReport);
-  if (!context) {
+  // 2. Build + minimize sanitized context (M8 fusion → policy → firewall).
+  let context: AgentContextPayload;
+  try {
+    const built = buildAgentPayload(currentReport, currentVisualReport);
+    if (!built) {
+      if (m5AgentStatus) {
+        m5AgentStatus.textContent = 'Context Error';
+        m5AgentStatus.style.color = '#ef4444';
+      }
+      if (m5ValidatorStatus) {
+        m5ValidatorStatus.textContent = 'BLOCKED: Missing required sanitized_status sentinel.';
+        m5ValidatorStatus.style.color = '#ef4444';
+      }
+      return;
+    }
+    context = minimizedContext(built, task);
+  } catch (minErr: unknown) {
+    // Fail closed: no context is handed to any provider when the firewall blocks.
     if (m5AgentStatus) {
-      m5AgentStatus.textContent = 'Context Error';
+      m5AgentStatus.textContent = 'Privacy Firewall';
       m5AgentStatus.style.color = '#ef4444';
     }
     if (m5ValidatorStatus) {
-      m5ValidatorStatus.textContent = 'BLOCKED: Missing required sanitized_status sentinel.';
+      m5ValidatorStatus.textContent = `BLOCKED: ${minErr instanceof Error ? minErr.message : String(minErr)}`;
       m5ValidatorStatus.style.color = '#ef4444';
     }
     return;
@@ -955,7 +1012,12 @@ async function runAutonomousLoop(task: string): Promise<void> {
         updateUI(currentReport);
       }
       if (!currentReport) return null;
-      return buildAgentPayload(currentReport, currentVisualReport);
+      const built = buildAgentPayload(currentReport, currentVisualReport);
+      if (!built) return null;
+      // M8: every loop step reasons over the MINIMIZED context (fusion →
+      // policy → task relevance → bound → firewall). Representative DOM
+      // detection ids are preserved so M5 grounding is unchanged.
+      return minimizedContext(built, task);
     },
 
     executeAction: async (action: BrowserAction) => {

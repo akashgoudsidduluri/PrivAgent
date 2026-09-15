@@ -27,6 +27,7 @@
  */
 
 import { SensitiveEntityType, AgentContextPayload, AgentDetection } from '../privacy/types';
+import { PrivacyBoundaryError, scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 import { BrowserAction } from './actionTypes';
 
 export type Capability =
@@ -200,6 +201,10 @@ export function handleLocalUserDisclosure(
 /**
  * Validates that an AgentContextPayload contains ONLY safe metadata before passing to an LLM.
  * Throws if any forbidden keys or raw values are present.
+ *
+ * M8: this is ALSO the shared raw-value firewall. Every provider calls it before
+ * building a prompt or opening a socket, so a single strengthened check protects
+ * all current and future providers without touching any of them.
  */
 export function assertSanitizedContextSafe(context: AgentContextPayload): void {
   if (context.sanitized_status !== 'sanitized_only') {
@@ -223,5 +228,18 @@ export function assertSanitizedContextSafe(context: AgentContextPayload): void {
         );
       }
     }
+  }
+
+  // M8 privacy firewall: independent forbidden-key + PII-shaped-value scan over
+  // the whole context. Metadata allowlisting guarantees which fields exist; this
+  // guarantees no field carries a raw sensitive VALUE. Fails closed.
+  const violations = scanForRawSensitiveValues(context);
+  if (violations.length > 0) {
+    const rules = Array.from(new Set(violations.map((v) => v.rule))).join(', ');
+    throw new PrivacyBoundaryError(
+      `[PrivacyPolicy] Raw-value firewall rejected the context ` +
+        `(${violations.length} violation(s): ${rules}). Nothing may be transmitted.`,
+      violations
+    );
   }
 }

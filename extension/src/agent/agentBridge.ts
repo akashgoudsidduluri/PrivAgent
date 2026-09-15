@@ -168,13 +168,18 @@ export async function checkBackendHealth(): Promise<HealthCheckResult> {
  *
  * @param domScanReport - The latest PrivacyScanReport from the content script
  * @param visualReport  - The latest VisualCaptureReport (optional, may be null)
+ * @param prebuiltPayload - An already-minimized payload (M8 context minimization).
+ *   When supplied it is used verbatim instead of rebuilding from the reports, so
+ *   the network boundary always carries the minimized context. It is still
+ *   subjected to the same pre-flight security checks.
  */
 export async function sendSanitizedContext(
   domScanReport: PrivacyScanReport,
   visualReport: VisualCaptureReport | null,
+  prebuiltPayload?: AgentContextPayload | null,
 ): Promise<AgentBridgeResult> {
-  // Step 1: Build payload via explicit allowlist
-  const payload = buildAgentPayload(domScanReport, visualReport);
+  // Step 1: Build payload via explicit allowlist (or use the minimized one)
+  const payload = prebuiltPayload ?? buildAgentPayload(domScanReport, visualReport);
   if (!payload) {
     return {
       success: false,
