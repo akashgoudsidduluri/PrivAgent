@@ -7,7 +7,8 @@ export type SensitiveEntityType =
   | 'person_name'
   | 'pan'
   | 'otp'
-  | 'cvv';
+  | 'cvv'
+  | 'address';
 
 export type DetectionSource = 
   | 'dom_input_type' 

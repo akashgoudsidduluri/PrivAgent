@@ -129,6 +129,8 @@ export class PrivacyCenterView {
         { key: 'pan', label: 'PAN' },
         { key: 'cvv', label: 'CVV' },
         { key: 'otp', label: 'OTP' },
+        { key: 'person_name', label: 'Personal Name' },
+        { key: 'address', label: 'Physical Address' },
       ] as const;
 
       pillsContainer.innerHTML = categories

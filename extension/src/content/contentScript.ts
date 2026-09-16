@@ -74,6 +74,7 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
     pan: 0,
     otp: 0,
     cvv: 0,
+    address: 0,
   };
 
   for (const det of detections) {

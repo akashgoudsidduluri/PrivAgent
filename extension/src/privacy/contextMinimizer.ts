@@ -128,7 +128,7 @@ export interface MinimizationResult {
 /** Categories representable in the frozen M4 payload contract. */
 const EXPORTABLE_TYPES: ReadonlySet<string> = new Set<SensitiveEntityType>([
   'password', 'email', 'phone', 'credit_card', 'account_number',
-  'person_name', 'pan', 'otp', 'cvv',
+  'person_name', 'pan', 'otp', 'cvv', 'address',
 ]);
 
 /** Deterministic stopword list for task-term extraction. */

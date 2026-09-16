@@ -1,7 +1,7 @@
 {
   "benchmarkTitle": "PrivAgent SIH Official Evaluation Benchmark Report",
-  "timestamp": "2026-09-16T03:11:00.573Z",
-  "benchmarkDurationMs": 537,
+  "timestamp": "2026-09-16T11:58:42.632Z",
+  "benchmarkDurationMs": 1139,
   "environment": {
     "platform": "win32",
     "architecture": "x64",
@@ -16,8 +16,8 @@
     },
     "piiDetectionF1": {
       "weight": "20%",
-      "score": 0.5625,
-      "macroScore": 0.3833
+      "score": 0.9259,
+      "macroScore": 0.9458
     },
     "redactionPrecision": {
       "weight": "20%",
@@ -34,118 +34,118 @@
     }
   },
   "piiBenchmark": {
-    "totalSamples": 28,
+    "totalSamples": 75,
     "microAverages": {
-      "precision": 0.6429,
-      "recall": 0.5,
-      "f1Score": 0.5625,
-      "sampleCount": 23
+      "precision": 0.8621,
+      "recall": 1,
+      "f1Score": 0.9259,
+      "sampleCount": 58
     },
     "macroAverages": {
-      "precision": 0.85,
-      "recall": 0.45,
-      "f1Score": 0.3833
+      "precision": 0.9169,
+      "recall": 1,
+      "f1Score": 0.9458
     },
     "categories": [
       {
         "category": "password",
-        "tp": 2,
-        "fp": 2,
+        "tp": 5,
+        "fp": 0,
         "fn": 0,
-        "tn": 24,
-        "precision": 0.5,
+        "tn": 70,
+        "precision": 1,
         "recall": 1,
-        "f1": 0.6667
+        "f1": 1
       },
       {
         "category": "otp",
-        "tp": 0,
+        "tp": 5,
         "fp": 0,
-        "fn": 2,
-        "tn": 26,
+        "fn": 0,
+        "tn": 70,
         "precision": 1,
-        "recall": 0,
-        "f1": 0
+        "recall": 1,
+        "f1": 1
       },
       {
         "category": "cvv",
-        "tp": 0,
+        "tp": 5,
         "fp": 0,
-        "fn": 2,
-        "tn": 26,
+        "fn": 0,
+        "tn": 70,
         "precision": 1,
-        "recall": 0,
-        "f1": 0
+        "recall": 1,
+        "f1": 1
       },
       {
         "category": "pan",
-        "tp": 2,
+        "tp": 5,
         "fp": 0,
         "fn": 0,
-        "tn": 26,
+        "tn": 70,
         "precision": 1,
         "recall": 1,
         "f1": 1
       },
       {
         "category": "account_number",
-        "tp": 2,
-        "fp": 2,
+        "tp": 5,
+        "fp": 6,
         "fn": 0,
-        "tn": 24,
-        "precision": 0.5,
+        "tn": 64,
+        "precision": 0.4545,
         "recall": 1,
-        "f1": 0.6667
+        "f1": 0.625
       },
       {
         "category": "credit_card",
-        "tp": 0,
+        "tp": 5,
         "fp": 0,
-        "fn": 2,
-        "tn": 26,
+        "fn": 0,
+        "tn": 70,
         "precision": 1,
-        "recall": 0,
-        "f1": 0
+        "recall": 1,
+        "f1": 1
       },
       {
         "category": "email",
-        "tp": 2,
+        "tp": 5,
         "fp": 0,
         "fn": 0,
-        "tn": 26,
+        "tn": 70,
         "precision": 1,
         "recall": 1,
         "f1": 1
       },
       {
         "category": "phone",
-        "tp": 1,
-        "fp": 1,
-        "fn": 1,
-        "tn": 25,
-        "precision": 0.5,
-        "recall": 0.5,
-        "f1": 0.5
+        "tp": 5,
+        "fp": 2,
+        "fn": 0,
+        "tn": 68,
+        "precision": 0.7143,
+        "recall": 1,
+        "f1": 0.8333
       },
       {
         "category": "name",
-        "tp": 0,
+        "tp": 5,
         "fp": 0,
-        "fn": 1,
-        "tn": 27,
+        "fn": 0,
+        "tn": 70,
         "precision": 1,
-        "recall": 0,
-        "f1": 0
+        "recall": 1,
+        "f1": 1
       },
       {
         "category": "address",
-        "tp": 0,
+        "tp": 5,
         "fp": 0,
-        "fn": 1,
-        "tn": 27,
+        "fn": 0,
+        "tn": 70,
         "precision": 1,
-        "recall": 0,
-        "f1": 0
+        "recall": 1,
+        "f1": 1
       }
     ]
   },
@@ -158,39 +158,39 @@
   },
   "clientResourceUtilization": {
     "iterations": 10,
-    "averageHeapUsedMB": 61.66,
-    "totalCpuTimeMs": 298,
+    "averageHeapUsedMB": 86.4,
+    "totalCpuTimeMs": 281,
     "stages": {
       "domScan": {
-        "p50Ms": 2.49,
-        "p95Ms": 5.28,
-        "meanMs": 2.55,
-        "minMs": 1.54,
-        "maxMs": 5.28,
+        "p50Ms": 3,
+        "p95Ms": 7.56,
+        "meanMs": 3.52,
+        "minMs": 1.9,
+        "maxMs": 7.56,
         "sampleCount": 10
       },
       "fusion": {
-        "p50Ms": 0.12,
-        "p95Ms": 1.45,
-        "meanMs": 0.3,
-        "minMs": 0.06,
-        "maxMs": 1.45,
+        "p50Ms": 0.13,
+        "p95Ms": 2.22,
+        "meanMs": 0.4,
+        "minMs": 0.07,
+        "maxMs": 2.22,
         "sampleCount": 10
       },
       "minimization": {
-        "p50Ms": 0.4,
-        "p95Ms": 2.14,
-        "meanMs": 0.56,
-        "minMs": 0.18,
-        "maxMs": 2.14,
+        "p50Ms": 0.46,
+        "p95Ms": 3.12,
+        "meanMs": 0.71,
+        "minMs": 0.2,
+        "maxMs": 3.12,
         "sampleCount": 10
       },
       "completePerceptionCycle": {
-        "p50Ms": 3.19,
-        "p95Ms": 8.87,
-        "meanMs": 3.42,
-        "minMs": 1.79,
-        "maxMs": 8.87,
+        "p50Ms": 3.68,
+        "p95Ms": 12.9,
+        "meanMs": 4.64,
+        "minMs": 2.18,
+        "maxMs": 12.9,
         "sampleCount": 10
       }
     }

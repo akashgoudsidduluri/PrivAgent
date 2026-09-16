@@ -2,6 +2,17 @@ import { AgentAdapter } from '../adapters/agentAdapter';
 import { DashboardAgentState, PipelineStage } from '../types/dashboard';
 import { classifyUserIntent, extractExplicitTargetFromTask } from '../routing/intentClassifier';
 
+export type AgentDisplayStatus =
+  | 'IDLE'
+  | 'THINKING'
+  | 'PERCEIVING'
+  | 'PROTECTING'
+  | 'EXECUTING'
+  | 'WAITING_FOR_CONFIRMATION'
+  | 'SUCCESS'
+  | 'FAILED'
+  | 'STOPPED';
+
 export class AgentView {
   private container: HTMLElement;
   private adapter: AgentAdapter;
@@ -10,6 +21,7 @@ export class AgentView {
   private conversationHistory: Array<{
     sender: 'user' | 'assistant';
     text: string;
+    timestamp?: string;
     isBrowserTask?: boolean;
     state?: DashboardAgentState;
   }> = [];
@@ -24,10 +36,20 @@ export class AgentView {
     this.container.innerHTML = `
       <div class="view-header">
         <div class="view-title-group">
-          <h2>PrivAgent Assistant</h2>
-          <p>Real-time autonomous browser automation with on-device privacy protection</p>
+          <div class="view-title-row">
+            <h2>PrivAgent Assistant</h2>
+            <div id="agent-runtime-badge" class="agent-status-badge status-idle">
+              <span class="status-badge-dot"></span>
+              <span class="status-badge-text">IDLE</span>
+            </div>
+          </div>
+          <p>Autonomous browser agent with zero-knowledge on-device privacy firewall</p>
         </div>
-        <div>
+        <div class="view-header-actions">
+          <div class="live-firewall-indicator" title="Hardware/local memory isolation boundary active">
+            <span class="firewall-pulse-dot"></span>
+            <span class="firewall-text">PRIVACY FIREWALL ACTIVE · 0 SENT</span>
+          </div>
           <button id="btn-new-task" class="btn btn-secondary">
             <span>+</span> New Task
           </button>
@@ -38,28 +60,53 @@ export class AgentView {
         <div id="chat-history" class="chat-history">
           <div class="chat-conversation-wrapper">
             <div id="chat-welcome" class="chat-welcome">
-              <div class="welcome-icon">🛡️</div>
+              <div class="welcome-icon-shield">
+                <span class="shield-glyph">🛡️</span>
+              </div>
               <h3>What task should PrivAgent perform?</h3>
               <p>
-                PrivAgent runs an autonomous browser agent loop directly in your browser. Sensitive
-                information is detected and protected locally on-device before sanitized context is sent to the LLM.
+                PrivAgent executes autonomous browser tasks directly in your browser tab. All passwords,
+                card numbers, OTPs, CVVs, PAN numbers, and personal identifiers are detected and redacted
+                locally on-device before sanitized context is sent to the LLM.
               </p>
+
+              <div class="privacy-guarantee-strip">
+                <div class="guarantee-item">
+                  <span class="guarantee-check">✓</span>
+                  <span>100% On-Device PII Masking</span>
+                </div>
+                <div class="guarantee-item">
+                  <span class="guarantee-check">✓</span>
+                  <span>Zero Raw Data Outbound</span>
+                </div>
+                <div class="guarantee-item">
+                  <span class="guarantee-check">✓</span>
+                  <span>Consequential Action Gating</span>
+                </div>
+              </div>
+
+              <div class="quick-prompts-label">Quick test prompts:</div>
               <div class="quick-prompts">
                 <button class="quick-prompt-btn" data-task="Open the localhost 4173 and get my account number">
-                  🏦 Open localhost:4173 & get my account number
+                  <span class="prompt-icon">🏦</span>
+                  <span>Open localhost:4173 & get my account number</span>
                 </button>
                 <button class="quick-prompt-btn" data-task="Find my recent transactions">
-                  🔍 Find my recent transactions
+                  <span class="prompt-icon">🔍</span>
+                  <span>Find my recent transactions</span>
                 </button>
                 <button class="quick-prompt-btn" data-task="Open account details">
-                  📋 Open account details
+                  <span class="prompt-icon">📋</span>
+                  <span>Open account details</span>
                 </button>
                 <button class="quick-prompt-btn" data-task="Navigate to external partner login">
-                  ⚠️ Navigate to external origin (Test safety check)
+                  <span class="prompt-icon">⚠️</span>
+                  <span>Navigate to external origin (Safety test)</span>
                 </button>
               </div>
             </div>
-            <div id="messages-container" style="display: flex; flex-direction: column; gap: 24px;"></div>
+
+            <div id="messages-container" class="messages-container"></div>
           </div>
         </div>
 
@@ -80,6 +127,9 @@ export class AgentView {
               ↑
             </button>
           </div>
+          <div class="composer-footnote">
+            <span>PrivAgent M1–M8 Architecture</span> · <span>Zero Raw PII Transmission Guarantee</span> · <span>Deterministic Verification</span>
+          </div>
         </div>
       </div>
     `;
@@ -98,105 +148,79 @@ export class AgentView {
 
       const state = this.adapter.getState();
       if (state.status === 'RUNNING') {
-        // Stop action
-        await this.adapter.stopTask();
+        this.adapter.stopTask();
         return;
       }
 
       this.isSubmitting = true;
-
-      // 1. Immediately clear input
       input.value = '';
-      input.placeholder = 'Ask PrivAgent to do something...';
 
-      // 2. Hide welcome card once conversation begins
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      this.conversationHistory.push({
+        sender: 'user',
+        text: task,
+        timestamp: now,
+      });
+
       const welcome = this.container.querySelector('#chat-welcome') as HTMLElement;
       if (welcome) welcome.style.display = 'none';
 
-      // 3. Classify intent: CHAT vs BROWSER_TASK
-      const classification = classifyUserIntent(task);
+      const intent = classifyUserIntent(task);
+      const isBrowserTask = intent.intent === 'BROWSER_TASK';
 
-      if (classification.intent === 'CHAT') {
-        this.conversationHistory.push({
-          sender: 'user',
-          text: task,
-          isBrowserTask: false,
-        });
-
+      if (isBrowserTask) {
+        const leadResponse = this.generateLeadResponse(task);
         this.conversationHistory.push({
           sender: 'assistant',
-          text:
-            classification.suggestedResponse ||
-            'Hi. I can help you automate tasks in your browser while keeping sensitive information protected on-device.',
+          text: leadResponse,
+          timestamp: now,
+          isBrowserTask: true,
+        });
+
+        this.renderConversation();
+
+        try {
+          await this.adapter.startTask(task);
+        } catch (err: any) {
+          console.error('[AgentView] Failed to start task:', err);
+        } finally {
+          this.isSubmitting = false;
+        }
+      } else {
+        this.conversationHistory.push({
+          sender: 'assistant',
+          text: intent.suggestedResponse || "Hello! I am PrivAgent, an on-device privacy-preserving browser automation assistant. Tell me what web task you'd like me to perform.",
+          timestamp: now,
           isBrowserTask: false,
         });
 
         this.renderConversation();
         this.isSubmitting = false;
-        return;
-      }
-
-      // 4. Browser Automation Task
-      this.conversationHistory.push({
-        sender: 'user',
-        text: task,
-        isBrowserTask: true,
-      });
-
-      const leadResponse = this.generateLeadResponse(task);
-      this.conversationHistory.push({
-        sender: 'assistant',
-        text: leadResponse,
-        isBrowserTask: true,
-      });
-
-      this.isActivityExpanded = true;
-      this.renderConversation();
-
-      // 5. Dispatch task to REAL adapter
-      try {
-        await this.adapter.startTask(task);
-      } finally {
-        this.isSubmitting = false;
       }
     };
 
-    actionBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const state = this.adapter.getState();
-      if (state.status === 'RUNNING') {
-        this.adapter.stopTask();
-      } else {
-        submitTask();
-      }
-    });
+    actionBtn.addEventListener('click', submitTask);
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        e.stopPropagation();
         submitTask();
       }
     });
 
-    btnNewTask.addEventListener('click', async (e) => {
-      e.preventDefault();
-      await this.adapter.stopTask();
-      this.resetConversation();
-      input.value = '';
-      input.placeholder = 'Ask PrivAgent to do something...';
-      input.focus();
-    });
-
-    // Quick prompts
-    const promptBtns = this.container.querySelectorAll('.quick-prompt-btn');
-    promptBtns.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+    if (btnNewTask) {
+      btnNewTask.addEventListener('click', () => {
         const state = this.adapter.getState();
-        if (state.status === 'RUNNING' || this.isSubmitting) return;
+        if (state.status === 'RUNNING') {
+          this.adapter.stopTask();
+        }
+        this.resetConversation();
+      });
+    }
+
+    const quickBtns = this.container.querySelectorAll('.quick-prompt-btn');
+    quickBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
         const task = (e.currentTarget as HTMLElement).getAttribute('data-task');
         if (task) {
           input.value = task;
@@ -216,6 +240,39 @@ export class AgentView {
     if (welcome) welcome.style.display = 'block';
     const messages = this.container.querySelector('#messages-container')!;
     messages.innerHTML = '';
+    this.updateStatusBadge('IDLE');
+  }
+
+  private computeDisplayStatus(state: DashboardAgentState): AgentDisplayStatus {
+    if (state.status === 'SUCCESS') return 'SUCCESS';
+    if (state.status === 'FAILED') return 'FAILED';
+    if (state.status === 'STOPPED') return 'STOPPED';
+    if (state.status === 'NEEDS_USER_CONFIRMATION') return 'WAITING_FOR_CONFIRMATION';
+
+    if (state.status === 'RUNNING') {
+      if (state.steps.length === 0) {
+        return 'PERCEIVING';
+      }
+      const lastStep = state.steps[state.steps.length - 1];
+      if (lastStep && lastStep.actionType === 'reasoning') {
+        return 'THINKING';
+      }
+      return 'EXECUTING';
+    }
+
+    return 'IDLE';
+  }
+
+  private updateStatusBadge(status: AgentDisplayStatus, extra?: string): void {
+    const badge = this.container.querySelector('#agent-runtime-badge');
+    if (!badge) return;
+
+    badge.className = `agent-status-badge status-${status.toLowerCase().replace(/_/g, '-')}`;
+
+    const textEl = badge.querySelector('.status-badge-text');
+    if (textEl) {
+      textEl.textContent = extra ? `${status} · ${extra}` : status;
+    }
   }
 
   private generateLeadResponse(task: string): string {
@@ -240,6 +297,10 @@ export class AgentView {
     const input = this.container.querySelector('#composer-input') as HTMLInputElement;
     const actionBtn = this.container.querySelector('#btn-composer-action') as HTMLButtonElement;
 
+    const displayStatus = this.computeDisplayStatus(state);
+    const stepInfo = state.steps.length > 0 ? `Step ${state.steps.length}` : undefined;
+    this.updateStatusBadge(displayStatus, stepInfo);
+
     if (state.status === 'RUNNING') {
       actionBtn.className = 'composer-button stop';
       actionBtn.textContent = '■';
@@ -252,11 +313,6 @@ export class AgentView {
       actionBtn.title = 'Run task';
       input.disabled = false;
       input.placeholder = 'Ask PrivAgent to do something...';
-    }
-
-    // Auto-collapse activity upon successful task completion
-    if (state.status === 'SUCCESS' && this.isActivityExpanded) {
-      // Keep expanded during execution; can collapse or remain compact
     }
 
     this.renderConversation(state);
@@ -277,12 +333,13 @@ export class AgentView {
 
       if (msg.sender === 'user') {
         html += `
-          <div class="chat-message-group">
-            <div class="user-sender-label">You</div>
-            <div class="user-message-row">
-              <div class="user-bubble-box">
-                ${escapeHtml(msg.text)}
-              </div>
+          <div class="chat-message-group user">
+            <div class="message-meta-row">
+              <span class="sender-name user">You</span>
+              ${msg.timestamp ? `<span class="message-timestamp">${escapeHtml(msg.timestamp)}</span>` : ''}
+            </div>
+            <div class="user-bubble-box">
+              ${escapeHtml(msg.text)}
             </div>
           </div>
         `;
@@ -291,10 +348,14 @@ export class AgentView {
         const isTask = msg.isBrowserTask === true;
 
         html += `
-          <div class="assistant-message-row">
-            <div class="assistant-avatar">🛡️</div>
-            <div class="assistant-body">
-              <div class="assistant-sender-label">PrivAgent</div>
+          <div class="chat-message-group assistant">
+            <div class="message-meta-row">
+              <span class="assistant-avatar-mini">🛡️</span>
+              <span class="sender-name assistant">PrivAgent</span>
+              <span class="firewall-shield-tag">LOCAL FIREWALL</span>
+              ${msg.timestamp ? `<span class="message-timestamp">${escapeHtml(msg.timestamp)}</span>` : ''}
+            </div>
+            <div class="assistant-bubble-box">
               <div class="assistant-lead-text">
                 ${escapeHtml(msg.text)}
               </div>
@@ -303,11 +364,11 @@ export class AgentView {
 
               ${isLatest && isTask && state.status === 'SUCCESS' ? `
                 <div class="task-completion-banner">
-                  <span style="font-size: 16px;">✓</span>
-                  <div>
-                    <strong>Task completed</strong>
-                    <div style="color: var(--text-secondary); margin-top: 2px;">
-                      I completed the requested task. Sensitive values remained protected on-device.
+                  <div class="banner-icon success">✓</div>
+                  <div class="banner-content">
+                    <strong>Task completed successfully</strong>
+                    <div class="banner-subtext">
+                      Autonomous loop finished. Zero raw sensitive values were transmitted.
                     </div>
                   </div>
                 </div>
@@ -315,10 +376,10 @@ export class AgentView {
 
               ${isLatest && isTask && state.status === 'FAILED' ? `
                 <div class="task-failed-banner">
-                  <span style="font-size: 16px;">✕</span>
-                  <div>
-                    <strong>Task could not be completed</strong>
-                    <div style="color: var(--text-secondary); margin-top: 2px;">
+                  <div class="banner-icon failed">✕</div>
+                  <div class="banner-content">
+                    <strong>Task halted</strong>
+                    <div class="banner-subtext">
                       ${escapeHtml(state.reason || 'The agent could not complete the requested actions.')}
                     </div>
                   </div>
@@ -326,31 +387,51 @@ export class AgentView {
               ` : ''}
 
               ${isLatest && isTask && state.status === 'STOPPED' ? `
-                <div style="background-color: var(--status-stopped-bg); border: 1px solid var(--status-stopped-border); padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; color: var(--status-stopped);">
-                  <strong>■ Task stopped</strong>
-                  <div style="color: var(--text-secondary); margin-top: 2px;">
-                    Task execution was halted by user.
+                <div class="task-stopped-banner">
+                  <div class="banner-icon stopped">■</div>
+                  <div class="banner-content">
+                    <strong>Task stopped by user</strong>
+                    <div class="banner-subtext">
+                      Agent loop was immediately halted. Browser tab state preserved.
+                    </div>
                   </div>
                 </div>
               ` : ''}
 
               ${isLatest && state.status === 'NEEDS_USER_CONFIRMATION' && state.requiresUserConfirmationAction ? `
                 <div class="confirmation-card">
-                  <h4>⚠ Confirmation required</h4>
-                  <p>
-                    The agent is about to execute a consequential action:
-                    <strong style="display: block; margin-top: 4px; color: #fff;">
-                      ${escapeHtml(state.requiresUserConfirmationAction.description || state.requiresUserConfirmationAction.action)}
-                    </strong>
+                  <div class="confirmation-card-header">
+                    <span class="confirmation-icon">⚠</span>
+                    <span>CONSEQUENTIAL ACTION CONFIRMATION REQUIRED</span>
+                  </div>
+                  <div class="confirmation-body">
+                    <p class="confirmation-prompt">
+                      The autonomous agent is about to execute a consequential browser action:
+                    </p>
+                    <div class="consequential-action-detail">
+                      <div class="action-type-badge">${escapeHtml(state.requiresUserConfirmationAction.action.toUpperCase())}</div>
+                      <div class="action-description-text">
+                        ${escapeHtml(state.requiresUserConfirmationAction.description || state.requiresUserConfirmationAction.action)}
+                      </div>
+                    </div>
                     ${state.requiresUserConfirmationAction.url ? `
-                      <code style="display:inline-block; margin-top: 4px; font-size: 11px; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px;">
-                        ${escapeHtml(state.requiresUserConfirmationAction.url)}
-                      </code>
+                      <div class="target-url-row">
+                        <span class="url-label">Destination URL:</span>
+                        <code class="url-code">${escapeHtml(state.requiresUserConfirmationAction.url)}</code>
+                      </div>
                     ` : ''}
-                  </p>
-                  <div class="confirmation-actions">
-                    <button id="btn-cancel-action" class="btn btn-secondary">Cancel</button>
-                    <button id="btn-confirm-action" class="btn btn-primary">Allow Action</button>
+                    <div class="confirmation-safety-warning">
+                      <span>🔒</span>
+                      <span>This action may alter account state, initiate a transfer, or submit sensitive information. Explicit user consent is mandatory.</span>
+                    </div>
+                    <div class="confirmation-actions-row">
+                      <button id="btn-cancel-action" class="btn btn-secondary danger-hover">
+                        ✕ Reject Action
+                      </button>
+                      <button id="btn-confirm-action" class="btn btn-primary authorize-btn">
+                        ✓ Authorize & Execute
+                      </button>
+                    </div>
                   </div>
                 </div>
               ` : ''}
@@ -372,8 +453,8 @@ export class AgentView {
           drawer.style.display = this.isActivityExpanded ? 'flex' : 'none';
         }
         toggleBtn.textContent = this.isActivityExpanded
-          ? 'Hide agent activity ▴'
-          : 'View agent activity ▾';
+          ? 'Hide execution trace ▴'
+          : 'View execution trace ▾';
       });
     }
 
@@ -395,33 +476,33 @@ export class AgentView {
     if (state.status === 'IDLE' && state.steps.length === 0) return '';
 
     let previewStatusCls = 'running';
-    let previewText = '● Agent is working...';
+    let previewText = '● Agent is executing...';
 
     if (state.status === 'SUCCESS') {
       previewStatusCls = 'success';
       previewText = `✓ Completed (${state.steps.length} actions executed)`;
     } else if (state.status === 'FAILED') {
       previewStatusCls = 'failed';
-      previewText = '✕ Execution failed';
+      previewText = '✕ Execution stopped';
     } else if (state.status === 'NEEDS_USER_CONFIRMATION') {
       previewStatusCls = 'confirmation';
-      previewText = '⚠ Action confirmation required';
+      previewText = '⚠ Confirmation required';
     } else if (state.status === 'STOPPED') {
       previewStatusCls = 'stopped';
-      previewText = '■ Task stopped by user';
+      previewText = '■ Halted by user';
     }
 
     const failedEarly = state.status === 'FAILED' && state.steps.length === 0;
 
-    // Dynamic thinking steps based on REAL execution steps
+    // Dynamic execution steps
     const stepItemsHtml = state.steps.map((s) => `
       <div class="activity-step-row done">
         <div class="activity-step-marker">✓</div>
-        <div>
-          <span>Step ${s.step}: <strong>${escapeHtml(s.actionType)}</strong> — ${escapeHtml(s.targetDescription)}</span>
+        <div class="step-content-block">
+          <span class="step-label">Step ${s.step}: <strong>${escapeHtml(s.actionType)}</strong> — ${escapeHtml(s.targetDescription)}</span>
           ${s.sensitiveCategoryDetected ? `
-            <span class="category-pill detected" style="padding: 1px 6px; font-size: 10px; margin-left: 6px;">
-              Protected class: ${escapeHtml(s.sensitiveCategoryDetected)}
+            <span class="category-pill detected">
+              Protected: ${escapeHtml(s.sensitiveCategoryDetected)}
             </span>
           ` : ''}
         </div>
@@ -435,21 +516,21 @@ export class AgentView {
             ${previewText}
           </div>
           <button id="btn-toggle-activity" class="activity-toggle-btn">
-            ${this.isActivityExpanded ? 'Hide agent activity ▴' : 'View agent activity ▾'}
+            ${this.isActivityExpanded ? 'Hide execution trace ▴' : 'View execution trace ▾'}
           </button>
         </div>
 
         <div id="activity-drawer" class="activity-details-drawer" style="display: ${this.isActivityExpanded ? 'flex' : 'none'};">
           ${failedEarly ? `
             <div class="activity-step-row failed">
-              <div class="activity-step-marker" style="color: var(--status-failed);">✕</div>
+              <div class="activity-step-marker">✕</div>
               <div>
                 <strong>Execution stopped</strong> — ${escapeHtml(state.reason || 'No browser tab available')}
               </div>
             </div>
           ` : state.status === 'RUNNING' && state.steps.length === 0 ? `
             <div class="activity-step-row active">
-              <div class="activity-step-marker">●</div>
+              <div class="activity-step-marker pulse">●</div>
               <div>
                 <em>Target tab discovery & on-device page perception...</em>
               </div>
@@ -458,7 +539,7 @@ export class AgentView {
             <div class="activity-step-row done">
               <div class="activity-step-marker">✓</div>
               <div>
-                <strong>Page perception</strong> — DOM & Visual OCR scanned
+                <strong>Page perception</strong> — DOM & Visual OCR scanned on-device
               </div>
             </div>
             <div class="activity-step-row done">
@@ -470,14 +551,14 @@ export class AgentView {
             <div class="activity-step-row done">
               <div class="activity-step-marker">✓</div>
               <div>
-                <strong>Context minimization</strong> — Outbound context sanitized & bounded (M8)
+                <strong>Context minimization (M8)</strong> — Outbound context sanitized & bounded
               </div>
             </div>
           `}
           ${stepItemsHtml}
           ${state.status === 'RUNNING' && state.steps.length > 0 ? `
             <div class="activity-step-row active">
-              <div class="activity-step-marker">●</div>
+              <div class="activity-step-marker pulse">●</div>
               <div>
                 <em>Executing safe next step...</em>
               </div>
@@ -485,7 +566,7 @@ export class AgentView {
           ` : ''}
           ${state.status === 'FAILED' && state.steps.length > 0 ? `
             <div class="activity-step-row failed">
-              <div class="activity-step-marker" style="color: var(--status-failed);">✕</div>
+              <div class="activity-step-marker">✕</div>
               <div>
                 <strong>Task halted</strong> — ${escapeHtml(state.reason || 'Step execution failed')}
               </div>

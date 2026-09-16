@@ -43,7 +43,7 @@ describe('Category policy table (M8)', () => {
   it('covers every known category plus unknown and the reserved face policy', () => {
     const expected = [
       'password', 'cvv', 'otp', 'credit_card', 'pan', 'account_number',
-      'face', 'phone', 'email', 'person_name', 'unknown',
+      'face', 'phone', 'email', 'person_name', 'address', 'unknown',
     ];
     expect(Object.keys(CATEGORY_POLICY).sort()).toEqual(expected.sort());
   });

@@ -5,8 +5,8 @@ export const PATTERNS = {
   // Credit card: 13-19 digits, optional dashes/spaces
   CREDIT_CARD: /\b(?:\d[ -]*?){13,19}\b/,
 
-  // Phone: Indian (+91 or without, 10 digits with optional 5-5 split) and international formats
-  PHONE: /(?:(?:\+91|0)?[\s.-]?)?[6-9]\d{4}[\s.-]?\d{5}\b|\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/,
+  // Phone: Indian (+91 or without, 10 digits with optional 5-5 split) and international / US formats (requires separators or valid 10-digit mobile)
+  PHONE: /(?:\+\d{1,3}[-.\s])?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b|(?:(?:\+91|0)?[\s.-]?)?[6-9]\d{4}[\s.-]?\d{5}\b|\+\d{1,3}[-.\s]\d{1,4}[-.\s]\d{3,4}[-.\s]\d{3,4}\b/,
 
   // Account number: 9 to 18 contiguous digits with banking context
   ACCOUNT_NUMBER: /\b\d{9,18}\b/,
@@ -19,18 +19,26 @@ export const PATTERNS = {
 
   // CVV / CVC: 3 or 4 digits
   CVV: /\b\d{3,4}\b/,
+
+  // Address: Street/Road/Flat/Postal pattern with 6-digit Indian PIN or standard street suffix
+  ADDRESS: /\b(?:flat|plot|road|street|lane|nagar|sector|residency|avenue|colony|cross)\b.*?\b\d{6}\b|\b\d{1,5}\s+[a-zA-Z0-9\s.,-]+\b(?:street|road|avenue|drive|lane)\b/i,
 };
 
 export const KEYWORDS = {
-  PASSWORD: ['password', 'passwd', 'pwd', 'secret', 'passcode', 'pin', 'cvv', 'cvc', 'security-code'],
+  PASSWORD: ['password', 'passwd', 'pwd', 'secret', 'passcode', 'pin', 'cvv', 'login-pin'],
   EMAIL: ['email', 'e-mail', 'mail_id', 'user_email'],
   PHONE: ['phone', 'mobile', 'cellphone', 'telephone', 'contact_number', 'phone_number', 'mobile_no', 'phone_no', 'cell', 'tel'],
-  CREDIT_CARD: ['card', 'cc-number', 'credit_card', 'debit_card', 'cardnumber', 'card-no'],
-  ACCOUNT_NUMBER: ['account', 'account_no', 'account_number', 'acc_no', 'acc_num', 'acct', 'a/c'],
-  PERSON_NAME: ['fullname', 'full_name', 'cardholder', 'holder_name', 'beneficiary', 'recipient_name', 'legal_name'],
-  PAN: ['pan', 'pan_card', 'pan_no', 'pan_number', 'pan-no', 'pancard', 'permanent account number'],
-  OTP: ['otp', 'one-time', 'passcode', 'verification code', 'verification_code', 'security code'],
-  CVV: ['cvv', 'cvc', 'cvv2', 'security code', 'card verification', 'security-code'],
+  CREDIT_CARD: ['card', 'cc-number', 'credit_card', 'debit_card', 'cardnumber', 'card-no', 'credit card', 'payment card'],
+  ACCOUNT_NUMBER: ['account', 'account_no', 'account_number', 'acc_no', 'acc_num', 'acct', 'a/c', 'beneficiary account', 'checking account'],
+  PERSON_NAME: [
+    'fullname', 'full_name', 'cardholder', 'holder_name', 'beneficiary', 'recipient_name',
+    'legal_name', 'account holder', 'applicant', 'signatory', 'applicant name', 'authorized signatory',
+    'customer name', 'client name', 'cardholder name'
+  ],
+  PAN: ['pan', 'pan_card', 'pan_no', 'pan_number', 'pan-no', 'pancard', 'permanent account number', 'pan card'],
+  OTP: ['otp', 'one-time', 'one-time passcode', 'verification code', 'verification_code', 'security code', 'verification', 'one-time password'],
+  CVV: ['cvv', 'cvc', 'cvv2', 'security code', 'card verification', 'security-code', 'cvc code'],
+  ADDRESS: ['address', 'billing address', 'shipping address', 'residential address', 'registered address', 'residency', 'street', 'locality'],
 };
 
 /**

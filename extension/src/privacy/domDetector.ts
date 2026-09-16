@@ -1,5 +1,5 @@
 import { DetectionResult, DetectionSource, SensitiveEntityType } from './types';
-import { KEYWORDS, PATTERNS, isValidLuhn, matchesKeyword } from './patterns';
+import { KEYWORDS, PATTERNS, isValidLuhn, isValidPAN, isPotentialCVV, isPotentialOTP, isPotentialAccountNumber, matchesKeyword } from './patterns';
 
 /**
  * Safe CSS selector escaping compatible with all browser and JSDOM environments.
@@ -170,8 +170,24 @@ export function scanDOM(root?: Document | HTMLElement): ScanResult {
     let confidence = 0.0;
     let source: DetectionSource = 'dom_attribute';
 
-    // A. Password Checks
-    if (typeAttr === 'password') {
+    const inputContext = `${name} ${id} ${labelText} ${ariaLabel} ${placeholder}`.trim().toLowerCase();
+
+    // A. CVV / Security Code Checks (can be type="password" or type="text" with CVV context)
+    if (autocomplete === 'cc-csc' || matchesKeyword(inputContext, KEYWORDS.CVV) || isPotentialCVV(rawValue, inputContext)) {
+      detectedType = 'cvv';
+      confidence = 0.98;
+      source = 'dom_label';
+    }
+
+    // B. OTP / Verification Code Checks
+    else if (autocomplete === 'one-time-code' || matchesKeyword(inputContext, KEYWORDS.OTP) || isPotentialOTP(rawValue, inputContext)) {
+      detectedType = 'otp';
+      confidence = 0.98;
+      source = 'dom_label';
+    }
+
+    // C. Password Checks
+    else if (typeAttr === 'password') {
       detectedType = 'password';
       confidence = 1.0;
       source = 'dom_input_type';
@@ -179,18 +195,18 @@ export function scanDOM(root?: Document | HTMLElement): ScanResult {
       detectedType = 'password';
       confidence = 0.99;
       source = 'dom_autocomplete';
-    } else if (matchesKeyword(name, KEYWORDS.PASSWORD) || matchesKeyword(id, KEYWORDS.PASSWORD) || matchesKeyword(labelText, KEYWORDS.PASSWORD)) {
+    } else if (matchesKeyword(inputContext, KEYWORDS.PASSWORD)) {
       detectedType = 'password';
       confidence = 0.95;
       source = 'dom_label';
     }
 
-    // B. Credit / Debit Card Checks
-    else if (autocomplete.includes('cc-number') || autocomplete.includes('cc-csc')) {
+    // D. Credit / Debit Card Checks
+    else if (autocomplete.includes('cc-number')) {
       detectedType = 'credit_card';
       confidence = 0.98;
       source = 'dom_autocomplete';
-    } else if (matchesKeyword(name, KEYWORDS.CREDIT_CARD) || matchesKeyword(id, KEYWORDS.CREDIT_CARD) || matchesKeyword(labelText, KEYWORDS.CREDIT_CARD)) {
+    } else if (matchesKeyword(inputContext, KEYWORDS.CREDIT_CARD)) {
       detectedType = 'credit_card';
       confidence = 0.95;
       source = 'dom_label';
@@ -200,12 +216,19 @@ export function scanDOM(root?: Document | HTMLElement): ScanResult {
       source = 'text_pattern';
     }
 
-    // C. Email Checks
+    // E. Indian PAN Checks
+    else if (matchesKeyword(inputContext, KEYWORDS.PAN) || (rawValue && isValidPAN(rawValue))) {
+      detectedType = 'pan';
+      confidence = 0.98;
+      source = 'text_pattern';
+    }
+
+    // F. Email Checks
     else if (typeAttr === 'email' || autocomplete === 'email') {
       detectedType = 'email';
       confidence = 0.99;
       source = typeAttr === 'email' ? 'dom_input_type' : 'dom_autocomplete';
-    } else if (matchesKeyword(name, KEYWORDS.EMAIL) || matchesKeyword(id, KEYWORDS.EMAIL) || matchesKeyword(labelText, KEYWORDS.EMAIL)) {
+    } else if (matchesKeyword(inputContext, KEYWORDS.EMAIL)) {
       detectedType = 'email';
       confidence = 0.92;
       source = 'dom_label';
@@ -215,53 +238,47 @@ export function scanDOM(root?: Document | HTMLElement): ScanResult {
       source = 'text_pattern';
     }
 
-    // D. Phone Number Checks
-    // 1. Explicit HTML semantic input: <input type="tel">
+    // G. Phone Number Checks
     else if (typeAttr === 'tel') {
       detectedType = 'phone';
       confidence = 0.98;
       source = 'dom_input_type';
-    }
-    // 2. Explicit HTML autocomplete: autocomplete="tel" or starts with "tel-"
-    else if (autocomplete === 'tel' || autocomplete.startsWith('tel-')) {
+    } else if (autocomplete === 'tel' || autocomplete.startsWith('tel-')) {
       detectedType = 'phone';
       confidence = 0.98;
       source = 'dom_autocomplete';
-    }
-    // 3. Input has actual value matching phone pattern
-    else if (rawValue && PATTERNS.PHONE.test(rawValue)) {
+    } else if (rawValue && PATTERNS.PHONE.test(rawValue)) {
       detectedType = 'phone';
       confidence = 0.95;
       source = 'text_pattern';
-    }
-    // 4. When value is absent, require strong explicit identifiers and reject generic chat/composer fields
-    else if (!rawValue && !isGenericComposerOrSearch(el)) {
-      if (matchesKeyword(name, KEYWORDS.PHONE) || matchesKeyword(id, KEYWORDS.PHONE)) {
-        detectedType = 'phone';
-        confidence = 0.92;
-        source = 'dom_attribute';
-      } else if (labelText && matchesKeyword(labelText, KEYWORDS.PHONE)) {
-        detectedType = 'phone';
-        confidence = 0.88;
-        source = 'dom_label';
-      }
-    }
-
-    // E. Bank Account Number Checks
-    else if (matchesKeyword(name, KEYWORDS.ACCOUNT_NUMBER) || matchesKeyword(id, KEYWORDS.ACCOUNT_NUMBER) || matchesKeyword(labelText, KEYWORDS.ACCOUNT_NUMBER)) {
-      detectedType = 'account_number';
-      confidence = 0.92;
+    } else if (!rawValue && !isGenericComposerOrSearch(el) && matchesKeyword(inputContext, KEYWORDS.PHONE)) {
+      detectedType = 'phone';
+      confidence = 0.90;
       source = 'dom_label';
     }
 
-    // F. Personal Legal Name Checks
+    // H. Bank Account Number Checks
+    else if (matchesKeyword(inputContext, KEYWORDS.ACCOUNT_NUMBER) || (rawValue && isPotentialAccountNumber(rawValue, inputContext))) {
+      detectedType = 'account_number';
+      confidence = 0.94;
+      source = 'dom_label';
+    }
+
+    // I. Personal Legal Name Checks
     else if (autocomplete === 'name' || autocomplete === 'given-name' || autocomplete === 'family-name') {
       detectedType = 'person_name';
       confidence = 0.90;
       source = 'dom_autocomplete';
-    } else if (matchesKeyword(name, KEYWORDS.PERSON_NAME) || matchesKeyword(id, KEYWORDS.PERSON_NAME) || matchesKeyword(labelText, KEYWORDS.PERSON_NAME)) {
+    } else if (matchesKeyword(inputContext, KEYWORDS.PERSON_NAME)) {
       detectedType = 'person_name';
       confidence = 0.88;
+      source = 'dom_label';
+    }
+
+    // J. Address Checks
+    else if (autocomplete.includes('address') || matchesKeyword(inputContext, KEYWORDS.ADDRESS)) {
+      detectedType = 'address';
+      confidence = 0.90;
       source = 'dom_label';
     }
 
@@ -300,54 +317,72 @@ export function scanDOM(root?: Document | HTMLElement): ScanResult {
 
     const id = (el.id || '').toLowerCase();
     const className = (typeof el.className === 'string' ? el.className : '').toLowerCase();
+    const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+    const parentText = (el.parentElement?.textContent || '').slice(0, 100).toLowerCase();
+    const prevSiblingText = (el.previousElementSibling?.textContent || '').slice(0, 60).toLowerCase();
+    const context = [id, className, ariaLabel, prevSiblingText, parentText].join(' ');
     const length = text.length;
 
     let detectedType: SensitiveEntityType | null = null;
     let confidence = 0.0;
     let source: DetectionSource = 'text_pattern';
 
-    // Credit Card in text (e.g. 4111 1111 1111 1111)
-    if (isValidLuhn(text)) {
+    // 1. PAN / National ID
+    if (isValidPAN(text)) {
+      detectedType = 'pan';
+      confidence = 0.98;
+      source = 'text_pattern';
+    }
+    // 2. Credit Card in text (Luhn valid or card keyword + card format)
+    else if (isValidLuhn(text) || (matchesKeyword(context, KEYWORDS.CREDIT_CARD) && PATTERNS.CREDIT_CARD.test(text))) {
       detectedType = 'credit_card';
       confidence = 0.98;
       source = 'text_pattern';
     }
-    // Card CVV / Security Code
-    else if ((matchesKeyword(id, ['cvv', 'cvc']) || matchesKeyword(className, ['cvv', 'cvc'])) && /^\d{3,4}$/.test(text)) {
-      detectedType = 'credit_card';
-      confidence = 0.95;
-      source = 'dom_attribute';
+    // 3. Card CVV / Security Code
+    else if (isPotentialCVV(text, context)) {
+      detectedType = 'cvv';
+      confidence = 0.96;
+      source = 'dom_label';
     }
-    // Email in text
+    // 4. One-Time Password / 2FA Token
+    else if (isPotentialOTP(text, context)) {
+      detectedType = 'otp';
+      confidence = 0.96;
+      source = 'dom_label';
+    }
+    // 5. Email address in text
     else if (PATTERNS.EMAIL.test(text)) {
       detectedType = 'email';
       confidence = 0.97;
       source = 'text_pattern';
     }
-    // Phone in text (targeted leaf text, not long prose)
+    // 6. Phone number in text (strict phone pattern + length limits)
     else if (PATTERNS.PHONE.test(text) && text.length <= 60) {
       detectedType = 'phone';
-      confidence = 0.92;
+      confidence = 0.94;
       source = 'text_pattern';
     }
-    // Bank Account Number in text
-    else if (
-      /^\d{9,18}$/.test(text) && 
-      (matchesKeyword(id, KEYWORDS.ACCOUNT_NUMBER) || matchesKeyword(className, KEYWORDS.ACCOUNT_NUMBER) || 
-       matchesKeyword(el.parentElement?.textContent, KEYWORDS.ACCOUNT_NUMBER))
-    ) {
+    // 7. Bank Account Number in text
+    else if (isPotentialAccountNumber(text, context)) {
       detectedType = 'account_number';
       confidence = 0.94;
       source = 'dom_label';
     }
-    // Cardholder / Legal Name
+    // 8. Cardholder / Legal Name
     else if (
-      (matchesKeyword(id, KEYWORDS.PERSON_NAME) || matchesKeyword(className, KEYWORDS.PERSON_NAME)) &&
-      text.length >= 3 && text.length <= 40 && /^[a-zA-Z\s.]+$/.test(text)
+      matchesKeyword(context, KEYWORDS.PERSON_NAME) &&
+      text.length >= 3 && text.length <= 40 && /^[a-zA-Z\s.']+$/.test(text)
     ) {
       detectedType = 'person_name';
       confidence = 0.90;
       source = 'dom_attribute';
+    }
+    // 9. Physical Postal Address
+    else if (PATTERNS.ADDRESS.test(text) || (matchesKeyword(context, KEYWORDS.ADDRESS) && text.length >= 10 && text.length <= 150)) {
+      detectedType = 'address';
+      confidence = 0.90;
+      source = 'text_pattern';
     }
 
     if (detectedType) {

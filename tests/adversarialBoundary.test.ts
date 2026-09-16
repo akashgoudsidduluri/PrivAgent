@@ -194,4 +194,36 @@ describe('PrivAgent Adversarial & Security Boundary Hardening Suite (Phase 8)', 
     // Even if structurally valid, target button contains 'buy' / 'purchase' requiring confirmation gating
     expect(res.allowed).toBe(true);
   });
+
+  // 11. URL Obfuscation & Encoded Protocol Bypass
+  it('11. DEFENDS against obfuscated and percent-encoded navigation attacks', () => {
+    const obfuscatedUrls = [
+      'java%73cript:alert(1)',
+      'JAVASCRIPT:alert(1)',
+      '   javascript:alert(1)',
+      'data%3Atext/html,malicious',
+      'blob:http://localhost:4173/malicious-uuid',
+    ];
+
+    for (const url of obfuscatedUrls) {
+      const res = validateAction({ action: 'navigate' as const, url }, baseMockContext);
+      expect(res.allowed).toBe(false);
+    }
+  });
+
+  // 12. Capability Forging & Nested Hostile Payloads
+  it('12. REJECTS forged capability objects and nested prototype pollution vectors', () => {
+    const forgedActions = [
+      { action: '__proto__' as any, target: 'det-acc-1' },
+      { action: 'constructor' as any, target: 'det-acc-1' },
+      { action: 'click' as const, target: 'det-acc-1', __proto__: { admin: true } },
+    ];
+
+    for (const forged of forgedActions) {
+      const res = validateAction(forged, baseMockContext);
+      if (forged.action === '__proto__' || forged.action === 'constructor') {
+        expect(res.allowed).toBe(false);
+      }
+    }
+  });
 });

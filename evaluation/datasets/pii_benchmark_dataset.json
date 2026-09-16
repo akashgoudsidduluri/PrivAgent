@@ -1,7 +1,10 @@
 {
   "metadata": {
-    "version": "1.0.0",
-    "description": "Synthetic, labelled dataset for SIH PrivAgent PII & Redaction Precision Benchmark",
+    "version": "1.1.0",
+    "description": "Expanded synthetic, labelled dataset for SIH PrivAgent PII & Redaction Precision Benchmark",
+    "total_cases": 75,
+    "positive_count": 50,
+    "negative_count": 25,
     "categories": [
       "password",
       "otp",
@@ -22,7 +25,9 @@
       "timestamp",
       "port",
       "product_id",
-      "tracking_id"
+      "tracking_id",
+      "commit_hash",
+      "coordinates"
     ]
   },
   "positive_cases": [
@@ -30,7 +35,7 @@
       "id": "pos_pw_1",
       "expectedCategory": "password",
       "text": "P@ssw0rd2026!Secure",
-      "context": "input type='password' name='user_secret'",
+      "context": "User account login password field",
       "tagName": "input",
       "typeAttr": "password"
     },
@@ -39,6 +44,30 @@
       "expectedCategory": "password",
       "text": "CorrectHorseBatteryStaple#99",
       "context": "Password confirmation field",
+      "tagName": "input",
+      "typeAttr": "password"
+    },
+    {
+      "id": "pos_pw_3",
+      "expectedCategory": "password",
+      "text": "SecretAdminVaultKey#442",
+      "context": "Master vault password",
+      "tagName": "input",
+      "typeAttr": "text"
+    },
+    {
+      "id": "pos_pw_4",
+      "expectedCategory": "password",
+      "text": "Tr0ub4dor&3920",
+      "context": "Current password required for modification",
+      "tagName": "input",
+      "typeAttr": "password"
+    },
+    {
+      "id": "pos_pw_5",
+      "expectedCategory": "password",
+      "text": "Passcode998811!",
+      "context": "Account passcode input",
       "tagName": "input",
       "typeAttr": "password"
     },
@@ -54,21 +83,68 @@
       "expectedCategory": "otp",
       "text": "392015",
       "context": "Enter 6-digit verification code sent to your mobile",
-      "tagName": "input"
+      "tagName": "input",
+      "typeAttr": "text"
+    },
+    {
+      "id": "pos_otp_3",
+      "expectedCategory": "otp",
+      "text": "904128",
+      "context": "Two-factor authentication 2FA token",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_otp_4",
+      "expectedCategory": "otp",
+      "text": "518392",
+      "context": "OTP SMS security code",
+      "tagName": "p"
+    },
+    {
+      "id": "pos_otp_5",
+      "expectedCategory": "otp",
+      "text": "774920",
+      "context": "Verification OTP code",
+      "tagName": "input",
+      "typeAttr": "number"
     },
     {
       "id": "pos_cvv_1",
       "expectedCategory": "cvv",
       "text": "824",
       "context": "Card CVV / CVC code on back of card",
-      "tagName": "input"
+      "tagName": "input",
+      "typeAttr": "password"
     },
     {
       "id": "pos_cvv_2",
       "expectedCategory": "cvv",
       "text": "4921",
       "context": "4-digit Amex security code",
-      "tagName": "input"
+      "tagName": "input",
+      "typeAttr": "text"
+    },
+    {
+      "id": "pos_cvv_3",
+      "expectedCategory": "cvv",
+      "text": "391",
+      "context": "CVV security code",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_cvv_4",
+      "expectedCategory": "cvv",
+      "text": "652",
+      "context": "Card verification value (CVC)",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_cvv_5",
+      "expectedCategory": "cvv",
+      "text": "108",
+      "context": "Enter 3-digit CVV",
+      "tagName": "input",
+      "typeAttr": "text"
     },
     {
       "id": "pos_pan_1",
@@ -85,17 +161,59 @@
       "tagName": "td"
     },
     {
+      "id": "pos_pan_3",
+      "expectedCategory": "pan",
+      "text": "ALRPK3910M",
+      "context": "Income tax PAN identifier",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_pan_4",
+      "expectedCategory": "pan",
+      "text": "DFGHE4821K",
+      "context": "KYC Verified PAN",
+      "tagName": "p"
+    },
+    {
+      "id": "pos_pan_5",
+      "expectedCategory": "pan",
+      "text": "ZZRPK9911Z",
+      "context": "Customer PAN Card",
+      "tagName": "span"
+    },
+    {
       "id": "pos_card_1",
       "expectedCategory": "credit_card",
-      "text": "4532 8921 4092 1109",
+      "text": "4111 1111 1111 1111",
       "context": "Visa credit card number",
       "tagName": "div"
     },
     {
       "id": "pos_card_2",
       "expectedCategory": "credit_card",
-      "text": "5425-2334-3454-9821",
+      "text": "4012 8888 8888 1881",
+      "context": "Visa debit card number",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_card_3",
+      "expectedCategory": "credit_card",
+      "text": "5500-0000-0000-0004",
       "context": "Mastercard payment card number",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_card_4",
+      "expectedCategory": "credit_card",
+      "text": "3782-822463-10005",
+      "context": "American Express card number",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_card_5",
+      "expectedCategory": "credit_card",
+      "text": "6011000990139424",
+      "context": "Discover payment card number",
       "tagName": "span"
     },
     {
@@ -113,6 +231,27 @@
       "tagName": "span"
     },
     {
+      "id": "pos_acc_3",
+      "expectedCategory": "account_number",
+      "text": "5010023456789012",
+      "context": "Savings Bank Account Number",
+      "tagName": "td"
+    },
+    {
+      "id": "pos_acc_4",
+      "expectedCategory": "account_number",
+      "text": "30491820491",
+      "context": "Deposit Account Number",
+      "tagName": "p"
+    },
+    {
+      "id": "pos_acc_5",
+      "expectedCategory": "account_number",
+      "text": "8849201948201",
+      "context": "Recipient Bank Account",
+      "tagName": "div"
+    },
+    {
       "id": "pos_email_1",
       "expectedCategory": "email",
       "text": "alice.security@example.com",
@@ -124,6 +263,27 @@
       "expectedCategory": "email",
       "text": "treasury-alerts@synthbank.internal",
       "context": "Alert dispatch mailbox",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_email_3",
+      "expectedCategory": "email",
+      "text": "user.name+finance@corp.io",
+      "context": "Billing notifications email",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_email_4",
+      "expectedCategory": "email",
+      "text": "Admin.Dev@CloudGov.in",
+      "context": "Official correspondence email address",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_email_5",
+      "expectedCategory": "email",
+      "text": "support.desk@banking-portal.org",
+      "context": "Customer service registered email",
       "tagName": "span"
     },
     {
@@ -141,6 +301,27 @@
       "tagName": "span"
     },
     {
+      "id": "pos_phone_3",
+      "expectedCategory": "phone",
+      "text": "9876543210",
+      "context": "Primary Phone Number",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_phone_4",
+      "expectedCategory": "phone",
+      "text": "+44 20 7946 0958",
+      "context": "UK office telephone contact",
+      "tagName": "p"
+    },
+    {
+      "id": "pos_phone_5",
+      "expectedCategory": "phone",
+      "text": "+91-87654-32109",
+      "context": "Registered SMS mobile phone",
+      "tagName": "div"
+    },
+    {
       "id": "pos_name_1",
       "expectedCategory": "name",
       "text": "Devendra Ramesh Patil",
@@ -148,10 +329,66 @@
       "tagName": "span"
     },
     {
+      "id": "pos_name_2",
+      "expectedCategory": "name",
+      "text": "Dr. Ananya S. Roy",
+      "context": "Cardholder Name on File",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_name_3",
+      "expectedCategory": "name",
+      "text": "Rajesh Kumar Sharma",
+      "context": "Beneficiary Full Legal Name",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_name_4",
+      "expectedCategory": "name",
+      "text": "Sarah M. O Connor",
+      "context": "Authorized Account Signatory",
+      "tagName": "p"
+    },
+    {
+      "id": "pos_name_5",
+      "expectedCategory": "name",
+      "text": "Vikramaditya Rao",
+      "context": "Primary Applicant Name",
+      "tagName": "span"
+    },
+    {
       "id": "pos_address_1",
       "expectedCategory": "address",
       "text": "Flat 402, Sai Residency, MG Road, Pune, Maharashtra 411001",
       "context": "Registered Billing Address",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_address_2",
+      "expectedCategory": "address",
+      "text": "124/B Indira Nagar, 2nd Cross, Bengaluru, Karnataka 560038",
+      "context": "Shipping Address on File",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_address_3",
+      "expectedCategory": "address",
+      "text": "742 Evergreen Terrace, Springfield, OR 97477",
+      "context": "Residential Street Address",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_address_4",
+      "expectedCategory": "address",
+      "text": "Plot 88, Sector 15, Vashi, Navi Mumbai 400703",
+      "context": "Customer Physical Address",
+      "tagName": "p"
+    },
+    {
+      "id": "pos_address_5",
+      "expectedCategory": "address",
+      "text": "Suite 500, 100 Main Street, New York, NY 10001",
+      "context": "Office Postal Address",
       "tagName": "div"
     }
   ],
@@ -164,6 +401,13 @@
       "tagName": "span"
     },
     {
+      "id": "neg_order_2",
+      "expectedCategory": null,
+      "text": "ORDER #402-91823-19",
+      "context": "Marketplace purchase order confirmation number",
+      "tagName": "p"
+    },
+    {
       "id": "neg_invoice_1",
       "expectedCategory": null,
       "text": "INV-2026-0941",
@@ -171,10 +415,31 @@
       "tagName": "div"
     },
     {
+      "id": "neg_invoice_2",
+      "expectedCategory": null,
+      "text": "BILL/2026/MAR/004",
+      "context": "Tax invoice serial code reference",
+      "tagName": "span"
+    },
+    {
       "id": "neg_flight_1",
       "expectedCategory": null,
       "text": "AI-802",
       "context": "Flight gate info: Air India AI-802 DEL to BLR",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_flight_2",
+      "expectedCategory": null,
+      "text": "6E-2431",
+      "context": "Departing Indigo flight departure code",
+      "tagName": "div"
+    },
+    {
+      "id": "neg_flight_3",
+      "expectedCategory": null,
+      "text": "BA-178",
+      "context": "British Airways international flight number",
       "tagName": "span"
     },
     {
@@ -192,11 +457,39 @@
       "tagName": "span"
     },
     {
+      "id": "neg_price_3",
+      "expectedCategory": null,
+      "text": "€128.50",
+      "context": "Net item purchase amount in euros",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_price_4",
+      "expectedCategory": null,
+      "text": "₹45,000",
+      "context": "Transfer limit transaction amount",
+      "tagName": "div"
+    },
+    {
       "id": "neg_timestamp_1",
       "expectedCategory": null,
       "text": "2026-09-16 08:30:00 UTC",
       "context": "Audit log generation timestamp",
       "tagName": "span"
+    },
+    {
+      "id": "neg_timestamp_2",
+      "expectedCategory": null,
+      "text": "16-Sep-2026 14:45 IST",
+      "context": "Session token initialization date and time",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_timestamp_3",
+      "expectedCategory": null,
+      "text": "2026-10-01T12:00:00.000Z",
+      "context": "ISO-8601 server heartbeat time",
+      "tagName": "code"
     },
     {
       "id": "neg_port_1",
@@ -213,6 +506,13 @@
       "tagName": "code"
     },
     {
+      "id": "neg_port_3",
+      "expectedCategory": null,
+      "text": "8010",
+      "context": "FastAPI backend daemon listening port 8010",
+      "tagName": "code"
+    },
+    {
       "id": "neg_product_1",
       "expectedCategory": null,
       "text": "SKU-BAGGY-PANTS-BEIGE-M",
@@ -220,10 +520,52 @@
       "tagName": "span"
     },
     {
+      "id": "neg_product_2",
+      "expectedCategory": null,
+      "text": "ITEM-9981-RED",
+      "context": "Warehouse shelf bin article SKU",
+      "tagName": "span"
+    },
+    {
       "id": "neg_tracking_1",
       "expectedCategory": null,
       "text": "TRK-981029381023",
       "context": "Package tracking courier barcode ID",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_tracking_2",
+      "expectedCategory": null,
+      "text": "AWB-7749120",
+      "context": "Airway bill logistics tracking code",
+      "tagName": "div"
+    },
+    {
+      "id": "neg_hash_1",
+      "expectedCategory": null,
+      "text": "ee158dd6c857f1eab700a02681e5e9ea2b2a970a",
+      "context": "Git commit SHA digest",
+      "tagName": "code"
+    },
+    {
+      "id": "neg_hash_2",
+      "expectedCategory": null,
+      "text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "context": "SHA-256 cryptographic payload hash",
+      "tagName": "code"
+    },
+    {
+      "id": "neg_coords_1",
+      "expectedCategory": null,
+      "text": "18.5204 N, 73.8567 E",
+      "context": "Geographical GPS latitude and longitude",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_version_1",
+      "expectedCategory": null,
+      "text": "v2.14.0-rc3",
+      "context": "Software release version string",
       "tagName": "span"
     }
   ]

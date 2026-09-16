@@ -158,6 +158,14 @@ export const CATEGORY_POLICY: Record<PrivacyCategory, CategoryPolicy> = {
     minConfidence: 0.5,
     rationale: 'Personal names are minimized; only redacted metadata may leave the device.',
   },
+  address: {
+    decision: 'REDACT',
+    severity: 'medium',
+    mustRedact: true,
+    exportableMetadata: true,
+    minConfidence: 0.5,
+    rationale: 'Physical and billing residential addresses are protected on-device.',
+  },
   unknown: {
     decision: 'FAIL_CLOSED',
     severity: 'unknown',

@@ -181,4 +181,41 @@ describe('PrivAgent Central Privacy Invariant Suite (Phase 9)', () => {
     expect(rawValueTransmissible).toBe(false);
     expect(sensitiveDataTransmitted).toBe(0);
   });
+
+  it('INVARIANT 8: Recursive arbitrary depth traversal catches deeply nested PII in objects and arrays', () => {
+    const deeplyNestedObject = {
+      level1: {
+        level2: {
+          level3: [
+            { id: 'item-1', meta: 'safe' },
+            { id: 'item-2', payload: { secret: 'nested-account-987654321012' } },
+          ],
+        },
+      },
+    };
+
+    const violations = scanForRawSensitiveValues(deeplyNestedObject);
+    expect(violations.length).toBeGreaterThan(0);
+    expect(violations.some((v) => v.path.includes('level3') && v.path.includes('secret'))).toBe(true);
+  });
+
+  it('INVARIANT 9: Multimodal context rejects raw unredacted base64 screenshots', () => {
+    const fakeRawMediaPayload = {
+      screenshot: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    };
+
+    const violations = scanForRawSensitiveValues(fakeRawMediaPayload);
+    expect(violations.some((v) => v.rule === 'raw_media')).toBe(true);
+  });
+
+  it('INVARIANT 10: Action parameter payload sanitization enforces strict zero leakage on consequential actions', () => {
+    const maliciousActionWithLeak = {
+      action: 'type',
+      target: 'det-input-1',
+      text: 'My secret card is 4111 1111 1111 1111',
+    };
+
+    const violations = scanForRawSensitiveValues(maliciousActionWithLeak);
+    expect(violations.length).toBeGreaterThan(0);
+  });
 });

@@ -104,7 +104,12 @@ function valueRuleViolations(text: string): RawValueRule[] {
 
   if (INDIAN_PHONE_RULE.test(text) || PATTERNS.PHONE.test(text)) hits.push('phone');
 
-  if (CREDENTIAL_TOKEN_RULE.test(text)) hits.push('credential_token');
+  const isDateOrTimestamp =
+    /\b\d{1,2}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2,4}\b/i.test(text) ||
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text) ||
+    /\b\d{4}-\d{2}-\d{2}\b/.test(text);
+
+  if (!isDateOrTimestamp && CREDENTIAL_TOKEN_RULE.test(text)) hits.push('credential_token');
 
   return hits;
 }
