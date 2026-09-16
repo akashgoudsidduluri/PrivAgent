@@ -359,6 +359,7 @@ window.addEventListener('message', (event) => {
   try {
     if (type === 'START_TASK') {
       console.info('[Extension] message received', { type: 'START_TASK' });
+      console.info('[AgentTrace] content START_TASK received');
       console.info('[AgentTrace] content script forwarding START_TASK to background worker');
       chrome.runtime.sendMessage(
         {
@@ -384,19 +385,18 @@ window.addEventListener('message', (event) => {
               },
               '*'
             );
-          } else if (response?.started) {
-            // Immediately inform dashboard that task was accepted by service worker
+          } else if (response) {
             window.postMessage(
               {
                 source: 'privagent-extension',
                 type: 'TASK_PROGRESS',
                 payload: {
-                  status: 'RUNNING',
+                  status: response.status || (response.started ? 'RUNNING' : 'FAILED'),
                   currentStep: 0,
                   maxSteps: 10,
                   task: task || '',
                   steps: [],
-                  reason: 'Task accepted by background service worker.',
+                  reason: response.reason || (response.started ? 'Task accepted by background service worker.' : 'Task failed.'),
                 },
               },
               '*'

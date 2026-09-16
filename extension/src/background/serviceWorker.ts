@@ -29,62 +29,92 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, timeoutMsg: string): Pr
       });
   });
 
-async function sendToDashboard(payload: any, preferredTabId?: number | null): Promise<void> {
+async function sendToDashboard(payload: any, preferredTabId?: number | null): Promise<boolean> {
   console.info('[ServiceWorker] response forwarded', {
     status: payload?.status,
     currentStep: payload?.currentStep,
     reason: payload?.reason,
   });
 
+  const MAX_RETRIES = 3;
   let sent = false;
-  let targetId = preferredTabId || currentDashboardTabId;
 
+  // 1. Try preferred tab first with bounded retries
+  const targetId = preferredTabId || currentDashboardTabId;
   if (targetId) {
-    try {
-      await chrome.tabs.sendMessage(targetId, {
-        type: 'PRIVAGENT_DASHBOARD_PROGRESS',
-        payload,
-      });
-      sent = true;
-    } catch {
-      // Preferred tab failed, fallback to querying all dashboard tabs
+    for (let attempt = 0; attempt < MAX_RETRIES && !sent; attempt++) {
+      try {
+        await withTimeout(
+          chrome.tabs.sendMessage(targetId, {
+            type: 'PRIVAGENT_DASHBOARD_PROGRESS',
+            payload,
+          }),
+          1500,
+          'Dashboard progress send timed out'
+        );
+        sent = true;
+        currentDashboardTabId = targetId;
+        break;
+      } catch (err) {
+        console.warn(`[PrivAgent SW] Delivery to tab ${targetId} attempt ${attempt + 1} failed:`, err);
+        if (attempt < MAX_RETRIES - 1) {
+          await new Promise((r) => setTimeout(r, 100 * (attempt + 1)));
+        }
+      }
     }
   }
 
+  // 2. Fallback: Locate any open dashboard tab (port 5173)
   if (!sent) {
     try {
-      const tabs = await chrome.tabs.query({});
-      const dashTabs = tabs.filter(
-        (t) => t.id && t.url && (t.url.includes(':5173') || t.url.includes('5173'))
-      );
+      const allTabs = await chrome.tabs.query({});
+      const dashTabs = allTabs.filter((t) => {
+        const url = t.url || (t as any).pendingUrl || '';
+        return Boolean(t.id && (url.includes(':5173') || url.includes('5173')));
+      });
+
       for (const dTab of dashTabs) {
-        if (dTab.id) {
-          try {
-            await chrome.tabs.sendMessage(dTab.id, {
+        if (!dTab.id) continue;
+        try {
+          await withTimeout(
+            chrome.tabs.sendMessage(dTab.id, {
               type: 'PRIVAGENT_DASHBOARD_PROGRESS',
               payload,
-            });
-            currentDashboardTabId = dTab.id;
-            sent = true;
-          } catch {
-            try {
-              await ensureTargetTabReady(dTab.id);
+            }),
+            1500,
+            'Dashboard tab fallback send timed out'
+          );
+          sent = true;
+          currentDashboardTabId = dTab.id;
+          break;
+        } catch {
+          // Attempt injection and retry once
+          try {
+            const reconnected = await ensureTargetTabReady(dTab.id);
+            if (reconnected) {
               await chrome.tabs.sendMessage(dTab.id, {
                 type: 'PRIVAGENT_DASHBOARD_PROGRESS',
                 payload,
               });
-              currentDashboardTabId = dTab.id;
               sent = true;
-            } catch {
-              // Ignore single tab attempt failure
+              currentDashboardTabId = dTab.id;
+              break;
             }
+          } catch (reconnectErr) {
+            console.warn(`[PrivAgent SW] Failed to reconnect dashboard tab ${dTab.id}:`, reconnectErr);
           }
         }
       }
-    } catch {
-      // Query error
+    } catch (queryErr) {
+      console.warn('[PrivAgent SW] Failed to query dashboard tabs:', queryErr);
     }
   }
+
+  if (!sent) {
+    console.warn('[PrivAgent SW] Could not deliver TASK_PROGRESS to any dashboard tab. AgentLoop state remains authoritative.');
+  }
+
+  return sent;
 }
 
 /**
@@ -143,9 +173,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       try {
         const allTabs = await chrome.tabs.query({});
         const candidate = allTabs.find((t) => {
-          if (!t.url) return false;
+          const uStr = t.url || (t as any).pendingUrl;
+          if (!uStr) return false;
           try {
-            const u = new URL(t.url);
+            const u = new URL(uStr);
             return u.port === '4173' || (u.hostname === 'localhost' && u.port === '4173');
           } catch {
             return false;
@@ -154,7 +185,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         const targetFound = Boolean(candidate?.id);
         let csResponsive = false;
-        const urlOrigin = candidate?.url ? new URL(candidate.url).origin : 'http://localhost:4173';
+        const candidateUrl = candidate?.url || (candidate as any)?.pendingUrl;
+        const urlOrigin = candidateUrl ? new URL(candidateUrl).origin : 'http://localhost:4173';
 
         if (candidate?.id) {
           csResponsive = await ensureTargetTabReady(candidate.id);
@@ -164,7 +196,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           connected: true,
           version: '0.4.0',
           serviceWorker: 'REACHABLE',
-          targetTab: targetFound ? 'FOUND' : 'NOT_FOUND',
+          targetTab: targetFound ? (csResponsive ? 'FOUND' : 'NOT_READY') : 'NOT_FOUND',
           contentScript: csResponsive ? 'REACHABLE' : 'NOT_INJECTED',
           urlOrigin,
           pageReady: csResponsive,
@@ -235,31 +267,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // ── Real M6 Agent Loop from Web Dashboard ────────────────────────────────
   if (message.type === 'PRIVAGENT_DASHBOARD_START_TASK') {
     console.info('[ServiceWorker] message received', { type: message.type });
-    console.info('[AgentTrace] dashboard START_TASK received');
+    console.info('[AgentTrace] service worker START_TASK received', { taskLength: (message.task as string)?.length });
     const task = message.task as string;
     const dashboardTabId = sender.tab?.id || currentDashboardTabId;
     if (sender.tab?.id) currentDashboardTabId = sender.tab.id;
 
-    // Send immediate acknowledgement
-    sendResponse({ started: true });
-
     (async () => {
       try {
-        console.info('[Adapter] target resolution started');
+        console.info('TARGET_RESOLUTION_STARTED');
         const allTabs = await chrome.tabs.query({});
         const resolution = resolveTargetWebTab(allTabs, task, message.originUrl || 'http://localhost:5173');
 
         // Safe diagnostics: strictly tab IDs & origins only
-        console.info('[Adapter] candidate tab IDs:', resolution.discoveredTabs.map((t) => t.id));
-        console.info('[Adapter] candidate origins:', resolution.discoveredTabs.map((t) => t.origin));
-        console.info('[Adapter] target tab selected', {
-          tabId: resolution.selectedTab?.id,
-          origin: resolution.selectedTab?.url ? new URL(resolution.selectedTab.url).origin : null,
-          reason: resolution.reason,
-        });
+        console.info('TARGET_TAB_CANDIDATES', resolution.discoveredTabs.map((t) => ({ id: t.id, origin: t.origin })));
 
         const targetTab = resolution.selectedTab;
         if (!targetTab || !targetTab.id) {
+          console.info('TARGET_TAB_FAILED: no eligible tab found');
+          console.info('[AgentTrace] terminal progress emitted', { status: 'FAILED' });
+          const failReason = resolution.reason || 'No target web tab found. Please open http://localhost:4173.';
+          try {
+            sendResponse({
+              started: false,
+              success: false,
+              status: 'FAILED',
+              reason: failReason,
+            });
+          } catch {
+            // Port might have closed
+          }
           await sendToDashboard(
             {
               status: 'FAILED',
@@ -267,7 +303,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               maxSteps: 10,
               task,
               steps: [],
-              reason: resolution.reason || 'No browser tab is available for this task. Open the webpage you want PrivAgent to work with and try again.',
+              reason: failReason,
             },
             dashboardTabId
           );
@@ -275,15 +311,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         const targetTabId = targetTab.id;
-        console.info('[AgentTrace] target tab resolved', {
+        console.info('TARGET_TAB_SELECTED', {
           tabId: targetTabId,
           origin: targetTab.url ? new URL(targetTab.url).origin : null,
+          reason: resolution.reason,
         });
+        console.info('[AgentTrace] target resolved', { tabId: targetTabId });
 
         // Ensure content script is active and responsive in the target tab
         const isReady = await ensureTargetTabReady(targetTabId);
         if (!isReady) {
-          console.warn('[AgentTrace] target tab unresponsive');
+          console.info('TARGET_TAB_FAILED: content script unreachable');
+          console.info('[AgentTrace] terminal progress emitted', { status: 'FAILED' });
+          const notReadyReason = 'Target web tab is open but not responding. Please refresh it.';
+          try {
+            sendResponse({
+              started: false,
+              success: false,
+              status: 'FAILED',
+              reason: notReadyReason,
+            });
+          } catch {
+            // Port might have closed
+          }
           await sendToDashboard(
             {
               status: 'FAILED',
@@ -291,15 +341,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               maxSteps: 10,
               task,
               steps: [],
-              reason: 'Target web tab content script is absent or cannot be scripted. Please refresh the target tab and try again.',
+              reason: notReadyReason,
             },
             dashboardTabId
           );
           return;
         }
-        console.info('[AgentTrace] target tab ready');
+
+        console.info('TARGET_TAB_READY', { tabId: targetTabId });
+        console.info('[AgentTrace] target content script ready', { tabId: targetTabId });
+
+        // Immediate direct response indicating task started successfully
+        try {
+          sendResponse({
+            started: true,
+            success: true,
+            status: 'RUNNING',
+            stage: 'PERCEPTION',
+            reason: 'Target tab discovered and ready. Starting visual privacy perception...',
+          });
+        } catch {
+          // Port might have closed
+        }
 
         // Initial progress update to dashboard: discovery verified, perception starting
+        console.info('[AgentTrace] first progress emitted');
         await sendToDashboard(
           {
             status: 'RUNNING',
@@ -315,7 +381,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const loopCallbacks = {
           perceivePage: async (): Promise<AgentContextPayload | null> => {
             try {
-              console.info('[ServiceWorker] message received: perceivePage');
+              console.info('[AgentTrace] perception started');
               // Ensure target tab is still ready before perception
               const tabReady = await ensureTargetTabReady(targetTabId);
               if (!tabReady) {
@@ -382,17 +448,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           providerRetries: 0,
         });
 
-        console.info('[AgentTrace] M6 loop started');
+        console.info('[AgentTrace] agent loop started');
         const finalState = await activeLoop.runTask(task);
-        if (finalState.status === 'SUCCESS') {
-          console.info('[AgentTrace] M6 completed');
-        } else if (finalState.status === 'FAILED') {
-          console.info('[AgentTrace] M6 failed', { reason: finalState.reason });
-        }
+        console.info('[AgentTrace] terminal progress emitted', { status: finalState.status });
         await sendToDashboard(finalState, dashboardTabId);
       } catch (err) {
         const errReason = err instanceof Error ? err.message : String(err);
-        console.info('[AgentTrace] M6 failed', { reason: errReason });
+        console.error('[AgentTrace] M6 failed', { reason: errReason });
+        console.info('[AgentTrace] terminal progress emitted', { status: 'FAILED' });
         await sendToDashboard(
           {
             status: 'FAILED',
@@ -407,7 +470,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     })();
 
-    return false;
+    return true; // Keep message channel open for async response
   }
 
   // ── Stop real task execution ─────────────────────────────────────────────

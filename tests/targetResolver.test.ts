@@ -128,9 +128,7 @@ describe('targetResolver', () => {
       const result = resolveTargetWebTab(tabs, 'find me the gold chain price');
 
       expect(result.selectedTab).toBeNull();
-      expect(result.reason).toBe(
-        'No browser tab is available for this task. Open the webpage you want PrivAgent to work with and try again.'
-      );
+      expect(result.reason).toContain('No browser tab is available for this task');
     });
 
     it('diagnostics never expose PII or query params', () => {

@@ -67,11 +67,12 @@ export function extractExplicitTargetFromTask(task: string): { hostname?: string
  * Checks if a tab is a valid web tab and NOT the dashboard.
  */
 export function isEligibleWebTab(tab: MinimalTab, dashboardOrigin = 'http://localhost:5173'): boolean {
-  if (!tab.id || !tab.url) return false;
+  const urlToTest = tab.url || (tab as any).pendingUrl;
+  if (!tab.id || !urlToTest) return false;
 
   let parsed: URL;
   try {
-    parsed = new URL(tab.url);
+    parsed = new URL(urlToTest);
   } catch {
     return false;
   }
@@ -80,7 +81,6 @@ export function isEligibleWebTab(tab: MinimalTab, dashboardOrigin = 'http://loca
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return false;
   }
-
 
   // Exclude dashboard tab (default port 5173)
   let dashParsed: URL | null = null;
@@ -114,15 +114,15 @@ export function resolveTargetWebTab(
   dashboardOrigin = 'http://localhost:5173'
 ): TargetResolutionResult {
   const discoveredTabs: Array<{ id?: number; origin?: string; url?: string }> = [];
-
   const eligibleTabs: MinimalTab[] = [];
 
   for (const t of tabs) {
-    if (!t.url) continue;
+    const tabUrl = t.url || (t as any).pendingUrl;
+    if (!tabUrl) continue;
 
     let origin = '';
     try {
-      origin = new URL(t.url).origin;
+      origin = new URL(tabUrl).origin;
     } catch {
       origin = 'invalid';
     }
@@ -130,7 +130,7 @@ export function resolveTargetWebTab(
     discoveredTabs.push({
       id: t.id,
       origin,
-      url: t.url.split('?')[0], // strip query params for safe diagnostics
+      url: tabUrl.split('?')[0], // strip query params for safe diagnostics
     });
 
     if (isEligibleWebTab(t, dashboardOrigin)) {
@@ -144,7 +144,7 @@ export function resolveTargetWebTab(
       return {
         selectedTab: null,
         discoveredTabs,
-        reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port} in another tab.`,
+        reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port}.`,
       };
     }
     return {
@@ -160,7 +160,9 @@ export function resolveTargetWebTab(
     if (explicit.port) {
       const matchedTab = eligibleTabs.find((t) => {
         try {
-          const u = new URL(t.url!);
+          const tabUrl = t.url || (t as any).pendingUrl;
+          if (!tabUrl) return false;
+          const u = new URL(tabUrl);
           const isLocalMatch =
             (explicit.hostname === 'localhost' || explicit.hostname === '127.0.0.1') &&
             (u.hostname === 'localhost' || u.hostname === '127.0.0.1');
@@ -184,12 +186,14 @@ export function resolveTargetWebTab(
       return {
         selectedTab: null,
         discoveredTabs,
-        reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port} in another tab.`,
+        reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port}.`,
       };
     } else if (explicit.hostname && explicit.hostname !== 'localhost' && explicit.hostname !== '127.0.0.1') {
       const matchedTab = eligibleTabs.find((t) => {
         try {
-          const u = new URL(t.url!);
+          const tabUrl = t.url || (t as any).pendingUrl;
+          if (!tabUrl) return false;
+          const u = new URL(tabUrl);
           return (
             u.hostname.toLowerCase() === explicit.hostname?.toLowerCase() ||
             u.hostname.toLowerCase().endsWith('.' + explicit.hostname?.toLowerCase())

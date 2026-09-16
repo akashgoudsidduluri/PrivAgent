@@ -55,15 +55,18 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     this.pingListeners = [];
   }
 
+  private lastLifecycleStage = 'IDLE';
+
   private resetWatchdog(timeoutMs = 30000): void {
     this.clearWatchdog();
     this.watchdogTimer = setTimeout(() => {
       if (this.state.status === 'RUNNING') {
-        console.warn('[AgentTrace] dashboard task watchdog timed out');
+        const stage = this.lastLifecycleStage || 'UNKNOWN';
+        console.warn(`[AgentTrace] dashboard task watchdog timed out (WATCHDOG_TIMEOUT). Last stage: ${stage}`);
         this.state = {
           ...this.state,
           status: 'FAILED',
-          reason: 'Task execution timed out. No response received from browser extension.',
+          reason: `Task execution timed out (WATCHDOG_TIMEOUT). Last stage: ${stage}.`,
           currentPipelineStage: 'IDLE',
         };
         this.notify();
@@ -201,6 +204,15 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     let stage: PipelineStage = 'IDLE';
     if (status === 'RUNNING') {
       stage = 'BROWSER_EXECUTION';
+      if (data.stage) {
+        this.lastLifecycleStage = data.stage;
+      } else if (data.reason && String(data.reason).toLowerCase().includes('perception')) {
+        this.lastLifecycleStage = 'PERCEPTION';
+      } else {
+        this.lastLifecycleStage = 'BROWSER_EXECUTION';
+      }
+    } else {
+      this.lastLifecycleStage = status;
     }
 
     const steps: StepTelemetry[] = (data.steps || []).map((s: any, idx: number) => ({
@@ -335,12 +347,14 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
   async startTask(task: string): Promise<void> {
     console.info('[Adapter] START_TASK received', { taskLength: task.length });
+    console.info('[AgentTrace] dashboard START_TASK received', { taskLength: task.length });
     if (this.state.status === 'RUNNING' || this.isStartingTask) {
       console.warn('[AgentTrace] dashboard startTask rejected: task already running or starting');
       return;
     }
 
     this.isStartingTask = true;
+    this.lastLifecycleStage = 'TARGET_RESOLUTION';
     try {
       this.taskStartTime = Date.now();
 
