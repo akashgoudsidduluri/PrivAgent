@@ -76,21 +76,11 @@ export function isEligibleWebTab(tab: MinimalTab, dashboardOrigin = 'http://loca
     return false;
   }
 
-  // Must be http or https
+  // Must be http or https (already excludes chrome:, edge:, about:, devtools:, extension schemes)
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return false;
   }
 
-  // Exclude browser internal and extension origins
-  if (
-    parsed.protocol === 'chrome:' ||
-    parsed.protocol === 'chrome-extension:' ||
-    parsed.protocol === 'devtools:' ||
-    parsed.protocol === 'about:' ||
-    parsed.protocol === 'edge:'
-  ) {
-    return false;
-  }
 
   // Exclude dashboard tab (default port 5173)
   let dashParsed: URL | null = null;

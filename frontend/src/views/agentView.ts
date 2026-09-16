@@ -180,6 +180,7 @@ export class AgentView {
         this.renderConversation();
 
         try {
+          console.info('[Dashboard] START_TASK sent', { taskLength: task.length });
           await this.adapter.startTask(task);
         } catch (err: any) {
           console.error('[AgentView] Failed to start task:', err);

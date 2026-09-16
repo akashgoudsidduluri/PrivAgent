@@ -248,18 +248,20 @@ async function runBenchmark() {
       type: 'account_number',
       confidence: 0.98,
       selector: '#beneficiary-account',
+      viewportBBox: [50, 50, 220, 32],
       screenshotBBox: [50, 50, 220, 32],
       isPartiallyVisible: false,
-      source: 'dom',
+      source: 'dom_attribute',
     },
     {
       id: 'det-002',
       type: 'password',
       confidence: 1.0,
       selector: 'input#login-pin',
+      viewportBBox: [50, 100, 160, 28],
       screenshotBBox: [50, 100, 160, 28],
       isPartiallyVisible: false,
-      source: 'dom',
+      source: 'dom_input_type',
     },
   ];
 
@@ -330,7 +332,7 @@ async function runBenchmark() {
     const basePayload: AgentContextPayload = {
       url: 'http://localhost:4173/account',
       timestamp: Date.now(),
-      viewport: { width: 1280, height: 800, scrollX: 0, scrollY: 0 },
+      viewport: { width: 1280, height: 800, scroll_x: 0, scroll_y: 0 },
       screenshot_dimensions: null,
       detections: scanReport.detections.map((d) => ({
         id: d.id,
@@ -345,6 +347,7 @@ async function runBenchmark() {
       total_elements_scanned: scanReport.totalElementsScanned,
       sensitive_elements_detected: scanReport.detections.length,
       sanitized_status: 'sanitized_only',
+      ocr_metrics: null,
     };
 
     minimizeAgentContext(basePayload, { task: 'get my account number' });

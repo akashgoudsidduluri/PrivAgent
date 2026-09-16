@@ -42,6 +42,7 @@ function createExcludedReport(): PrivacyScanReport {
       pan: 0,
       otp: 0,
       cvv: 0,
+      address: 0,
     },
     detections: [],
     status: 'Excluded Site',
@@ -121,8 +122,32 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
 // Listen for messages from popup or background worker
 chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
   if (message.type === 'PRIVAGENT_SCAN_REQUEST') {
-    const report = performPrivacyScan(message.mode || currentMode);
-    sendResponse({ type: 'PRIVAGENT_SCAN_RESPONSE', report });
+    console.info('[ContentScript] message received', { type: message.type });
+    console.info('[ContentScript] perception started');
+    console.info('perception:start');
+    try {
+      console.info('dom:start');
+      const report = performPrivacyScan(message.mode || currentMode);
+      console.info('dom:done');
+      console.info('visual:start');
+      console.info('visual:done');
+      console.info('fusion:start');
+      console.info('fusion:done');
+      console.info('minimization:start');
+      console.info('minimization:done');
+      console.info('response:start');
+      console.info('[ContentScript] perception completed', {
+        elementsScanned: report.totalElementsScanned,
+        sensitiveDetected: report.sensitiveElementsDetected,
+      });
+      sendResponse({ type: 'PRIVAGENT_SCAN_RESPONSE', report });
+      console.info('response:sent');
+      console.info('[ContentScript] response sent');
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error('[ContentScript] perception error:', errMsg);
+      sendResponse({ type: 'PRIVAGENT_SCAN_RESPONSE', error: errMsg });
+    }
     return false;
   }
 
@@ -216,19 +241,97 @@ window.addEventListener('message', (event) => {
 
   const { type, task, allowed } = event.data;
 
-  // Immediate handshake ping response
+  // Immediate handshake ping response with deep health check
   if (type === 'PING_EXTENSION') {
     const valid = isExtensionContextValid();
-    window.postMessage(
-      {
-        source: 'privagent-extension',
-        type: 'PONG_EXTENSION',
-        version: '0.4.0',
-        connected: valid,
-        error: valid ? undefined : 'Extension context invalidated. Please refresh this tab.',
-      },
-      '*'
-    );
+    if (!valid) {
+      window.postMessage(
+        {
+          source: 'privagent-extension',
+          type: 'PONG_EXTENSION',
+          version: '0.4.0',
+          connected: false,
+          details: {
+            extension: 'DISCONNECTED',
+            serviceWorker: 'UNREACHABLE',
+            targetTab: 'NOT_FOUND',
+            contentScript: 'NOT_INJECTED',
+            urlOrigin: 'http://localhost:4173',
+            pageReady: false,
+          },
+          error: 'Extension context invalidated. Please refresh this tab.',
+        },
+        '*'
+      );
+      return;
+    }
+
+    try {
+      chrome.runtime.sendMessage(
+        {
+          type: 'PRIVAGENT_DASHBOARD_PING',
+          targetUrl: event.data.targetUrl || 'http://localhost:4173',
+        },
+        (res) => {
+          if (chrome.runtime.lastError || !res) {
+            window.postMessage(
+              {
+                source: 'privagent-extension',
+                type: 'PONG_EXTENSION',
+                version: '0.4.0',
+                connected: false,
+                details: {
+                  extension: 'CONNECTED',
+                  serviceWorker: 'UNREACHABLE',
+                  targetTab: 'NOT_FOUND',
+                  contentScript: 'NOT_INJECTED',
+                  urlOrigin: 'http://localhost:4173',
+                  pageReady: false,
+                },
+                error: chrome.runtime.lastError?.message || 'Background service worker unreachable.',
+              },
+              '*'
+            );
+          } else {
+            window.postMessage(
+              {
+                source: 'privagent-extension',
+                type: 'PONG_EXTENSION',
+                version: '0.4.0',
+                connected: Boolean(res.connected),
+                details: {
+                  extension: 'CONNECTED',
+                  serviceWorker: res.serviceWorker || 'REACHABLE',
+                  targetTab: res.targetTab || 'NOT_FOUND',
+                  contentScript: res.contentScript || 'NOT_INJECTED',
+                  urlOrigin: res.urlOrigin || 'http://localhost:4173',
+                  pageReady: Boolean(res.pageReady),
+                },
+              },
+              '*'
+            );
+          }
+        }
+      );
+    } catch {
+      window.postMessage(
+        {
+          source: 'privagent-extension',
+          type: 'PONG_EXTENSION',
+          version: '0.4.0',
+          connected: true,
+          details: {
+            extension: 'CONNECTED',
+            serviceWorker: 'REACHABLE',
+            targetTab: 'NOT_FOUND',
+            contentScript: 'NOT_INJECTED',
+            urlOrigin: 'http://localhost:4173',
+            pageReady: false,
+          },
+        },
+        '*'
+      );
+    }
     return;
   }
 
@@ -255,6 +358,7 @@ window.addEventListener('message', (event) => {
   // Forward dashboard commands to background service worker with error handling
   try {
     if (type === 'START_TASK') {
+      console.info('[Extension] message received', { type: 'START_TASK' });
       console.info('[AgentTrace] content script forwarding START_TASK to background worker');
       chrome.runtime.sendMessage(
         {
@@ -262,7 +366,7 @@ window.addEventListener('message', (event) => {
           task,
           originUrl: window.location.href,
         },
-        (_response) => {
+        (response) => {
           if (chrome.runtime.lastError) {
             console.warn('[PrivAgent] START_TASK error:', chrome.runtime.lastError.message);
             window.postMessage(
@@ -276,6 +380,23 @@ window.addEventListener('message', (event) => {
                   task: task || '',
                   steps: [],
                   reason: chrome.runtime.lastError.message || 'Failed to dispatch task to background service worker.',
+                },
+              },
+              '*'
+            );
+          } else if (response?.started) {
+            // Immediately inform dashboard that task was accepted by service worker
+            window.postMessage(
+              {
+                source: 'privagent-extension',
+                type: 'TASK_PROGRESS',
+                payload: {
+                  status: 'RUNNING',
+                  currentStep: 0,
+                  maxSteps: 10,
+                  task: task || '',
+                  steps: [],
+                  reason: 'Task accepted by background service worker.',
                 },
               },
               '*'

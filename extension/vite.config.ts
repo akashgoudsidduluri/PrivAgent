@@ -58,6 +58,32 @@ function copyExtensionAssets() {
           fs.copyFileSync(file.src, resolve(ocrDest, file.dest));
         }
       }
+
+      // Also mirror extension/dist to root dist for developers who loaded root dist in Chrome
+      try {
+        const rootDist = resolve(__dirname, '../dist');
+        fs.cpSync(outDir, rootDist, { recursive: true });
+      } catch {
+        // ignore
+      }
+    },
+  };
+}
+
+function mirrorContentScriptToRootDist() {
+  return {
+    name: 'mirror-contentscript-root',
+    closeBundle() {
+      try {
+        const srcFile = resolve(__dirname, 'dist/contentScript.js');
+        const destFile = resolve(__dirname, '../dist/contentScript.js');
+        if (fs.existsSync(srcFile)) {
+          fs.mkdirSync(resolve(__dirname, '../dist'), { recursive: true });
+          fs.copyFileSync(srcFile, destFile);
+        }
+      } catch {
+        // ignore
+      }
     },
   };
 }
@@ -86,6 +112,7 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
+      plugins: [mirrorContentScriptToRootDist()],
     };
   }
 

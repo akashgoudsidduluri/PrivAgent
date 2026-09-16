@@ -246,6 +246,7 @@ export class AgentLoop {
     const tracer = new AgentDecisionTracer(`task-${Date.now()}`);
     const plan = createTaskPlan(task);
     this.state.plan = plan;
+    this.notifyProgress();
 
     while (this.state.status === 'IN_PROGRESS') {
       if (this.isStopped) {
@@ -272,6 +273,7 @@ export class AgentLoop {
         console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
         break;
       }
+      console.info('[AgentLoop] perception completed');
       console.info('[AgentTrace] perception complete');
 
       // Defense-in-depth: enforce zero raw PII in newly perceived context

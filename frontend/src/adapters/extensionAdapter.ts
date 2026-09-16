@@ -99,6 +99,18 @@ export class ExtensionAgentAdapter implements AgentAdapter {
           resolved = true;
           const isConnected = Boolean(event.data.connected !== false && !event.data.error);
           this.extensionConnected = isConnected;
+
+          const details = event.data.details || {};
+          const extStatus = details.extension || (isConnected ? 'CONNECTED' : 'DISCONNECTED');
+          const swStatus = details.serviceWorker || (isConnected ? 'REACHABLE' : 'UNREACHABLE');
+          const tabStatus = details.targetTab || 'NOT_FOUND';
+          const csStatus = details.contentScript || 'NOT_INJECTED';
+
+          console.info(`Extension: ${extStatus}`);
+          console.info(`Service Worker: ${swStatus}`);
+          console.info(`Target Tab: ${tabStatus}`);
+          console.info(`Content Script: ${csStatus}`);
+
           window.removeEventListener('message', handler);
           this.notifyExtensionStatus(isConnected);
           resolve(isConnected);
@@ -111,6 +123,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         {
           source: 'privagent-dashboard',
           type: 'PING_EXTENSION',
+          targetUrl: 'http://localhost:4173',
         },
         '*'
       );
@@ -119,10 +132,14 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         if (!resolved) {
           window.removeEventListener('message', handler);
           this.extensionConnected = false;
+          console.info('Extension: DISCONNECTED');
+          console.info('Service Worker: UNREACHABLE');
+          console.info('Target Tab: NOT_FOUND');
+          console.info('Content Script: NOT_INJECTED');
           this.notifyExtensionStatus(false);
           resolve(false);
         }
-      }, 500);
+      }, 1000);
     });
   }
 
@@ -158,6 +175,11 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   }
 
   private handleExtensionProgress(data: any): void {
+    console.info('[Adapter] response received', {
+      status: data.status,
+      currentStep: data.currentStep,
+      reason: data.reason,
+    });
     console.info('[AgentTrace] dashboard received TASK_PROGRESS', {
       status: data.status,
       currentStep: data.currentStep,
@@ -312,6 +334,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   }
 
   async startTask(task: string): Promise<void> {
+    console.info('[Adapter] START_TASK received', { taskLength: task.length });
     if (this.state.status === 'RUNNING' || this.isStartingTask) {
       console.warn('[AgentTrace] dashboard startTask rejected: task already running or starting');
       return;
