@@ -1,7 +1,7 @@
 {
   "benchmarkTitle": "PrivAgent SIH Official Evaluation Benchmark Report",
-  "timestamp": "2026-09-16T11:58:42.632Z",
-  "benchmarkDurationMs": 1139,
+  "timestamp": "2026-09-16T13:04:04.110Z",
+  "benchmarkDurationMs": 978,
   "environment": {
     "platform": "win32",
     "architecture": "x64",
@@ -31,6 +31,53 @@
       "weight": "15%",
       "p50": 310,
       "p95": 340
+    },
+    "securityResistanceRate": {
+      "weight": "Security Lab",
+      "score": 1
+    }
+  },
+  "securityAttackLab": {
+    "totalAttacksTested": 17,
+    "attacksNeutralized": 17,
+    "attacksBreached": 0,
+    "overallResistanceRate": 100,
+    "categoryBreakdown": {
+      "PROMPT_INJECTION": {
+        "tested": 4,
+        "neutralized": 4,
+        "resistanceRate": 100
+      },
+      "DOM_INJECTION": {
+        "tested": 2,
+        "neutralized": 2,
+        "resistanceRate": 100
+      },
+      "TARGET_CONFUSION": {
+        "tested": 2,
+        "neutralized": 2,
+        "resistanceRate": 100
+      },
+      "NAVIGATION_HIJACKING": {
+        "tested": 3,
+        "neutralized": 3,
+        "resistanceRate": 100
+      },
+      "ACTION_SMUGGLING": {
+        "tested": 3,
+        "neutralized": 3,
+        "resistanceRate": 100
+      },
+      "CONFIRMATION_BYPASS": {
+        "tested": 1,
+        "neutralized": 1,
+        "resistanceRate": 100
+      },
+      "PII_EXFILTRATION": {
+        "tested": 2,
+        "neutralized": 2,
+        "resistanceRate": 100
+      }
     }
   },
   "piiBenchmark": {
@@ -158,39 +205,39 @@
   },
   "clientResourceUtilization": {
     "iterations": 10,
-    "averageHeapUsedMB": 86.4,
-    "totalCpuTimeMs": 281,
+    "averageHeapUsedMB": 72.5,
+    "totalCpuTimeMs": 234,
     "stages": {
       "domScan": {
-        "p50Ms": 3,
-        "p95Ms": 7.56,
-        "meanMs": 3.52,
-        "minMs": 1.9,
-        "maxMs": 7.56,
+        "p50Ms": 2.07,
+        "p95Ms": 5.57,
+        "meanMs": 2.7,
+        "minMs": 1.74,
+        "maxMs": 5.57,
         "sampleCount": 10
       },
       "fusion": {
-        "p50Ms": 0.13,
-        "p95Ms": 2.22,
-        "meanMs": 0.4,
-        "minMs": 0.07,
-        "maxMs": 2.22,
+        "p50Ms": 0.19,
+        "p95Ms": 1.58,
+        "meanMs": 0.37,
+        "minMs": 0.06,
+        "maxMs": 1.58,
         "sampleCount": 10
       },
       "minimization": {
-        "p50Ms": 0.46,
-        "p95Ms": 3.12,
-        "meanMs": 0.71,
+        "p50Ms": 0.54,
+        "p95Ms": 2.29,
+        "meanMs": 0.78,
         "minMs": 0.2,
-        "maxMs": 3.12,
+        "maxMs": 2.29,
         "sampleCount": 10
       },
       "completePerceptionCycle": {
-        "p50Ms": 3.68,
-        "p95Ms": 12.9,
-        "meanMs": 4.64,
-        "minMs": 2.18,
-        "maxMs": 12.9,
+        "p50Ms": 3.71,
+        "p95Ms": 9.44,
+        "meanMs": 3.85,
+        "minMs": 2,
+        "maxMs": 9.44,
         "sampleCount": 10
       }
     }

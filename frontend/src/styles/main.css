@@ -1008,6 +1008,178 @@
   color: var(--danger-red) !important;
 }
 
+/* ── Multi-Step Plan & Execution Inspector (SIH Research Edition) ───────── */
+.execution-inspector-panel {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-top: 10px;
+  backdrop-filter: blur(8px);
+}
+
+.inspector-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.inspector-badges-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.risk-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.risk-badge-pill.risk-low {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.risk-badge-pill.risk-medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.risk-badge-pill.risk-high {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.risk-badge-pill.risk-critical {
+  background: rgba(220, 38, 38, 0.25);
+  color: #fca5a5;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  animation: pulseCritical 1.5s infinite;
+}
+
+@keyframes pulseCritical {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+}
+
+.semantic-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.confidence-gauge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.self-healing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.4);
+}
+
+/* Plan Checklist Card */
+.plan-checklist-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-top: 8px;
+}
+
+.plan-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.plan-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.plan-step-item.completed {
+  color: #34d399;
+}
+
+.plan-step-item.running {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.plan-step-item.failed {
+  color: #f87171;
+}
+
+.plan-step-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.plan-step-icon.done { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.plan-step-icon.active { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.plan-step-icon.pending { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
 /* Completion & Failure Banners */
 .task-completion-banner {
   display: flex;
@@ -1617,3 +1789,128 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Self-Healing Recovery Event Card (Feature N) */
+.recovery-event-card {
+  margin-top: 10px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+.recovery-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #f472b6;
+  margin-bottom: 8px;
+}
+
+.recovery-badge {
+  margin-left: auto;
+  font-size: 10px;
+  background: rgba(236, 72, 153, 0.2);
+  border: 1px solid rgba(236, 72, 153, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.recovery-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.recovery-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.recovery-row .rec-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.recovery-row .badge-pass {
+  color: #34d399;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.recovery-row .badge-success {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+/* Privacy & Security Event Timeline (Feature O) */
+.timeline-container {
+  margin-top: 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.timeline-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.timeline-time {
+  color: var(--text-muted);
+  font-size: 10px;
+  min-width: 55px;
+}
+
+.timeline-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 95px;
+  text-align: center;
+}
+
+.timeline-tag.perception { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+.timeline-tag.privacy { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.timeline-tag.reasoning { background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3); }
+.timeline-tag.risk { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.timeline-tag.semantic { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.timeline-tag.execution { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+.timeline-tag.healed { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); }
+
+.timeline-desc {
+  color: var(--text-primary);
+  font-size: 11px;
+}
+

@@ -36,6 +36,58 @@ export interface SensitiveCategorySummary {
   otp: number;
 }
 
+export interface PlanStep {
+  id: string;
+  stepNumber: number;
+  description: string;
+  expectedActionType: string;
+  status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'SKIPPED';
+  targetHint?: string;
+  completedAction?: unknown;
+  error?: string;
+}
+
+export interface TaskPlan {
+  taskId: string;
+  goal: string;
+  steps: PlanStep[];
+  currentStepIndex: number;
+  status: string;
+  recoveryAttempts: number;
+  maxRecoveryAttempts: number;
+  createdAt: number;
+  updatedAt: number;
+  failureDiagnosis?: string;
+}
+
+export interface ActionRiskAssessment {
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  level?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  score: number;
+  reasons: string[];
+  rationale?: string;
+  requiresConfirmation: boolean;
+  allowed: boolean;
+}
+
+export interface SemanticVerificationResult {
+  verified: boolean;
+  confidence: number;
+  reason: string;
+  targetAlignment: 'ALIGNED' | 'AMBIGUOUS' | 'CONTRADICTORY' | 'UNRELATED';
+  policyDecision: 'ALLOW' | 'REQUIRE_CONFIRMATION' | 'REJECT';
+}
+
+export interface DecisionTraceSummary {
+  taskId: string;
+  totalSteps: number;
+  executedCount: number;
+  blockedCount: number;
+  confirmedCount: number;
+  recoveredCount: number;
+  entries: unknown[];
+}
+
 export interface StepTelemetry {
   step: number;
   actionType: string;
@@ -46,6 +98,10 @@ export interface StepTelemetry {
   executionError?: string;
   sensitiveCategoryDetected?: string;
   timestamp: number;
+  riskAssessment?: ActionRiskAssessment;
+  semanticVerification?: SemanticVerificationResult;
+  confidenceScore?: number;
+  selfHealingRecovered?: boolean;
 }
 
 export interface PrivacyReceipt {
@@ -79,10 +135,16 @@ export interface DashboardAgentState {
     description: string;
     target?: string;
     url?: string;
+    riskLevel?: string;
+    riskScore?: number;
   };
   steps: StepTelemetry[];
   sensitiveItemsCount: number;
   categories: SensitiveCategorySummary;
+  plan?: TaskPlan;
+  latestRisk?: ActionRiskAssessment;
+  latestSemantic?: SemanticVerificationResult;
+  decisionTraceSummary?: DecisionTraceSummary;
 }
 
 export interface BackendHealthState {
@@ -91,3 +153,4 @@ export interface BackendHealthState {
   reasoner: string;
   reasoner_configured: boolean;
 }
+

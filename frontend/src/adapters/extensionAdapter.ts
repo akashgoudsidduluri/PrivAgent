@@ -191,7 +191,13 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       executionError: s.executionError,
       sensitiveCategoryDetected: s.targetType,
       timestamp: s.timestamp || Date.now(),
+      riskAssessment: s.riskAssessment,
+      semanticVerification: s.semanticVerification,
+      confidenceScore: s.confidenceEvaluation?.confidenceScore,
+      selfHealingRecovered: s.selfHealing?.recovered,
     }));
+
+    const latestStep = steps.length > 0 ? steps[steps.length - 1] : undefined;
 
     this.state = {
       ...this.state,
@@ -199,8 +205,24 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       currentStep: data.currentStep || steps.length,
       currentPipelineStage: stage,
       reason: data.reason,
-      requiresUserConfirmationAction: data.requiresUserConfirmationAction,
+      requiresUserConfirmationAction: data.requiresUserConfirmationAction
+        ? {
+            action: data.requiresUserConfirmationAction.action,
+            description:
+              data.requiresUserConfirmationAction.target ||
+              data.requiresUserConfirmationAction.url ||
+              'Consequential browser action',
+            target: data.requiresUserConfirmationAction.target,
+            url: data.requiresUserConfirmationAction.url,
+            riskLevel: latestStep?.riskAssessment?.riskLevel || 'HIGH',
+            riskScore: latestStep?.riskAssessment?.score || 0.85,
+          }
+        : undefined,
       steps,
+      plan: data.plan,
+      latestRisk: latestStep?.riskAssessment,
+      latestSemantic: latestStep?.semanticVerification,
+      decisionTraceSummary: data.decisionTraceSummary,
     };
 
     if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED') {

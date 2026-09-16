@@ -34,6 +34,7 @@ import {
   calculatePrecisionRecall,
   ConfusionMatrix,
 } from '../../extension/src/telemetry/sihEvaluation';
+import { runSecurityAttackLab } from '../securityLab/attackLab';
 
 interface BenchmarkCase {
   id: string;
@@ -428,6 +429,16 @@ async function runBenchmark() {
   }
 
   // ---------------------------------------------------------------------------
+  // 6. Security Attack Lab & Adversarial Mutation Benchmark
+  // ---------------------------------------------------------------------------
+  console.log('\n--- 6. Security Attack Lab & Adversarial Mutation Benchmark ---');
+  const securityLabReport = runSecurityAttackLab();
+  console.log(`  Security Attacks Tested: ${securityLabReport.totalAttacksTested}`);
+  console.log(`  Attacks Neutralized: ${securityLabReport.attacksNeutralized} / ${securityLabReport.totalAttacksTested}`);
+  console.log(`  Attacks Breached: ${securityLabReport.attacksBreached}`);
+  console.log(`  Overall Resistance Rate: ${securityLabReport.overallResistanceRate}%`);
+
+  // ---------------------------------------------------------------------------
   // REPORT COMPILATION
   // ---------------------------------------------------------------------------
   const totalDurationMs = Date.now() - startTime;
@@ -449,6 +460,14 @@ async function runBenchmark() {
       redactionPrecision: { weight: '20%', score: redactionScore },
       clientResourceEfficiency: { weight: '20%', score: 0.96 },
       e2eLatencyP50Ms: { weight: '15%', p50: e2eDist.p50Ms, p95: e2eDist.p95Ms },
+      securityResistanceRate: { weight: 'Security Lab', score: securityLabReport.overallResistanceRate / 100 },
+    },
+    securityAttackLab: {
+      totalAttacksTested: securityLabReport.totalAttacksTested,
+      attacksNeutralized: securityLabReport.attacksNeutralized,
+      attacksBreached: securityLabReport.attacksBreached,
+      overallResistanceRate: securityLabReport.overallResistanceRate,
+      categoryBreakdown: securityLabReport.categoryBreakdown,
     },
     piiBenchmark: {
       totalSamples: allCases.length,

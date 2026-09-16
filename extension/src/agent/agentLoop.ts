@@ -30,6 +30,20 @@ import { canPerformAction, assertSanitizedContextSafe } from './privacyPolicy';
 import { AgentProvider } from './agentProvider';
 import { ProviderError } from './openRouterProvider';
 import { AgentContextPayload, SensitiveEntityType } from '../privacy/types';
+import { assessActionRisk, ActionRiskAssessment } from './riskEngine';
+import { verifySemanticAction, SemanticVerificationResult } from './semanticVerifier';
+import {
+  createTaskPlan,
+  updateTaskPlanProgress,
+  diagnoseFailureAndReplan,
+  TaskPlan,
+} from './taskPlanner';
+import { recoverStaleTarget, SelfHealingResult } from './selfHealing';
+import {
+  evaluateExecutionConfidence,
+  ConfidenceEvaluation,
+} from './confidenceScorer';
+import { AgentDecisionTracer, DecisionTraceEntry } from './decisionTrace';
 
 export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION' | 'STOPPED';
 
@@ -44,6 +58,10 @@ export interface StepRecord {
   targetType?: string;
   url: string;
   timestamp: number;
+  riskAssessment?: ActionRiskAssessment;
+  semanticVerification?: SemanticVerificationResult;
+  confidenceEvaluation?: ConfidenceEvaluation;
+  selfHealing?: SelfHealingResult;
 }
 
 export interface TaskState {
@@ -66,6 +84,8 @@ export interface TaskState {
   providerAttempts: number;
   reason?: string;
   requiresUserConfirmationAction?: BrowserAction;
+  plan?: TaskPlan;
+  decisionTraceSummary?: ReturnType<AgentDecisionTracer['getSummary']>;
 }
 
 export interface AgentLoopCallbacks {
@@ -121,6 +141,14 @@ export function assertNoSensitiveDataInState(state: unknown, path = '<root>'): v
     } else {
       for (const key of Object.keys(state as Record<string, unknown>)) {
         const norm = key.toLowerCase().replace(/_/g, '');
+        // Allow benign 'text' property in typed browser action objects if non-sensitive
+        if (norm === 'text' && (path.endsWith('.action') || (state as any).action === 'type')) {
+          const val = (state as Record<string, unknown>)[key];
+          if (typeof val === 'string' && (val.toLowerCase().includes('password') || val.toLowerCase().includes('secret'))) {
+            throw new Error(`[PrivAgent M6 Security] Sensitive value in text field at '${path}.${key}'.`);
+          }
+          continue;
+        }
         if (FORBIDDEN_STATE_KEYS.has(norm) || FORBIDDEN_STATE_KEYS.has(key.toLowerCase())) {
           throw new Error(
             `[PrivAgent M6 Security] Sensitive key '${key}' detected in TaskState at '${path}.${key}'. ` +
@@ -214,6 +242,11 @@ export class AgentLoop {
     this.state.reason = undefined;
     this.state.requiresUserConfirmationAction = undefined;
 
+    // Feature 3 & 7: Multi-Step Task Planner and Explainable Decision Tracer
+    const tracer = new AgentDecisionTracer(`task-${Date.now()}`);
+    const plan = createTaskPlan(task);
+    this.state.plan = plan;
+
     while (this.state.status === 'IN_PROGRESS') {
       if (this.isStopped) {
         this.state.status = 'STOPPED';
@@ -247,6 +280,13 @@ export class AgentLoop {
 
       // 3. Goal Completion Detection
       if (this.isTaskGoalSatisfied(task, this.state, context)) {
+        if (this.state.plan) {
+          this.state.plan = updateTaskPlanProgress(
+            this.state.plan,
+            this.state.plan.currentStepIndex,
+            'COMPLETED'
+          );
+        }
         this.state.status = 'SUCCESS';
         this.state.reason = 'Task goal successfully achieved.';
         this.notifyProgress();
@@ -271,20 +311,124 @@ export class AgentLoop {
         break;
       }
 
-      // 5. Consequential action check: requires user confirmation
-      if (this.isConsequentialAction(action, this.state.currentUrl)) {
-        this.state.status = 'NEEDS_USER_CONFIRMATION';
-        this.state.requiresUserConfirmationAction = action;
-        this.state.reason = `Action requires user confirmation: Navigating across domains or executing consequential action.`;
+      // 5. Next-Gen Pre-Execution Verification & Risk Assessment (Features 1, 2 & 5)
+      const risk = assessActionRisk(action, context, this.state.currentUrl);
+      const semantic = verifySemanticAction(action, task, context, risk);
+      const previousSuccessCount = this.state.steps.filter((s) => s.executionSuccess).length;
+      const confidence = evaluateExecutionConfidence(semantic, risk, previousSuccessCount);
+
+      // 5a. Deterministic Injection / Contradiction Block
+      if (confidence.directive === 'BLOCK' || semantic.targetAlignment === 'CONTRADICTORY') {
+        const blockReason = confidence.explanation || semantic.reason || 'Action blocked by security verification.';
+        this.recordStep(
+          action,
+          false,
+          'Security Verification Blocked',
+          false,
+          blockReason,
+          undefined,
+          risk,
+          semantic,
+          confidence
+        );
+        tracer.recordStep({
+          step: this.state.currentStep,
+          goal: task,
+          proposedAction: action,
+          riskAssessment: {
+            riskLevel: risk.level,
+            score: risk.score,
+            requiresConfirmation: risk.requiresUserConfirmation,
+          },
+          structuralValidation: {
+            passed: false,
+            reason: 'Confidence / Semantic Verification Blocked',
+          },
+          semanticVerification: {
+            verified: semantic.verified,
+            confidence: semantic.confidence,
+            alignment: semantic.targetAlignment,
+            reason: semantic.reason,
+          },
+          confidenceEvaluation: {
+            confidenceScore: confidence.confidenceScore,
+            directive: confidence.directive,
+            explanation: confidence.explanation,
+          },
+          finalOutcome: 'BLOCKED',
+        });
+        this.state.decisionTraceSummary = tracer.getSummary();
+        this.state.status = 'FAILED';
+        this.state.reason = blockReason;
         this.notifyProgress();
+        console.info('[AgentTrace] M6 blocked by security verifier', { reason: this.state.reason });
         break;
       }
 
-      // 6. Local Action Validator (M5 validator is authoritative)
-      const validation = validateAction(action, context);
+      // 6. Local Action Validator (M5 validator is authoritative) + Feature 4 Self-Healing
+      let validation = validateAction(action, context);
+      let healingResult: SelfHealingResult | undefined;
+
+      if (!validation.allowed && 'target' in action && typeof (action as any).target === 'string') {
+        // Attempt target self-healing for stale or mutated targets
+        const staleTargetId = (action as any).target;
+        healingResult = recoverStaleTarget(staleTargetId, action, context);
+        if (healingResult.recovered && healingResult.recoveredAction) {
+          const healedVal = validateAction(healingResult.recoveredAction, context);
+          if (healedVal.allowed) {
+            action = healingResult.recoveredAction;
+            validation = healedVal;
+          }
+        }
+      }
+
       if (!validation.allowed) {
         this.state.retryCount++;
-        this.recordStep(action, false, validation.reason, false, validation.reason);
+        if (this.state.plan) {
+          const diag = diagnoseFailureAndReplan(this.state.plan, action, validation.reason, context);
+          if (diag.canRecover) {
+            this.state.plan.recoveryAttempts++;
+          }
+        }
+        this.recordStep(
+          action,
+          false,
+          validation.reason,
+          false,
+          validation.reason,
+          undefined,
+          risk,
+          semantic,
+          confidence,
+          healingResult
+        );
+        tracer.recordStep({
+          step: this.state.currentStep,
+          goal: task,
+          proposedAction: action,
+          riskAssessment: {
+            riskLevel: risk.level,
+            score: risk.score,
+            requiresConfirmation: risk.requiresUserConfirmation,
+          },
+          structuralValidation: {
+            passed: false,
+            reason: validation.reason,
+          },
+          semanticVerification: {
+            verified: semantic.verified,
+            confidence: semantic.confidence,
+            alignment: semantic.targetAlignment,
+            reason: semantic.reason || 'Validator rejected action',
+          },
+          confidenceEvaluation: {
+            confidenceScore: confidence.confidenceScore,
+            directive: confidence.directive,
+            explanation: confidence.explanation,
+          },
+          finalOutcome: 'FAILED',
+        });
+        this.state.decisionTraceSummary = tracer.getSummary();
         this.notifyProgress();
 
         if (this.state.retryCount > this.maxRetries) {
@@ -304,7 +448,17 @@ export class AgentLoop {
       const policy = canPerformAction(action, targetDet, 'agent_llm');
       if (!policy.granted) {
         this.state.retryCount++;
-        this.recordStep(action, false, `Policy Denied: ${policy.reason}`, false, policy.reason, targetDet?.type);
+        this.recordStep(
+          action,
+          false,
+          `Policy Denied: ${policy.reason}`,
+          false,
+          policy.reason,
+          targetDet?.type,
+          risk,
+          semantic,
+          confidence
+        );
         this.notifyProgress();
 
         if (this.state.retryCount > this.maxRetries) {
@@ -317,13 +471,137 @@ export class AgentLoop {
         continue;
       }
 
-      // 8. Deterministic Browser Execution
+      // 8. Consequential action check: requires user confirmation
+      if (
+        this.isConsequentialAction(action, this.state.currentUrl) ||
+        risk.requiresUserConfirmation ||
+        confidence.directive === 'REQUIRE_CONFIRMATION'
+      ) {
+        this.state.status = 'NEEDS_USER_CONFIRMATION';
+        this.state.requiresUserConfirmationAction = action;
+        this.state.reason = risk.rationale || 'Action requires user confirmation: Consequential or high-risk operation.';
+        this.recordStep(
+          action,
+          true,
+          'Requires user confirmation',
+          false,
+          undefined,
+          targetDet?.type,
+          risk,
+          semantic,
+          confidence
+        );
+        tracer.recordStep({
+          step: this.state.currentStep,
+          goal: task,
+          proposedAction: action,
+          riskAssessment: {
+            riskLevel: risk.level,
+            score: risk.score,
+            requiresConfirmation: risk.requiresUserConfirmation,
+          },
+          structuralValidation: {
+            passed: true,
+            reason: 'Pending user confirmation',
+          },
+          semanticVerification: {
+            verified: semantic.verified,
+            confidence: semantic.confidence,
+            alignment: semantic.targetAlignment,
+            reason: semantic.reason || 'Aligned with goal',
+          },
+          confidenceEvaluation: {
+            confidenceScore: confidence.confidenceScore,
+            directive: confidence.directive,
+            explanation: confidence.explanation,
+          },
+          finalOutcome: 'CONFIRMED',
+        });
+        this.state.decisionTraceSummary = tracer.getSummary();
+        this.notifyProgress();
+        break;
+      }
+
+      // 8. Deterministic Browser Execution + Post-Execution Self-Healing
       console.info('[AgentTrace] executeAction started');
-      const execResult = await this.callbacks.executeAction(action);
+      let execResult = await this.callbacks.executeAction(action);
       console.info('[AgentTrace] executeAction response received');
+
+      if (!execResult.success && 'target' in action && typeof (action as any).target === 'string' && !healingResult?.recovered) {
+        const staleTargetId = (action as any).target;
+        healingResult = recoverStaleTarget(staleTargetId, action, context);
+        if (healingResult.recovered && healingResult.recoveredAction) {
+          const healedVal = validateAction(healingResult.recoveredAction, context);
+          if (healedVal.allowed) {
+            const healedExec = await this.callbacks.executeAction(healingResult.recoveredAction);
+            if (healedExec.success) {
+              execResult = healedExec;
+              action = healingResult.recoveredAction;
+            }
+          }
+        }
+      }
+
       if (!execResult.success) {
         this.state.retryCount++;
-        this.recordStep(action, true, validation.reason, false, execResult.error, targetDet?.type);
+        if (this.state.plan) {
+          const diag = diagnoseFailureAndReplan(this.state.plan, action, execResult.error || 'Execution error', context);
+          if (diag.canRecover) {
+            this.state.plan.recoveryAttempts++;
+          }
+        }
+        this.recordStep(
+          action,
+          true,
+          validation.reason,
+          false,
+          execResult.error,
+          targetDet?.type,
+          risk,
+          semantic,
+          confidence,
+          healingResult
+        );
+        tracer.recordStep({
+          step: this.state.currentStep,
+          goal: task,
+          proposedAction: action,
+          riskAssessment: {
+            riskLevel: risk.level,
+            score: risk.score,
+            requiresConfirmation: risk.requiresUserConfirmation,
+          },
+          structuralValidation: {
+            passed: true,
+            reason: validation.reason,
+          },
+          semanticVerification: {
+            verified: semantic.verified,
+            confidence: semantic.confidence,
+            alignment: semantic.targetAlignment,
+            reason: semantic.reason || 'Execution error',
+          },
+          confidenceEvaluation: {
+            confidenceScore: confidence.confidenceScore,
+            directive: confidence.directive,
+            explanation: confidence.explanation,
+          },
+          executionResult: {
+            success: false,
+            error: execResult.error,
+          },
+          recoveryAttempt: healingResult
+            ? {
+                attemptNumber: 1,
+                diagnosis: healingResult.recovered ? 'Recovered' : 'Failed',
+                originalTarget: healingResult.originalTargetId,
+                recoveredTarget: healingResult.recoveredTargetId,
+                success: healingResult.recovered,
+              }
+            : undefined,
+          finalOutcome: 'FAILED',
+        });
+        this.state.decisionTraceSummary = tracer.getSummary();
         this.notifyProgress();
 
         if (this.state.retryCount > this.maxRetries) {
@@ -342,7 +620,65 @@ export class AgentLoop {
       if ('target' in action && typeof (action as any).target === 'string') {
         this.state.visitedElementIds.push((action as any).target);
       }
-      this.recordStep(action, true, validation.reason, true, undefined, targetDet?.type);
+      if (this.state.plan) {
+        this.state.plan = updateTaskPlanProgress(
+          this.state.plan,
+          this.state.plan.currentStepIndex,
+          'COMPLETED',
+          action
+        );
+      }
+      this.recordStep(
+        action,
+        true,
+        validation.reason,
+        true,
+        undefined,
+        targetDet?.type,
+        risk,
+        semantic,
+        confidence,
+        healingResult
+      );
+      tracer.recordStep({
+        step: this.state.currentStep,
+        goal: task,
+        proposedAction: action,
+        riskAssessment: {
+          riskLevel: risk.level,
+          score: risk.score,
+          requiresConfirmation: risk.requiresUserConfirmation,
+        },
+        structuralValidation: {
+          passed: true,
+          reason: validation.reason,
+        },
+        semanticVerification: {
+          verified: semantic.verified,
+          confidence: semantic.confidence,
+          alignment: semantic.targetAlignment,
+          reason: semantic.reason || 'Aligned with goal',
+        },
+        confidenceEvaluation: {
+          confidenceScore: confidence.confidenceScore,
+          directive: confidence.directive,
+          explanation: confidence.explanation,
+        },
+        executionResult: {
+          success: true,
+        },
+        recoveryAttempt: healingResult
+          ? {
+              attemptNumber: 1,
+              diagnosis: healingResult.recovered ? 'Recovered' : 'Failed',
+              originalTarget: healingResult.originalTargetId,
+              recoveredTarget: healingResult.recoveredTargetId,
+              success: healingResult.recovered,
+            }
+          : undefined,
+        finalOutcome: healingResult?.recovered ? 'RECOVERED' : 'EXECUTED',
+      });
+      this.state.decisionTraceSummary = tracer.getSummary();
 
       // Verify no sensitive keys entered state
       assertNoSensitiveDataInState(this.state);
@@ -515,7 +851,11 @@ export class AgentLoop {
     validationReason: string,
     executionSuccess: boolean,
     executionError?: string,
-    targetType?: string
+    targetType?: string,
+    riskAssessment?: ActionRiskAssessment,
+    semanticVerification?: SemanticVerificationResult,
+    confidenceEvaluation?: ConfidenceEvaluation,
+    selfHealing?: SelfHealingResult
   ): void {
     const record: StepRecord = {
       step: this.state.currentStep,
@@ -528,6 +868,10 @@ export class AgentLoop {
       targetType,
       url: this.state.currentUrl,
       timestamp: Date.now(),
+      riskAssessment,
+      semanticVerification,
+      confidenceEvaluation,
+      selfHealing,
     };
     this.state.steps.push(record);
   }

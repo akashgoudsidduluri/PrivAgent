@@ -49,6 +49,7 @@ class SensitiveEntityType(str, Enum):
     pan = "pan"
     otp = "otp"
     cvv = "cvv"
+    address = "address"
 
 
 # ── Sub-models ────────────────────────────────────────────────────────────────

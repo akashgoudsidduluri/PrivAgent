@@ -6,6 +6,56 @@
 
 ---
 
+### Core Architectural Principle: Reasoning ≠ Authority
+
+PrivAgent enforces an essential safety boundary:
+> **The LLM is untrusted.** The LLM may propose browser actions, but it must never independently authorize them. Every action must be deterministically validated, assessed for risk, semantically verified against the user's explicit task, and policy-authorized before touching the browser DOM.
+
+```text
+USER INTENT
+     │
+     ▼
+AGENT CHAT
+     │
+     ▼
+TASK PLANNER
+     │
+     ▼
+ AGENT LOOP
+ ┌───┴──────────┐
+ ▼              ▼
+PERCEPTION    REASONING (Untrusted LLM)
+ │              │
+ ▼              ▼
+PRIVACY       PROPOSED ACTION
+FIREWALL        │
+ │              ▼
+ └──────► RISK ENGINE (LOW | MEDIUM | HIGH | CRITICAL)
+                │
+                ▼
+          SEMANTIC VERIFIER (Aligned | Ambiguous | Contradictory)
+                │
+                ▼
+          POLICY AUTHORIZATION (Allow | Confirm | Block)
+                │
+                ▼
+          BROWSER EXECUTION (DOM Dispatch)
+                │
+                ▼
+          RESULT VERIFICATION
+             /       \
+            /         \
+       SUCCESS       FAILURE
+                        │
+                        ▼
+                     DIAGNOSE (Stale Target / Timeout / Mismatch)
+                        │
+                        ▼
+                     SELF-HEALING RECOVERY & REPLANNING (Max 2 Attempts)
+```
+
+---
+
 ## Architecture & System Flow
 
 PrivAgent establishes an inviolable **on-device privacy, perception, and control boundary** that intercepts webpage content inside the user's browser, detects and redacts sensitive personal data locally, and exposes **strictly sanitized structural metadata** to downstream agent reasoning frameworks.
@@ -27,6 +77,9 @@ PrivAgent establishes an inviolable **on-device privacy, perception, and control
 |  [ Extension ServiceWorker ] -------- ensureTargetTabReady --->|                      |
 |               |                                                |                      |
 |               v                                                v                      |
+|  [ Task Planner & Replanner ] -------- decomposeGoal ---------> [ Structured Plan ]   |
+|               |                                                                       |
+|               v                                                v                      |
 |  [ M6 Autonomous AgentLoop ] -------- perceivePage ---------> [ Local DOM Scanner (M1) ]
 |               |                                    [ Local Visual Redactor (M2) ]     |
 |               |                                    [ Local Tesseract OCR (M3) ]       |
@@ -38,7 +91,9 @@ PrivAgent establishes an inviolable **on-device privacy, perception, and control
 |               |                                                |                      |
 |               |                                     Sanitized Metadata Only           |
 |               |                                                v                      |
-|               +<----------------------------- AgentContextPayload (Zero Raw PII)      |
+|               |                                    AgentContextPayload (Zero Raw PII) |
+|               |                                                |                      |
+|               +<-----------------------------------------------+                      |
 +---------------+-----------------------------------------------------------------------+
                 |
                 | POST http://127.0.0.1:8010/api/v1/agent/action
@@ -60,11 +115,16 @@ PrivAgent establishes an inviolable **on-device privacy, perception, and control
 +---------------------------------------------------------------+
 |                       ON-DEVICE EXTENSION                     |
 |                                                               |
-|  1. M5 Action Validator (Authoritative Structural Grounding)  |
-|  2. M5 Privacy Policy Gate (Non-Destructive Free-Text Scan)   |
-|  3. Consequential Action Confirmation Gating (Buy/Pay/Order)  |
-|  4. Content Script DOM Execution                              |
-|  5. Acknowledgement ----------> M6 Next Step                  |
+|  1. Risk Engine (Deterministic 4-Tier Assessment)             |
+|  2. Semantic Pre-Execution Verifier (Injection & Goal Guard)  |
+|  3. Confidence-Aware Execution Scorer                         |
+|  4. M5 Action Validator (Authoritative Structural Grounding)  |
+|     └─► Self-Healing Target Recovery (Jaccard / Role Match)   |
+|  5. Privacy Capability Policy Gate                            |
+|  6. Consequential Action Confirmation Gating (Buy/Pay/Order)  |
+|  7. Content Script DOM Execution                              |
+|  8. Decision Tracer & Telemetry Receipt                       |
+|  9. Dynamic Replanning on Failure                             |
 +---------------------------------------------------------------+
 ```
 
@@ -210,7 +270,7 @@ npm run dev:frontend
 
 ### 6. Run Verified Test Suites
 ```bash
-# Frontend & Extension Tests (33 suites, 358 tests)
+# Frontend & Extension Tests (38 suites, 375 tests)
 npm test
 
 # Backend Tests (186 tests)
@@ -219,7 +279,7 @@ python -m pytest
 # Frontend Typecheck
 npx tsc --noEmit -p frontend/tsconfig.json
 
-# Official SIH Benchmark Runner
+# Official SIH Benchmark & Security Attack Lab Runner
 npx tsx evaluation/scripts/run_sih_benchmark.ts
 ```
 
