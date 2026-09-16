@@ -73,7 +73,8 @@ function getBoundingBox(el: HTMLElement): [number, number, number, number] {
 function getAssociatedLabelText(input: HTMLElement): string {
   // 1. Explicit <label for="...">
   if (input.id) {
-    const label = document.querySelector(`label[for="${escapeCss(input.id)}"]`);
+    const doc = input.ownerDocument || (typeof document !== 'undefined' ? document : null);
+    const label = doc ? doc.querySelector(`label[for="${escapeCss(input.id)}"]`) : null;
     if (label && label.textContent) {
       return label.textContent.trim();
     }
@@ -139,14 +140,18 @@ export interface ScanResult {
  * Analyzes form controls, labels, and text nodes purely on-device.
  * Guarantees zero raw PII values in the returned DetectionResult.
  */
-export function scanDOM(root: Document | HTMLElement = document): ScanResult {
+export function scanDOM(root?: Document | HTMLElement): ScanResult {
+  const targetRoot = root || (typeof document !== 'undefined' ? document : null);
+  if (!targetRoot) {
+    return { detections: [], scanLatencyMs: 0, totalElementsScanned: 0 };
+  }
   const startTime = performance.now();
   const detections: DetectionResult[] = [];
   const detectedElements = new Set<HTMLElement>();
   let elementCount = 0;
 
   // 1. Scan Form Inputs & Controls (<input>, <textarea>, <select>)
-  const formControls = Array.from(root.querySelectorAll<HTMLElement>('input, textarea, select'));
+  const formControls = Array.from(targetRoot.querySelectorAll<HTMLElement>('input, textarea, select'));
   elementCount += formControls.length;
 
   for (const el of formControls) {

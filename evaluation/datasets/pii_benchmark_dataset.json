@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Synthetic, labelled dataset for SIH PrivAgent PII & Redaction Precision Benchmark",
+    "categories": [
+      "password",
+      "otp",
+      "cvv",
+      "pan",
+      "account_number",
+      "credit_card",
+      "email",
+      "phone",
+      "name",
+      "address"
+    ],
+    "negative_categories": [
+      "order_id",
+      "invoice_number",
+      "flight_number",
+      "price",
+      "timestamp",
+      "port",
+      "product_id",
+      "tracking_id"
+    ]
+  },
+  "positive_cases": [
+    {
+      "id": "pos_pw_1",
+      "expectedCategory": "password",
+      "text": "P@ssw0rd2026!Secure",
+      "context": "input type='password' name='user_secret'",
+      "tagName": "input",
+      "typeAttr": "password"
+    },
+    {
+      "id": "pos_pw_2",
+      "expectedCategory": "password",
+      "text": "CorrectHorseBatteryStaple#99",
+      "context": "Password confirmation field",
+      "tagName": "input",
+      "typeAttr": "password"
+    },
+    {
+      "id": "pos_otp_1",
+      "expectedCategory": "otp",
+      "text": "849201",
+      "context": "One-Time Password (OTP) expires in 10 minutes",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_otp_2",
+      "expectedCategory": "otp",
+      "text": "392015",
+      "context": "Enter 6-digit verification code sent to your mobile",
+      "tagName": "input"
+    },
+    {
+      "id": "pos_cvv_1",
+      "expectedCategory": "cvv",
+      "text": "824",
+      "context": "Card CVV / CVC code on back of card",
+      "tagName": "input"
+    },
+    {
+      "id": "pos_cvv_2",
+      "expectedCategory": "cvv",
+      "text": "4921",
+      "context": "4-digit Amex security code",
+      "tagName": "input"
+    },
+    {
+      "id": "pos_pan_1",
+      "expectedCategory": "pan",
+      "text": "ABCDE1234F",
+      "context": "Permanent Account Number (PAN Card)",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_pan_2",
+      "expectedCategory": "pan",
+      "text": "BNZPK8492Q",
+      "context": "Tax identification PAN number",
+      "tagName": "td"
+    },
+    {
+      "id": "pos_card_1",
+      "expectedCategory": "credit_card",
+      "text": "4532 8921 4092 1109",
+      "context": "Visa credit card number",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_card_2",
+      "expectedCategory": "credit_card",
+      "text": "5425-2334-3454-9821",
+      "context": "Mastercard payment card number",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_acc_1",
+      "expectedCategory": "account_number",
+      "text": "987654321012",
+      "context": "Beneficiary Account Number",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_acc_2",
+      "expectedCategory": "account_number",
+      "text": "11223344556677",
+      "context": "Primary Checking Account Number",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_email_1",
+      "expectedCategory": "email",
+      "text": "alice.security@example.com",
+      "context": "User profile primary contact email",
+      "tagName": "a"
+    },
+    {
+      "id": "pos_email_2",
+      "expectedCategory": "email",
+      "text": "treasury-alerts@synthbank.internal",
+      "context": "Alert dispatch mailbox",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_phone_1",
+      "expectedCategory": "phone",
+      "text": "+91 98765 43210",
+      "context": "Customer verified mobile number",
+      "tagName": "div"
+    },
+    {
+      "id": "pos_phone_2",
+      "expectedCategory": "phone",
+      "text": "(555) 234-5678",
+      "context": "Support direct contact number",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_name_1",
+      "expectedCategory": "name",
+      "text": "Devendra Ramesh Patil",
+      "context": "Account Holder Name",
+      "tagName": "span"
+    },
+    {
+      "id": "pos_address_1",
+      "expectedCategory": "address",
+      "text": "Flat 402, Sai Residency, MG Road, Pune, Maharashtra 411001",
+      "context": "Registered Billing Address",
+      "tagName": "div"
+    }
+  ],
+  "negative_cases": [
+    {
+      "id": "neg_order_1",
+      "expectedCategory": null,
+      "text": "ORD-984210",
+      "context": "E-commerce order ID reference #ORD-984210",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_invoice_1",
+      "expectedCategory": null,
+      "text": "INV-2026-0941",
+      "context": "Monthly recurring billing invoice number",
+      "tagName": "div"
+    },
+    {
+      "id": "neg_flight_1",
+      "expectedCategory": null,
+      "text": "AI-802",
+      "context": "Flight gate info: Air India AI-802 DEL to BLR",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_price_1",
+      "expectedCategory": null,
+      "text": "₹1,499.00",
+      "context": "Total checkout price before discounts",
+      "tagName": "strong"
+    },
+    {
+      "id": "neg_price_2",
+      "expectedCategory": null,
+      "text": "$349.95",
+      "context": "Cart subtotal amount",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_timestamp_1",
+      "expectedCategory": null,
+      "text": "2026-09-16 08:30:00 UTC",
+      "context": "Audit log generation timestamp",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_port_1",
+      "expectedCategory": null,
+      "text": "5173",
+      "context": "Development server listening on port 5173",
+      "tagName": "code"
+    },
+    {
+      "id": "neg_port_2",
+      "expectedCategory": null,
+      "text": "4173",
+      "context": "Banking demo running on port 4173",
+      "tagName": "code"
+    },
+    {
+      "id": "neg_product_1",
+      "expectedCategory": null,
+      "text": "SKU-BAGGY-PANTS-BEIGE-M",
+      "context": "Inventory catalogue item code",
+      "tagName": "span"
+    },
+    {
+      "id": "neg_tracking_1",
+      "expectedCategory": null,
+      "text": "TRK-981029381023",
+      "context": "Package tracking courier barcode ID",
+      "tagName": "span"
+    }
+  ]
+}

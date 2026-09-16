@@ -1,0 +1,244 @@
+{
+  "benchmarkTitle": "PrivAgent SIH Official Evaluation Benchmark Report",
+  "timestamp": "2026-09-16T03:11:00.573Z",
+  "benchmarkDurationMs": 537,
+  "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "cpuModel": "AMD Ryzen 5 7520U with Radeon Graphics         ",
+    "totalMemoryMB": 15610,
+    "nodeVersion": "v22.18.0"
+  },
+  "summaryScores": {
+    "visualContextAccuracy": {
+      "weight": "25%",
+      "score": 0.985
+    },
+    "piiDetectionF1": {
+      "weight": "20%",
+      "score": 0.5625,
+      "macroScore": 0.3833
+    },
+    "redactionPrecision": {
+      "weight": "20%",
+      "score": 1
+    },
+    "clientResourceEfficiency": {
+      "weight": "20%",
+      "score": 0.96
+    },
+    "e2eLatencyP50Ms": {
+      "weight": "15%",
+      "p50": 310,
+      "p95": 340
+    }
+  },
+  "piiBenchmark": {
+    "totalSamples": 28,
+    "microAverages": {
+      "precision": 0.6429,
+      "recall": 0.5,
+      "f1Score": 0.5625,
+      "sampleCount": 23
+    },
+    "macroAverages": {
+      "precision": 0.85,
+      "recall": 0.45,
+      "f1Score": 0.3833
+    },
+    "categories": [
+      {
+        "category": "password",
+        "tp": 2,
+        "fp": 2,
+        "fn": 0,
+        "tn": 24,
+        "precision": 0.5,
+        "recall": 1,
+        "f1": 0.6667
+      },
+      {
+        "category": "otp",
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "tn": 26,
+        "precision": 1,
+        "recall": 0,
+        "f1": 0
+      },
+      {
+        "category": "cvv",
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "tn": 26,
+        "precision": 1,
+        "recall": 0,
+        "f1": 0
+      },
+      {
+        "category": "pan",
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "tn": 26,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      {
+        "category": "account_number",
+        "tp": 2,
+        "fp": 2,
+        "fn": 0,
+        "tn": 24,
+        "precision": 0.5,
+        "recall": 1,
+        "f1": 0.6667
+      },
+      {
+        "category": "credit_card",
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "tn": 26,
+        "precision": 1,
+        "recall": 0,
+        "f1": 0
+      },
+      {
+        "category": "email",
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "tn": 26,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      {
+        "category": "phone",
+        "tp": 1,
+        "fp": 1,
+        "fn": 1,
+        "tn": 25,
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5
+      },
+      {
+        "category": "name",
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "tn": 27,
+        "precision": 1,
+        "recall": 0,
+        "f1": 0
+      },
+      {
+        "category": "address",
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "tn": 27,
+        "precision": 1,
+        "recall": 0,
+        "f1": 0
+      }
+    ]
+  },
+  "redactionBenchmark": {
+    "blackoutVerified": true,
+    "blurVerified": true,
+    "maskVerified": true,
+    "adjacentContentPreserved": true,
+    "score": 1
+  },
+  "clientResourceUtilization": {
+    "iterations": 10,
+    "averageHeapUsedMB": 61.66,
+    "totalCpuTimeMs": 298,
+    "stages": {
+      "domScan": {
+        "p50Ms": 2.49,
+        "p95Ms": 5.28,
+        "meanMs": 2.55,
+        "minMs": 1.54,
+        "maxMs": 5.28,
+        "sampleCount": 10
+      },
+      "fusion": {
+        "p50Ms": 0.12,
+        "p95Ms": 1.45,
+        "meanMs": 0.3,
+        "minMs": 0.06,
+        "maxMs": 1.45,
+        "sampleCount": 10
+      },
+      "minimization": {
+        "p50Ms": 0.4,
+        "p95Ms": 2.14,
+        "meanMs": 0.56,
+        "minMs": 0.18,
+        "maxMs": 2.14,
+        "sampleCount": 10
+      },
+      "completePerceptionCycle": {
+        "p50Ms": 3.19,
+        "p95Ms": 8.87,
+        "meanMs": 3.42,
+        "minMs": 1.79,
+        "maxMs": 8.87,
+        "sampleCount": 10
+      }
+    }
+  },
+  "endToEndLatency": {
+    "p50Ms": 310,
+    "p95Ms": 340,
+    "meanMs": 307.2,
+    "minMs": 275,
+    "maxMs": 340,
+    "sampleCount": 10
+  },
+  "providerBenchmark": [
+    {
+      "provider": "backend",
+      "model": "google/gemma-4-31b-it",
+      "configured": true,
+      "status": "AVAILABLE",
+      "taskSuccessRate": 1,
+      "jsonValidityRate": 1,
+      "targetGroundingRate": 1,
+      "errorRate429": 0,
+      "retryCount": 0,
+      "averageLatencyMs": 142.5
+    },
+    {
+      "provider": "dev-mock",
+      "model": "deterministic-mock-v1",
+      "configured": true,
+      "status": "AVAILABLE",
+      "taskSuccessRate": 1,
+      "jsonValidityRate": 1,
+      "targetGroundingRate": 1,
+      "errorRate429": 0,
+      "retryCount": 0,
+      "averageLatencyMs": 5
+    },
+    {
+      "provider": "gemma-26b-a4b",
+      "model": "google/gemma-4-26b-a4b-it",
+      "configured": false,
+      "status": "UNAVAILABLE",
+      "taskSuccessRate": 0,
+      "jsonValidityRate": 0,
+      "targetGroundingRate": 0,
+      "errorRate429": 0,
+      "retryCount": 0,
+      "averageLatencyMs": 0
+    }
+  ]
+}
