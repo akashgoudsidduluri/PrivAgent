@@ -154,7 +154,7 @@ export function resolveTargetWebTab(
       return {
         selectedTab: null,
         discoveredTabs,
-        reason: `Explicit target ${explicit.hostname || 'localhost'}:${explicit.port} was not found among open tabs. Please open http://${explicit.hostname || 'localhost'}:${explicit.port} in another tab.`,
+        reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port} in another tab.`,
       };
     }
     return {
@@ -194,7 +194,7 @@ export function resolveTargetWebTab(
       return {
         selectedTab: null,
         discoveredTabs,
-        reason: `Explicit target ${explicit.hostname || 'localhost'}:${explicit.port} was not found among open tabs. Please open http://${explicit.hostname || 'localhost'}:${explicit.port} in another tab.`,
+        reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port} in another tab.`,
       };
     } else if (explicit.hostname && explicit.hostname !== 'localhost' && explicit.hostname !== '127.0.0.1') {
       const matchedTab = eligibleTabs.find((t) => {

@@ -122,7 +122,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
   if (message.type === 'PRIVAGENT_SCAN_REQUEST') {
     const report = performPrivacyScan(message.mode || currentMode);
     sendResponse({ type: 'PRIVAGENT_SCAN_RESPONSE', report });
-    return true;
+    return false;
   }
 
   if (message.type === 'PRIVAGENT_SET_REDACTION_MODE') {
@@ -131,7 +131,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       const report = performPrivacyScan(currentMode);
       sendResponse({ type: 'PRIVAGENT_SCAN_RESPONSE', report });
     }
-    return true;
+    return false;
   }
 
   if (message.type === 'PRIVAGENT_TOGGLE_REDACTION') {
@@ -140,7 +140,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       const report = performPrivacyScan(currentMode);
       sendResponse({ type: 'PRIVAGENT_SCAN_RESPONSE', report });
     }
-    return true;
+    return false;
   }
 
   if (message.type === 'PRIVAGENT_GET_STATE') {
@@ -153,7 +153,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       report: lastReport,
       isRedactionActive,
     });
-    return true;
+    return false;
   }
 
   // Milestone 2: Provide live viewport geometry for coordinate mapping
@@ -166,7 +166,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       scrollY: window.scrollY,
       devicePixelRatio: window.devicePixelRatio,
     });
-    return true;
+    return false;
   }
 
   // Milestone 5: Structured Browser Action Execution
@@ -198,7 +198,12 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
 
 function isExtensionContextValid(): boolean {
   try {
-    return Boolean(typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id);
+    if (typeof chrome === 'undefined' || !chrome?.runtime?.id) {
+      return false;
+    }
+    // In Chrome MV3, chrome.runtime.getManifest() throws synchronously when context is invalidated
+    const manifest = chrome.runtime.getManifest();
+    return Boolean(manifest && manifest.version);
   } catch {
     return false;
   }
@@ -249,6 +254,7 @@ window.addEventListener('message', (event) => {
   // Forward dashboard commands to background service worker with error handling
   try {
     if (type === 'START_TASK') {
+      console.info('[AgentTrace] content script forwarding START_TASK to background worker');
       chrome.runtime.sendMessage(
         {
           type: 'PRIVAGENT_DASHBOARD_START_TASK',

@@ -15,6 +15,10 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   private extensionConnected = false;
   private pingListeners: Array<(connected: boolean) => void> = [];
 
+  private isStartingTask = false;
+  private messageBridgeHandler: ((event: MessageEvent) => void) | null = null;
+  private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor() {
     this.state = {
       status: 'IDLE',
@@ -41,6 +45,39 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     this.checkExtensionConnected();
   }
 
+  destroy(): void {
+    this.clearWatchdog();
+    if (this.messageBridgeHandler) {
+      window.removeEventListener('message', this.messageBridgeHandler);
+      this.messageBridgeHandler = null;
+    }
+    this.listeners = [];
+    this.pingListeners = [];
+  }
+
+  private resetWatchdog(timeoutMs = 30000): void {
+    this.clearWatchdog();
+    this.watchdogTimer = setTimeout(() => {
+      if (this.state.status === 'RUNNING') {
+        console.warn('[AgentTrace] dashboard task watchdog timed out');
+        this.state = {
+          ...this.state,
+          status: 'FAILED',
+          reason: 'Task execution timed out. No response received from browser extension.',
+          currentPipelineStage: 'IDLE',
+        };
+        this.notify();
+      }
+    }, timeoutMs);
+  }
+
+  private clearWatchdog(): void {
+    if (this.watchdogTimer) {
+      clearTimeout(this.watchdogTimer);
+      this.watchdogTimer = null;
+    }
+  }
+
   isDevMock(): boolean {
     return false;
   }
@@ -60,10 +97,11 @@ export class ExtensionAgentAdapter implements AgentAdapter {
           event.data.type === 'PONG_EXTENSION'
         ) {
           resolved = true;
-          this.extensionConnected = true;
+          const isConnected = Boolean(event.data.connected !== false && !event.data.error);
+          this.extensionConnected = isConnected;
           window.removeEventListener('message', handler);
-          this.notifyExtensionStatus(true);
-          resolve(true);
+          this.notifyExtensionStatus(isConnected);
+          resolve(isConnected);
         }
       };
 
@@ -101,28 +139,42 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   }
 
   private setupMessageBridge(): void {
-    window.addEventListener('message', (event) => {
+    this.messageBridgeHandler = (event: MessageEvent) => {
       if (!event.data || event.data.source !== 'privagent-extension') return;
 
       const { type, payload } = event.data;
 
       if (type === 'PONG_EXTENSION') {
-        this.extensionConnected = true;
-        this.notifyExtensionStatus(true);
+        const isConnected = Boolean(event.data.connected !== false && !event.data.error);
+        this.extensionConnected = isConnected;
+        this.notifyExtensionStatus(isConnected);
       } else if (type === 'TASK_PROGRESS' && payload) {
         this.handleExtensionProgress(payload);
       } else if (type === 'PRIVACY_SCAN_UPDATE' && payload) {
         this.handlePrivacyUpdate(payload);
       }
-    });
+    };
+    window.addEventListener('message', this.messageBridgeHandler);
   }
 
   private handleExtensionProgress(data: any): void {
+    console.info('[AgentTrace] dashboard received TASK_PROGRESS', {
+      status: data.status,
+      currentStep: data.currentStep,
+      reason: data.reason,
+    });
+
     let status: UIAgentStatus = 'RUNNING';
     if (data.status === 'SUCCESS') status = 'SUCCESS';
     else if (data.status === 'FAILED') status = 'FAILED';
     else if (data.status === 'STOPPED') status = 'STOPPED';
     else if (data.status === 'NEEDS_USER_CONFIRMATION') status = 'NEEDS_USER_CONFIRMATION';
+
+    if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED') {
+      this.clearWatchdog();
+    } else if (status === 'RUNNING') {
+      this.resetWatchdog();
+    }
 
     let stage: PipelineStage = 'IDLE';
     if (status === 'RUNNING') {
@@ -238,48 +290,62 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   }
 
   async startTask(task: string): Promise<void> {
-    this.taskStartTime = Date.now();
-
-    // Check extension connectivity
-    const connected = await this.checkExtensionConnected();
-    if (!connected) {
-      this.state = {
-        ...this.state,
-        task,
-        status: 'FAILED',
-        currentStep: 0,
-        steps: [],
-        reason:
-          'PrivAgent Chrome Extension is not connected. Please load the extension in chrome://extensions or switch to Dev Mode to simulate UI interactions.',
-        currentPipelineStage: 'IDLE',
-      };
-      this.notify();
+    if (this.state.status === 'RUNNING' || this.isStartingTask) {
+      console.warn('[AgentTrace] dashboard startTask rejected: task already running or starting');
       return;
     }
 
-    this.state = {
-      ...this.state,
-      task,
-      status: 'RUNNING',
-      currentStep: 0,
-      steps: [],
-      reason: undefined,
-      requiresUserConfirmationAction: undefined,
-      currentPipelineStage: 'PERCEPTION',
-    };
-    this.notify();
+    this.isStartingTask = true;
+    try {
+      this.taskStartTime = Date.now();
 
-    window.postMessage(
-      {
-        source: 'privagent-dashboard',
-        type: 'START_TASK',
+      // Check extension connectivity
+      const connected = await this.checkExtensionConnected();
+      if (!connected) {
+        this.state = {
+          ...this.state,
+          task,
+          status: 'FAILED',
+          currentStep: 0,
+          steps: [],
+          reason:
+            'PrivAgent Chrome Extension is not connected. Please load the extension in chrome://extensions or switch to Dev Mode to simulate UI interactions.',
+          currentPipelineStage: 'IDLE',
+        };
+        this.notify();
+        return;
+      }
+
+      this.state = {
+        ...this.state,
         task,
-      },
-      '*'
-    );
+        status: 'RUNNING',
+        currentStep: 0,
+        steps: [],
+        reason: undefined,
+        requiresUserConfirmationAction: undefined,
+        currentPipelineStage: 'PERCEPTION',
+      };
+      this.notify();
+
+      console.info('[AgentTrace] dashboard START_TASK posted to window', { taskLength: task.length });
+      this.resetWatchdog(30000);
+
+      window.postMessage(
+        {
+          source: 'privagent-dashboard',
+          type: 'START_TASK',
+          task,
+        },
+        '*'
+      );
+    } finally {
+      this.isStartingTask = false;
+    }
   }
 
   async stopTask(): Promise<void> {
+    this.clearWatchdog();
     window.postMessage(
       {
         source: 'privagent-dashboard',

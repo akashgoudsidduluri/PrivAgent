@@ -163,6 +163,7 @@ export class AgentView {
 
     actionBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       const state = this.adapter.getState();
       if (state.status === 'RUNNING') {
         this.adapter.stopTask();
@@ -174,11 +175,13 @@ export class AgentView {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
+        e.stopPropagation();
         submitTask();
       }
     });
 
-    btnNewTask.addEventListener('click', async () => {
+    btnNewTask.addEventListener('click', async (e) => {
+      e.preventDefault();
       await this.adapter.stopTask();
       this.resetConversation();
       input.value = '';
@@ -190,6 +193,10 @@ export class AgentView {
     const promptBtns = this.container.querySelectorAll('.quick-prompt-btn');
     promptBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const state = this.adapter.getState();
+        if (state.status === 'RUNNING' || this.isSubmitting) return;
         const task = (e.currentTarget as HTMLElement).getAttribute('data-task');
         if (task) {
           input.value = task;
@@ -197,6 +204,10 @@ export class AgentView {
         }
       });
     });
+  }
+
+  setAdapter(adapter: AgentAdapter): void {
+    this.adapter = adapter;
   }
 
   private resetConversation(): void {
@@ -433,7 +444,14 @@ export class AgentView {
             <div class="activity-step-row failed">
               <div class="activity-step-marker" style="color: var(--status-failed);">✕</div>
               <div>
-                <strong>Target tab resolution</strong> — ${escapeHtml(state.reason || 'No browser tab available')}
+                <strong>Execution stopped</strong> — ${escapeHtml(state.reason || 'No browser tab available')}
+              </div>
+            </div>
+          ` : state.status === 'RUNNING' && state.steps.length === 0 ? `
+            <div class="activity-step-row active">
+              <div class="activity-step-marker">●</div>
+              <div>
+                <em>Target tab discovery & on-device page perception...</em>
               </div>
             </div>
           ` : `
@@ -457,11 +475,19 @@ export class AgentView {
             </div>
           `}
           ${stepItemsHtml}
-          ${state.status === 'RUNNING' ? `
+          ${state.status === 'RUNNING' && state.steps.length > 0 ? `
             <div class="activity-step-row active">
               <div class="activity-step-marker">●</div>
               <div>
                 <em>Executing safe next step...</em>
+              </div>
+            </div>
+          ` : ''}
+          ${state.status === 'FAILED' && state.steps.length > 0 ? `
+            <div class="activity-step-row failed">
+              <div class="activity-step-marker" style="color: var(--status-failed);">✕</div>
+              <div>
+                <strong>Task halted</strong> — ${escapeHtml(state.reason || 'Step execution failed')}
               </div>
             </div>
           ` : ''}

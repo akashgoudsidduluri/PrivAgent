@@ -236,6 +236,7 @@ export class AgentLoop {
         this.state.status = 'FAILED';
         this.state.reason = 'Perception failed: Unable to obtain sanitized page context.';
         this.notifyProgress();
+        console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
         break;
       }
       console.info('[AgentTrace] perception complete');
@@ -266,6 +267,7 @@ export class AgentLoop {
         this.state.status = 'FAILED';
         this.state.reason = `Agent reasoning failed: ${msg}`;
         this.notifyProgress();
+        console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
         break;
       }
 
@@ -288,6 +290,7 @@ export class AgentLoop {
         if (this.state.retryCount > this.maxRetries) {
           this.state.status = 'FAILED';
           this.state.reason = `Validator rejected action repeatedly: ${validation.reason}`;
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
           break;
         }
         // Wait and retry with next perception
@@ -307,6 +310,7 @@ export class AgentLoop {
         if (this.state.retryCount > this.maxRetries) {
           this.state.status = 'FAILED';
           this.state.reason = `Privacy policy rejected action repeatedly: ${policy.reason}`;
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
           break;
         }
         await this.delay(this.delayBetweenStepsMs);
@@ -325,6 +329,7 @@ export class AgentLoop {
         if (this.state.retryCount > this.maxRetries) {
           this.state.status = 'FAILED';
           this.state.reason = `Browser action execution failed repeatedly: ${execResult.error}`;
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
           break;
         }
         await this.delay(this.delayBetweenStepsMs);
@@ -363,7 +368,11 @@ export class AgentLoop {
       }
     }
 
-    console.info('[AgentTrace] M6 completed');
+    if (this.state.status === 'SUCCESS') {
+      console.info('[AgentTrace] M6 completed');
+    } else if (this.state.status === 'FAILED') {
+      console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+    }
     return this.getState();
   }
 
@@ -418,7 +427,7 @@ export class AgentLoop {
             () =>
               reject(
                 new ProviderError('Reasoning provider request timed out after 25s.', 'timeout', {
-                  retryable: true,
+                  retryable: false,
                 })
               ),
             25000

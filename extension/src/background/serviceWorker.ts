@@ -15,33 +15,83 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.action.setBadgeBackgroundColor({ color: '#10b981' });
 });
 
+const withTimeout = <T>(promise: Promise<T>, ms: number, timeoutMsg: string): Promise<T> =>
+  new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(timeoutMsg)), ms);
+    promise
+      .then((res) => {
+        clearTimeout(t);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(t);
+        reject(err);
+      });
+  });
+
+async function sendToDashboard(payload: any, preferredTabId?: number | null): Promise<void> {
+  let targetId = preferredTabId || currentDashboardTabId;
+  if (!targetId) {
+    try {
+      const tabs = await chrome.tabs.query({});
+      const dash = tabs.find((t) => t.url && t.url.includes(':5173'));
+      targetId = dash?.id || null;
+    } catch {
+      targetId = null;
+    }
+  }
+  if (targetId) {
+    chrome.tabs.sendMessage(targetId, {
+      type: 'PRIVAGENT_DASHBOARD_PROGRESS',
+      payload,
+    }).catch(() => {});
+  }
+}
+
 /**
  * Ensures the target tab has the content script injected and responsive.
  * If the tab was opened prior to extension reload, dynamically injects contentScript.
  */
 async function ensureTargetTabReady(tabId: number): Promise<boolean> {
+  // 1. Check if already responsive
   try {
-    const res = await chrome.tabs.sendMessage(tabId, { type: 'PRIVAGENT_GET_VIEWPORT_GEOMETRY' });
+    const res = await withTimeout(
+      chrome.tabs.sendMessage(tabId, { type: 'PRIVAGENT_GET_VIEWPORT_GEOMETRY' }),
+      1500,
+      'Viewport geometry query timed out'
+    );
     if (res) return true;
   } catch {
-    // Content script not yet attached; inject dynamically
+    // Not responsive; proceed to injection
+  }
+
+  // 2. Content script not yet attached or invalidated; inject dynamically
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['contentScript.js'],
+    });
     try {
-      await chrome.scripting.executeScript({
-        target: { tabId },
-        files: ['contentScript.js'],
-      });
       await chrome.scripting.insertCSS({
         target: { tabId },
         files: ['contentStyles.css'],
       });
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      return true;
-    } catch (e) {
-      console.warn('[PrivAgent SW] Content script auto-injection warning:', e);
-      return false;
+    } catch {
+      // CSS insert error non-fatal
     }
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // 3. Verify newly injected script responds
+    const verifyRes = await withTimeout(
+      chrome.tabs.sendMessage(tabId, { type: 'PRIVAGENT_GET_VIEWPORT_GEOMETRY' }),
+      2000,
+      'Target tab verification timed out'
+    );
+    return Boolean(verifyRes);
+  } catch (e) {
+    console.warn('[PrivAgent SW] Target tab content script auto-injection failed:', e);
+    return false;
   }
-  return true;
 }
 
 /**
@@ -127,19 +177,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       const targetTab = resolution.selectedTab;
       if (!targetTab || !targetTab.id) {
-        if (dashboardTabId) {
-          chrome.tabs.sendMessage(dashboardTabId, {
-            type: 'PRIVAGENT_DASHBOARD_PROGRESS',
-            payload: {
-              status: 'FAILED',
-              currentStep: 0,
-              maxSteps: 10,
-              task,
-              steps: [],
-              reason: resolution.reason || 'No browser tab is available for this task. Open the webpage you want PrivAgent to work with and try again.',
-            },
-          }).catch(() => {});
-        }
+        await sendToDashboard(
+          {
+            status: 'FAILED',
+            currentStep: 0,
+            maxSteps: 10,
+            task,
+            steps: [],
+            reason: resolution.reason || 'No browser tab is available for this task. Open the webpage you want PrivAgent to work with and try again.',
+          },
+          dashboardTabId
+        );
         return;
       }
 
@@ -150,21 +198,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
 
       // Ensure content script is active and responsive in the target tab
-      await ensureTargetTabReady(targetTabId);
-
-      const withTimeout = <T>(promise: Promise<T>, ms: number, timeoutMsg: string): Promise<T> =>
-        new Promise((resolve, reject) => {
-          const t = setTimeout(() => reject(new Error(timeoutMsg)), ms);
-          promise
-            .then((res) => {
-              clearTimeout(t);
-              resolve(res);
-            })
-            .catch((err) => {
-              clearTimeout(t);
-              reject(err);
-            });
-        });
+      const isReady = await ensureTargetTabReady(targetTabId);
+      if (!isReady) {
+        console.warn('[AgentTrace] target tab unresponsive');
+        await sendToDashboard(
+          {
+            status: 'FAILED',
+            currentStep: 0,
+            maxSteps: 10,
+            task,
+            steps: [],
+            reason: 'Target web tab is not responsive or cannot be scripted. Please refresh the target tab and try again.',
+          },
+          dashboardTabId
+        );
+        return;
+      }
+      console.info('[AgentTrace] target tab ready');
 
       const loopCallbacks = {
         perceivePage: async (): Promise<AgentContextPayload | null> => {
@@ -209,12 +259,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         },
 
         onStepProgress: (state: TaskState) => {
-          if (dashboardTabId) {
-            chrome.tabs.sendMessage(dashboardTabId, {
-              type: 'PRIVAGENT_DASHBOARD_PROGRESS',
-              payload: state,
-            }).catch(() => {});
-          }
+          sendToDashboard(state, dashboardTabId);
         },
       };
 
@@ -225,31 +270,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         maxSteps: 10,
         maxRetries: 2,
         delayBetweenStepsMs: 500,
+        providerRetries: 0,
       });
 
       try {
         console.info('[AgentTrace] M6 loop started');
         const finalState = await activeLoop.runTask(task);
-        if (dashboardTabId) {
-          chrome.tabs.sendMessage(dashboardTabId, {
-            type: 'PRIVAGENT_DASHBOARD_PROGRESS',
-            payload: finalState,
-          }).catch(() => {});
+        if (finalState.status === 'SUCCESS') {
+          console.info('[AgentTrace] M6 completed');
+        } else if (finalState.status === 'FAILED') {
+          console.info('[AgentTrace] M6 failed', { reason: finalState.reason });
         }
+        await sendToDashboard(finalState, dashboardTabId);
       } catch (err) {
-        if (dashboardTabId) {
-          chrome.tabs.sendMessage(dashboardTabId, {
-            type: 'PRIVAGENT_DASHBOARD_PROGRESS',
-            payload: {
-              status: 'FAILED',
-              currentStep: activeLoop?.getState().currentStep || 0,
-              maxSteps: 10,
-              task,
-              steps: activeLoop?.getState().steps || [],
-              reason: err instanceof Error ? err.message : String(err),
-            },
-          }).catch(() => {});
-        }
+        const errReason = err instanceof Error ? err.message : String(err);
+        console.info('[AgentTrace] M6 failed', { reason: errReason });
+        await sendToDashboard(
+          {
+            status: 'FAILED',
+            currentStep: activeLoop?.getState().currentStep || 0,
+            maxSteps: 10,
+            task,
+            steps: activeLoop?.getState().steps || [],
+            reason: errReason,
+          },
+          dashboardTabId
+        );
       }
     })();
 

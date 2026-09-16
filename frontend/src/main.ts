@@ -114,13 +114,30 @@ class App {
     if (modeBadge) {
       modeBadge.addEventListener('click', () => {
         if (this.adapter.isDevMock()) {
-          this.adapter = new ExtensionAgentAdapter();
+          this.switchAdapter(new ExtensionAgentAdapter());
         } else {
-          this.adapter = new DevMockAgentAdapter();
+          this.switchAdapter(new DevMockAgentAdapter());
         }
-        this.init();
       });
     }
+  }
+
+  private switchAdapter(newAdapter: AgentAdapter): void {
+    if ((this.adapter as any).destroy) {
+      (this.adapter as any).destroy();
+    }
+    this.adapter = newAdapter;
+    this.agentView.setAdapter(this.adapter);
+
+    this.adapter.onStateChange((state) => this.handleStateChange(state));
+    if (this.adapter.onExtensionStatusChange) {
+      this.adapter.onExtensionStatusChange((connected) => {
+        this.updateModeBadge(connected);
+      });
+    } else {
+      this.updateModeBadge(false);
+    }
+    this.handleStateChange(this.adapter.getState());
   }
 
   public switchTab(tab: DashboardTab): void {
@@ -195,7 +212,20 @@ class App {
   }
 }
 
-// Bootstrap once DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  new App();
-});
+// Bootstrap with strict singleton guard to prevent duplicate listeners
+declare global {
+  interface Window {
+    __privagent_app_instance?: App;
+  }
+}
+
+function bootstrap(): void {
+  if (window.__privagent_app_instance) return;
+  window.__privagent_app_instance = new App();
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  bootstrap();
+} else {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+}
