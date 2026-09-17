@@ -1,145 +1,179 @@
-import { DashboardAgentState } from '../types/dashboard';
-import { receiptsStore } from '../state/receiptsStore';
+import { DashboardAgentState, StepTelemetry } from '../types/dashboard';
+
+export interface ActivityLogEntry {
+  time: string;
+  source: string;
+  stage: string;
+  event: string;
+  status: 'PASS' | 'PROTECTED' | 'FAIL' | 'RUNNING' | 'INFO';
+}
 
 export class ActivityView {
   private container: HTMLElement;
+  private logs: ActivityLogEntry[] = [];
+  private filterText = '';
 
   constructor(container: HTMLElement) {
     this.container = container;
     this.render();
   }
 
+  update(state: DashboardAgentState): void {
+    this.syncFromState(state);
+    this.renderTable();
+  }
+
+  private syncFromState(state: DashboardAgentState): void {
+    if (!state.steps || state.steps.length === 0) return;
+
+    // Build log entries from steps
+    const newLogs: ActivityLogEntry[] = [];
+    state.steps.forEach((step: StepTelemetry) => {
+      const time = new Date(step.timestamp).toLocaleTimeString();
+
+      if (step.sensitiveCategoryDetected) {
+        newLogs.push({
+          time,
+          source: 'Privacy',
+          stage: 'M8',
+          event: `${step.sensitiveCategoryDetected} detected and masked locally`,
+          status: 'PROTECTED',
+        });
+      }
+
+      newLogs.push({
+        time,
+        source: 'Reasoner',
+        stage: 'Groq',
+        event: `Structured action produced: ${step.actionType.toUpperCase()}`,
+        status: 'PASS',
+      });
+
+      newLogs.push({
+        time,
+        source: 'Validator',
+        stage: 'M5',
+        event: `${step.actionType.toUpperCase()} target validated against M4 context`,
+        status: step.validationPassed ? 'PASS' : 'FAIL',
+      });
+
+      newLogs.push({
+        time,
+        source: 'Executor',
+        stage: 'M6',
+        event: `Browser action executed (${step.actionType})`,
+        status: step.executionSuccess ? 'PASS' : 'FAIL',
+      });
+    });
+
+    this.logs = newLogs;
+  }
+
   private render(): void {
     this.container.innerHTML = `
-      <div class="view-header">
-        <div class="view-title-group">
-          <h2>Agent Activity</h2>
-          <p>Real-time execution log and historical browser agent operations trail</p>
-        </div>
-      </div>
-
-      <div class="activity-container">
-        <!-- Current Task Execution Card -->
-        <div id="current-task-activity-section" style="margin-bottom: 24px;">
-          <h3 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-            <span class="pulse-dot"></span> Active Task Operations
-          </h3>
-          <div id="current-task-trail" class="activity-trail">
-            <div style="color: var(--text-muted); font-size: 13px; padding: 12px 0;">
-              No active task currently running. Start a task from the Agent tab.
-            </div>
+      <div class="ide-panel" style="height: 100%;">
+        <div class="ide-panel-header">
+          <span>Technical Activity Log Viewer</span>
+          <div class="ide-panel-header-actions">
+            <input
+              id="activity-search-input"
+              class="ide-input"
+              type="text"
+              placeholder="Filter events (e.g. M5, Groq, Privacy)..."
+              style="width: 220px; height: 22px; font-size: 11px;"
+            />
+            <button id="activity-clear-btn" class="ide-btn" style="height: 22px; font-size: 11px;">Clear</button>
           </div>
         </div>
-
-        <!-- Previous Completed Tasks -->
-        <div>
-          <h3 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">
-            Historical Task Executions
-          </h3>
-          <div id="previous-task-list" class="activity-trail"></div>
+        <div class="ide-panel-body" style="padding: 0; display: flex; flex-direction: column;">
+          <table class="ide-table">
+            <thead>
+              <tr>
+                <th style="width: 100px;">Time</th>
+                <th style="width: 110px;">Source</th>
+                <th style="width: 80px;">Stage</th>
+                <th>Event Description</th>
+                <th style="width: 110px;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="activity-table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                  No activity events recorded yet. Run a task to view execution logs.
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     `;
 
-    this.renderHistorical();
-  }
-
-  update(state: DashboardAgentState): void {
-    const currentSection = this.container.querySelector('#current-task-trail');
-    if (!currentSection) return;
-
-    if (state.status === 'RUNNING' || (state.steps.length > 0 && state.status !== 'IDLE')) {
-      currentSection.innerHTML = `
-        <div class="activity-item success">
-          <div class="activity-dot">●</div>
-          <div class="activity-card">
-            <div class="activity-top">
-              <span class="activity-action-name">${escapeHtml(state.task)}</span>
-              <span class="activity-time">${state.status}</span>
-            </div>
-            <div class="activity-detail">
-              ${state.steps
-                .map(
-                  (s) => `
-                <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
-                  <span style="color: ${s.executionSuccess ? 'var(--shield-green)' : 'var(--danger-red)'}; font-size: 11px;">
-                    ${s.executionSuccess ? '✓' : '✗'}
-                  </span>
-                  <span>Step ${s.step}: <strong>${escapeHtml(s.actionType)}</strong> on ${escapeHtml(s.targetDescription)}</span>
-                  ${
-                    s.sensitiveCategoryDetected
-                      ? `<span class="category-pill detected" style="padding: 1px 6px; font-size: 10px;">Protected: ${escapeHtml(s.sensitiveCategoryDetected)}</span>`
-                      : ''
-                  }
-                </div>
-              `
-                )
-                .join('')}
-            </div>
-          </div>
-        </div>
-      `;
-    } else {
-      currentSection.innerHTML = `
-        <div style="color: var(--text-muted); font-size: 13px; padding: 8px 0;">
-          No task currently active. Enter a prompt in the Agent tab to begin.
-        </div>
-      `;
+    const searchInput = this.container.querySelector('#activity-search-input') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        this.filterText = searchInput.value.toLowerCase().trim();
+        this.renderTable();
+      });
     }
 
-    this.renderHistorical();
+    const clearBtn = this.container.querySelector('#activity-clear-btn') as HTMLButtonElement;
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.logs = [];
+        this.renderTable();
+      });
+    }
   }
 
-  private renderHistorical(): void {
-    const prevSection = this.container.querySelector('#previous-task-list');
-    if (!prevSection) return;
+  private renderTable(): void {
+    const tbody = this.container.querySelector('#activity-table-body');
+    if (!tbody) return;
 
-    const receipts = receiptsStore.getAll();
-    if (receipts.length === 0) {
-      prevSection.innerHTML = `
-        <div style="color: var(--text-muted); font-size: 13px; padding: 12px 0;">
-          No completed historical operations recorded.
-        </div>
+    const filtered = this.filterText
+      ? this.logs.filter(
+          (l) =>
+            l.event.toLowerCase().includes(this.filterText) ||
+            l.source.toLowerCase().includes(this.filterText) ||
+            l.stage.toLowerCase().includes(this.filterText)
+        )
+      : this.logs;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">
+            ${this.logs.length === 0 ? 'No activity events recorded yet.' : 'No events match the active filter.'}
+          </td>
+        </tr>
       `;
       return;
     }
 
-    prevSection.innerHTML = receipts
-      .map(
-        (r) => `
-      <div class="activity-item ${r.result === 'SUCCESS' ? 'success' : 'blocked'}">
-        <div class="activity-dot">${r.result === 'SUCCESS' ? '✓' : '⚠'}</div>
-        <div class="activity-card">
-          <div class="activity-top">
-            <span class="activity-action-name">${escapeHtml(r.task)}</span>
-            <span class="activity-time">${new Date(r.timestamp).toLocaleTimeString()}</span>
-          </div>
-          <div class="activity-detail">
-            ${r.steps
-              .map(
-                (s) => `
-              <div style="margin-top: 4px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
-                <span style="color: ${s.executionSuccess ? 'var(--shield-green)' : 'var(--danger-red)'};">
-                  ${s.executionSuccess ? '✓' : '✗'}
-                </span>
-                <span>${escapeHtml(s.actionType)} — ${escapeHtml(s.targetDescription)}</span>
-              </div>
-            `
-              )
-              .join('')}
-          </div>
-        </div>
-      </div>
-    `
-      )
+    tbody.innerHTML = filtered
+      .slice(-100)
+      .reverse()
+      .map((entry) => {
+        const badgeClass =
+          entry.status === 'PASS'
+            ? 'badge-green'
+            : entry.status === 'PROTECTED'
+            ? 'badge-green'
+            : entry.status === 'RUNNING'
+            ? 'badge-blue'
+            : entry.status === 'FAIL'
+            ? 'badge-red'
+            : 'badge-gray';
+
+        return `
+          <tr>
+            <td class="mono" style="color: var(--text-dim);">${entry.time}</td>
+            <td class="mono" style="color: var(--status-blue-bright); font-weight: 500;">${entry.source}</td>
+            <td class="mono">${entry.stage}</td>
+            <td class="mono">${entry.event}</td>
+            <td><span class="badge ${badgeClass}">${entry.status}</span></td>
+          </tr>
+        `;
+      })
       .join('');
   }
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }

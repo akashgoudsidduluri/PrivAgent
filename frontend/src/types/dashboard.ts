@@ -6,7 +6,21 @@
  * Strictly metadata, category identifiers, and sanitized action descriptions.
  */
 
-export type DashboardTab = 'agent' | 'activity' | 'privacy' | 'receipts' | 'settings';
+export type DashboardTab =
+  | 'overview'
+  | 'agent'
+  | 'browser'
+  | 'privacy'
+  | 'detection'
+  | 'redaction'
+  | 'activity'
+  | 'receipts'
+  | 'telemetry'
+  | 'evaluation'
+  | 'providers'
+  | 'settings'
+  | 'diagnostics';
+
 
 export type UIAgentStatus =
   | 'IDLE'
@@ -150,7 +164,15 @@ export interface DashboardAgentState {
 export interface BackendHealthState {
   online: boolean;
   service: string;
+  backend_status: string;
   reasoner: string;
+  reasoner_status: string;
   reasoner_configured: boolean;
+  model?: string;
+  fallback_reasoner?: string;
+  fallback_configured?: boolean;
+  privacy_firewall: string;
+  sensitive_data_sent: number;
 }
+
 

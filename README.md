@@ -104,12 +104,14 @@ PrivAgent establishes an inviolable **on-device privacy, perception, and control
 |  - Ephemeral Memory Context                                   |
 |  - Independent Pydantic Extra="Forbid" Validation             |
 |  - Value Safety & Target Grounding Verification               |
-|  - OPENROUTER_API_KEY Guarded Server-Side Only                |
-|  - Non-Retryable Rate Limit (HTTP 429 Fail-Fast)              |
+|  - Primary Reasoner: Groq (openai/gpt-oss-20b)                |
+|  - Bounded Fallback: OpenRouter (Gemma 4 31B, 1 attempt)      |
+|  - GROQ_API_KEY / OPENROUTER_API_KEY Guarded Server-Side Only |
+|  - Non-Retryable Rate Limit (HTTP 429 Fail-Closed)            |
 +-------------------------------+-------------------------------+
                                 |
                                 v
-               [ OpenRouter: Google Gemma 4 31B ]
+               [ Groq / OpenRouter Cloud LLM Gateway ]
                                 |
                                 v Structured BrowserAction
 +---------------------------------------------------------------+
@@ -243,38 +245,54 @@ npm install
 cd backend && pip install -r requirements.txt && cd ..
 ```
 
-### 3. Build Extension & Frontend
+### 3. Configure Environment (.env)
+Create `.env` in the repository root (see `.env.example`):
+```bash
+# Reasoner Provider Configuration (backend only — never exposed to client or browser)
+REASONER_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=openai/gpt-oss-20b
+GROQ_TIMEOUT_SECONDS=30
+
+# Optional Reasoner Fallback Provider (bounded single-attempt fallback)
+REASONER_FALLBACK_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_MODEL=google/gemma-4-31b-it:free
+OPENROUTER_TIMEOUT_SECONDS=45
+```
+
+### 4. Build Extension & Frontend
 ```bash
 npm run build:extension
 npm run build:frontend
 ```
 
-### 4. Start Local Development Services
+### 5. Start Local Development Services
 In separate terminal windows:
 ```bash
 # Terminal 1: FastAPI Backend (Port 8010)
-npm run dev:backend
+python backend/run.py
 
 # Terminal 2: Synthetic Banking Demo Site (Port 4173)
-npm run demo:node
+python demo/synthetic-banking-site/server.py
 
-# Terminal 3: PrivAgent Web Dashboard (Port 5173)
+# Terminal 3: PrivAgent Professional IDE Dashboard (Port 5173)
 npm run dev:frontend
 ```
 
-### 5. Load Extension in Google Chrome
+### 6. Load Extension in Google Chrome
 1. Navigate to `chrome://extensions/`.
 2. Toggle on **Developer mode** (top-right).
 3. Click **Load unpacked** and select the `PrivAgent/dist` directory.
 4. Pin PrivAgent to your browser toolbar.
 
-### 6. Run Verified Test Suites
+### 7. Run Verified Test Suites
 ```bash
-# Frontend & Extension Tests (38 suites, 375 tests)
+# Frontend & Extension Tests (39 suites, 388 tests)
 npm test
 
-# Backend Tests (186 tests)
-python -m pytest
+# Backend Tests (194 tests)
+pytest backend/tests/ -q
 
 # Frontend Typecheck
 npx tsc --noEmit -p frontend/tsconfig.json

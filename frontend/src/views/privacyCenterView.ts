@@ -1,187 +1,141 @@
-import { DashboardAgentState } from '../types/dashboard';
+import { DashboardAgentState, SensitiveCategorySummary } from '../types/dashboard';
 
 export class PrivacyCenterView {
   private container: HTMLElement;
+  private state: DashboardAgentState | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
     this.render();
   }
 
+  update(state: DashboardAgentState): void {
+    this.state = state;
+    this.renderTable();
+  }
+
   private render(): void {
     this.container.innerHTML = `
-      <div class="view-header">
-        <div class="view-title-group">
-          <h2>Privacy Center</h2>
-          <p>Real-time on-device telemetry and cryptographic privacy enforcement boundaries</p>
+      <div class="ide-panel" style="margin-bottom: 12px;">
+        <div class="ide-panel-header">
+          <span>Security Console — Privacy Firewall Boundary</span>
+          <span class="badge badge-green">FIREWALL ACTIVE</span>
         </div>
-        <div class="privacy-shield-badge">
-          <span class="pulse-dot"></span>
-          <span id="privacy-status-label">Local Firewall Active · Zero Leakage</span>
+        <div class="ide-panel-body">
+          <div class="metric-grid">
+            <div class="metric-tile">
+              <span class="metric-label">Firewall Status</span>
+              <span class="metric-value green">ACTIVE</span>
+            </div>
+            <div class="metric-tile">
+              <span class="metric-label">Local PII Detected</span>
+              <span id="privacy-total-detected" class="metric-value amber">0</span>
+            </div>
+            <div class="metric-tile">
+              <span class="metric-label">Local PII Protected</span>
+              <span id="privacy-total-protected" class="metric-value green">0</span>
+            </div>
+            <div class="metric-tile">
+              <span class="metric-label">Network Transmitted</span>
+              <span class="metric-value green" style="font-weight: 800;">0 (ZERO-LEAK)</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="privacy-center-container">
-        <!-- 4 Core Metrics -->
-        <div class="privacy-metrics-grid">
-          <div class="metric-card">
-            <div class="metric-card-label">
-              <span>👁️</span> Sensitive info detected
-            </div>
-            <div id="metric-sensitive-detected" class="metric-card-value">0</div>
-            <div class="metric-card-note">On-device DOM & visual perception</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-card-label">
-              <span>🔒</span> Sensitive info transmitted
-            </div>
-            <div class="metric-card-value highlight-zero">0</div>
-            <div class="metric-card-note">Strictly blocked on device</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-card-label">
-              <span>🖼️</span> Raw screenshots transmitted
-            </div>
-            <div class="metric-card-value highlight-zero">0</div>
-            <div class="metric-card-note">Zero visual leakage guarantee</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-card-label">
-              <span>📄</span> Raw DOM values transmitted
-            </div>
-            <div class="metric-card-value highlight-zero">0</div>
-            <div class="metric-card-note">Sanitized bounding boxes only</div>
-          </div>
+      <!-- Categories Table Panel -->
+      <div class="ide-panel" style="flex: 1;">
+        <div class="ide-panel-header">
+          <span>Sensitive Entity Detection & Redaction Matrix</span>
+          <span class="mono" style="font-size: 10px; color: var(--text-muted);">LIVE DATA</span>
         </div>
-
-        <!-- Protected Categories Section -->
-        <div class="comparison-card">
-          <div class="comparison-header blocked">
-            <span>🛡️</span> Protected Locally On-Device
-          </div>
-          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
-            The following sensitive data classes are recognized locally by regex & DOM attribute scanners, masked in memory, and stripped from outbound context:
-          </p>
-          <div id="category-pills-list" class="category-pills-wrap">
-            <!-- Populated dynamically -->
-          </div>
+        <div class="ide-panel-body" style="padding: 0;">
+          <table class="ide-table">
+            <thead>
+              <tr>
+                <th>Sensitive Entity Category</th>
+                <th style="width: 120px; text-align: center;">Detected</th>
+                <th style="width: 140px; text-align: center;">Local Protection</th>
+                <th style="width: 140px; text-align: center;">Remote Transmitted</th>
+                <th style="width: 160px;">Policy Action</th>
+              </tr>
+            </thead>
+            <tbody id="privacy-categories-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        <!-- Recent Redaction Events -->
-        <div class="comparison-card">
-          <div class="comparison-header blocked">
-            <span>🔒</span> On-Device Redaction & Masking Events
-          </div>
-          <div id="redaction-events-list" style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
-            <p style="color: var(--text-muted); font-style: italic;">No sensitive fields detected on the current active page. Local firewall is monitoring live DOM.</p>
-          </div>
+      <!-- Security Invariant Notice -->
+      <div class="ide-panel" style="margin-top: 12px;">
+        <div class="ide-panel-header">
+          <span>PrivAgent Core Privacy Invariants</span>
+          <span class="badge badge-green">NON-NEGOTIABLE</span>
         </div>
-
-        <!-- Shared vs Blocked Breakdown -->
-        <div class="privacy-comparison-grid">
-          <div class="comparison-card">
-            <div class="comparison-header shared">
-              <span>📤</span> Information Shared with AI (Sanitized Context)
-            </div>
-            <ul class="comparison-list">
-              <li><span>✓</span> <strong>Button labels</strong> (e.g. "Submit", "Search")</li>
-              <li><span>✓</span> <strong>Page structure</strong> (Hierarchical layout elements)</li>
-              <li><span>✓</span> <strong>Safe coordinates</strong> (Bounding boxes for clicking)</li>
-              <li><span>✓</span> <strong>Non-sensitive text</strong> (Public headings & prompts)</li>
-              <li><span>✓</span> <strong>Allowed metadata</strong> (Input field tags & viewport size)</li>
-            </ul>
-          </div>
-
-          <div class="comparison-card">
-            <div class="comparison-header blocked">
-              <span>🛑</span> Information Blocked from AI (Firewalled)
-            </div>
-            <ul class="comparison-list">
-              <li><span>✓</span> <strong>Password values</strong> (Never transmitted)</li>
-              <li><span>✓</span> <strong>Credit card numbers</strong> (16-digit PANs redacted)</li>
-              <li><span>✓</span> <strong>Bank account numbers</strong> (Masked on-device)</li>
-              <li><span>✓</span> <strong>OTP & CVV codes</strong> (Strictly forbidden)</li>
-              <li><span>✓</span> <strong>Unredacted screenshots</strong> (Stored in RAM only)</li>
-            </ul>
-          </div>
+        <div class="ide-panel-body" style="font-size: 11px; color: var(--text-secondary);">
+          <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
+            <li><strong>Raw Values Never Leave Device:</strong> Passwords, account numbers, card numbers, CVVs, OTPs, emails, and phones are stripped before backend context dispatch.</li>
+            <li><strong>Zero Raw Screenshots:</strong> Visual captures remain inside Chrome extension memory. LLMs receive only sanitized, coordinate-bounded metadata.</li>
+            <li><strong>M8 Privacy Fusion:</strong> Multi-modal agreement between DOM attributes, visual OCR, and text regex patterns enforces fail-closed redaction.</li>
+          </ul>
         </div>
       </div>
     `;
+
+    this.renderTable();
   }
 
-  update(state: DashboardAgentState): void {
-    const elDetected = this.container.querySelector('#metric-sensitive-detected');
-    if (elDetected) {
-      elDetected.textContent = String(state.sensitiveItemsCount);
-    }
+  private renderTable(): void {
+    const tbody = this.container.querySelector('#privacy-categories-table-body');
+    const totalDetectedEl = this.container.querySelector('#privacy-total-detected');
+    const totalProtectedEl = this.container.querySelector('#privacy-total-protected');
 
-    const pillsContainer = this.container.querySelector('#category-pills-list');
-    if (pillsContainer) {
-      const categories = [
-        { key: 'password', label: 'Password' },
-        { key: 'account_number', label: 'Account number' },
-        { key: 'credit_card', label: 'Credit card' },
-        { key: 'email', label: 'Email' },
-        { key: 'phone', label: 'Phone' },
-        { key: 'pan', label: 'PAN' },
-        { key: 'cvv', label: 'CVV' },
-        { key: 'otp', label: 'OTP' },
-        { key: 'person_name', label: 'Personal Name' },
-        { key: 'address', label: 'Physical Address' },
-      ] as const;
+    const categories: SensitiveCategorySummary = this.state?.categories || {
+      password: 0,
+      credit_card: 0,
+      account_number: 0,
+      email: 0,
+      phone: 0,
+      pan: 0,
+      cvv: 0,
+      otp: 0,
+    };
 
-      pillsContainer.innerHTML = categories
-        .map((cat) => {
-          const count = (state.categories as any)[cat.key] || 0;
-          const isDetected = count > 0;
+    const rows: Array<{ label: string; count: number; policy: string }> = [
+      { label: 'Password', count: categories.password, policy: 'BLACKOUT + MASK' },
+      { label: 'Account Number', count: categories.account_number, policy: 'REDACT + MASK' },
+      { label: 'Credit Card (PAN)', count: categories.credit_card, policy: 'BLACKOUT + MASK' },
+      { label: 'CVV / Security Code', count: categories.cvv, policy: 'BLACKOUT + STRIP' },
+      { label: 'One-Time Password (OTP)', count: categories.otp, policy: 'BLACKOUT + STRIP' },
+      { label: 'PAN Card (Tax ID)', count: categories.pan, policy: 'REDACT + MASK' },
+      { label: 'Email Address', count: categories.email, policy: 'METADATA_ONLY' },
+      { label: 'Phone Number', count: categories.phone, policy: 'METADATA_ONLY' },
+    ];
+
+    let totalDetected = 0;
+
+    if (tbody) {
+      tbody.innerHTML = rows
+        .map((r) => {
+          totalDetected += r.count;
+          const detectedDisplay = r.count > 0 ? `<strong class="mono" style="color: var(--status-amber-bright);">${r.count}</strong>` : `<span class="mono" style="color: var(--text-dim);">0</span>`;
+          const protectedDisplay = r.count > 0 ? `<span class="badge badge-green">${r.count} PROTECTED</span>` : `<span class="mono" style="color: var(--text-dim);">-</span>`;
+
           return `
-            <div class="category-pill ${isDetected ? 'detected' : ''}">
-              ✓ ${cat.label} ${count > 0 ? `(${count})` : ''}
-            </div>
+            <tr>
+              <td><strong>${r.label}</strong></td>
+              <td style="text-align: center;">${detectedDisplay}</td>
+              <td style="text-align: center;">${protectedDisplay}</td>
+              <td style="text-align: center;"><span class="mono" style="color: var(--status-green-bright); font-weight: 700;">0</span></td>
+              <td class="mono" style="font-size: 11px; color: var(--text-secondary);">${r.policy}</td>
+            </tr>
           `;
         })
         .join('');
     }
 
-    const eventsList = this.container.querySelector('#redaction-events-list');
-    if (eventsList) {
-      const sensitiveSteps = state.steps.filter((s) => s.sensitiveCategoryDetected);
-      if (sensitiveSteps.length > 0) {
-        eventsList.innerHTML = sensitiveSteps
-          .map(
-            (s) => `
-          <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
-            <span style="color: var(--shield-green); font-weight: bold;">🛡️ [PROTECTED]</span>
-            <span>Step ${s.step}: <strong>${escapeHtml(s.actionType)}</strong> on <code>${escapeHtml(s.targetDescription)}</code></span>
-            <span class="category-pill detected" style="padding: 1px 6px; font-size: 10px;">${escapeHtml(s.sensitiveCategoryDetected!)}</span>
-          </div>
-        `
-          )
-          .join('');
-      } else if (state.sensitiveItemsCount > 0) {
-        eventsList.innerHTML = `
-          <p style="color: var(--shield-green);">
-            🔒 ${state.sensitiveItemsCount} sensitive elements protected on current page. Values masked locally with zero network transmission.
-          </p>
-        `;
-      } else {
-        eventsList.innerHTML = `
-          <p style="color: var(--text-muted); font-style: italic;">
-            No sensitive fields detected on current page. Local firewall is actively monitoring DOM.
-          </p>
-        `;
-      }
-    }
+    if (totalDetectedEl) totalDetectedEl.textContent = String(totalDetected);
+    if (totalProtectedEl) totalProtectedEl.textContent = String(totalDetected);
   }
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }

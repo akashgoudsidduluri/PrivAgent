@@ -24,6 +24,7 @@ import pytest
 from app import reasoner as reasoner_mod
 from app.reasoner import (
     REASONER_REGISTRY,
+    GroqReasoner,
     MockReasoner,
     OpenRouterReasoner,
     ReasonerProvider,
@@ -32,6 +33,7 @@ from app.reasoner import (
     parse_model_action,
     resolve_reasoner_name,
 )
+
 
 API_KEY = "test-key-not-a-real-secret"
 
@@ -458,3 +460,271 @@ class TestReasonerRegistry:
         result = build_reasoner("mock").request_action(**kwargs)
         assert result.raw_action["action"] in ("click", "scroll")
         assert result.attempts >= 1
+
+
+class TestGroqReasoner:
+    """Milestone Groq: Server-side Groq provider tests."""
+
+    def test_groq_reasoner_satisfies_contract(self):
+        groq = GroqReasoner(api_key="gsk-test", model="openai/gpt-oss-20b")
+        assert isinstance(groq, ReasonerProvider)
+        assert groq.configured is True
+        assert build_reasoner("groq") is not build_reasoner("groq")
+        assert resolve_reasoner_name("groq") == "groq"
+
+    def test_groq_unconfigured_fails_closed(self):
+        groq = GroqReasoner(api_key="")
+        assert groq.configured is False
+        with pytest.raises(ReasoningError) as exc_info:
+            groq.request_action(
+                task="Click login",
+                url="https://bank.example.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "not_configured"
+        assert exc_info.value.retryable is False
+
+    def test_groq_structured_action_success(self, monkeypatch):
+        groq = GroqReasoner(api_key="gsk-test", model="openai/gpt-oss-20b")
+        captured = {}
+
+        def fake_post(url, **kwargs):
+            captured["url"] = url
+            captured["json"] = kwargs.get("json")
+            captured["headers"] = kwargs.get("headers")
+            return httpx.Response(
+                200,
+                json={
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": json.dumps({
+                                    "action": "click",
+                                    "target": "element_details",
+                                    "reason": "Clicking account details button",
+                                }),
+                            }
+                        }
+                    ]
+                },
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        result = groq.request_action(
+            task="Click account details",
+            url="https://bank.example.com",
+            detections=SAMPLE_DETECTIONS,
+        )
+        assert result.raw_action["action"] == "click"
+        assert result.raw_action["target"] == "element_details"
+        assert result.model == "openai/gpt-oss-20b"
+        assert result.latency_ms >= 0
+        assert captured["headers"]["Authorization"] == "Bearer gsk-test"
+        assert captured["json"]["response_format"]["type"] == "json_schema"
+
+    def test_groq_429_rate_limit_fails_closed_and_non_retryable(self, monkeypatch):
+        groq = GroqReasoner(api_key="gsk-test")
+
+        def fake_post(url, **kwargs):
+            return httpx.Response(
+                429,
+                headers={"retry-after": "15"},
+                json={"error": {"message": "Rate limit exceeded. Please wait."}},
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        with pytest.raises(ReasoningError) as exc_info:
+            groq.request_action(
+                task="Click account details",
+                url="https://bank.example.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "rate_limit"
+        assert exc_info.value.retryable is False
+        assert "Retry-After: 15s" in str(exc_info.value)
+
+    def test_groq_auth_failure_fails_closed(self, monkeypatch):
+        groq = GroqReasoner(api_key="gsk-invalid")
+
+        def fake_post(url, **kwargs):
+            return httpx.Response(
+                401,
+                json={"error": {"message": "Invalid API key"}},
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        with pytest.raises(ReasoningError) as exc_info:
+            groq.request_action(
+                task="Click account details",
+                url="https://bank.example.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "auth"
+        assert exc_info.value.retryable is False
+
+    def test_groq_timeout_is_retryable(self, monkeypatch):
+        groq = GroqReasoner(api_key="gsk-test")
+
+        def fake_post(url, **kwargs):
+            raise httpx.TimeoutException("Connection timed out")
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        with pytest.raises(ReasoningError) as exc_info:
+            groq.request_action(
+                task="Click account details",
+                url="https://bank.example.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "timeout"
+        assert exc_info.value.retryable is True
+
+    def test_zero_raw_pii_reaches_groq_request(self, monkeypatch):
+        """CRITICAL PRIVACY INVARIANT:
+        Verify that even if raw PII was present in the user's perception context upstream,
+        the request body sent to Groq contains ZERO instances of sensitive values.
+        """
+        groq = GroqReasoner(api_key="gsk-test")
+        captured_body = {}
+
+        def fake_post(url, **kwargs):
+            captured_body["json"] = kwargs.get("json")
+            return httpx.Response(
+                200,
+                json={
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": '{"action":"click","target":"elem_safe","reason":"Clicking safe button"}',
+                            }
+                        }
+                    ]
+                },
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+
+        # Raw synthetic secrets that MUST NEVER appear in the Groq request:
+        RAW_SECRETS = [
+            "SecretPassword123!",
+            "4532-1234-5678-9012",
+            "987654321098",
+            "user@confidential-bank.com",
+            "+1-555-019-2834",
+            "ABCDE1234F",
+            "982",
+            "741852",
+        ]
+
+        # Sanitized detections as delivered by M8 (metadata only, NO raw values):
+        sanitized_detections = [
+            {
+                "id": "elem_safe",
+                "type": "account_number",
+                "confidence": 0.99,
+                "bbox": {"x": 50, "y": 100, "width": 120, "height": 30},
+                "length": 12,
+                "source": "dom_label",
+                "selector": "#acc-num",
+            },
+            {
+                "id": "elem_card",
+                "type": "credit_card",
+                "confidence": 0.95,
+                "bbox": {"x": 50, "y": 150, "width": 150, "height": 30},
+                "length": 16,
+                "source": "text_pattern",
+                "selector": "#card-info",
+            },
+        ]
+
+        result = groq.request_action(
+            task="Find my account number and view balance",
+            url="https://bank.example.com/portal",
+            detections=sanitized_detections,
+        )
+        assert result.raw_action["action"] == "click"
+
+        # Serialize outbound Groq payload to text
+        payload_str = json.dumps(captured_body["json"])
+
+        for secret in RAW_SECRETS:
+            assert secret not in payload_str, f"CRITICAL LEAK: Raw secret '{secret}' found in Groq payload!"
+
+    def test_provider_fallback_on_rate_limit(self, monkeypatch):
+        """Verify fallback from Groq to OpenRouter on transient 429 rate limit."""
+        from app.main import app
+        from fastapi.testclient import TestClient
+
+        client = TestClient(app)
+        monkeypatch.setattr("app.config.REASONER_PROVIDER", "groq")
+        monkeypatch.setattr("app.config.REASONER_MODE", "groq")
+        monkeypatch.setattr("app.config.GROQ_API_KEY", "gsk-test")
+        monkeypatch.setattr("app.config.REASONER_FALLBACK_PROVIDER", "openrouter")
+        monkeypatch.setattr("app.config.OPENROUTER_API_KEY", "or-test")
+
+        calls = []
+
+        def fake_post(url, **kwargs):
+            calls.append(url)
+            # If called for Groq, return 429
+            if "groq.com" in url:
+                return httpx.Response(429, json={"error": {"message": "Groq rate limited"}})
+            # If called for OpenRouter fallback, return valid action
+            return httpx.Response(
+                200,
+                json={
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": json.dumps({
+                                    "action": "click",
+                                    "target": "element_details",
+                                    "reason": "Fallback OpenRouter clicked details",
+                                }),
+                            }
+                        }
+                    ]
+                },
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+
+        resp = client.post(
+            "/api/v1/agent/action",
+            json={
+                "task": "Click account details",
+                "context": {
+                    "url": "https://bank.example.com",
+                    "timestamp": 12345678,
+                    "viewport": {"width": 1280, "height": 800},
+                    "detections": [
+                        {
+                            "id": "element_details",
+                            "type": "person_name",
+                            "confidence": 0.9,
+                            "bbox": {"x": 10, "y": 20, "width": 100, "height": 30},
+                            "length": 8,
+                            "source": "dom_label",
+                            "selector": "#details",
+                        }
+                    ],
+                    "total_elements_scanned": 10,
+                    "sensitive_elements_detected": 1,
+                    "sanitized_status": "sanitized_only",
+                },
+            },
+        )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["success"] is True
+        assert data["action"]["action"] == "click"
+        assert data["action"]["target"] == "element_details"
+        assert data["telemetry"]["fallback_used"] is True
+        assert data["telemetry"]["provider"] == "openrouter"
+        assert len(calls) == 2  # 1 Groq, 1 OpenRouter
+
+

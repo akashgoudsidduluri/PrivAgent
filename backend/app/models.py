@@ -174,10 +174,17 @@ class ContextResponse(StrictModel):
 
 class HealthResponse(BaseModel):  # not strict — allow future additions
     status: str = "ok"
-    version: str = "0.7.0"
+    version: str = "0.8.0"
     service: str = "PrivAgent Agent Safety API"
-    reasoner: str = "openrouter"           # active reasoner mode (never the key)
+    backend_status: str = "CONNECTED"      # CONNECTED | OFFLINE
+    reasoner: str = "groq"                 # active primary reasoner mode (never the key)
+    reasoner_status: str = "AVAILABLE"     # AVAILABLE | RATE_LIMITED | UNCONFIGURED | ERROR
     reasoner_configured: bool = False      # whether an API key is present
+    model: Optional[str] = None
+    fallback_reasoner: Optional[str] = None
+    fallback_configured: bool = False
+    privacy_firewall: str = "ACTIVE"       # ACTIVE | ERROR
+    sensitive_data_sent: int = 0           # Invariant: 0
 
 
 # ── Milestone 5: Structured Browser Action Models ────────────────────────────
@@ -347,10 +354,11 @@ class ReasoningTelemetry(StrictModel):
     Safe reasoning telemetry — identifiers and durations only.
     Never contains prompts, model text, or API key material.
     """
-    provider: str                      # "openrouter" | "mock"
-    model: str                         # e.g. "google/gemma-4-31b-it:free"
+    provider: str                      # "groq" | "openrouter" | "mock"
+    model: str                         # e.g. "openai/gpt-oss-20b"
     latency_ms: float
     attempts: int = 1
+    fallback_used: bool = False
     error_kind: Optional[str] = None   # "timeout" | "auth" | "invalid_json" | ...
 
 

@@ -92,7 +92,11 @@ async def generate_action(
         h.model_dump(exclude_none=True) for h in body.history
     ]
 
-    reasoner = _build_reasoner()
+    primary_name = resolve_reasoner_name(getattr(config, "REASONER_MODE", config.REASONER_PROVIDER))
+    reasoner = build_reasoner(primary_name)
+    fallback_used = False
+    effective_provider = primary_name
+
 
     try:
         result = reasoner.request_action(
@@ -108,17 +112,64 @@ async def generate_action(
             ),
         )
     except ReasoningError as err:
-        logger.warning("Reasoning failed (%s): %s", err.kind, err)
-        # Fail closed — never fabricate an action from detections.
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={
-                "success": False,
-                "reason": f"Reasoning unavailable: {err}",
-                "error_kind": err.kind,
-                "retryable": err.retryable,
-            },
+        fallback_name = (config.REASONER_FALLBACK_PROVIDER or "").strip().lower()
+        can_fallback = (
+            fallback_name
+            and fallback_name in ["groq", "openrouter", "mock"]
+            and fallback_name != primary_name
+            and err.kind in ("rate_limit", "timeout", "network", "not_configured", "http_server_error")
         )
+        if can_fallback:
+            logger.info(
+                "Primary reasoner '%s' failed (%s); attempting fallback to '%s'.",
+                primary_name,
+                err.kind,
+                fallback_name,
+            )
+            fallback_reasoner = build_reasoner(fallback_name)
+            try:
+                result = fallback_reasoner.request_action(
+                    task=body.task,
+                    url=context.url,
+                    detections=[d.model_dump() for d in context.detections],
+                    history=safe_history,
+                    viewport=context.viewport.model_dump(),
+                    screenshot_dimensions=(
+                        context.screenshot_dimensions.model_dump()
+                        if context.screenshot_dimensions
+                        else None
+                    ),
+                )
+                fallback_used = True
+                effective_provider = fallback_name
+            except ReasoningError as fallback_err:
+                logger.warning(
+                    "Fallback reasoner '%s' also failed (%s): %s",
+                    fallback_name,
+                    fallback_err.kind,
+                    fallback_err,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail={
+                        "success": False,
+                        "reason": f"Reasoning unavailable: {primary_name} ({err.kind}) and fallback {fallback_name} ({fallback_err.kind}) failed.",
+                        "error_kind": fallback_err.kind,
+                        "retryable": False,
+                    },
+                )
+        else:
+            logger.warning("Reasoning failed (%s): %s", err.kind, err)
+            # Fail closed — never fabricate an action from detections.
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "success": False,
+                    "reason": f"Reasoning unavailable: {err}",
+                    "error_kind": err.kind,
+                    "retryable": err.retryable,
+                },
+            )
 
     # 2. LLM output is UNTRUSTED: strict schema validation + re-validation.
     try:
@@ -158,12 +209,11 @@ async def generate_action(
         )
 
     telemetry = ReasoningTelemetry(
-        # Provider id comes from the registry selection, so a newly registered
-        # provider is reported correctly without changing this route.
-        provider=resolve_reasoner_name(config.REASONER_MODE),
+        provider=effective_provider,
         model=result.model,
         latency_ms=round(result.latency_ms, 1),
         attempts=result.attempts,
+        fallback_used=fallback_used,
     )
 
     return AgentActionResponse(
@@ -172,3 +222,4 @@ async def generate_action(
         reason=action.reason or "Reasoned action from sanitized context metadata.",
         telemetry=telemetry,
     )
+

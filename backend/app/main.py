@@ -56,16 +56,41 @@ app.include_router(agent_router)
 
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["health"])
 async def health() -> HealthResponse:
-    """Liveness check — used by the extension popup to detect backend status.
+    """Liveness check — used by the extension popup and dashboard.
 
-    `reasoner` is the RESOLVED provider name (from the reasoner registry), so it
-    always reports the model path that will actually serve agent requests. The
-    API key itself is never exposed — only whether one is configured.
+    Separates backend connectivity (CONNECTED) from reasoner availability (AVAILABLE /
+    UNCONFIGURED / RATE_LIMITED). The API key itself is never exposed.
     """
-    return HealthResponse(
-        reasoner=resolve_reasoner_name(config.REASONER_MODE),
-        reasoner_configured=config.has_api_key(),
+    primary = resolve_reasoner_name(getattr(config, "REASONER_MODE", config.REASONER_PROVIDER))
+    is_configured = config.has_api_key(primary)
+    reasoner_status = "AVAILABLE" if is_configured else "UNCONFIGURED"
+
+
+    fallback = (
+        resolve_reasoner_name(config.REASONER_FALLBACK_PROVIDER)
+        if config.REASONER_FALLBACK_PROVIDER
+        else None
     )
+    fallback_configured = config.has_api_key(fallback) if fallback else False
+
+    model_name = (
+        config.GROQ_MODEL
+        if primary == "groq"
+        else (config.OPENROUTER_MODEL if primary == "openrouter" else "mock-deterministic")
+    )
+
+    return HealthResponse(
+        backend_status="CONNECTED",
+        reasoner=primary,
+        reasoner_status=reasoner_status,
+        reasoner_configured=is_configured,
+        model=model_name,
+        fallback_reasoner=fallback,
+        fallback_configured=fallback_configured,
+        privacy_firewall="ACTIVE",
+        sensitive_data_sent=0,
+    )
+
 
 
 @app.get("/", include_in_schema=False)

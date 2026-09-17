@@ -329,8 +329,15 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         return {
           online: true,
           service: 'PrivAgent Agent Safety API (M7)',
-          reasoner: data.reasoner || 'google/gemma-2-9b-it:free',
+          backend_status: data.backend_status || 'CONNECTED',
+          reasoner: data.reasoner || 'groq',
+          reasoner_status: data.reasoner_status || 'AVAILABLE',
           reasoner_configured: data.reasoner_configured ?? false,
+          model: data.model || 'openai/gpt-oss-20b',
+          fallback_reasoner: data.fallback_reasoner || 'openrouter',
+          fallback_configured: data.fallback_configured ?? false,
+          privacy_firewall: data.privacy_firewall || 'ACTIVE',
+          sensitive_data_sent: data.sensitive_data_sent || 0,
         };
       }
     } catch {
@@ -340,10 +347,15 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     return {
       online: false,
       service: 'PrivAgent Backend (Offline)',
-      reasoner: 'Unknown',
+      backend_status: 'OFFLINE',
+      reasoner: 'groq',
+      reasoner_status: 'ERROR',
       reasoner_configured: false,
+      privacy_firewall: 'ACTIVE',
+      sensitive_data_sent: 0,
     };
   }
+
 
   async startTask(task: string): Promise<void> {
     console.info('[Adapter] START_TASK received', { taskLength: task.length });

@@ -24,19 +24,37 @@ except ImportError:  # pragma: no cover - dotenv is a soft dependency
     pass
 
 
+
+
 # ── Reasoner mode ─────────────────────────────────────────────────────────────
 # Selects the SERVER-SIDE reasoning provider by name. The authoritative list of
 # valid names is `reasoner.REASONER_REGISTRY`:
-#   "openrouter" — real Gemma reasoning via OpenRouter (production/demo mode)
-#   "mock"       — deterministic offline reasoner (tests / CI only, never guessing)
-#                   plus any future provider registered there.
-# Adding a provider is a registry entry + this env var — no change to the agent
-# route, the request/response models, the security validator, or the extension.
-# An unregistered name FAILS CLOSED to the production provider (see
-# reasoner.build_reasoner) rather than to any deterministic fallback.
-REASONER_MODE = os.environ.get("PRIVAGENT_REASONER", "openrouter").strip().lower()
-if not REASONER_MODE:
-    REASONER_MODE = "openrouter"
+#   "groq"       — real reasoning via Groq (production default)
+#   "openrouter" — real Gemma reasoning via OpenRouter
+#   "mock"       — deterministic offline reasoner (tests / CI only)
+#
+# REASONER_PROVIDER is primary; PRIVAGENT_REASONER is supported for backwards compatibility.
+REASONER_PROVIDER = os.environ.get(
+    "REASONER_PROVIDER", os.environ.get("PRIVAGENT_REASONER", "groq")
+).strip().lower()
+if not REASONER_PROVIDER:
+    REASONER_PROVIDER = "groq"
+
+# REASONER_MODE is the authoritative active mode string (compatible with test monkeypatching)
+REASONER_MODE = REASONER_PROVIDER
+
+# Optional transient provider fallback (e.g. "openrouter")
+REASONER_FALLBACK_PROVIDER = os.environ.get("REASONER_FALLBACK_PROVIDER", "").strip().lower()
+
+
+
+# ── Groq settings ─────────────────────────────────────────────────────────────
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+GROQ_BASE_URL = os.environ.get(
+    "GROQ_BASE_URL", "https://api.groq.com/openai/v1/chat/completions"
+).strip()
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b").strip()
+GROQ_TIMEOUT_SECONDS = float(os.environ.get("GROQ_TIMEOUT_SECONDS", "30"))
 
 
 # ── OpenRouter settings ───────────────────────────────────────────────────────
@@ -53,6 +71,14 @@ OPENROUTER_TIMEOUT_SECONDS = float(os.environ.get("OPENROUTER_TIMEOUT_SECONDS", 
 MAX_LLM_ATTEMPTS = int(os.environ.get("PRIVAGENT_MAX_LLM_ATTEMPTS", "1"))
 
 
-def has_api_key() -> bool:
-    """Whether an OpenRouter API key is configured (value never exposed)."""
-    return bool(OPENROUTER_API_KEY)
+def has_api_key(provider: str | None = None) -> bool:
+    """Whether an API key is configured for the requested (or active) provider."""
+    target = (provider or REASONER_PROVIDER).lower()
+    if target == "groq":
+        return bool(GROQ_API_KEY)
+    if target == "openrouter":
+        return bool(OPENROUTER_API_KEY)
+    if target == "mock":
+        return True
+    return False
+

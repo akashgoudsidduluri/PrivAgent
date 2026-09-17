@@ -485,6 +485,236 @@ class OpenRouterReasoner:
         return ""
 
 
+# Canonical JSON schema for Groq structured output (strict mode compliant)
+GROQ_ACTION_SCHEMA = {
+    "name": "browser_action",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "action": {
+                "type": "string",
+                "enum": ["click", "scroll", "type", "select", "navigate"],
+                "description": "The browser action type",
+            },
+            "target": {
+                "type": ["string", "null"],
+                "description": "ID of target element from detections (e.g. elem_12)",
+            },
+            "direction": {
+                "type": ["string", "null"],
+                "enum": ["up", "down", None],
+                "description": "Scroll direction ('up' or 'down')",
+            },
+            "amount": {
+                "type": ["integer", "null"],
+                "description": "Scroll amount in pixels (1-5000)",
+            },
+            "text": {
+                "type": ["string", "null"],
+                "description": "Text to type into target element",
+            },
+            "option": {
+                "type": ["string", "null"],
+                "description": "Option value for select element",
+            },
+            "url": {
+                "type": ["string", "null"],
+                "description": "Full HTTP/HTTPS URL for navigation",
+            },
+            "reason": {
+                "type": ["string", "null"],
+                "description": "Short explanation of why this action was chosen",
+            },
+        },
+        "required": [
+            "action",
+            "target",
+            "direction",
+            "amount",
+            "text",
+            "option",
+            "url",
+            "reason",
+        ],
+        "additionalProperties": False,
+    },
+}
+
+
+class GroqReasoner:
+    """One-shot structured reasoning via Groq API. M6 calls this once per step.
+
+    Security Invariants:
+      1. GROQ_API_KEY is backend-only and never logged, echoed, or transmitted to client.
+      2. Receives ONLY sanitized metadata (no raw DOM/OCR, no screenshots, no sensitive values).
+      3. Strict JSON schema structured output is preferred; fails closed on invalid output.
+      4. HTTP 429 rate limits are classified as non-retryable and fail closed.
+    """
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        timeout_seconds: Optional[float] = None,
+    ) -> None:
+        self.api_key = (api_key if api_key is not None else config.GROQ_API_KEY).strip()
+        self.model = (model or config.GROQ_MODEL).strip()
+        self.base_url = (base_url or config.GROQ_BASE_URL).strip()
+        self.timeout_seconds = float(timeout_seconds or config.GROQ_TIMEOUT_SECONDS)
+
+    @property
+    def configured(self) -> bool:
+        return bool(self.api_key)
+
+    def request_action(
+        self,
+        task: str,
+        url: str,
+        detections: List[Dict[str, Any]],
+        history: Optional[List[Dict[str, Any]]] = None,
+        viewport: Optional[Dict[str, Any]] = None,
+        screenshot_dimensions: Optional[Dict[str, Any]] = None,
+        steps_used: int = 0,
+        max_steps: int = 10,
+    ) -> ReasoningResult:
+        """Perform ONE reasoning request to Groq. Raises ReasoningError on failure."""
+        if not self.configured:
+            raise ReasoningError(
+                "Groq API key is not configured on the backend (GROQ_API_KEY).",
+                kind="not_configured",
+            )
+
+        user_prompt = _build_user_prompt(
+            task=task,
+            url=url,
+            viewport=viewport,
+            screenshot_dimensions=screenshot_dimensions,
+            detections=detections,
+            history=history or [],
+            steps_used=steps_used,
+            max_steps=max_steps,
+        )
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        # Try strict json_schema first; if model rejects json_schema with 400, fallback to json_object
+        payload_schema = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.1,
+            "max_tokens": 300,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": GROQ_ACTION_SCHEMA,
+            },
+        }
+
+        started = time.perf_counter()
+        try:
+            response = httpx.post(
+                self.base_url,
+                json=payload_schema,
+                headers=headers,
+                timeout=self.timeout_seconds,
+            )
+        except httpx.TimeoutException as err:
+            raise ReasoningError(
+                f"Groq request timed out after {self.timeout_seconds:.0f}s.",
+                retryable=True,
+                kind="timeout",
+            ) from err
+        except httpx.HTTPError as err:
+            raise ReasoningError(
+                f"Groq network error: {type(err).__name__}",
+                retryable=True,
+                kind="network",
+            ) from err
+
+        # If 400 with schema error, try json_object format as fallback
+        if response.status_code == 400 and "json_schema" in response.text.lower():
+            logger.info("Groq model '%s' rejected json_schema; retrying with json_object format.", self.model)
+            payload_obj = dict(payload_schema)
+            payload_obj["response_format"] = {"type": "json_object"}
+            try:
+                response = httpx.post(
+                    self.base_url,
+                    json=payload_obj,
+                    headers=headers,
+                    timeout=self.timeout_seconds,
+                )
+            except Exception as e:
+                logger.warning("Groq json_object retry failed: %s", e)
+
+        if response.status_code == 200:
+            content = self._extract_content(response.json())
+            raw_action = parse_model_action(content)
+            return ReasoningResult(
+                raw_action=raw_action,
+                model=self.model,
+                latency_ms=(time.perf_counter() - started) * 1000.0,
+                attempts=1,
+            )
+
+        # HTTP error handling
+        detail = self._safe_error_detail(response)
+        if response.status_code in (401, 403):
+            raise ReasoningError(
+                f"Groq authentication failed (HTTP {response.status_code}). "
+                "Check GROQ_API_KEY on the backend.",
+                kind="auth",
+                retryable=False,
+            )
+        if response.status_code == 429:
+            retry_after = response.headers.get("retry-after")
+            retry_info = f" (Retry-After: {retry_after}s)" if retry_after else ""
+            raise ReasoningError(
+                f"Groq rate limit reached (HTTP 429){retry_info}. {detail}",
+                retryable=False,
+                kind="rate_limit",
+            )
+        if 400 <= response.status_code < 500:
+            raise ReasoningError(
+                f"Groq rejected the request (HTTP {response.status_code}). {detail}",
+                kind="http_client_error",
+                retryable=False,
+            )
+        raise ReasoningError(
+            f"Groq server error (HTTP {response.status_code}). {detail}",
+            retryable=True,
+            kind="http_server_error",
+        )
+
+    @staticmethod
+    def _extract_content(data: Dict[str, Any]) -> str:
+        choices = data.get("choices")
+        if not isinstance(choices, list) or not choices:
+            raise ReasoningError("Groq response contained no choices.", kind="unexpected_format")
+        message = choices[0].get("message") if isinstance(choices[0], dict) else None
+        content = message.get("content") if isinstance(message, dict) else None
+        if not isinstance(content, str):
+            raise ReasoningError("Groq response missing message content.", kind="unexpected_format")
+        return content
+
+    @staticmethod
+    def _safe_error_detail(response: httpx.Response) -> str:
+        try:
+            body = response.json()
+            msg = body.get("error", {}).get("message", "") if isinstance(body, dict) else ""
+            if isinstance(msg, str) and msg:
+                return msg[:200]
+        except Exception:
+            pass
+        return ""
+
+
 class MockReasoner:
     """Deterministic offline reasoner for tests and CI.
 
@@ -566,25 +796,17 @@ class MockReasoner:
 #
 # The agent route resolves its provider from here by name, so adding a reasoning
 # model is a CONFIGURATION + registration change — not an architecture change.
-#
-# HOW TO ADD A NEW SERVER-SIDE PROVIDER
-#   1. Implement `ReasonerProvider` (one request per call, sanitized metadata
-#      only, typed `ReasoningError` on every failure, never guess).
-#   2. Register it below under a new name.
-#   3. Select it with `PRIVAGENT_REASONER=<name>` (see app/config.py) and add a
-#      test in backend/tests/test_reasoner.py proving the same route contract.
-#
-# Do NOT add a second loop, a second validator, or a fallback that guesses: the
-# route and the extension M5/M6 gates remain authoritative for every provider.
 
 REASONER_REGISTRY: Dict[str, Callable[[], ReasonerProvider]] = {
-    "openrouter": OpenRouterReasoner,   # PRODUCTION: Gemma via OpenRouter (server-side key)
+    "groq": GroqReasoner,               # Real reasoning via Groq (server-side key)
+    "openrouter": OpenRouterReasoner,   # Real Gemma via OpenRouter (server-side key)
     "mock": MockReasoner,               # Offline/deterministic: tests, CI, demos without a key
 }
 
-# Fail-closed default: the production path, which itself refuses to run without
+# Fail-closed default: the production provider, which itself refuses to run without
 # an API key. There is no guessing-based fallback anywhere in this module.
 DEFAULT_REASONER_NAME = "openrouter"
+
 
 
 def resolve_reasoner_name(name: str) -> str:
@@ -613,3 +835,4 @@ def build_reasoner(name: str) -> ReasonerProvider:
     (no fabricated actions when reasoning is unavailable).
     """
     return REASONER_REGISTRY[resolve_reasoner_name(name)]()
+

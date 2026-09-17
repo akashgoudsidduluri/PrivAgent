@@ -11,4 +11,7 @@ from __future__ import annotations
 import os
 
 # Must be set before app modules import backend.app.config.
-os.environ.setdefault("PRIVAGENT_REASONER", "mock")
+os.environ["PRIVAGENT_REASONER"] = "mock"
+os.environ["REASONER_PROVIDER"] = "mock"
+os.environ["REASONER_FALLBACK_PROVIDER"] = ""
+

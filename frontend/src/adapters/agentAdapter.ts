@@ -8,6 +8,9 @@ export interface AgentAdapter {
   getState(): DashboardAgentState;
   onStateChange(callback: (state: DashboardAgentState) => void): () => void;
   isDevMock(): boolean;
+  isExtensionConnected?(): boolean;
   checkExtensionConnected?(): Promise<boolean>;
   onExtensionStatusChange?(callback: (connected: boolean) => void): () => void;
+  destroy?(): void;
 }
+
