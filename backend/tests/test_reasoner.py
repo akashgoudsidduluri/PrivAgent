@@ -425,11 +425,11 @@ class TestReasonerRegistry:
         assert isinstance(build_reasoner("mock"), MockReasoner)
 
     def test_unknown_name_fails_closed_to_the_production_provider(self):
-        assert resolve_reasoner_name("not-a-provider") == "openrouter"
+        assert resolve_reasoner_name("not-a-provider") == "groq"
         # Fail-closed means: the production provider (which refuses to run
         # without a key) — never a deterministic/guessing fallback.
-        assert isinstance(build_reasoner("not-a-provider"), OpenRouterReasoner)
-        assert resolve_reasoner_name("") == "openrouter"
+        assert isinstance(build_reasoner("not-a-provider"), GroqReasoner)
+        assert resolve_reasoner_name("") == "groq"
 
     def test_resolved_name_reports_what_will_actually_run(self):
         assert resolve_reasoner_name(" MOCK ") == "mock"

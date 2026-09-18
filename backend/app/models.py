@@ -11,7 +11,7 @@ Security Contract:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Dict, List, Optional
+from typing import Annotated, ClassVar, Dict, List, Optional
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -244,8 +244,8 @@ class BrowserActionModel(StrictModel):
         BrowserActionType.navigate: frozenset({"url"}),
     }
 
-    MIN_SCROLL_AMOUNT: int = 1
-    MAX_SCROLL_AMOUNT: int = 5000
+    MIN_SCROLL_AMOUNT: ClassVar[int] = 1
+    MAX_SCROLL_AMOUNT: ClassVar[int] = 5000
 
     @model_validator(mode="after")
     def validate_action_shape(self) -> "BrowserActionModel":

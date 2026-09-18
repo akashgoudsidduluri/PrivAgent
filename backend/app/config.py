@@ -17,9 +17,18 @@ from __future__ import annotations
 import os
 
 try:  # python-dotenv is optional; the env var can also be set directly.
-    from dotenv import load_dotenv
+    from dotenv import find_dotenv, load_dotenv
 
-    load_dotenv()
+    # Search current directory, parent directories, and explicit repo root
+    _dotenv_path = find_dotenv(usecwd=True)
+    if not _dotenv_path:
+        _repo_root_env = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+        if os.path.exists(_repo_root_env):
+            _dotenv_path = _repo_root_env
+    if _dotenv_path:
+        load_dotenv(_dotenv_path)
+    else:
+        load_dotenv()
 except ImportError:  # pragma: no cover - dotenv is a soft dependency
     pass
 

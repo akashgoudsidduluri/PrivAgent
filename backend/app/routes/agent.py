@@ -56,6 +56,7 @@ def _build_reasoner():
 @router.post(
     "/action",
     response_model=AgentActionResponse,
+    response_model_exclude_none=True,
     status_code=status.HTTP_200_OK,
     summary="Agent Reasoning — one structured browser action from sanitized context",
 )
@@ -175,7 +176,7 @@ async def generate_action(
     try:
         action = BrowserActionModel.model_validate(result.raw_action)
     except PydanticValidationError as err:
-        logger.warning("Reasoner produced schema-invalid action: %s", err.error_count())
+        logger.warning("Reasoner produced schema-invalid action: %s | raw: %s | error: %s", err.error_count(), result.raw_action, err)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={

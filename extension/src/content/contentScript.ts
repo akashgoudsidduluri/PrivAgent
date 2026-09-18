@@ -506,6 +506,7 @@ function executeBrowserAction(action: import('../agent/actionTypes').BrowserActi
       case 'scroll': {
         const top = action.direction === 'down' ? action.amount : -action.amount;
         window.scrollBy({ top, behavior: 'smooth' });
+        window.scrollBy(0, top);
         return { success: true, action, message: `Scrolled ${action.direction} by ${action.amount}px.` };
       }
 

@@ -179,7 +179,7 @@ export function validateAction(
   // 4. Reject unknown properties for this action type
   const allowedKeys = ALLOWED_ACTION_KEYS[typedAction];
   for (const key of Object.keys(actionObj)) {
-    if (!allowedKeys.has(key)) {
+    if (actionObj[key] !== null && actionObj[key] !== undefined && !allowedKeys.has(key)) {
       return fail(`Unknown field '${key}' is not allowed on '${typedAction}' action.`);
     }
   }
