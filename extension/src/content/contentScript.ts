@@ -243,12 +243,21 @@ window.addEventListener('message', (event) => {
 
   // Immediate handshake ping response with deep health check
   if (type === 'PING_EXTENSION') {
+    const pingId = event.data.pingId || `cs-${Date.now()}`;
+    console.info('[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT', {
+      pingId,
+      origin: window.location.origin,
+      validContext: isExtensionContextValid(),
+    });
+
     const valid = isExtensionContextValid();
     if (!valid) {
+      console.warn('[CS][PING] CONTEXT_INVALID — sending disconnected PONG', { pingId });
       window.postMessage(
         {
           source: 'privagent-extension',
           type: 'PONG_EXTENSION',
+          pingId,
           version: '0.4.0',
           connected: false,
           details: {
@@ -256,7 +265,7 @@ window.addEventListener('message', (event) => {
             serviceWorker: 'UNREACHABLE',
             targetTab: 'NOT_FOUND',
             contentScript: 'NOT_INJECTED',
-            urlOrigin: 'http://localhost:4173',
+            urlOrigin: '',
             pageReady: false,
           },
           error: 'Extension context invalidated. Please refresh this tab.',
@@ -266,72 +275,121 @@ window.addEventListener('message', (event) => {
       return;
     }
 
-    try {
-      chrome.runtime.sendMessage(
-        {
-          type: 'PRIVAGENT_DASHBOARD_PING',
-          targetUrl: event.data.targetUrl || 'http://localhost:4173',
-        },
-        (res) => {
-          if (chrome.runtime.lastError || !res) {
-            window.postMessage(
-              {
-                source: 'privagent-extension',
-                type: 'PONG_EXTENSION',
-                version: '0.4.0',
-                connected: false,
-                details: {
-                  extension: 'CONNECTED',
-                  serviceWorker: 'UNREACHABLE',
-                  targetTab: 'NOT_FOUND',
-                  contentScript: 'NOT_INJECTED',
-                  urlOrigin: 'http://localhost:4173',
-                  pageReady: false,
-                },
-                error: chrome.runtime.lastError?.message || 'Background service worker unreachable.',
-              },
-              '*'
-            );
-          } else {
-            window.postMessage(
-              {
-                source: 'privagent-extension',
-                type: 'PONG_EXTENSION',
-                version: '0.4.0',
-                connected: Boolean(res.connected),
-                details: {
-                  extension: 'CONNECTED',
-                  serviceWorker: res.serviceWorker || 'REACHABLE',
-                  targetTab: res.targetTab || 'NOT_FOUND',
-                  contentScript: res.contentScript || 'NOT_INJECTED',
-                  urlOrigin: res.urlOrigin || 'http://localhost:4173',
-                  pageReady: Boolean(res.pageReady),
-                },
-              },
-              '*'
-            );
-          }
-        }
-      );
-    } catch {
-      window.postMessage(
-        {
-          source: 'privagent-extension',
-          type: 'PONG_EXTENSION',
-          version: '0.4.0',
-          connected: true,
-          details: {
-            extension: 'CONNECTED',
-            serviceWorker: 'REACHABLE',
-            targetTab: 'NOT_FOUND',
-            contentScript: 'NOT_INJECTED',
-            urlOrigin: 'http://localhost:4173',
-            pageReady: false,
+    // Helper: send PRIVAGENT_DASHBOARD_PING to service worker with one retry
+    // if the SW was asleep (MV3 workers spin down after ~30s of inactivity).
+    // "Receiving end does not exist" is the normal Chrome error when the SW
+    // is still waking up; retrying once after 600ms is sufficient.
+    const sendPingToSW = (attempt: number) => {
+      console.info('[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER', { pingId, attempt });
+      try {
+        chrome.runtime.sendMessage(
+          {
+            type: 'PRIVAGENT_DASHBOARD_PING',
+            pingId,
+            targetUrl: event.data.targetUrl || 'http://localhost:4173',
           },
-        },
-        '*'
-      );
-    }
+          (res) => {
+            const err = chrome.runtime.lastError;
+
+            // MV3 SW wake-up race: SW was idle, Chrome returned this error
+            // synchronously before the SW had a chance to register listeners.
+            // Retry once after a brief delay to let the SW wake up.
+            if (err && attempt === 1) {
+              const msg = err.message || '';
+              const isSwAsleep =
+                msg.includes('Receiving end does not exist') ||
+                msg.includes('Could not establish connection');
+              if (isSwAsleep) {
+                console.info('[CS][PING] SW_WAKEUP_RETRY', { pingId, error: msg });
+                setTimeout(() => sendPingToSW(2), 600);
+                return;
+              }
+            }
+
+            if (err || !res) {
+              console.warn('[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW unreachable', {
+                pingId,
+                attempt,
+                error: err?.message,
+              });
+              console.info('[CS][PING] PONG_EXTENSION_SENT (sw-unreachable)', { pingId });
+              window.postMessage(
+                {
+                  source: 'privagent-extension',
+                  type: 'PONG_EXTENSION',
+                  pingId,
+                  version: '0.4.0',
+                  connected: false,
+                  details: {
+                    extension: 'CONNECTED',
+                    serviceWorker: 'UNREACHABLE',
+                    targetTab: 'NOT_FOUND',
+                    contentScript: 'NOT_INJECTED',
+                    urlOrigin: '',
+                    pageReady: false,
+                  },
+                  error: err?.message || 'Background service worker unreachable.',
+                },
+                '*'
+              );
+            } else {
+              console.info('[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive', {
+                pingId,
+                attempt,
+                targetTab: res.targetTab,
+                urlOrigin: res.urlOrigin,
+              });
+              console.info('[CS][PING] PONG_EXTENSION_SENT', {
+                pingId,
+                connected: Boolean(res.connected),
+                targetTab: res.targetTab,
+              });
+              window.postMessage(
+                {
+                  source: 'privagent-extension',
+                  type: 'PONG_EXTENSION',
+                  pingId,
+                  version: '0.4.0',
+                  connected: Boolean(res.connected),
+                  details: {
+                    extension: 'CONNECTED',
+                    serviceWorker: res.serviceWorker || 'REACHABLE',
+                    targetTab: res.targetTab || 'NOT_FOUND',
+                    contentScript: res.contentScript || 'NOT_INJECTED',
+                    urlOrigin: res.urlOrigin || '',
+                    pageReady: Boolean(res.pageReady),
+                  },
+                },
+                '*'
+              );
+            }
+          }
+        );
+      } catch (ex) {
+        console.warn('[CS][PING] SEND_MESSAGE_THREW', { pingId, attempt, error: String(ex) });
+        // Extension context gone — send a best-effort PONG from what we know
+        window.postMessage(
+          {
+            source: 'privagent-extension',
+            type: 'PONG_EXTENSION',
+            pingId,
+            version: '0.4.0',
+            connected: true,
+            details: {
+              extension: 'CONNECTED',
+              serviceWorker: 'REACHABLE',
+              targetTab: 'NOT_FOUND',
+              contentScript: 'NOT_INJECTED',
+              urlOrigin: '',
+              pageReady: false,
+            },
+          },
+          '*'
+        );
+      }
+    };
+
+    sendPingToSW(1);
     return;
   }
 

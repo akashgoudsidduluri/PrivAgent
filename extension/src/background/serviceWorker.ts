@@ -168,52 +168,78 @@ async function ensureTargetTabReady(tabId: number): Promise<boolean> {
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // ── Handshake from dashboard or popup ──────────────────────────────────────
+  //
+  // IMPORTANT: This handler must NOT call ensureTargetTabReady() — that
+  // operation takes up to 3700ms and would block the heartbeat response beyond
+  // any reasonable timeout. Extension connectivity (SW alive?) must be
+  // completely decoupled from target-tab preparation (done at task start only).
   if (message.type === 'PRIVAGENT_DASHBOARD_PING') {
+    const pingId = message.pingId || `sw-${Date.now()}`;
+    console.info('[SW][PING] SERVICE_WORKER_RECEIVED_PING', { pingId });
+
     (async () => {
       try {
+        console.info('[SW][PING] TARGET_RESOLUTION_STARTED', { pingId });
         const allTabs = await chrome.tabs.query({});
-        const candidate = allTabs.find((t) => {
-          const uStr = t.url || (t as any).pendingUrl;
-          if (!uStr) return false;
-          try {
-            const u = new URL(uStr);
-            return u.port === '4173' || (u.hostname === 'localhost' && u.port === '4173');
-          } catch {
-            return false;
-          }
-        }) || allTabs.find((t) => isEligibleWebTab(t));
+
+        // Fast tab discovery — no scripting, no injection, no waiting.
+        // Priority: explicit 4173 first, then any eligible web tab.
+        const candidate =
+          allTabs.find((t) => {
+            const uStr = t.url || (t as any).pendingUrl;
+            if (!uStr) return false;
+            try {
+              const u = new URL(uStr);
+              return u.port === '4173';
+            } catch {
+              return false;
+            }
+          }) || allTabs.find((t) => isEligibleWebTab(t));
 
         const targetFound = Boolean(candidate?.id);
-        let csResponsive = false;
         const candidateUrl = candidate?.url || (candidate as any)?.pendingUrl;
-        const urlOrigin = candidateUrl ? new URL(candidateUrl).origin : 'http://localhost:4173';
+        const urlOrigin = candidateUrl
+          ? (() => { try { return new URL(candidateUrl).origin; } catch { return candidateUrl; } })()
+          : '';
 
-        if (candidate?.id) {
-          csResponsive = await ensureTargetTabReady(candidate.id);
-        }
+        console.info('[SW][PING] TARGET_RESOLUTION_RESULT', {
+          pingId,
+          targetFound,
+          tabId: candidate?.id,
+          urlOrigin,
+        });
 
-        sendResponse({
+        // Do NOT probe the target tab here — that is ensureTargetTabReady's job
+        // and it is called at task-start time, not during a heartbeat ping.
+        // Report targetTab as FOUND if a tab exists; content script readiness
+        // is probed lazily at task time.
+        const resp = {
+          pingId,
           connected: true,
           version: '0.4.0',
           serviceWorker: 'REACHABLE',
-          targetTab: targetFound ? (csResponsive ? 'FOUND' : 'NOT_READY') : 'NOT_FOUND',
-          contentScript: csResponsive ? 'REACHABLE' : 'NOT_INJECTED',
+          targetTab: targetFound ? 'FOUND' : 'NOT_FOUND',
+          contentScript: targetFound ? 'REACHABLE' : 'NOT_INJECTED',
           urlOrigin,
-          pageReady: csResponsive,
-        });
+          pageReady: targetFound, // optimistic — verified at task start
+        };
+        console.info('[SW][PING] SERVICE_WORKER_RESPONSE_SENT', { pingId, targetFound });
+        sendResponse(resp);
       } catch (e) {
+        console.warn('[SW][PING] TARGET_RESOLUTION_FAILED', { pingId, error: String(e) });
         sendResponse({
+          pingId,
           connected: true,
           version: '0.4.0',
           serviceWorker: 'REACHABLE',
           targetTab: 'NOT_FOUND',
           contentScript: 'NOT_INJECTED',
-          urlOrigin: 'http://localhost:4173',
+          urlOrigin: '',
           pageReady: false,
         });
       }
     })();
-    return true; // Keep message channel open for async response
+    return true; // keep message channel open for async response
   }
 
   // ── Badge update from content script scan ────────────────────────────────

@@ -101,6 +101,8 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   async checkExtensionConnected(): Promise<boolean> {
     return new Promise((resolve) => {
       let resolved = false;
+      const pingId = `adapter-${Date.now()}`;
+      console.info('[Adapter][PING] PING_SENT', { pingId, origin: window.location.origin });
 
       const handler = (event: MessageEvent) => {
         if (
@@ -119,6 +121,15 @@ export class ExtensionAgentAdapter implements AgentAdapter {
           const tabStatus = details.targetTab || 'NOT_FOUND';
           const csStatus = details.contentScript || 'NOT_INJECTED';
 
+          console.info('[Adapter][PING] PONG_EXTENSION_RECEIVED', {
+            pingId: event.data.pingId || pingId,
+            connected: isConnected,
+            extension: extStatus,
+            serviceWorker: swStatus,
+            targetTab: tabStatus,
+            contentScript: csStatus,
+          });
+          console.info('[Adapter][PING] ADAPTER_RESOLVED', { pingId, connected: isConnected });
           console.info(`Extension: ${extStatus}`);
           console.info(`Service Worker: ${swStatus}`);
           console.info(`Target Tab: ${tabStatus}`);
@@ -136,31 +147,40 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         {
           source: 'privagent-dashboard',
           type: 'PING_EXTENSION',
+          pingId,
           targetUrl: 'http://localhost:4173',
         },
         '*'
       );
 
-      // 5000ms timeout: the full handshake chain can take up to ~3700ms
-      // (content script → service worker → ensureTargetTabReady 1500ms → inject 200ms → verify 2000ms).
-      // A 1000ms timeout was causing false DISCONNECTED reports even when the extension was working.
+      // 3000ms is now sufficient:
+      // - SW now responds immediately (no ensureTargetTabReady in PING path)
+      // - Worst case is: CS receives ping (5ms) + SW wakeup retry (600ms) +
+      //   chrome.tabs.query (~50ms) + PONG back (~10ms) = ~665ms total.
+      // - 3000ms gives 4x headroom for slow machines / SW cold-start.
       setTimeout(() => {
         if (!resolved) {
           window.removeEventListener('message', handler);
-          // Don't immediately mark as disconnected — keep last known state
-          // and only update if we've never successfully connected.
+          console.warn('[Adapter][PING] PING_TIMEOUT', {
+            pingId,
+            afterMs: 3000,
+            lastKnownConnected: this.extensionConnected,
+          });
+          // Keep last known connected state instead of immediately flipping to false.
+          // This prevents transient timeouts from showing DISCONNECTED when extension
+          // is merely slow to respond on a specific ping cycle.
           if (!this.extensionConnected) {
-            console.info('Extension: DISCONNECTED (ping timeout after 5s)');
+            console.info('Extension: DISCONNECTED (ping timeout after 3s)');
             console.info('Service Worker: UNREACHABLE');
             console.info('Target Tab: NOT_FOUND');
             console.info('Content Script: NOT_INJECTED');
             this.notifyExtensionStatus(false);
           } else {
-            console.info('Extension: ping timeout — keeping last connected state');
+            console.info('[Adapter][PING] timeout — keeping last connected state');
           }
           resolve(this.extensionConnected);
         }
-      }, 5000);
+      }, 3000);
     });
   }
 
