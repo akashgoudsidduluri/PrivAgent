@@ -76,7 +76,11 @@ async def health() -> HealthResponse:
     model_name = (
         config.GROQ_MODEL
         if primary == "groq"
-        else (config.OPENROUTER_MODEL if primary == "openrouter" else "mock-deterministic")
+        else (
+            config.NVIDIA_MODEL
+            if primary == "nvidia"
+            else (config.OPENROUTER_MODEL if primary == "openrouter" else "mock-deterministic")
+        )
     )
 
     return HealthResponse(

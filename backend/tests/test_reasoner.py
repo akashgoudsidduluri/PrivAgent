@@ -26,6 +26,7 @@ from app.reasoner import (
     REASONER_REGISTRY,
     GroqReasoner,
     MockReasoner,
+    NvidiaReasoner,
     OpenRouterReasoner,
     ReasonerProvider,
     ReasoningError,
@@ -417,10 +418,14 @@ class TestReasonerRegistry:
     reasoning model is configuration, not an architecture change."""
 
     def test_registry_declares_production_and_offline_providers(self):
+        assert "groq" in REASONER_REGISTRY         # production default: Groq
+        assert "nvidia" in REASONER_REGISTRY       # production: NVIDIA NIM GLM-5.3
         assert "openrouter" in REASONER_REGISTRY   # production: Gemma via OpenRouter
         assert "mock" in REASONER_REGISTRY         # offline tests / CI
 
     def test_build_reasoner_selects_by_name(self):
+        assert isinstance(build_reasoner("groq"), GroqReasoner)
+        assert isinstance(build_reasoner("nvidia"), NvidiaReasoner)
         assert isinstance(build_reasoner("openrouter"), OpenRouterReasoner)
         assert isinstance(build_reasoner("mock"), MockReasoner)
 
@@ -726,5 +731,276 @@ class TestGroqReasoner:
         assert data["telemetry"]["fallback_used"] is True
         assert data["telemetry"]["provider"] == "openrouter"
         assert len(calls) == 2  # 1 Groq, 1 OpenRouter
+
+
+class TestNvidiaReasoner:
+    """NVIDIA NIM GLM-5.3 Reasoner Tests."""
+
+    def test_nvidia_reasoner_satisfies_contract(self):
+        nvidia = NvidiaReasoner(api_key="nvapi-test", model="z-ai/glm-5.3")
+        assert isinstance(nvidia, ReasonerProvider)
+        assert nvidia.configured is True
+        assert build_reasoner("nvidia") is not build_reasoner("nvidia")
+        assert resolve_reasoner_name("nvidia") == "nvidia"
+
+    def test_nvidia_provider_construction_and_defaults(self):
+        nvidia = NvidiaReasoner(api_key="nvapi-test")
+        assert nvidia.model == "z-ai/glm-5.3"
+        assert nvidia.base_url == "https://integrate.api.nvidia.com/v1"
+        assert nvidia.endpoint_url == "https://integrate.api.nvidia.com/v1/chat/completions"
+        assert nvidia.configured is True
+
+    def test_missing_nvidia_api_key_fails_closed(self):
+        nvidia = NvidiaReasoner(api_key="")
+        assert nvidia.configured is False
+        with pytest.raises(ReasoningError) as exc_info:
+            nvidia.request_action(
+                task="Search for cats",
+                url="https://google.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "not_configured"
+        assert exc_info.value.retryable is False
+
+    def test_correct_nvidia_base_url_and_exact_model(self, monkeypatch):
+        nvidia = NvidiaReasoner(api_key="nvapi-test", model="z-ai/glm-5.3")
+        captured = {}
+
+        def fake_post(url, **kwargs):
+            captured["url"] = url
+            captured["json"] = kwargs.get("json")
+            captured["headers"] = kwargs.get("headers")
+            return httpx.Response(
+                200,
+                json={
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": json.dumps({
+                                    "action": "type",
+                                    "target": "search_input",
+                                    "text": "cats",
+                                    "reason": "Typing query cats into search box",
+                                }),
+                            }
+                        }
+                    ]
+                },
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        result = nvidia.request_action(
+            task="Search for cats",
+            url="https://google.com",
+            detections=[
+                {
+                    "id": "search_input",
+                    "type": "text_field",
+                    "confidence": 0.95,
+                    "bbox": {"x": 10, "y": 10, "width": 200, "height": 30},
+                    "length": 0,
+                    "source": "dom_label",
+                    "selector": "input[name='q']",
+                }
+            ],
+        )
+        assert captured["url"] == "https://integrate.api.nvidia.com/v1/chat/completions"
+        assert captured["json"]["model"] == "z-ai/glm-5.3"
+        assert captured["headers"]["Authorization"] == "Bearer nvapi-test"
+        assert result.raw_action["action"] == "type"
+        assert result.raw_action["target"] == "search_input"
+        assert result.raw_action["text"] == "cats"
+        assert result.model == "z-ai/glm-5.3"
+
+    def test_sanitized_context_passed_to_nvidia(self, monkeypatch):
+        nvidia = NvidiaReasoner(api_key="nvapi-test")
+        captured = {}
+
+        def fake_post(url, **kwargs):
+            captured["json"] = kwargs.get("json")
+            return httpx.Response(
+                200,
+                json={
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": '{"action":"click","target":"elem_target","reason":"Click target"}',
+                            }
+                        }
+                    ]
+                },
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        nvidia.request_action(
+            task="Click target",
+            url="https://bank.example.com",
+            detections=[
+                {
+                    "id": "elem_target",
+                    "type": "account_number",
+                    "confidence": 0.9,
+                    "bbox": {"x": 10, "y": 20, "width": 50, "height": 20},
+                    "length": 10,
+                    "source": "dom_label",
+                    "selector": "#target",
+                }
+            ],
+        )
+
+        user_content = captured["json"]["messages"][1]["content"]
+        assert "elem_target" in user_content
+        assert "account_number" in user_content
+        assert "https://bank.example.com" in user_content
+
+    def test_raw_sensitive_values_blocked_from_nvidia_payload(self, monkeypatch):
+        nvidia = NvidiaReasoner(api_key="nvapi-test")
+        captured = {}
+
+        def fake_post(url, **kwargs):
+            captured["json"] = kwargs.get("json")
+            return httpx.Response(
+                200,
+                json={
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": '{"action":"click","target":"elem_safe","reason":"Clicking safe element"}',
+                            }
+                        }
+                    ]
+                },
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+
+        RAW_SECRETS = [
+            "SecretPassword123!",
+            "4111-2222-3333-4444",
+            "987654321098",
+            "user@bank.com",
+            "999",
+            "852147",
+        ]
+
+        sanitized_detections = [
+            {
+                "id": "elem_safe",
+                "type": "account_number",
+                "confidence": 0.99,
+                "bbox": {"x": 50, "y": 100, "width": 120, "height": 30},
+                "length": 12,
+                "source": "dom_label",
+                "selector": "#acc",
+            }
+        ]
+
+        nvidia.request_action(
+            task="View account balance",
+            url="https://bank.example.com",
+            detections=sanitized_detections,
+        )
+
+        payload_str = json.dumps(captured["json"])
+        for secret in RAW_SECRETS:
+            assert secret not in payload_str, f"CRITICAL LEAK: '{secret}' found in NVIDIA payload!"
+
+    def test_nvidia_malformed_model_response_fails_closed(self, monkeypatch):
+        nvidia = NvidiaReasoner(api_key="nvapi-test")
+
+        def fake_post(url, **kwargs):
+            return httpx.Response(
+                200,
+                json={"choices": [{"message": {"role": "assistant", "content": "not-a-valid-json"}}]},
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        with pytest.raises(ReasoningError) as exc_info:
+            nvidia.request_action(
+                task="Click login",
+                url="https://bank.example.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "invalid_json"
+
+    def test_nvidia_429_rate_limit_fails_closed(self, monkeypatch):
+        nvidia = NvidiaReasoner(api_key="nvapi-test")
+
+        def fake_post(url, **kwargs):
+            return httpx.Response(
+                429,
+                headers={"retry-after": "30"},
+                json={"error": {"message": "NVIDIA NIM rate limit exceeded"}},
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        with pytest.raises(ReasoningError) as exc_info:
+            nvidia.request_action(
+                task="Click login",
+                url="https://bank.example.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "rate_limit"
+        assert exc_info.value.retryable is False
+        assert "Retry-After: 30s" in str(exc_info.value)
+
+    def test_nvidia_auth_failure_fails_closed(self, monkeypatch):
+        nvidia = NvidiaReasoner(api_key="nvapi-invalid")
+
+        def fake_post(url, **kwargs):
+            return httpx.Response(
+                401,
+                json={"error": {"message": "Invalid API key"}},
+            )
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        with pytest.raises(ReasoningError) as exc_info:
+            nvidia.request_action(
+                task="Click login",
+                url="https://bank.example.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "auth"
+        assert exc_info.value.retryable is False
+
+    def test_nvidia_timeout_is_retryable(self, monkeypatch):
+        nvidia = NvidiaReasoner(api_key="nvapi-test")
+
+        def fake_post(url, **kwargs):
+            raise httpx.TimeoutException("NVIDIA connection timed out")
+
+        monkeypatch.setattr(reasoner_mod.httpx, "post", fake_post)
+        with pytest.raises(ReasoningError) as exc_info:
+            nvidia.request_action(
+                task="Click login",
+                url="https://bank.example.com",
+                detections=SAMPLE_DETECTIONS,
+            )
+        assert exc_info.value.kind == "timeout"
+        assert exc_info.value.retryable is True
+
+    def test_health_endpoint_reports_nvidia_available(self, monkeypatch):
+        from app.main import app
+        from fastapi.testclient import TestClient
+
+        client = TestClient(app)
+        monkeypatch.setattr("app.config.REASONER_PROVIDER", "nvidia")
+        monkeypatch.setattr("app.config.REASONER_MODE", "nvidia")
+        monkeypatch.setattr("app.config.NVIDIA_API_KEY", "nvapi-test-key")
+        monkeypatch.setattr("app.config.NVIDIA_MODEL", "z-ai/glm-5.3")
+
+        resp = client.get("/api/v1/health")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["reasoner"] == "nvidia"
+        assert data["model"] == "z-ai/glm-5.3"
+        assert data["reasoner_status"] == "AVAILABLE"
+        assert data["privacy_firewall"] == "ACTIVE"
+        assert data["sensitive_data_sent"] == 0
+        assert "nvapi-test-key" not in json.dumps(data)
+
 
 

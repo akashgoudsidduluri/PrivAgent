@@ -116,7 +116,7 @@ async def generate_action(
         fallback_name = (config.REASONER_FALLBACK_PROVIDER or "").strip().lower()
         can_fallback = (
             fallback_name
-            and fallback_name in ["groq", "openrouter", "mock"]
+            and fallback_name in ["groq", "nvidia", "openrouter", "mock"]
             and fallback_name != primary_name
             and err.kind in ("rate_limit", "timeout", "network", "not_configured", "http_server_error")
         )

@@ -19,6 +19,8 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   private messageBridgeHandler: ((event: MessageEvent) => void) | null = null;
   private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
 
+  private pingInterval: ReturnType<typeof setInterval> | null = null;
+
   constructor() {
     this.state = {
       status: 'IDLE',
@@ -42,11 +44,18 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     };
 
     this.setupMessageBridge();
-    this.checkExtensionConnected();
+    // Initial ping with slight delay so the page and content script settle
+    setTimeout(() => this.checkExtensionConnected(), 200);
+    // Periodic re-check every 15s so status recovers if extension loads late
+    this.pingInterval = setInterval(() => this.checkExtensionConnected(), 15000);
   }
 
   destroy(): void {
     this.clearWatchdog();
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
     if (this.messageBridgeHandler) {
       window.removeEventListener('message', this.messageBridgeHandler);
       this.messageBridgeHandler = null;
@@ -99,6 +108,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
           event.data.source === 'privagent-extension' &&
           event.data.type === 'PONG_EXTENSION'
         ) {
+          if (resolved) return; // guard against duplicate PONG replies
           resolved = true;
           const isConnected = Boolean(event.data.connected !== false && !event.data.error);
           this.extensionConnected = isConnected;
@@ -131,18 +141,26 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         '*'
       );
 
+      // 5000ms timeout: the full handshake chain can take up to ~3700ms
+      // (content script → service worker → ensureTargetTabReady 1500ms → inject 200ms → verify 2000ms).
+      // A 1000ms timeout was causing false DISCONNECTED reports even when the extension was working.
       setTimeout(() => {
         if (!resolved) {
           window.removeEventListener('message', handler);
-          this.extensionConnected = false;
-          console.info('Extension: DISCONNECTED');
-          console.info('Service Worker: UNREACHABLE');
-          console.info('Target Tab: NOT_FOUND');
-          console.info('Content Script: NOT_INJECTED');
-          this.notifyExtensionStatus(false);
-          resolve(false);
+          // Don't immediately mark as disconnected — keep last known state
+          // and only update if we've never successfully connected.
+          if (!this.extensionConnected) {
+            console.info('Extension: DISCONNECTED (ping timeout after 5s)');
+            console.info('Service Worker: UNREACHABLE');
+            console.info('Target Tab: NOT_FOUND');
+            console.info('Content Script: NOT_INJECTED');
+            this.notifyExtensionStatus(false);
+          } else {
+            console.info('Extension: ping timeout — keeping last connected state');
+          }
+          resolve(this.extensionConnected);
         }
-      }, 1000);
+      }, 5000);
     });
   }
 

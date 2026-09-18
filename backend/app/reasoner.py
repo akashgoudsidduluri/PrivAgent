@@ -723,6 +723,186 @@ class GroqReasoner:
         return ""
 
 
+class NvidiaReasoner:
+    """One-shot structured reasoning via NVIDIA NIM API (GLM-5.3). M6 calls this once per step.
+
+    Security Invariants:
+      1. NVIDIA_API_KEY is backend-only and never logged, echoed, or transmitted to client.
+      2. Receives ONLY sanitized metadata (no raw DOM/OCR, no screenshots, no sensitive values).
+      3. Structured output via OpenAI-compatible chat completions endpoint.
+      4. Fails closed on any error or missing target.
+      5. HTTP 429 rate limits are classified as non-retryable and fail closed.
+    """
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        timeout_seconds: Optional[float] = None,
+    ) -> None:
+        self.api_key = (api_key if api_key is not None else config.NVIDIA_API_KEY).strip()
+        self.model = (model or config.NVIDIA_MODEL).strip()
+        self.base_url = (base_url or config.NVIDIA_BASE_URL).strip()
+        if self.base_url.rstrip("/").endswith("/chat/completions"):
+            self.endpoint_url = self.base_url.rstrip("/")
+        else:
+            self.endpoint_url = f"{self.base_url.rstrip('/')}/chat/completions"
+        self.timeout_seconds = float(timeout_seconds or config.NVIDIA_TIMEOUT_SECONDS)
+
+    @property
+    def configured(self) -> bool:
+        return bool(self.api_key)
+
+    def request_action(
+        self,
+        task: str,
+        url: str,
+        detections: List[Dict[str, Any]],
+        history: Optional[List[Dict[str, Any]]] = None,
+        viewport: Optional[Dict[str, Any]] = None,
+        screenshot_dimensions: Optional[Dict[str, Any]] = None,
+        steps_used: int = 0,
+        max_steps: int = 10,
+    ) -> ReasoningResult:
+        """Perform ONE reasoning request to NVIDIA NIM. Raises ReasoningError on failure."""
+        if not self.configured:
+            raise ReasoningError(
+                "NVIDIA API key is not configured on the backend (NVIDIA_API_KEY).",
+                kind="not_configured",
+            )
+
+        user_prompt = _build_user_prompt(
+            task=task,
+            url=url,
+            viewport=viewport,
+            screenshot_dimensions=screenshot_dimensions,
+            detections=detections,
+            history=history or [],
+            steps_used=steps_used,
+            max_steps=max_steps,
+        )
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.1,
+            "max_tokens": 1024,
+            "response_format": {"type": "json_object"},
+        }
+
+        started = time.perf_counter()
+        try:
+            response = httpx.post(
+                self.endpoint_url,
+                json=payload,
+                headers=headers,
+                timeout=self.timeout_seconds,
+            )
+        except httpx.TimeoutException as err:
+            raise ReasoningError(
+                f"NVIDIA request timed out after {self.timeout_seconds:.0f}s.",
+                retryable=True,
+                kind="timeout",
+            ) from err
+        except httpx.HTTPError as err:
+            raise ReasoningError(
+                f"NVIDIA network error: {type(err).__name__}",
+                retryable=True,
+                kind="network",
+            ) from err
+
+        # If model rejects response_format {"type": "json_object"}, fallback to prompt-directed format
+        if response.status_code == 400 and any(
+            term in response.text.lower()
+            for term in ("response_format", "json_object", "schema", "not supported")
+        ):
+            logger.info(
+                "NVIDIA model '%s' rejected response_format; retrying prompt-directed format.",
+                self.model,
+            )
+            payload_plain = dict(payload)
+            payload_plain.pop("response_format", None)
+            try:
+                response = httpx.post(
+                    self.endpoint_url,
+                    json=payload_plain,
+                    headers=headers,
+                    timeout=self.timeout_seconds,
+                )
+            except Exception as e:
+                logger.warning("NVIDIA prompt-directed retry failed: %s", e)
+
+        if response.status_code == 200:
+            content = self._extract_content(response.json())
+            raw_action = parse_model_action(content)
+            return ReasoningResult(
+                raw_action=raw_action,
+                model=self.model,
+                latency_ms=(time.perf_counter() - started) * 1000.0,
+                attempts=1,
+            )
+
+        # HTTP error handling
+        detail = self._safe_error_detail(response)
+        if response.status_code in (401, 403):
+            raise ReasoningError(
+                f"NVIDIA authentication failed (HTTP {response.status_code}). "
+                "Check NVIDIA_API_KEY on the backend.",
+                kind="auth",
+                retryable=False,
+            )
+        if response.status_code == 429:
+            retry_after = response.headers.get("retry-after")
+            retry_info = f" (Retry-After: {retry_after}s)" if retry_after else ""
+            raise ReasoningError(
+                f"NVIDIA rate limit reached (HTTP 429){retry_info}. {detail}",
+                retryable=False,
+                kind="rate_limit",
+            )
+        if 400 <= response.status_code < 500:
+            raise ReasoningError(
+                f"NVIDIA rejected the request (HTTP {response.status_code}). {detail}",
+                kind="http_client_error",
+                retryable=False,
+            )
+        raise ReasoningError(
+            f"NVIDIA server error (HTTP {response.status_code}). {detail}",
+            retryable=True,
+            kind="http_server_error",
+        )
+
+    @staticmethod
+    def _extract_content(data: Dict[str, Any]) -> str:
+        choices = data.get("choices")
+        if not isinstance(choices, list) or not choices:
+            raise ReasoningError("NVIDIA response contained no choices.", kind="unexpected_format")
+        message = choices[0].get("message") if isinstance(choices[0], dict) else None
+        content = message.get("content") if isinstance(message, dict) else None
+        if not isinstance(content, str):
+            raise ReasoningError("NVIDIA response missing message content.", kind="unexpected_format")
+        return content
+
+    @staticmethod
+    def _safe_error_detail(response: httpx.Response) -> str:
+        try:
+            body = response.json()
+            msg = body.get("error", {}).get("message", "") if isinstance(body, dict) else ""
+            if isinstance(msg, str) and msg:
+                return msg[:200]
+        except Exception:
+            pass
+        return ""
+
+
 class MockReasoner:
     """Deterministic offline reasoner for tests and CI.
 
@@ -807,6 +987,7 @@ class MockReasoner:
 
 REASONER_REGISTRY: Dict[str, Callable[[], ReasonerProvider]] = {
     "groq": GroqReasoner,               # Real reasoning via Groq (server-side key)
+    "nvidia": NvidiaReasoner,           # Real GLM-5.3 via NVIDIA NIM (server-side key)
     "openrouter": OpenRouterReasoner,   # Real Gemma via OpenRouter (server-side key)
     "mock": MockReasoner,               # Offline/deterministic: tests, CI, demos without a key
 }

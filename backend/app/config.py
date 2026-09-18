@@ -76,6 +76,14 @@ OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "google/gemma-4-31b-it:fre
 # LLM request budget (seconds). Kept generous: free-tier models can be slow.
 OPENROUTER_TIMEOUT_SECONDS = float(os.environ.get("OPENROUTER_TIMEOUT_SECONDS", "45"))
 
+# ── NVIDIA NIM settings (GLM-5.3) ─────────────────────────────────────────────
+NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "").strip()
+NVIDIA_BASE_URL = os.environ.get(
+    "NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"
+).strip()
+NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "z-ai/glm-5.3").strip()
+NVIDIA_TIMEOUT_SECONDS = float(os.environ.get("NVIDIA_TIMEOUT_SECONDS", "45"))
+
 # One provider call per M6 reasoning step (M6 owns all loop/bounds semantics).
 MAX_LLM_ATTEMPTS = int(os.environ.get("PRIVAGENT_MAX_LLM_ATTEMPTS", "1"))
 
@@ -85,6 +93,8 @@ def has_api_key(provider: str | None = None) -> bool:
     target = (provider or REASONER_PROVIDER).lower()
     if target == "groq":
         return bool(GROQ_API_KEY)
+    if target == "nvidia":
+        return bool(NVIDIA_API_KEY)
     if target == "openrouter":
         return bool(OPENROUTER_API_KEY)
     if target == "mock":

@@ -72,7 +72,7 @@ export class ProvidersView {
           <span class="badge badge-green">VERIFIED</span>
         </div>
         <div class="ide-panel-body" style="font-size: 11px; color: var(--text-secondary);">
-          <p><strong>GROQ_API_KEY</strong> and <strong>OPENROUTER_API_KEY</strong> reside solely within the local backend environment. They are never exposed to browser context, Chrome extension storage, window globals, DOM, or telemetry. Rate limits (HTTP 429) fail closed without repetitive quota-burning retry loops.</p>
+          <p><strong>GROQ_API_KEY</strong>, <strong>NVIDIA_API_KEY</strong>, and <strong>OPENROUTER_API_KEY</strong> reside solely within the local backend environment. They are never exposed to browser context, Chrome extension storage, window globals, DOM, or telemetry. Rate limits (HTTP 429) fail closed without repetitive quota-burning retry loops.</p>
         </div>
       </div>
     `;
@@ -88,20 +88,28 @@ export class ProvidersView {
 
     const primary = (this.health?.reasoner || 'groq').toLowerCase();
     const isGroq = primary === 'groq';
+    const isNvidia = primary === 'nvidia';
 
     if (activeName) activeName.textContent = primary.toUpperCase();
-    if (activeModel) activeModel.textContent = this.health?.model || (isGroq ? 'openai/gpt-oss-20b' : 'google/gemma-4-31b-it:free');
+    if (activeModel) activeModel.textContent = this.health?.model || (isGroq ? 'openai/gpt-oss-20b' : (isNvidia ? 'z-ai/glm-5.3' : 'google/gemma-4-31b-it:free'));
     if (fallbackName) fallbackName.textContent = (this.health?.fallback_reasoner || 'openrouter').toUpperCase();
 
     if (!tbody) return;
 
     tbody.innerHTML = `
       <tr>
-        <td><strong class="mono">Groq (Primary)</strong></td>
+        <td><strong class="mono">Groq</strong></td>
         <td class="mono">openai/gpt-oss-20b</td>
-        <td><span class="badge badge-green">CONFIGURED</span></td>
+        <td><span class="badge ${isGroq && this.health?.reasoner_configured ? 'badge-green' : 'badge-green'}">CONFIGURED</span></td>
         <td style="text-align: center;"><span class="badge badge-green">AVAILABLE</span></td>
-        <td style="text-align: center;"><span class="badge badge-blue">PRIMARY</span></td>
+        <td style="text-align: center;"><span class="badge ${isGroq ? 'badge-blue' : 'badge-gray'}">${isGroq ? 'PRIMARY' : 'STANDBY'}</span></td>
+      </tr>
+      <tr>
+        <td><strong class="mono">NVIDIA NIM</strong></td>
+        <td class="mono">z-ai/glm-5.3</td>
+        <td><span class="badge ${isNvidia && this.health?.reasoner_configured ? 'badge-green' : 'badge-gray'}">${isNvidia && this.health?.reasoner_configured ? 'CONFIGURED' : 'BACKEND KEY'}</span></td>
+        <td style="text-align: center;"><span class="badge ${isNvidia && this.health?.reasoner_status === 'AVAILABLE' ? 'badge-green' : 'badge-green'}">AVAILABLE</span></td>
+        <td style="text-align: center;"><span class="badge ${isNvidia ? 'badge-blue' : 'badge-gray'}">${isNvidia ? 'PRIMARY' : 'STANDBY'}</span></td>
       </tr>
       <tr>
         <td><strong class="mono">OpenRouter</strong></td>
