@@ -794,8 +794,18 @@ class NvidiaReasoner:
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ],
+            # Inference optimisations for single-action browser reasoning:
+            #   reasoning_effort=low  — disables deep multi-step thinking;
+            #                          sufficient for structured BrowserAction output.
+            #   clear_thinking=true   — suppresses verbose <think> sections in
+            #                          the completion, reducing output latency.
+            #   max_tokens=256        — one JSON BrowserAction needs <150 tokens;
+            #                          256 is a conservative ceiling that prevents
+            #                          verbose completions while allowing all schemas.
+            "reasoning_effort": "low",
+            "clear_thinking": True,
             "temperature": 0.1,
-            "max_tokens": 1024,
+            "max_tokens": 256,
             "response_format": {"type": "json_object"},
         }
 
@@ -843,11 +853,16 @@ class NvidiaReasoner:
 
         if response.status_code == 200:
             content = self._extract_content(response.json())
+            latency = (time.perf_counter() - started) * 1000.0
+            logger.info(
+                "NVIDIA GLM-5.3 responded in %.0fms (reasoning_effort=low, clear_thinking=True).",
+                latency,
+            )
             raw_action = parse_model_action(content)
             return ReasoningResult(
                 raw_action=raw_action,
                 model=self.model,
-                latency_ms=(time.perf_counter() - started) * 1000.0,
+                latency_ms=latency,
                 attempts=1,
             )
 

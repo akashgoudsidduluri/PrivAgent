@@ -82,7 +82,7 @@ NVIDIA_BASE_URL = os.environ.get(
     "NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"
 ).strip()
 NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "z-ai/glm-5.3").strip()
-NVIDIA_TIMEOUT_SECONDS = float(os.environ.get("NVIDIA_TIMEOUT_SECONDS", "45"))
+NVIDIA_TIMEOUT_SECONDS = float(os.environ.get("NVIDIA_TIMEOUT_SECONDS", "30"))
 
 # One provider call per M6 reasoning step (M6 owns all loop/bounds semantics).
 MAX_LLM_ATTEMPTS = int(os.environ.get("PRIVAGENT_MAX_LLM_ATTEMPTS", "1"))

@@ -398,8 +398,26 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   async startTask(task: string): Promise<void> {
     console.info('[Adapter] START_TASK received', { taskLength: task.length });
     console.info('[AgentTrace] dashboard START_TASK received', { taskLength: task.length });
+
+    // Genuine concurrent-task protection: reject if a task is actively being
+    // dispatched (isStartingTask) OR if the agent loop is running AND the
+    // watchdog is still ticking (meaning we have a live task in the SW).
+    // If the watchdog has already fired (watchdogTimer===null) and state is
+    // still RUNNING, the TASK_PROGRESS relay from the SW was dropped — allow
+    // a fresh start by resetting the stale RUNNING state.
+    const isLikelyStaleRunning =
+      this.state.status === 'RUNNING' &&
+      !this.isStartingTask &&
+      this.watchdogTimer === null;
+
+    if (isLikelyStaleRunning) {
+      console.warn('[AgentTrace] stale RUNNING state detected (watchdog fired, relay lost) — resetting for fresh task');
+      this.state = { ...this.state, status: 'FAILED', reason: 'Previous task relay was lost; starting fresh.' };
+      this.notify();
+    }
+
     if (this.state.status === 'RUNNING' || this.isStartingTask) {
-      console.warn('[AgentTrace] dashboard startTask rejected: task already running or starting');
+      console.warn('[AgentTrace] dashboard startTask rejected: task already running or starting (genuine concurrent guard)');
       return;
     }
 
