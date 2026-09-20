@@ -109,6 +109,7 @@ export function createSanitizedExport(report: PrivacyScanReport): Readonly<Priva
     bbox: [d.bbox[0], d.bbox[1], d.bbox[2], d.bbox[3]],
     length: d.length,
     source: d.source,
+    ...(d.label ? { label: d.label } : {}),
   }));
 
   const sanitizedReport: PrivacyScanReport = {
