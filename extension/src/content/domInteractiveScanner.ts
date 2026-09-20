@@ -12,7 +12,7 @@
  *  4. Deterministic IDs: Preserves real DOM IDs where available for accurate M5 grounding.
  */
 
-import { DetectionResult, DetectionEntityType } from '../privacy/types';
+import { DetectionResult, DetectionEntityType, SemanticGroupMetadata } from '../privacy/types';
 
 export interface InteractiveElement {
   id: string;
@@ -28,6 +28,10 @@ export interface PageUnderstanding {
   title: string;
   heading: string;
   interactiveElements: DetectionResult[];
+  semanticGroups?: SemanticGroupMetadata[];
+  activeModal?: { selector: string; label: string } | null;
+  isLargeDom?: boolean;
+  totalDomElements?: number;
 }
 
 const SENSITIVE_LABEL_KEYWORDS = [
@@ -44,28 +48,35 @@ function isSensitiveText(text: string): boolean {
   return SENSITIVE_LABEL_KEYWORDS.some(kw => lower.includes(kw));
 }
 
+function safeEscapeCss(val: string): string {
+  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+    return CSS.escape(val);
+  }
+  return val.replace(/([ #;?%&,.+*~':"!^$[\]()=>|/@])/g, '\\$1');
+}
+
 /**
  * Builds a unique CSS selector for an interactive DOM element.
  */
 function getInteractiveSelector(el: HTMLElement): string {
   if (el.id) {
-    return `#${CSS.escape(el.id)}`;
+    return `#${safeEscapeCss(el.id)}`;
   }
 
   const tag = el.tagName.toLowerCase();
   const name = el.getAttribute('name');
   if (name) {
-    return `${tag}[name="${CSS.escape(name)}"]`;
+    return `${tag}[name="${safeEscapeCss(name)}"]`;
   }
 
   const role = el.getAttribute('role');
   if (role) {
-    return `${tag}[role="${CSS.escape(role)}"]`;
+    return `${tag}[role="${safeEscapeCss(role)}"]`;
   }
 
   const ariaLabel = el.getAttribute('aria-label');
   if (ariaLabel) {
-    return `${tag}[aria-label="${CSS.escape(ariaLabel.slice(0, 30))}"]`;
+    return `${tag}[aria-label="${safeEscapeCss(ariaLabel.slice(0, 30))}"]`;
   }
 
   const className = (el.className || '')
@@ -108,7 +119,7 @@ function getAccessibleLabel(el: HTMLElement): string {
 
   // 4. Check associated label
   if (el.id) {
-    const label = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+    const label = document.querySelector(`label[for="${safeEscapeCss(el.id)}"]`);
     if (label && label.textContent && label.textContent.trim()) {
       return sanitizeLabel(label.textContent.trim());
     }
@@ -158,59 +169,308 @@ function getBoundingBox(el: HTMLElement): [number, number, number, number] {
 }
 
 /**
- * Determines if an element is visible and interactive.
+ * Determines if an element is visible, non-hidden, and interactive (not disabled).
  */
-function isElementVisible(el: HTMLElement): boolean {
+export function isElementVisible(el: HTMLElement): boolean {
   if (!el.isConnected) return false;
+
+  // Reject disabled controls
+  if (el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true') {
+    return false;
+  }
+
   const style = window.getComputedStyle(el);
-  if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+  if (
+    style.display === 'none' ||
+    style.visibility === 'hidden' ||
+    style.opacity === '0' ||
+    style.pointerEvents === 'none'
+  ) {
     return false;
   }
   const rect = el.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) {
+    return true;
+  }
   return rect.width > 2 && rect.height > 2;
 }
 
 /**
- * Infer the high-level semantic page type from URL and DOM contents.
+ * Detects if an active modal dialog, popup overlay, or cookie banner is present on the page.
  */
-export function inferPageType(doc: Document = document): string {
-  const url = (typeof window !== 'undefined' ? window.location.href : '').toLowerCase();
-  
-  // 1. URL patterns
-  if (url.includes('login') || url.includes('signin') || url.includes('auth')) return 'login';
-  if (url.includes('results') || url.includes('search?') || url.includes('/search')) return 'results';
-  if (url.includes('checkout') || url.includes('cart') || url.includes('pay')) return 'checkout';
-  if (url.includes('bank') || url.includes('account') || url.includes('portal')) return 'banking';
+export function detectActiveModal(doc: Document = document): { selector: string; label: string; element: HTMLElement } | null {
+  const modalQuery = [
+    'dialog[open]',
+    '[aria-modal="true"]',
+    '[role="dialog"]:not([style*="display: none"])',
+    '.modal.show',
+    '.modal.active',
+    '#cookie-consent:not([style*="display: none"])',
+    '#cookie-banner:not([style*="display: none"])',
+    '.cookie-banner:not([style*="display: none"])',
+    '.popup-overlay:not([style*="display: none"])'
+  ].join(', ');
 
-  // 2. DOM-based heuristics
-  if (doc.querySelector('input[type="password"]')) {
+  const candidates = Array.from(doc.querySelectorAll<HTMLElement>(modalQuery));
+  for (const m of candidates) {
+    if (m.isConnected) {
+      const style = window.getComputedStyle(m);
+      if (style.display !== 'none' && style.visibility !== 'hidden') {
+        const titleEl = m.querySelector('h1, h2, h3, .modal-title, .title');
+        const label = (titleEl?.textContent || m.getAttribute('aria-label') || 'Active Modal Dialog').trim().slice(0, 50);
+        const selector = m.id ? `#${safeEscapeCss(m.id)}` : m.tagName.toLowerCase();
+        return { selector, label, element: m };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Safely inspects same-origin iframes without violating browser Same-Origin Policy (SOP).
+ */
+export function scanSameOriginIframes(doc: Document = document): Array<{ el: HTMLElement; framePrefix: string }> {
+  const iframes = Array.from(doc.querySelectorAll<HTMLIFrameElement>('iframe'));
+  const results: Array<{ el: HTMLElement; framePrefix: string }> = [];
+
+  iframes.forEach((iframe, idx) => {
+    try {
+      const frameDoc = iframe.contentDocument;
+      if (frameDoc) {
+        const query = 'button, a[href], input:not([type="hidden"]), textarea, select';
+        const els = Array.from(frameDoc.querySelectorAll<HTMLElement>(query));
+        for (const el of els) {
+          results.push({ el, framePrefix: `frame${idx}` });
+        }
+      }
+    } catch {
+      // Cross-origin iframe: protected by browser security policy (SOP).
+      // We do not weaken or bypass browser sandbox boundaries.
+    }
+  });
+
+  return results;
+}
+
+/**
+ * Generic page classifier that categorizes the current page into semantic types:
+ * 'search' | 'login' | 'article' | 'listing' | 'form' | 'checkout' | 'settings' | 'dashboard' | 'error' | 'unknown'
+ * (plus backwards-compatible 'landing', 'results', 'product_detail', 'banking').
+ */
+export function classifyPage(doc: Document = document): string {
+  const url = (typeof window !== 'undefined' ? window.location.href : '').toLowerCase();
+  const title = (doc.title || '').toLowerCase();
+  const h1 = (doc.querySelector('h1')?.textContent || '').toLowerCase();
+
+  // 1. Error pages
+  if (
+    url.includes('chrome-error://') ||
+    title.includes('404') || title.includes('not found') ||
+    h1.includes('404') || h1.includes('not found') ||
+    doc.querySelector('.error-page, [data-error]')
+  ) {
+    return 'error';
+  }
+
+  // 2. Login / Authentication
+  if (
+    url.includes('login') || url.includes('signin') || url.includes('auth') ||
+    title.includes('sign in') || title.includes('log in') ||
+    doc.querySelector('input[type="password"], form[action*="login" i], form[action*="signin" i], #btn-signin, #btn-login')
+  ) {
     return 'login';
   }
-  if (doc.querySelector('input[name="q"], input[type="search"], #search-query, input[placeholder*="search" i]')) {
+
+  // 3. Checkout / Payment
+  if (
+    url.includes('checkout') || url.includes('cart') || url.includes('payment') || url.includes('pay') ||
+    title.includes('checkout') || title.includes('shopping cart') ||
+    doc.querySelector('form[action*="checkout" i], [data-checkout], #btn-checkout, #btn-pay')
+  ) {
+    return 'checkout';
+  }
+
+  // 4. Product / Search Results / Listing
+  if (
+    url.includes('results') || url.includes('search?') ||
+    doc.querySelector('.product-card, .search-result, [data-component="result"], [data-product], .listing-item')
+  ) {
+    return 'listing';
+  }
+
+  // 5. Search portal
+  if (
+    url.includes('search') ||
+    doc.querySelector('input[type="search"], input[name="q"], [role="search"], form[action*="search" i]')
+  ) {
     return 'search';
   }
-  if (doc.querySelector('.product-card, .search-result, [data-component="result"]')) {
-    return 'results';
+
+  // 6. Settings / Account / Profile
+  if (
+    url.includes('settings') || url.includes('profile') || url.includes('account') ||
+    title.includes('settings') || title.includes('my account') ||
+    doc.querySelector('.settings-panel, [data-settings], form[action*="settings" i]')
+  ) {
+    return 'settings';
   }
+
+  // 7. Dashboard / Table data
+  if (
+    url.includes('dashboard') || url.includes('analytics') || url.includes('admin') ||
+    doc.querySelector('[role="grid"], .dashboard, table tbody tr')
+  ) {
+    return 'dashboard';
+  }
+
+  // 8. Article / Content
+  if (
+    url.includes('article') || url.includes('blog') || url.includes('post') || url.includes('news') ||
+    doc.querySelector('article, [role="article"], .article-body, .post-content')
+  ) {
+    return 'article';
+  }
+
+  // 9. Generic Form
+  if (doc.querySelectorAll('form input:not([type="hidden"])').length >= 3) {
+    return 'form';
+  }
+
+  // 10. Landing page
   if (url.endsWith('/') || url.includes('index.html') || url.includes('home')) {
     return 'landing';
   }
 
-  return 'general';
+  return 'unknown';
+}
+
+export function inferPageType(doc: Document = document): string {
+  return classifyPage(doc);
 }
 
 /**
- * Scans the live document for all visible interactive controls,
- * producing standardized DetectionResult objects with clean accessible labels.
+ * Extracts safe structural element relationships (search region, auth region, cards, forms)
+ * without ever exposing raw input values or sensitive credentials.
+ */
+function extractSemanticGroups(doc: Document, interactive: DetectionResult[]): SemanticGroupMetadata[] {
+  const groups: SemanticGroupMetadata[] = [];
+  const elementIdMap = new Map<HTMLElement, string>();
+
+  for (const det of interactive) {
+    try {
+      const el = doc.querySelector<HTMLElement>(det.selector);
+      if (el) elementIdMap.set(el, det.id);
+    } catch {
+      // ignore invalid selector syntax
+    }
+  }
+
+  // Group 1: Search Regions
+  const searchForms = Array.from(
+    doc.querySelectorAll<HTMLElement>('form[role="search"], form.search-form, [role="search"], form[action*="search" i]')
+  );
+  let searchIdx = 0;
+  for (const sf of searchForms) {
+    searchIdx++;
+    const containedIds: string[] = [];
+    for (const [el, id] of elementIdMap.entries()) {
+      if (sf.contains(el)) containedIds.push(id);
+    }
+    if (containedIds.length > 0) {
+      groups.push({
+        id: `group-search-${searchIdx}`,
+        type: 'search_region',
+        label: 'Search Region',
+        elementIds: containedIds,
+      });
+    }
+  }
+
+  // Group 2: Auth Regions
+  const authForms = Array.from(
+    doc.querySelectorAll<HTMLElement>('form:has(input[type="password"]), form.login-form, form.auth-form')
+  );
+  let authIdx = 0;
+  for (const af of authForms) {
+    authIdx++;
+    const containedIds: string[] = [];
+    for (const [el, id] of elementIdMap.entries()) {
+      if (af.contains(el)) containedIds.push(id);
+    }
+    if (containedIds.length > 0) {
+      groups.push({
+        id: `group-auth-${authIdx}`,
+        type: 'auth_region',
+        label: 'Authentication Region',
+        elementIds: containedIds,
+      });
+    }
+  }
+
+  // Group 3: Card Listings (products, results, articles)
+  const cards = Array.from(
+    doc.querySelectorAll<HTMLElement>('.product-card, .search-result, [data-component="result"], article.card, .listing-card')
+  );
+  let cardIdx = 0;
+  for (const card of cards.slice(0, 10)) {
+    cardIdx++;
+    const containedIds: string[] = [];
+    for (const [el, id] of elementIdMap.entries()) {
+      if (card.contains(el)) containedIds.push(id);
+    }
+    const cardTitle = (card.querySelector('.product-title, h2, h3, .title')?.textContent || '').trim().slice(0, 40);
+    if (containedIds.length > 0) {
+      groups.push({
+        id: `group-card-${cardIdx}`,
+        type: 'card_listing',
+        label: cardTitle ? `Card: ${cardTitle}` : 'Listing Item Card',
+        elementIds: containedIds,
+      });
+    }
+  }
+
+  // Group 4: Generic Form Sections
+  const generalForms = Array.from(doc.querySelectorAll<HTMLElement>('form:not([role="search"])')).filter(
+    (f) => !authForms.includes(f) && !searchForms.includes(f)
+  );
+  let formIdx = 0;
+  for (const gf of generalForms.slice(0, 5)) {
+    formIdx++;
+    const containedIds: string[] = [];
+    for (const [el, id] of elementIdMap.entries()) {
+      if (gf.contains(el)) containedIds.push(id);
+    }
+    if (containedIds.length > 0) {
+      groups.push({
+        id: `group-form-${formIdx}`,
+        type: 'form_section',
+        label: 'Form Section',
+        elementIds: containedIds,
+      });
+    }
+  }
+
+  return groups;
+}
+
+/**
+ * Scans the live document for visible interactive controls,
+ * producing standardized DetectionResult objects with clean accessible labels and semantic groups.
+ * Includes modal prioritization, same-origin iframe elements, duplicate label disambiguation, and large DOM bounds.
  */
 export function scanInteractiveElements(root: Document | HTMLElement = document): PageUnderstanding {
   const targetDoc = root instanceof Document ? root : root.ownerDocument || document;
-  const pageType = inferPageType(targetDoc);
+  const pageType = classifyPage(targetDoc);
   const title = targetDoc.title || '';
   const mainHeading = (targetDoc.querySelector('h1')?.textContent || '').trim().slice(0, 80);
 
+  const totalDomElements = targetDoc.querySelectorAll('*').length;
+  const isLargeDom = totalDomElements > 1500;
+  const activeModal = detectActiveModal(targetDoc);
+
   const interactiveElements: DetectionResult[] = [];
   const seenSelectors = new Set<string>();
+  const seenLabels = new Map<string, number>();
 
   // Selector targeting common interactive elements
   const query = [
@@ -226,7 +486,22 @@ export function scanInteractiveElements(root: Document | HTMLElement = document)
     'a.button'
   ].join(', ');
 
-  const rawElements = Array.from(targetDoc.querySelectorAll<HTMLElement>(query));
+  const allDocElements = Array.from(targetDoc.querySelectorAll<HTMLElement>(query));
+
+  // Also include elements from accessible same-origin iframes
+  const iframeResults = scanSameOriginIframes(targetDoc);
+  const iframeElements = iframeResults.map(r => r.el);
+
+  // If a modal is active, prioritize its interactive elements first
+  let rawElements: HTMLElement[] = [];
+  if (activeModal && activeModal.element) {
+    const modalElements = allDocElements.filter(el => activeModal.element.contains(el));
+    const outsideElements = allDocElements.filter(el => !activeModal.element.contains(el));
+    rawElements = [...modalElements, ...outsideElements, ...iframeElements];
+  } else {
+    rawElements = [...allDocElements, ...iframeElements];
+  }
+
   let counter = 0;
 
   for (const el of rawElements) {
@@ -266,7 +541,23 @@ export function scanInteractiveElements(root: Document | HTMLElement = document)
 
     counter++;
     const id = el.id || `inter-${entityType}-${counter}`;
-    const label = getAccessibleLabel(el);
+    let rawLabel = getAccessibleLabel(el);
+
+    // Disambiguate duplicate labels (e.g. repeated "Add to Cart" or "Select")
+    if (rawLabel) {
+      const currentCount = seenLabels.get(rawLabel) || 0;
+      seenLabels.set(rawLabel, currentCount + 1);
+      if (currentCount > 0) {
+        const card = el.closest('.product-card, .search-result, article, tr, li, [data-component]');
+        const cardTitle = card
+          ? (card.querySelector('.product-title, h2, h3, h4, .title, strong')?.textContent || '').trim().slice(0, 30)
+          : '';
+        rawLabel = cardTitle && !rawLabel.toLowerCase().includes(cardTitle.toLowerCase())
+          ? `${rawLabel} (${cardTitle})`
+          : `${rawLabel} (#${currentCount + 1})`;
+      }
+    }
+
     const bbox = getBoundingBox(el);
 
     interactiveElements.push({
@@ -275,14 +566,34 @@ export function scanInteractiveElements(root: Document | HTMLElement = document)
       confidence: 0.95,
       selector,
       bbox,
-      length: label.length,
+      length: rawLabel.length,
       source: 'dom_attribute',
-      label: label || undefined,
+      label: rawLabel || undefined,
     });
 
-    // Limit to 35 most prominent interactive controls to keep context bounded
-    if (interactiveElements.length >= 35) {
+    // Bound context to 40 most prominent interactive controls to prevent prompt explosion
+    if (interactiveElements.length >= 40) {
       break;
+    }
+  }
+
+  const semanticGroups = extractSemanticGroups(targetDoc, interactiveElements);
+
+  if (activeModal && activeModal.element) {
+    const modalElementIds = interactiveElements
+      .filter((ie) => {
+        const matchingNode = targetDoc.querySelector(ie.selector);
+        return matchingNode && activeModal.element.contains(matchingNode);
+      })
+      .map((ie) => ie.id);
+
+    if (modalElementIds.length > 0) {
+      semanticGroups.unshift({
+        id: 'group-modal-interruption',
+        type: 'modal_overlay',
+        label: `Active Dialog: ${activeModal.label}`,
+        elementIds: modalElementIds,
+      });
     }
   }
 
@@ -291,5 +602,9 @@ export function scanInteractiveElements(root: Document | HTMLElement = document)
     title,
     heading: mainHeading,
     interactiveElements,
+    semanticGroups,
+    activeModal: activeModal ? { selector: activeModal.selector, label: activeModal.label } : null,
+    isLargeDom,
+    totalDomElements,
   };
 }

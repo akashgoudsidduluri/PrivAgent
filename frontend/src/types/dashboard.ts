@@ -6,21 +6,18 @@
  * Strictly metadata, category identifiers, and sanitized action descriptions.
  */
 
+import type { EvaluationRun, EvaluationCase, SIHEvaluationMatrix, BenchmarkMetric } from '../../../extension/src/telemetry/evaluationEngine';
+export type { EvaluationRun, EvaluationCase, SIHEvaluationMatrix, BenchmarkMetric };
+
 export type DashboardTab =
   | 'overview'
   | 'agent'
   | 'browser'
   | 'privacy'
-  | 'detection'
-  | 'redaction'
-  | 'activity'
-  | 'receipts'
-  | 'telemetry'
   | 'evaluation'
-  | 'providers'
-  | 'settings'
-  | 'diagnostics';
-
+  | 'activity'
+  | 'evidence'
+  | 'system';
 
 export type UIAgentStatus =
   | 'IDLE'
@@ -37,7 +34,8 @@ export type PipelineStage =
   | 'CONTEXT_MINIMIZATION'
   | 'LLM_REASONING'
   | 'ACTION_VALIDATION'
-  | 'BROWSER_EXECUTION';
+  | 'BROWSER_EXECUTION'
+  | 'VERIFICATION';
 
 export interface SensitiveCategorySummary {
   password: number;
@@ -174,5 +172,3 @@ export interface BackendHealthState {
   privacy_firewall: string;
   sensitive_data_sent: number;
 }
-
-

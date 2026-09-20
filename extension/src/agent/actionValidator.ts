@@ -28,6 +28,7 @@ import {
 } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { isValidLuhn } from '../privacy/patterns';
+import { groundProposedTarget } from './groundingEngine';
 
 // Sensitive keys that must not appear as properties anywhere in the action object
 const FORBIDDEN_SENSITIVE_KEYS = new Set([
@@ -219,18 +220,29 @@ function validateClick(
   }
 
   const targetId = target.trim();
-  const detection = findDetection(targetId, context);
+  let detection = findDetection(targetId, context);
+  let resolvedTargetId = targetId;
+
   if (!detection) {
-    return fail(`Target element '${targetId}' does not exist in the current sanitized context.`);
+    const grounding = groundProposedTarget(
+      { action: 'click', target: targetId },
+      context.detections
+    );
+    if (grounding.grounded && grounding.targetId) {
+      resolvedTargetId = grounding.targetId;
+      detection = findDetection(resolvedTargetId, context);
+    } else {
+      return fail(`Target element '${targetId}' does not exist in the current sanitized context.`);
+    }
   }
 
   const action: BrowserAction = {
     action: 'click',
-    target: targetId,
+    target: resolvedTargetId,
     reason: typeof obj.reason === 'string' ? obj.reason : undefined,
   };
 
-  return pass(`Validated click action on known element '${targetId}'.`, action);
+  return pass(`Validated click action on known element '${resolvedTargetId}'.`, action);
 }
 
 function validateScroll(obj: Record<string, unknown>): ActionValidationResult {
@@ -285,19 +297,30 @@ function validateType(
   }
 
   const targetId = target.trim();
-  const detection = findDetection(targetId, context);
+  let detection = findDetection(targetId, context);
+  let resolvedTargetId = targetId;
+
   if (!detection) {
-    return fail(`Target element '${targetId}' does not exist in the current sanitized context.`);
+    const grounding = groundProposedTarget(
+      { action: 'type', target: targetId, text },
+      context.detections
+    );
+    if (grounding.grounded && grounding.targetId) {
+      resolvedTargetId = grounding.targetId;
+      detection = findDetection(resolvedTargetId, context);
+    } else {
+      return fail(`Target element '${targetId}' does not exist in the current sanitized context.`);
+    }
   }
 
   const action: BrowserAction = {
     action: 'type',
-    target: targetId,
+    target: resolvedTargetId,
     text,
     reason: typeof obj.reason === 'string' ? obj.reason : undefined,
   };
 
-  return pass(`Validated type action on known element '${targetId}'.`, action);
+  return pass(`Validated type action on known element '${resolvedTargetId}'.`, action);
 }
 
 function validateSelect(
@@ -320,19 +343,30 @@ function validateSelect(
   }
 
   const targetId = target.trim();
-  const detection = findDetection(targetId, context);
+  let detection = findDetection(targetId, context);
+  let resolvedTargetId = targetId;
+
   if (!detection) {
-    return fail(`Target element '${targetId}' does not exist in the current sanitized context.`);
+    const grounding = groundProposedTarget(
+      { action: 'select', target: targetId, option: option.trim() },
+      context.detections
+    );
+    if (grounding.grounded && grounding.targetId) {
+      resolvedTargetId = grounding.targetId;
+      detection = findDetection(resolvedTargetId, context);
+    } else {
+      return fail(`Target element '${targetId}' does not exist in the current sanitized context.`);
+    }
   }
 
   const action: BrowserAction = {
     action: 'select',
-    target: targetId,
+    target: resolvedTargetId,
     option: option.trim(),
     reason: typeof obj.reason === 'string' ? obj.reason : undefined,
   };
 
-  return pass(`Validated select action '${action.option}' on known element '${targetId}'.`, action);
+  return pass(`Validated select action '${action.option}' on known element '${resolvedTargetId}'.`, action);
 }
 
 function validateNavigate(obj: Record<string, unknown>): ActionValidationResult {

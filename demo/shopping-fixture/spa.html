@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ApexCart — Dynamic SPA & Interactive Form Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .spa-nav { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+    .spa-tab { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; text-decoration: none; color: var(--text-secondary); background: var(--bg-card); }
+    .spa-tab.active { color: var(--accent); background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); }
+    .dynamic-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .dynamic-item { padding: 0.75rem; background: var(--bg-input); border-radius: 6px; border-left: 4px solid var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" class="brand">ApexCart SPA</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="spa.html#overview" class="spa-tab active" id="tab-overview">Overview</a>
+      <a href="spa.html#inventory" class="spa-tab" id="tab-inventory">Dynamic Inventory</a>
+      <a href="spa.html#form" class="spa-tab" id="tab-form">Order Form</a>
+    </nav>
+  </header>
+
+  <main style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+    <!-- Section 1: Overview -->
+    <div id="section-overview" class="card">
+      <h2>SPA Interactive Overview</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+        Single-Page Application demonstrating dynamic client-side state transitions, live DOM mutations, and rich form interactions.
+      </p>
+      <button id="btn-switch-inventory" class="btn">Go to Dynamic Inventory</button>
+    </div>
+
+    <!-- Section 2: Dynamic Inventory (DOM Mutation) -->
+    <div id="section-inventory" class="card" style="display: none; margin-top: 1.5rem;">
+      <h2>Live Dynamic Inventory</h2>
+      <p style="color: var(--text-secondary);">Items loaded asynchronously via client-side DOM mutation:</p>
+      <div id="dynamic-container" class="dynamic-list">
+        <div class="dynamic-item" id="item-initial-1"><strong>Initial Item A</strong> — Standard Stock</div>
+      </div>
+      <div style="margin-top: 1.5rem;">
+        <button id="btn-load-more-items" class="btn">Load More Dynamic Items</button>
+      </div>
+    </div>
+
+    <!-- Section 3: Interactive Form -->
+    <div id="section-form" class="card" style="display: none; margin-top: 1.5rem;">
+      <h2>Order Delivery Form</h2>
+      <form id="order-delivery-form" onsubmit="return false;">
+        <div class="form-group">
+          <label for="input-recipient-name">Recipient Reference</label>
+          <input type="text" id="input-recipient-name" placeholder="Enter recipient reference code">
+        </div>
+        <div class="form-group">
+          <label for="select-delivery-speed">Delivery Priority</label>
+          <select id="select-delivery-speed" class="btn" style="width: 100%; text-align: left; background: var(--bg-input);">
+            <option value="standard">Standard Courier (3-5 Days)</option>
+            <option value="express">Express Priority (24 Hours)</option>
+            <option value="same_day">Same-Day Local Courier</option>
+          </select>
+        </div>
+        <div style="margin-top: 1.5rem;">
+          <button id="btn-submit-order" class="btn" style="width: 100%;">Submit Delivery Preference</button>
+        </div>
+        <div id="order-feedback" style="display: none; margin-top: 1rem; padding: 0.75rem; background: rgba(34, 197, 94, 0.15); border: 1px solid var(--success); color: var(--success); border-radius: 6px;">
+          ✓ Order preference submitted successfully!
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    function updateRoute() {
+      const hash = window.location.hash || '#overview';
+      document.getElementById('section-overview').style.display = hash === '#overview' ? 'block' : 'none';
+      document.getElementById('section-inventory').style.display = hash === '#inventory' ? 'block' : 'none';
+      document.getElementById('section-form').style.display = hash === '#form' ? 'block' : 'none';
+
+      document.querySelectorAll('.spa-tab').forEach(tab => tab.classList.remove('active'));
+      if (hash === '#inventory') document.getElementById('tab-inventory')?.classList.add('active');
+      else if (hash === '#form') document.getElementById('tab-form')?.classList.add('active');
+      else document.getElementById('tab-overview')?.classList.add('active');
+    }
+
+    window.addEventListener('hashchange', updateRoute);
+    updateRoute();
+
+    document.getElementById('btn-switch-inventory')?.addEventListener('click', () => {
+      window.location.hash = '#inventory';
+    });
+
+    let itemCount = 1;
+    document.getElementById('btn-load-more-items')?.addEventListener('click', () => {
+      const container = document.getElementById('dynamic-container');
+      for (let i = 0; i < 2; i++) {
+        itemCount++;
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.id = 'dynamic-item-' + itemCount;
+        div.innerHTML = '<strong>Dynamic Item #' + itemCount + '</strong> — Asynchronously Rendered via DOM Mutation';
+        container.appendChild(div);
+      }
+    });
+
+    document.getElementById('btn-submit-order')?.addEventListener('click', () => {
+      const feedback = document.getElementById('order-feedback');
+      if (feedback) feedback.style.display = 'block';
+    });
+  </script>
+</body>
+</html>

@@ -125,6 +125,13 @@ export function createSanitizedExport(report: PrivacyScanReport): Readonly<Priva
     detections: sanitizedDetections,
     status: 'Sanitized Context — Local Privacy Check Passed',
     redactionMode: report.redactionMode,
+    ...(report.pageType ? { pageType: report.pageType } : {}),
+    ...(report.semanticGroups ? { semanticGroups: report.semanticGroups.map(g => ({
+      id: g.id,
+      type: g.type,
+      ...(g.label ? { label: g.label } : {}),
+      elementIds: [...g.elementIds],
+    })) } : {}),
   };
 
   return Object.freeze(sanitizedReport);

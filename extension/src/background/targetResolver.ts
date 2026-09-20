@@ -230,3 +230,26 @@ export function resolveTargetWebTab(
     reason: 'Selected first eligible web tab.',
   };
 }
+
+/**
+ * Verifies whether the specified targetTabId is currently open, valid, and responsive.
+ */
+export async function verifyTargetTabAlive(
+  targetTabId: number,
+  chromeTabsApi: any = typeof chrome !== 'undefined' ? chrome?.tabs : undefined
+): Promise<{ alive: boolean; tab?: MinimalTab; reason: string }> {
+  if (!chromeTabsApi) {
+    return { alive: false, reason: 'Chrome tabs API unavailable' };
+  }
+
+  try {
+    const tab = await chromeTabsApi.get(targetTabId);
+    if (!tab) {
+      return { alive: false, reason: `Target tab ${targetTabId} not found` };
+    }
+    return { alive: true, tab, reason: `Target tab ${targetTabId} verified alive` };
+  } catch (err: any) {
+    return { alive: false, reason: `Target tab ${targetTabId} inaccessible: ${err?.message || 'closed'}` };
+  }
+}
+

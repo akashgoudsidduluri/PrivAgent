@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ApexCart — Interstitial Modal & Cookie Consent</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #0f172a; color: #f8fafc; }
+    .content-area { max-width: 700px; margin: 60px auto; }
+    .card { background: #1e293b; padding: 25px; border-radius: 8px; border: 1px solid #334155; }
+    
+    /* Cookie Banner */
+    #cookie-consent { position: fixed; bottom: 0; left: 0; right: 0; background: #0284c7; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+    #cookie-consent button { background: white; color: #0369a1; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    
+    /* Newsletter Modal */
+    .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+    .modal-box { background: #1e293b; border: 1px solid #475569; border-radius: 12px; padding: 30px; max-width: 450px; width: 90%; text-align: center; }
+    .btn-close { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <!-- Cookie Consent Banner -->
+  <div id="cookie-consent">
+    <span>We use cookies to improve your browsing experience and security.</span>
+    <div>
+      <button id="btn-accept-cookies">Accept Necessary Only</button>
+      <button id="btn-dismiss-cookies" style="margin-left: 8px; background: transparent; color: white; border: 1px solid white;">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Newsletter Modal Overlay -->
+  <div class="modal-backdrop" id="newsletter-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <h2 id="modal-title">Special 20% Discount Offer!</h2>
+      <p style="color: #94a3b8; font-size: 14px;">Subscribe to our developer bulletin to receive curated automation insights.</p>
+      <input type="text" id="modal-email-input" placeholder="name@company.com" style="width: 80%; padding: 8px; border-radius: 4px; border: 1px solid #475569; background: #0f172a; color: white; margin-bottom: 12px;">
+      <br>
+      <button id="btn-close-modal" class="btn-close">Close Offer (Continue)</button>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="card">
+      <h1 id="page-main-heading">Target Resource: Protected API Docs</h1>
+      <p>This content is the primary goal of the user.</p>
+      <button id="btn-read-documentation" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+        Access Full Specification
+      </button>
+      <div id="docs-result" style="display: none; margin-top: 15px; color: #38bdf8;">
+        ✓ Specification unlocked successfully!
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('btn-close-modal').addEventListener('click', () => {
+      document.getElementById('newsletter-modal').style.display = 'none';
+    });
+    document.getElementById('btn-dismiss-cookies').addEventListener('click', () => {
+      document.getElementById('cookie-consent').style.display = 'none';
+    });
+    document.getElementById('btn-accept-cookies').addEventListener('click', () => {
+      document.getElementById('cookie-consent').style.display = 'none';
+    });
+    document.getElementById('btn-read-documentation').addEventListener('click', () => {
+      document.getElementById('docs-result').style.display = 'block';
+    });
+  </script>
+</body>
+</html>

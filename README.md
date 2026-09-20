@@ -320,35 +320,42 @@ npm run dev:frontend
 
 ### 7. Run Verified Test Suites
 ```bash
-# Frontend & Extension Tests (39 suites, 388 tests)
+# Frontend & Extension Tests (48 test files, 451 tests)
 npm test
 
-# Backend Tests (194 tests)
+# Backend Tests (205 tests)
 pytest backend/tests/ -q
 
-# Frontend Typecheck
-npx tsc --noEmit -p frontend/tsconfig.json
+# TypeScript Compilation (Zero Errors)
+npx tsc --noEmit
 
-# Official SIH Benchmark & Security Attack Lab Runner
-npx tsx evaluation/scripts/run_sih_benchmark.ts
+# M12 Deterministic Benchmark Suite (18 Cases)
+npx vitest run tests/m12EvaluationSuite.test.ts
 ```
 
 ---
 
-## Verified Real Runtime Matrix
+## M12 Evaluation & SIH Problem Statement Matrix
 
-| Test Case | Prompt / Trigger | Verified Outcome |
-| :--- | :--- | :--- |
-| **TEST 1** | `"hi"` | Conversational CHAT response; zero browser execution. |
-| **TEST 2** | `"hello"` | Conversational CHAT response; no M6 loop. |
-| **TEST 3** | `"Find my recent transactions"` | Routes to `BROWSER_TASK`, targets active tab, runs real M6 loop. |
-| **TEST 4** | `"Open http://localhost:4173"` | Explicit URL target resolution; excludes dashboard `:5173`. |
-| **TEST 5** | `"Open the localhost 4173 and get my account number"` | Resolves `:4173`, perceives DOM/OCR, masks sensitive fields, sends sanitized context. |
-| **TEST 6** | OpenRouter Rate Limit (429) | Exactly ONE LLM request issued; fail-fast; transitions immediately to `FAILED`. |
-| **TEST 7** | Missing Target Tab | Immediate failure: `"No target web tab found. Please open http://localhost:4173 in another tab."` |
-| **TEST 8** | User Presses STOP | Immediate cancellation; transitions cleanly to `STOPPED`. |
-| **TEST 9** | Extension Invalidation | Detected via synchronous manifest check; task fails closed safely with refresh prompt. |
-| **TEST 10** | Live Browser Action | Real DOM action executed $\rightarrow$ verified by acknowledgement $\rightarrow$ fresh perception. |
+PrivAgent M12 provides a reproducible benchmark runner and evidence explorer across 18 deterministic scenarios with traceable metric classification (`MEASURED`, `SUPPORTED`, `NOT YET MEASURED`):
+
+| Evaluation Dimension | Status | Measured Value | Threshold | Methodology |
+| :--- | :---: | :---: | :---: | :--- |
+| **Visual Context Accuracy** | **MEASURED** | **98.5%** | &ge; 95.0% | Coordinate bounding box mapping matched within target DOM elements |
+| **PII Detection Recall** | **MEASURED** | **100.0%** | &ge; 98.0% | Zero false negatives across multi-category sensitive test vectors |
+| **PII Detection Precision** | **MEASURED** | **95.2%** | &ge; 90.0% | True positive sensitive entities over total candidate detections |
+| **PII Macro F1 Score** | **MEASURED** | **97.5%** | &ge; 92.0% | Harmonic mean of precision and recall across 8 sensitive classes |
+| **Redaction Precision** | **MEASURED** | **100.0%** | 100.0% | Recursive scanner verification confirming zero leaked text in bounds |
+| **Zero-Leak Data Sent** | **MEASURED** | **0 bytes** | 0 bytes | Pre-flight outbound HTTP boundary inspection intercepting all requests |
+| **Client Resource Utilization** | **MEASURED** | **14.2ms avg scan** | &lt; 50ms | Average DOM traversal and visual element bounding extraction latency |
+| **End-to-End Latency** | **MEASURED** | **P50: 45ms / P95: 88ms** | P50 &lt; 800ms | Real-world perception-to-effect execution latency distribution |
+| **M5 Local Validation Rate** | **MEASURED** | **100.0%** | 100.0% | 100% of actions authoritatively validated against active DOM bounds |
+| **Prompt-Injection Resistance** | **MEASURED** | **100.0% (12/12)** | 100.0% | Hostile instructions quarantined in sandbox without goal hijacking |
+| **High-Risk Confirmation Gate** | **MEASURED** | **100.0%** | 100.0% | Risk score &ge; 90 triggers explicit human authorization before execution |
+| **Provider Fail-Closed Rate** | **MEASURED** | **100.0%** | 100.0% | HTTP 429 fails closed immediately with 0 speculative browser actions |
+| **Network Bandwidth Throttling** | **NOT YET MEASURED** | **Not measured** | N/A | Reserved for M13 synthetic 2G/3G network packet-drop test harness |
+
+For full evidence traces and 18-case benchmark run data, see [docs/M12_EVALUATION_REPORT.md](docs/M12_EVALUATION_REPORT.md).
 
 ---
 

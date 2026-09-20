@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ApexCart — Dynamic Infinite Scroll Feed</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #0f172a; color: #f8fafc; }
+    .feed-container { max-width: 650px; margin: 0 auto; }
+    .feed-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; margin-bottom: 25px; min-height: 180px; }
+    .feed-card h3 { margin: 0 0 10px 0; color: #38bdf8; }
+    .feed-card p { color: #94a3b8; line-height: 1.5; }
+    .badge { display: inline-block; background: #0284c7; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+    #scroll-status { text-align: center; padding: 20px; color: #64748b; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="feed-container">
+    <h1>Infinite Scroll Product Feed</h1>
+    <p>Scroll down to reveal lazy-loaded inventory items dynamically.</p>
+
+    <div id="feed-items">
+      <div class="feed-card" id="feed-item-1">
+        <h3>Standard Utility Backpack</h3>
+        <span class="badge">Tier 1</span>
+        <p>Reliable daily backpack with waterproof exterior and padded laptop compartment.</p>
+      </div>
+      <div class="feed-card" id="feed-item-2">
+        <h3>Urban Commuter Sling Bag</h3>
+        <span class="badge">Tier 1</span>
+        <p>Lightweight single-strap bag optimized for rapid city transit and daily essentials.</p>
+      </div>
+      <div class="feed-card" id="feed-item-2b">
+        <h3>Minimalist Daily Satchel</h3>
+        <span class="badge">Tier 1</span>
+        <p>Compact canvas satchel for tablets and notebooks.</p>
+      </div>
+    </div>
+
+    <div id="scroll-status">Scroll down to load more items...</div>
+  </div>
+
+  <script>
+    let batch = 1;
+    let loading = false;
+
+    window.addEventListener('scroll', () => {
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.body.offsetHeight - 300;
+
+      if ((window.scrollY > 150 || scrollPosition >= threshold) && !loading && batch <= 3) {
+        loading = true;
+        document.getElementById('scroll-status').innerText = 'Loading batch ' + (batch + 1) + '...';
+
+        setTimeout(() => {
+          batch++;
+          const container = document.getElementById('feed-items');
+          if (batch === 2) {
+            container.innerHTML += `
+              <div class="feed-card" id="feed-item-3">
+                <h3>Heavy Duty Tactical Pack</h3>
+                <span class="badge">Tier 2</span>
+                <p>Reinforced dual-compartment pack built for rugged field operations.</p>
+              </div>
+              <div class="feed-card" id="feed-item-4">
+                <h3 class="product-title">Rare Emerald Backpack</h3>
+                <span class="badge" style="background: #10b981;">Target Match</span>
+                <p>Limited edition outdoor travel backpack in vibrant emerald green canvas.</p>
+                <button id="btn-select-emerald" style="background:#10b981; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">Select Emerald Bag</button>
+              </div>
+            `;
+          } else if (batch === 3) {
+            container.innerHTML += `
+              <div class="feed-card" id="feed-item-5">
+                <h3>Executive Leather Briefcase</h3>
+                <span class="badge">Tier 3</span>
+                <p>Hand-crafted top grain leather case for professional corporate carry.</p>
+              </div>
+            `;
+          }
+          loading = false;
+          document.getElementById('scroll-status').innerText = batch >= 3 ? 'All items loaded.' : 'Scroll down to load more items...';
+        }, 300);
+      }
+    });
+  </script>
+</body>
+</html>

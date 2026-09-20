@@ -21,15 +21,50 @@ import { AgentDecisionTracer } from './decisionTrace';
 export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION' | 'STOPPED';
 
 export type PageCategory =
-  | 'landing'
-  | 'login'
   | 'search'
+  | 'login'
+  | 'article'
+  | 'listing'
+  | 'form'
+  | 'checkout'
+  | 'settings'
+  | 'dashboard'
+  | 'error'
+  | 'unknown'
+  // Preserved for backwards-compatibility:
+  | 'landing'
   | 'results'
   | 'product_detail'
-  | 'banking'
-  | 'unknown';
+  | 'banking';
 
 export type ConfirmationStatus = 'NONE' | 'PENDING' | 'AUTHORIZED' | 'REJECTED';
+
+export type FailureCategory =
+  | 'TARGET_NOT_FOUND'
+  | 'STALE_TARGET'
+  | 'TARGET_MISMATCH'
+  | 'ACTION_NO_EFFECT'
+  | 'PAGE_CHANGED'
+  | 'TARGET_TAB_NOT_FOUND'
+  | 'TARGET_TAB_UNRESPONSIVE'
+  | 'NAVIGATION_TIMEOUT'
+  | 'PERCEPTION_TIMEOUT'
+  | 'PROVIDER_TIMEOUT'
+  | 'LLM_RATE_LIMIT'
+  | 'INVALID_MODEL_RESPONSE'
+  | 'CONFIRMATION_REQUIRED'
+  | 'GOAL_NOT_SATISFIED'
+  | 'RECOVERY_EXHAUSTED';
+
+export interface FailureRecord {
+  category: FailureCategory;
+  reason: string;
+  pageGeneration: number;
+  attemptedAction?: BrowserAction;
+  recoveryAttempted: boolean;
+  finalState: TaskStatus;
+  timestamp: number;
+}
 
 export interface StructuredConstraints {
   category?: string;
@@ -160,11 +195,16 @@ export interface AgentTaskState extends TaskState {
   // Findings & candidates
   currentFindings: string[];
   candidateItems: CandidateProductItem[];
+  candidateEntities?: any[];
+  semanticGroups?: any[];
 
   // Execution & failure metrics
   goalStatus: TaskStatus;
   failureCount: number;
+  recoveryCount: number;
   confirmationState: ConfirmationStatus;
+  lastFailure?: FailureRecord | null;
+  failureHistory?: FailureRecord[];
 }
 
 /**
@@ -217,9 +257,14 @@ export function createAgentTaskState(
     expectedStateChange: null,
     currentFindings: [],
     candidateItems: [],
+    candidateEntities: [],
+    semanticGroups: [],
     goalStatus: 'IN_PROGRESS',
     failureCount: 0,
+    recoveryCount: 0,
     confirmationState: 'NONE',
+    lastFailure: null,
+    failureHistory: [],
   };
 }
 

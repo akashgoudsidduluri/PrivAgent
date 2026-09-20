@@ -102,7 +102,7 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
   overlayManager.renderFloatingPanel();
 
   // 5. Scan visible interactive controls (buttons, links, search inputs)
-  const { interactiveElements } = scanInteractiveElements(document);
+  const { interactiveElements, pageType, semanticGroups } = scanInteractiveElements(document);
   const sensitiveSelectors = new Set(detections.map((d) => d.selector));
   const sensitiveIds = new Set(detections.map((d) => d.id));
   const nonOverlappingInteractive = interactiveElements.filter(
@@ -124,6 +124,8 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
     detections: allDetections,
     status: 'Sanitized Context — Local Privacy Check Passed',
     redactionMode: currentMode,
+    pageType,
+    semanticGroups,
   };
 
   const safeExport = createSanitizedExport(rawReport);

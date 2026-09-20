@@ -65,6 +65,13 @@ export interface DetectionResult {
   label?: string;
 }
 
+export interface SemanticGroupMetadata {
+  id: string;
+  type: 'search_region' | 'auth_region' | 'card_listing' | 'form_section' | 'table_region' | 'content_region' | 'modal_overlay';
+  label?: string;
+  elementIds: string[];
+}
+
 export interface PrivacyScanReport {
   timestamp: number;
   url: string;
@@ -78,6 +85,8 @@ export interface PrivacyScanReport {
   detections: DetectionResult[];
   status: 'Sanitized Context — Local Privacy Check Passed' | 'Scanning' | 'Error' | 'Excluded Site';
   redactionMode: RedactionMode;
+  pageType?: string;
+  semanticGroups?: SemanticGroupMetadata[];
 }
 
 export interface CaptureMetadata {
@@ -200,6 +209,7 @@ export interface AgentContextPayload {
   sanitized_status: 'sanitized_only';
   ocr_metrics: AgentOCRMetrics | null;
   page_type?: string;
+  semantic_groups?: SemanticGroupMetadata[];
 }
 
 /**
@@ -287,5 +297,7 @@ export function buildAgentPayload(
     sensitive_elements_detected: domScanReport.sensitiveElementsDetected,
     sanitized_status: 'sanitized_only',
     ocr_metrics,
+    ...(domScanReport.pageType ? { page_type: domScanReport.pageType } : {}),
+    ...(domScanReport.semanticGroups ? { semantic_groups: domScanReport.semanticGroups } : {}),
   };
 }

@@ -10,15 +10,10 @@ import { OverviewView } from './views/overviewView';
 import { AgentView } from './views/agentView';
 import { BrowserView } from './views/browserView';
 import { PrivacyCenterView } from './views/privacyCenterView';
-import { DetectionView } from './views/detectionView';
-import { RedactionView } from './views/redactionView';
-import { ActivityView } from './views/activityView';
-import { ReceiptsView } from './views/receiptsView';
-import { TelemetryView } from './views/telemetryView';
 import { EvaluationView } from './views/evaluationView';
-import { ProvidersView } from './views/providersView';
-import { SettingsView } from './views/settingsView';
-import { DiagnosticsView } from './views/diagnosticsView';
+import { EvidenceView } from './views/evidenceView';
+import { ActivityView } from './views/activityView';
+import { SystemView } from './views/systemView';
 
 class App {
   private adapter: AgentAdapter;
@@ -28,15 +23,10 @@ class App {
   private agentView!: AgentView;
   private browserView!: BrowserView;
   private privacyCenterView!: PrivacyCenterView;
-  private detectionView!: DetectionView;
-  private redactionView!: RedactionView;
-  private activityView!: ActivityView;
-  private receiptsView!: ReceiptsView;
-  private telemetryView!: TelemetryView;
   private evaluationView!: EvaluationView;
-  private providersView!: ProvidersView;
-  private settingsView!: SettingsView;
-  private diagnosticsView!: DiagnosticsView;
+  private evidenceView!: EvidenceView;
+  private activityView!: ActivityView;
+  private systemView!: SystemView;
 
   private healthTimer: ReturnType<typeof setTimeout> | null = null;
   private latestHealth: BackendHealthState | null = null;
@@ -48,20 +38,15 @@ class App {
   }
 
   private init(): void {
-    // Instantiate all 13 views
+    // Instantiate all 8 primary views
     this.overviewView = new OverviewView(document.getElementById('view-overview')!, this.adapter);
     this.agentView = new AgentView(document.getElementById('view-agent')!, this.adapter);
     this.browserView = new BrowserView(document.getElementById('view-browser')!, this.adapter);
     this.privacyCenterView = new PrivacyCenterView(document.getElementById('view-privacy')!);
-    this.detectionView = new DetectionView(document.getElementById('view-detection')!);
-    this.redactionView = new RedactionView(document.getElementById('view-redaction')!);
-    this.activityView = new ActivityView(document.getElementById('view-activity')!);
-    this.receiptsView = new ReceiptsView(document.getElementById('view-receipts')!);
-    this.telemetryView = new TelemetryView(document.getElementById('view-telemetry')!);
     this.evaluationView = new EvaluationView(document.getElementById('view-evaluation')!);
-    this.providersView = new ProvidersView(document.getElementById('view-providers')!);
-    this.settingsView = new SettingsView(document.getElementById('view-settings')!);
-    this.diagnosticsView = new DiagnosticsView(document.getElementById('view-diagnostics')!);
+    this.evidenceView = new EvidenceView(document.getElementById('view-evidence')!);
+    this.activityView = new ActivityView(document.getElementById('view-activity')!);
+    this.systemView = new SystemView(document.getElementById('view-system')!, this.adapter);
 
     // Setup sidebar collapse
     this.setupSidebar();
@@ -159,7 +144,7 @@ class App {
 
     if (settingsBtn) {
       settingsBtn.addEventListener('click', () => {
-        this.switchTab('settings');
+        this.switchTab('system');
       });
     }
   }
@@ -184,9 +169,6 @@ class App {
         vc.classList.remove('active');
       }
     });
-
-    // Refresh views that need active updates
-    if (tab === 'receipts') this.receiptsView.update();
   }
 
   private switchAdapter(newAdapter: AgentAdapter): void {
@@ -198,6 +180,7 @@ class App {
     this.overviewView = new OverviewView(document.getElementById('view-overview')!, this.adapter);
     this.agentView = new AgentView(document.getElementById('view-agent')!, this.adapter);
     this.browserView = new BrowserView(document.getElementById('view-browser')!, this.adapter);
+    this.systemView = new SystemView(document.getElementById('view-system')!, this.adapter);
 
     this.adapter.onStateChange((state) => this.handleStateChange(state));
     if (this.adapter.onExtensionStatusChange) {
@@ -216,11 +199,10 @@ class App {
     this.agentView.update(state);
     this.browserView.update(state);
     this.privacyCenterView.update(state);
-    this.detectionView.update(state);
-    this.redactionView.update(state);
-    this.activityView.update(state);
-    this.telemetryView.update(state);
     this.evaluationView.update(state);
+    this.evidenceView.update(state);
+    this.activityView.update(state);
+    this.systemView.update(state);
 
     // Update Bottom Status Bar
     const statusbarStage = document.getElementById('statusbar-stage');
@@ -230,7 +212,7 @@ class App {
 
     const statusbarTarget = document.getElementById('statusbar-target');
     if (statusbarTarget) {
-      statusbarTarget.textContent = 'http://localhost:4173';
+      statusbarTarget.textContent = state.currentUrl ? 'http://localhost:4174' : 'http://localhost:4174';
     }
 
     // Topbar Stop Button state
@@ -307,8 +289,7 @@ class App {
 
     this.updateTopbarHealthIndicators(this.latestHealth);
     this.overviewView.updateHealth(this.latestHealth);
-    this.providersView.updateHealth(this.latestHealth);
-    this.diagnosticsView.updateHealth(this.latestHealth);
+    this.systemView.updateHealth(this.latestHealth);
 
     // Poll health periodically
     this.scheduleHealthCheck(5000);
@@ -336,7 +317,7 @@ class App {
       const reasonerName = h.reasoner ? h.reasoner.toUpperCase() : 'GROQ';
       if (h.reasoner_status === 'AVAILABLE') {
         rDot.className = 'status-dot green';
-        rVal.textContent = reasonerName;
+        rVal.textContent = `${reasonerName} (Ready)`;
       } else if (h.reasoner_status === 'RATE_LIMITED') {
         rDot.className = 'status-dot amber';
         rVal.textContent = `${reasonerName} (429)`;
@@ -348,7 +329,7 @@ class App {
 
     if (tDot && tVal) {
       tDot.className = 'status-dot green';
-      tVal.textContent = 'localhost:4173';
+      tVal.textContent = 'localhost:4174';
     }
   }
 }

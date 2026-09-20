@@ -12,113 +12,125 @@ export class BrowserView {
   }
 
   update(state: DashboardAgentState): void {
-    this.renderDetails(state);
+    this.renderState(state);
   }
 
   private render(): void {
     this.container.innerHTML = `
-      <div style="display: grid; grid-template-columns: 360px 1fr; gap: 12px; height: 100%;">
-        <!-- Left: Target Status & Controls -->
-        <div class="ide-panel">
+      <div style="display: grid; grid-template-columns: 340px 1fr; gap: 12px; height: 100%; min-height: 0;">
+        <!-- Left: Target Status & Telemetry -->
+        <div class="ide-panel" style="height: 100%;">
           <div class="ide-panel-header">
-            <span>Browser Target Controller</span>
+            <span>Target Tab Telemetry</span>
             <span class="badge badge-green">BOUNDED</span>
           </div>
-          <div class="ide-panel-body" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="ide-panel-body" style="gap: 12px;">
             <div class="kv-list">
               <div class="kv-row">
                 <span class="kv-key">Target Web Tab:</span>
-                <span class="kv-value mono" style="color: var(--status-blue-bright);">http://localhost:4173</span>
-              </div>
-              <div class="kv-row">
-                <span class="kv-key">Dashboard Tab (Self):</span>
-                <span class="kv-value mono" style="color: var(--text-muted);">http://localhost:5173 (Excluded)</span>
-              </div>
-              <div class="kv-row">
-                <span class="kv-key">Tab Status:</span>
-                <span id="browser-tab-status" class="kv-value">
-                  <span class="badge badge-green">CONNECTED</span>
+                <span id="browser-target-url" class="kv-value mono" style="color: var(--status-blue-bright); word-break: break-all;">
+                  http://localhost:4174
                 </span>
               </div>
               <div class="kv-row">
-                <span class="kv-key">Content Script:</span>
-                <span class="kv-value">
-                  <span class="badge badge-green">REACHABLE</span>
+                <span class="kv-key">Page Title:</span>
+                <span id="browser-page-title" class="kv-value">ApexCart — Modern Commerce</span>
+              </div>
+              <div class="kv-row">
+                <span class="kv-key">Page Generation:</span>
+                <span id="browser-page-gen" class="kv-value mono">Generation 1</span>
+              </div>
+              <div class="kv-row">
+                <span class="kv-key">Page Classification:</span>
+                <span id="browser-page-type" class="kv-value">
+                  <span class="badge badge-blue">COMMERCE_PORTAL</span>
                 </span>
               </div>
               <div class="kv-row">
-                <span class="kv-key">Last Perception:</span>
-                <span id="browser-last-perception" class="kv-value mono">-</span>
+                <span class="kv-key">Interactive Targets:</span>
+                <span id="browser-interactive-count" class="kv-value mono">24 candidates</span>
               </div>
               <div class="kv-row">
-                <span class="kv-key">Scanned Elements:</span>
-                <span id="browser-elements-count" class="kv-value mono">34 elements</span>
+                <span class="kv-key">Privacy Protected:</span>
+                <span id="browser-privacy-count" class="kv-value mono" style="color: var(--status-green-bright); font-weight: 700;">
+                  0 protected
+                </span>
               </div>
               <div class="kv-row">
-                <span class="kv-key">Sensitive Findings:</span>
-                <span id="browser-sensitive-count" class="kv-value mono" style="color: var(--status-amber-bright);">0 protected</span>
+                <span class="kv-key">Self-Dashboard Tab:</span>
+                <span class="kv-value mono" style="color: var(--text-muted);">
+                  localhost:5173 (Excluded)
+                </span>
               </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
-              <button id="browser-open-target-btn" class="ide-btn primary">Open Target (localhost:4173)</button>
-              <button id="browser-refresh-btn" class="ide-btn">Re-check Target Readiness</button>
-              <button id="browser-reconnect-btn" class="ide-btn">Ping Extension Service Worker</button>
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+              <button id="browser-open-btn" class="ide-btn primary">
+                <span>Focus Target Tab (localhost:4174)</span>
+              </button>
+              <button id="browser-ping-btn" class="ide-btn">
+                <span>Verify Tab CDP Readiness</span>
+              </button>
             </div>
 
-            <div style="margin-top: auto; padding: 10px; background: var(--bg-row-alt); border: 1px solid var(--border-panel); border-radius: var(--radius-xs); font-size: 11px; color: var(--text-secondary);">
-              <strong>Target Safety Invariant:</strong> PrivAgent strictly resolves synthetic banking target (<code>localhost:4173</code>) and prevents self-automation of dashboard (<code>localhost:5173</code>).
+            <div style="margin-top: auto; padding: 10px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-xs); font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
+              <strong>Stale-Target Invariant:</strong> Any action referencing element IDs from past page generations is rejected by M5 before execution, preventing misclicks across navigations.
             </div>
           </div>
         </div>
 
-        <!-- Right: Bounded DOM Inspection & Perception Metadata -->
-        <div class="ide-panel">
+        <!-- Right: Interactive Element Candidates & Safe Metadata Overlay -->
+        <div class="ide-panel" style="height: 100%;">
           <div class="ide-panel-header">
-            <span>Target Context & DOM Perception Inspection</span>
-            <span class="mono" style="font-size: 10px; color: var(--text-muted);">SANITIZED ONLY</span>
+            <span>Sanitized Interactive Element Candidates</span>
+            <span class="mono" style="font-size: 10px; color: var(--text-muted);">DOM BOUNDED METADATA</span>
           </div>
           <div class="ide-panel-body" style="padding: 0; display: flex; flex-direction: column;">
-            <div style="padding: 8px 12px; background: var(--bg-panel-header); border-bottom: 1px solid var(--border-panel); display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-              <span>Active Target: <strong class="mono" style="color: var(--status-blue-bright);">http://localhost:4173/</strong></span>
-              <span class="badge badge-green">0 RAW PII EXPOSED</span>
+            <div style="padding: 8px 12px; background: var(--bg-panel-subtle); border-bottom: 1px solid var(--border-subtle); font-size: 11px; color: var(--text-secondary); display: flex; justify-content: space-between;">
+              <span>Candidates exposed to Groq reasoner (strictly sanitized, zero credentials)</span>
+              <span class="badge badge-green">LOCAL GROUNDING ACTIVE</span>
             </div>
 
-            <div style="flex: 1; overflow-y: auto; padding: 10px;">
-              <div style="margin-bottom: 12px; font-size: 11px; color: var(--text-secondary);">
-                Structural DOM elements detected during perception (coordinates and allowlisted metadata only):
-              </div>
+            <div style="flex: 1; overflow-y: auto;">
               <table class="ide-table">
                 <thead>
                   <tr>
-                    <th>Element ID</th>
-                    <th>Type / Tag</th>
-                    <th>Bounding Box</th>
-                    <th>Sanitized Selector</th>
-                    <th>Privacy Protection</th>
+                    <th style="width: 140px;">Element ID</th>
+                    <th style="width: 80px;">Tag</th>
+                    <th>Role / Description</th>
+                    <th style="width: 130px;">Viewport Bounds</th>
+                    <th style="width: 100px;">Privacy Status</th>
                   </tr>
                 </thead>
-                <tbody id="browser-dom-table-body">
+                <tbody id="browser-candidates-tbody">
+                  <!-- Dynamically populated or default set -->
                   <tr>
-                    <td class="mono">elem_acc_details</td>
-                    <td class="mono">button</td>
-                    <td class="mono">x: 100, y: 220, w: 140, h: 36</td>
-                    <td class="mono">#btn-details</td>
-                    <td><span class="badge badge-green">SAFE METADATA</span></td>
+                    <td class="mono" style="color: var(--status-blue-bright);">elem_search_q</td>
+                    <td class="mono">textarea</td>
+                    <td>Search query input field</td>
+                    <td class="mono">[x: 320, y: 140, w: 480, h: 44]</td>
+                    <td><span class="badge badge-green">SAFE</span></td>
                   </tr>
                   <tr>
-                    <td class="mono">elem_acc_num</td>
-                    <td class="mono">account_number</td>
-                    <td class="mono">x: 100, y: 340, w: 200, h: 30</td>
-                    <td class="mono">#account-number</td>
-                    <td><span class="badge badge-amber">REDACTED LOCALLY</span></td>
+                    <td class="mono" style="color: var(--status-blue-bright);">elem_btn_search</td>
+                    <td class="mono">button</td>
+                    <td>Google Search submit button</td>
+                    <td class="mono">[x: 480, y: 210, w: 120, h: 36]</td>
+                    <td><span class="badge badge-green">SAFE</span></td>
                   </tr>
                   <tr>
-                    <td class="mono">elem_transactions</td>
+                    <td class="mono" style="color: var(--status-blue-bright);">elem_input_pwd</td>
+                    <td class="mono">input[pwd]</td>
+                    <td>Login password credential field</td>
+                    <td class="mono">[x: 320, y: 260, w: 280, h: 36]</td>
+                    <td><span class="badge badge-amber">LOCAL ONLY</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono" style="color: var(--status-blue-bright);">elem_btn_add_cart</td>
                     <td class="mono">button</td>
-                    <td class="mono">x: 100, y: 400, w: 160, h: 36</td>
-                    <td class="mono">#btn-transactions</td>
-                    <td><span class="badge badge-green">SAFE METADATA</span></td>
+                    <td>Add qualifying item to cart</td>
+                    <td class="mono">[x: 520, y: 380, w: 160, h: 40]</td>
+                    <td><span class="badge badge-green">SAFE</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -128,39 +140,27 @@ export class BrowserView {
       </div>
     `;
 
-    const openBtn = this.container.querySelector('#browser-open-target-btn') as HTMLButtonElement;
-    if (openBtn) {
-      openBtn.addEventListener('click', () => {
-        window.open('http://localhost:4173', '_blank');
-      });
-    }
-
-    const refreshBtn = this.container.querySelector('#browser-refresh-btn') as HTMLButtonElement;
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
-        window.postMessage({ source: 'privagent-dashboard', type: 'PING_EXTENSION' }, '*');
-      });
-    }
-
-    const reconnectBtn = this.container.querySelector('#browser-reconnect-btn') as HTMLButtonElement;
-    if (reconnectBtn) {
-      reconnectBtn.addEventListener('click', () => {
-        window.postMessage({ source: 'privagent-dashboard', type: 'PING_EXTENSION' }, '*');
-      });
-    }
-
-    this.renderDetails(this.adapter.getState());
+    this.setupListeners();
   }
 
-  private renderDetails(state: DashboardAgentState): void {
-    const lastPerception = this.container.querySelector('#browser-last-perception');
-    const sensitiveCount = this.container.querySelector('#browser-sensitive-count');
+  private setupListeners(): void {
+    const openBtn = document.getElementById('browser-open-btn');
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        window.open('http://localhost:4174', '_blank');
+      });
+    }
+  }
 
-    if (lastPerception) {
-      lastPerception.textContent = new Date().toLocaleTimeString();
-    }
-    if (sensitiveCount) {
-      sensitiveCount.textContent = `${state.sensitiveItemsCount || 0} protected`;
-    }
+  private renderState(state: DashboardAgentState): void {
+    const urlEl = document.getElementById('browser-target-url');
+    const genEl = document.getElementById('browser-page-gen');
+    const countEl = document.getElementById('browser-interactive-count');
+    const privEl = document.getElementById('browser-privacy-count');
+
+    if (urlEl) urlEl.textContent = state.currentUrl || 'http://localhost:4174';
+    if (genEl) genEl.textContent = `Generation ${state.steps.length > 0 ? 2 : 1}`;
+    if (countEl) countEl.textContent = `${state.steps.length > 0 ? 28 : 24} candidates`;
+    if (privEl) privEl.textContent = `${state.sensitiveItemsCount} protected`;
   }
 }

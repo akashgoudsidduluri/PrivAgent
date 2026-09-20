@@ -1,4 +1,4 @@
-import { DashboardAgentState, SensitiveCategorySummary } from '../types/dashboard';
+import { DashboardAgentState } from '../types/dashboard';
 
 export class PrivacyCenterView {
   private container: HTMLElement;
@@ -11,131 +11,162 @@ export class PrivacyCenterView {
 
   update(state: DashboardAgentState): void {
     this.state = state;
-    this.renderTable();
+    this.renderMetrics(state);
   }
 
   private render(): void {
     this.container.innerHTML = `
-      <div class="ide-panel" style="margin-bottom: 12px;">
-        <div class="ide-panel-header">
-          <span>Security Console — Privacy Firewall Boundary</span>
-          <span class="badge badge-green">FIREWALL ACTIVE</span>
-        </div>
-        <div class="ide-panel-body">
-          <div class="metric-grid">
-            <div class="metric-tile">
-              <span class="metric-label">Firewall Status</span>
-              <span class="metric-value green">ACTIVE</span>
+      <!-- Privacy Firewall Active Status Banner -->
+      <div class="ide-panel" style="border-left: 3px solid var(--status-green-bright);">
+        <div class="ide-panel-body" style="padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-bright); display: flex; align-items: center; gap: 8px;">
+              <span>PrivAgent Privacy Firewall</span>
+              <span class="badge badge-green">ACTIVE & ENFORCING</span>
             </div>
-            <div class="metric-tile">
-              <span class="metric-label">Local PII Detected</span>
-              <span id="privacy-total-detected" class="metric-value amber">0</span>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
+              M8 Privacy Fusion • DOM Sanitizer • Local Visual OCR • Pre-Flight Zero-Leak Boundary
             </div>
-            <div class="metric-tile">
-              <span class="metric-label">Local PII Protected</span>
-              <span id="privacy-total-protected" class="metric-value green">0</span>
-            </div>
-            <div class="metric-tile">
-              <span class="metric-label">Network Transmitted</span>
-              <span class="metric-value green" style="font-weight: 800;">0 (ZERO-LEAK)</span>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <div style="text-align: right; font-family: var(--font-mono); font-size: 11px;">
+              <span style="color: var(--text-muted);">REMOTE TRANSMISSION:</span>
+              <span style="color: var(--status-green-bright); font-weight: 800; font-size: 13px; margin-left: 6px;">0 BYTES (NON-NEGOTIABLE)</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Categories Table Panel -->
+      <!-- 4 Pillars Architecture Grid -->
+      <div class="metric-grid">
+        <!-- 1. Local Detection -->
+        <div class="metric-tile">
+          <span class="metric-label">1. Local Detection</span>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-bright); margin-top: 2px;">
+            DOM + OCR + VISION
+          </div>
+          <span class="metric-subtext">On-device regex, attributes, visual text</span>
+        </div>
+
+        <!-- 2. M8 Privacy Fusion -->
+        <div class="metric-tile">
+          <span class="metric-label">2. M8 Privacy Fusion</span>
+          <div style="font-size: 13px; font-weight: 600; color: var(--status-green-bright); margin-top: 2px;">
+            <span id="privacy-fusion-count">0</span> Findings Synthesized
+          </div>
+          <span class="metric-subtext">Multi-modal consensus voting</span>
+        </div>
+
+        <!-- 3. Policy Enforcement -->
+        <div class="metric-tile">
+          <span class="metric-label">3. Strict Policies</span>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-bright); margin-top: 2px;">
+            REDACT & MINIMIZE
+          </div>
+          <span class="metric-subtext">Never Transmit • Fail Closed</span>
+        </div>
+
+        <!-- 4. Outbound Context Status -->
+        <div class="metric-tile">
+          <span class="metric-label">4. Outbound Context</span>
+          <div style="font-size: 13px; font-weight: 700; color: var(--status-green-bright); margin-top: 2px;">
+            SAFE / VERIFIED
+          </div>
+          <span class="metric-subtext">Pre-flight outbound HTTP firewall</span>
+        </div>
+      </div>
+
+      <!-- Entity Category Policy & Action Matrix -->
       <div class="ide-panel" style="flex: 1;">
         <div class="ide-panel-header">
-          <span>Sensitive Entity Detection & Redaction Matrix</span>
-          <span class="mono" style="font-size: 10px; color: var(--text-muted);">LIVE DATA</span>
+          <span>Sensitive Entity Categorization & Quarantining Matrix</span>
+          <span class="badge badge-green">STRICT LOCAL ISOLATION</span>
         </div>
         <div class="ide-panel-body" style="padding: 0;">
           <table class="ide-table">
             <thead>
               <tr>
-                <th>Sensitive Entity Category</th>
-                <th style="width: 120px; text-align: center;">Detected</th>
-                <th style="width: 140px; text-align: center;">Local Protection</th>
-                <th style="width: 140px; text-align: center;">Remote Transmitted</th>
-                <th style="width: 160px;">Policy Action</th>
+                <th style="width: 180px;">Entity Category</th>
+                <th style="width: 140px;">Local Protection Policy</th>
+                <th style="width: 140px; text-align: center;">Detected Count</th>
+                <th style="width: 160px; text-align: center;">Remote Transmitted</th>
+                <th>Handling Mechanism (Zero-Leak Evidence)</th>
               </tr>
             </thead>
-            <tbody id="privacy-categories-table-body">
-              <!-- Dynamically populated -->
+            <tbody>
+              <tr>
+                <td><strong>PASSWORD / CREDENTIAL</strong></td>
+                <td><span class="badge badge-amber">LOCAL ONLY</span></td>
+                <td class="mono" style="text-align: center;" id="cat-count-pwd">0</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">0 bytes</td>
+                <td style="color: var(--text-secondary); font-size: 11px;">Stripped from DOM metadata; handled strictly via secure local extension keystroke isolate.</td>
+              </tr>
+              <tr>
+                <td><strong>CREDIT CARD (PAN)</strong></td>
+                <td><span class="badge badge-red">REDACTED</span></td>
+                <td class="mono" style="text-align: center;" id="cat-count-card">0</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">0 bytes</td>
+                <td style="color: var(--text-secondary); font-size: 11px;">Replaced with [REDACTED_CARD] token; pixel bounding box blurred in visual memory.</td>
+              </tr>
+              <tr>
+                <td><strong>CARD CVV / CVC</strong></td>
+                <td><span class="badge badge-red">REDACTED</span></td>
+                <td class="mono" style="text-align: center;" id="cat-count-cvv">0</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">0 bytes</td>
+                <td style="color: var(--text-secondary); font-size: 11px;">Quarantined immediately upon DOM inspection. Never serialized to any payload.</td>
+              </tr>
+              <tr>
+                <td><strong>BANK ACCOUNT NUMBER</strong></td>
+                <td><span class="badge badge-amber">LOCAL ONLY</span></td>
+                <td class="mono" style="text-align: center;" id="cat-count-acc">0</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">0 bytes</td>
+                <td style="color: var(--text-secondary); font-size: 11px;">Preserved locally for user verification; omitted from external LLM reasoning prompt.</td>
+              </tr>
+              <tr>
+                <td><strong>ONE-TIME PASSWORD (OTP)</strong></td>
+                <td><span class="badge badge-amber">LOCAL ONLY</span></td>
+                <td class="mono" style="text-align: center;" id="cat-count-otp">0</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">0 bytes</td>
+                <td style="color: var(--text-secondary); font-size: 11px;">Strictly ephemeral in browser memory; forbidden key checks reject on egress.</td>
+              </tr>
+              <tr>
+                <td><strong>EMAIL ADDRESS</strong></td>
+                <td><span class="badge badge-blue">MINIMIZED</span></td>
+                <td class="mono" style="text-align: center;" id="cat-count-email">0</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">0 bytes</td>
+                <td style="color: var(--text-secondary); font-size: 11px;">Replaced with entity alias [USER_EMAIL] unless explicit user goal requires interaction.</td>
+              </tr>
+              <tr>
+                <td><strong>PHONE NUMBER</strong></td>
+                <td><span class="badge badge-blue">MINIMIZED</span></td>
+                <td class="mono" style="text-align: center;" id="cat-count-phone">0</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">0 bytes</td>
+                <td style="color: var(--text-secondary); font-size: 11px;">Masked with [PHONE_MASKED] metadata token; raw phone digits never leave device.</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
-
-      <!-- Security Invariant Notice -->
-      <div class="ide-panel" style="margin-top: 12px;">
-        <div class="ide-panel-header">
-          <span>PrivAgent Core Privacy Invariants</span>
-          <span class="badge badge-green">NON-NEGOTIABLE</span>
-        </div>
-        <div class="ide-panel-body" style="font-size: 11px; color: var(--text-secondary);">
-          <ul style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px;">
-            <li><strong>Raw Values Never Leave Device:</strong> Passwords, account numbers, card numbers, CVVs, OTPs, emails, and phones are stripped before backend context dispatch.</li>
-            <li><strong>Zero Raw Screenshots:</strong> Visual captures remain inside Chrome extension memory. LLMs receive only sanitized, coordinate-bounded metadata.</li>
-            <li><strong>M8 Privacy Fusion:</strong> Multi-modal agreement between DOM attributes, visual OCR, and text regex patterns enforces fail-closed redaction.</li>
-          </ul>
-        </div>
-      </div>
     `;
-
-    this.renderTable();
   }
 
-  private renderTable(): void {
-    const tbody = this.container.querySelector('#privacy-categories-table-body');
-    const totalDetectedEl = this.container.querySelector('#privacy-total-detected');
-    const totalProtectedEl = this.container.querySelector('#privacy-total-protected');
+  private renderMetrics(state: DashboardAgentState): void {
+    const fusionCount = document.getElementById('privacy-fusion-count');
+    const pwdCount = document.getElementById('cat-count-pwd');
+    const cardCount = document.getElementById('cat-count-card');
+    const cvvCount = document.getElementById('cat-count-cvv');
+    const accCount = document.getElementById('cat-count-acc');
+    const otpCount = document.getElementById('cat-count-otp');
+    const emailCount = document.getElementById('cat-count-email');
+    const phoneCount = document.getElementById('cat-count-phone');
 
-    const categories: SensitiveCategorySummary = this.state?.categories || {
-      password: 0,
-      credit_card: 0,
-      account_number: 0,
-      email: 0,
-      phone: 0,
-      pan: 0,
-      cvv: 0,
-      otp: 0,
-    };
-
-    const rows: Array<{ label: string; count: number; policy: string }> = [
-      { label: 'Password', count: categories.password, policy: 'BLACKOUT + MASK' },
-      { label: 'Account Number', count: categories.account_number, policy: 'REDACT + MASK' },
-      { label: 'Credit Card (PAN)', count: categories.credit_card, policy: 'BLACKOUT + MASK' },
-      { label: 'CVV / Security Code', count: categories.cvv, policy: 'BLACKOUT + STRIP' },
-      { label: 'One-Time Password (OTP)', count: categories.otp, policy: 'BLACKOUT + STRIP' },
-      { label: 'PAN Card (Tax ID)', count: categories.pan, policy: 'REDACT + MASK' },
-      { label: 'Email Address', count: categories.email, policy: 'METADATA_ONLY' },
-      { label: 'Phone Number', count: categories.phone, policy: 'METADATA_ONLY' },
-    ];
-
-    let totalDetected = 0;
-
-    if (tbody) {
-      tbody.innerHTML = rows
-        .map((r) => {
-          totalDetected += r.count;
-          const detectedDisplay = r.count > 0 ? `<strong class="mono" style="color: var(--status-amber-bright);">${r.count}</strong>` : `<span class="mono" style="color: var(--text-dim);">0</span>`;
-          const protectedDisplay = r.count > 0 ? `<span class="badge badge-green">${r.count} PROTECTED</span>` : `<span class="mono" style="color: var(--text-dim);">-</span>`;
-
-          return `
-            <tr>
-              <td><strong>${r.label}</strong></td>
-              <td style="text-align: center;">${detectedDisplay}</td>
-              <td style="text-align: center;">${protectedDisplay}</td>
-              <td style="text-align: center;"><span class="mono" style="color: var(--status-green-bright); font-weight: 700;">0</span></td>
-              <td class="mono" style="font-size: 11px; color: var(--text-secondary);">${r.policy}</td>
-            </tr>
-          `;
-        })
-        .join('');
-    }
-
-    if (totalDetectedEl) totalDetectedEl.textContent = String(totalDetected);
-    if (totalProtectedEl) totalProtectedEl.textContent = String(totalDetected);
+    if (fusionCount) fusionCount.textContent = `${state.sensitiveItemsCount}`;
+    if (pwdCount) pwdCount.textContent = `${state.categories.password}`;
+    if (cardCount) cardCount.textContent = `${state.categories.credit_card}`;
+    if (cvvCount) cvvCount.textContent = `${state.categories.cvv}`;
+    if (accCount) accCount.textContent = `${state.categories.account_number}`;
+    if (otpCount) otpCount.textContent = `${state.categories.otp}`;
+    if (emailCount) emailCount.textContent = `${state.categories.email}`;
+    if (phoneCount) phoneCount.textContent = `${state.categories.phone}`;
   }
 }
