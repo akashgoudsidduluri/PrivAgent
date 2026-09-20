@@ -179,14 +179,17 @@ export function isElementVisible(el: HTMLElement): boolean {
     return false;
   }
 
-  const style = window.getComputedStyle(el);
-  if (
-    style.display === 'none' ||
-    style.visibility === 'hidden' ||
-    style.opacity === '0' ||
-    style.pointerEvents === 'none'
-  ) {
-    return false;
+  const win = el.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null);
+  const style = win?.getComputedStyle ? win.getComputedStyle(el) : null;
+  if (style) {
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.opacity === '0' ||
+      style.pointerEvents === 'none'
+    ) {
+      return false;
+    }
   }
   const rect = el.getBoundingClientRect();
   if (rect.width === 0 && rect.height === 0) {
@@ -214,8 +217,9 @@ export function detectActiveModal(doc: Document = document): { selector: string;
   const candidates = Array.from(doc.querySelectorAll<HTMLElement>(modalQuery));
   for (const m of candidates) {
     if (m.isConnected) {
-      const style = window.getComputedStyle(m);
-      if (style.display !== 'none' && style.visibility !== 'hidden') {
+      const win = m.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null);
+      const style = win?.getComputedStyle ? win.getComputedStyle(m) : null;
+      if (!style || (style.display !== 'none' && style.visibility !== 'hidden')) {
         const titleEl = m.querySelector('h1, h2, h3, .modal-title, .title');
         const label = (titleEl?.textContent || m.getAttribute('aria-label') || 'Active Modal Dialog').trim().slice(0, 50);
         const selector = m.id ? `#${safeEscapeCss(m.id)}` : m.tagName.toLowerCase();

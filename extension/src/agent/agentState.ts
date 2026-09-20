@@ -17,6 +17,7 @@ import { ConfidenceEvaluation } from './confidenceScorer';
 import { SelfHealingResult } from './selfHealing';
 import { TaskPlan } from './taskPlanner';
 import { AgentDecisionTracer } from './decisionTrace';
+import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 
 export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION' | 'STOPPED';
 
@@ -203,6 +204,7 @@ export interface AgentTaskState extends TaskState {
   failureCount: number;
   recoveryCount: number;
   confirmationState: ConfirmationStatus;
+  activeWorldModelRef?: ActiveWorldModelRef | null;
   lastFailure?: FailureRecord | null;
   failureHistory?: FailureRecord[];
 }
@@ -263,6 +265,7 @@ export function createAgentTaskState(
     failureCount: 0,
     recoveryCount: 0,
     confirmationState: 'NONE',
+    activeWorldModelRef: null,
     lastFailure: null,
     failureHistory: [],
   };
@@ -285,7 +288,8 @@ export function advancePageGeneration(
   if (detectedPageType) {
     state.pageType = detectedPageType;
   }
-  // Old element IDs belong to destroyed or mutated DOM tree; clear them
+  // Old element IDs and active world model ref belong to destroyed or mutated DOM tree; clear them
   state.visitedElementIds = [];
+  state.activeWorldModelRef = null;
   return state;
 }
