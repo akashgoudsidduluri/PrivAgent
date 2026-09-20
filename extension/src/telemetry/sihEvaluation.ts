@@ -120,11 +120,11 @@ export function calculateLatencyDistribution(samples: number[]): LatencyDistribu
   const mean = Number((sum / n).toFixed(2));
 
   return {
-    p50Ms: sorted[p50Index],
-    p95Ms: sorted[p95Index],
+    p50Ms: sorted[p50Index] ?? 0,
+    p95Ms: sorted[p95Index] ?? 0,
     meanMs: mean,
-    minMs: sorted[0],
-    maxMs: sorted[n - 1],
+    minMs: sorted[0] ?? 0,
+    maxMs: sorted[n - 1] ?? 0,
     sampleCount: n,
   };
 }

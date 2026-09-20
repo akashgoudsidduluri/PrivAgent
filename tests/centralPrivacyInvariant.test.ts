@@ -70,7 +70,13 @@ describe('PrivAgent Central Privacy Invariant Suite (Phase 9)', () => {
   it('INVARIANT 2: Raw sensitive values never enter minimized context sent to LLM', () => {
     const rawContext: AgentContextPayload = {
       url: 'http://localhost:4173/profile',
-      viewport: { width: 1280, height: 800 },
+      timestamp: Date.now(),
+      viewport: { width: 1280, height: 800, scroll_x: 0, scroll_y: 0 },
+      screenshot_dimensions: null,
+      total_elements_scanned: 10,
+      sensitive_elements_detected: 2,
+      sanitized_status: 'sanitized_only',
+      ocr_metrics: null,
       detections: [
         {
           id: 'det-pwd-1',
@@ -78,6 +84,8 @@ describe('PrivAgent Central Privacy Invariant Suite (Phase 9)', () => {
           confidence: 1.0,
           selector: '#user-pin',
           bbox: { x: 10, y: 10, width: 100, height: 30 },
+          length: 8,
+          is_partially_visible: false,
           source: 'dom_input_type',
         },
         {
@@ -86,6 +94,8 @@ describe('PrivAgent Central Privacy Invariant Suite (Phase 9)', () => {
           confidence: 0.98,
           selector: '#account-info',
           bbox: { x: 10, y: 50, width: 200, height: 30 },
+          length: 12,
+          is_partially_visible: false,
           source: 'dom_attribute',
         },
       ],

@@ -134,7 +134,17 @@ export function assessActionRisk(
     action.action === 'navigate' ? action.url : '',
   ].join(' ').toLowerCase();
 
-  const isConsequential = CONSEQUENTIAL_KEYWORDS.some((kw) => targetDescriptor.includes(kw));
+  const isSearchAction =
+    targetDescriptor.includes('search') ||
+    targetDescriptor.includes('filter') ||
+    targetDescriptor.includes('query');
+
+  const isConsequential = CONSEQUENTIAL_KEYWORDS.some((kw) => {
+    if (kw === 'submit' && isSearchAction) {
+      return false; // Submitting search queries is non-destructive exploration
+    }
+    return targetDescriptor.includes(kw);
+  });
   if (isConsequential) {
     const isFinancialOrDestructive = [
       'pay', 'transfer', 'buy', 'purchase', 'delete', 'checkout', 'send money'

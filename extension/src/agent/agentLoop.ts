@@ -44,60 +44,23 @@ import {
   ConfidenceEvaluation,
 } from './confidenceScorer';
 import { AgentDecisionTracer, DecisionTraceEntry } from './decisionTrace';
+import {
+  AgentTaskState,
+  TaskState,
+  StepRecord,
+  TaskStatus,
+  PageCategory,
+  StructuredConstraints,
+  SubGoalItem,
+  CandidateProductItem,
+  ExpectedStateChange,
+  createAgentTaskState,
+  advancePageGeneration,
+} from './agentState';
+import { parseUserGoal } from './goalParser';
+import { verifyTaskGoal } from './goalVerifier';
 
-export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION' | 'STOPPED';
-
-export interface StepRecord {
-  step: number;
-  action: BrowserAction;
-  validationAllowed: boolean;
-  validationReason: string;
-  executionSuccess: boolean;
-  executionError?: string;
-  targetId?: string;
-  targetType?: string;
-  url: string;
-  timestamp: number;
-  riskAssessment?: ActionRiskAssessment;
-  semanticVerification?: SemanticVerificationResult;
-  confidenceEvaluation?: ConfidenceEvaluation;
-  selfHealing?: SelfHealingResult;
-  /** Populated for navigate actions — the destination URL. */
-  navigationDestination?: string;
-  /** True if post-navigation page setup (load + re-inject) succeeded. */
-  postNavigationSettled?: boolean;
-  /** Monotonic counter: which perception cycle produced the context used this step. */
-  perceptionGeneration?: number;
-}
-
-export interface TaskState {
-  task: string;
-  currentStep: number;
-  status: TaskStatus;
-  previousActions: BrowserAction[];
-  steps: StepRecord[];
-  currentUrl: string;
-  visitedElementIds: string[];
-  retryCount: number;
-  maxSteps: number;
-  maxRetries: number;
-  /**
-   * M7 Phase 4: total provider reasoning attempts across the WHOLE task,
-   * tracked separately from `retryCount` (which counts validator/execution
-   * retries within M6). Observable and explicitly bounded:
-   * total ≤ maxSteps × (1 + providerRetries).
-   */
-  providerAttempts: number;
-  reason?: string;
-  requiresUserConfirmationAction?: BrowserAction;
-  plan?: TaskPlan;
-  decisionTraceSummary?: ReturnType<AgentDecisionTracer['getSummary']>;
-  /**
-   * Monotonic counter incremented at the start of each perceivePage call.
-   * Lets the dashboard distinguish stale perception context from fresh.
-   */
-  perceptionGeneration: number;
-}
+export type { TaskStatus, StepRecord, TaskState, AgentTaskState } from './agentState';
 
 export interface AgentLoopCallbacks {
   /**
@@ -115,7 +78,7 @@ export interface AgentLoopCallbacks {
   /**
    * Optional progress listener called after every step.
    */
-  onStepProgress?: (state: TaskState) => void;
+  onStepProgress?: (state: AgentTaskState) => void;
 
   /**
    * Called immediately after a successful NAVIGATE action is executed.
@@ -199,7 +162,7 @@ export class AgentLoop {
   private requireConfirmationForExternalNavigation: boolean;
   private providerRetries: number;
   private providerRetryDelayMs: number;
-  private state: TaskState;
+  private state: AgentTaskState;
   private isStopped = false;
 
   constructor(
@@ -217,20 +180,10 @@ export class AgentLoop {
     this.providerRetries = options.providerRetries ?? 2;
     this.providerRetryDelayMs = options.providerRetryDelayMs ?? 250;
 
-    this.state = {
-      task: '',
-      currentStep: 0,
-      status: 'IN_PROGRESS',
-      previousActions: [],
-      steps: [],
-      currentUrl: '',
-      visitedElementIds: [],
-      retryCount: 0,
+    this.state = createAgentTaskState('', {
       maxSteps: this.maxSteps,
       maxRetries: this.maxRetries,
-      providerAttempts: 0,
-      perceptionGeneration: 0,
-    };
+    });
   }
 
   /**
@@ -240,12 +193,13 @@ export class AgentLoop {
     this.isStopped = true;
     if (this.state.status === 'IN_PROGRESS') {
       this.state.status = 'STOPPED';
+      this.state.goalStatus = 'STOPPED';
       this.state.reason = 'Task stopped by user.';
       this.notifyProgress();
     }
   }
 
-  getState(): TaskState {
+  getState(): AgentTaskState {
     return {
       ...this.state,
       steps: [...this.state.steps],
@@ -256,22 +210,37 @@ export class AgentLoop {
   /**
    * Run the complete autonomous task loop until SUCCESS, FAILED, or NEEDS_USER_CONFIRMATION.
    */
-  async runTask(task: string): Promise<TaskState> {
+  async runTask(task: string): Promise<AgentTaskState> {
+    const parsed = parseUserGoal(task);
     this.isStopped = false;
     this.state.task = task;
+    this.state.taskGoal = task;
+    this.state.normalizedGoal = parsed.normalizedGoal;
+    this.state.taskConstraints = parsed.constraints;
+    this.state.pendingSubgoals = parsed.subgoals;
     this.state.currentStep = 0;
     this.state.status = 'IN_PROGRESS';
+    this.state.goalStatus = 'IN_PROGRESS';
     this.state.previousActions = [];
+    this.state.recentActions = [];
     this.state.steps = [];
     this.state.visitedElementIds = [];
     this.state.retryCount = 0;
+    this.state.failureCount = 0;
     this.state.providerAttempts = 0;
+    this.state.currentFindings = [];
+    this.state.candidateItems = [];
+    this.state.lastAction = null;
+    this.state.lastActionResult = null;
+    this.state.expectedStateChange = null;
+    this.state.confirmationState = 'NONE';
     // perceptionGeneration is NOT reset on resume (runTask called from
     // resumeWithConfirmation): the counter stays monotonic across navigation
     // so the dashboard can distinguish pre- and post-navigation perceptions.
     // It IS reset to 0 for a brand-new task (status was not IN_PROGRESS).
     if (this.state.status !== 'IN_PROGRESS') {
       this.state.perceptionGeneration = 0;
+      this.state.currentPageGeneration = 0;
     }
     this.state.reason = undefined;
     this.state.requiresUserConfirmationAction = undefined;
@@ -285,6 +254,7 @@ export class AgentLoop {
     while (this.state.status === 'IN_PROGRESS') {
       if (this.isStopped) {
         this.state.status = 'STOPPED';
+        this.state.goalStatus = 'STOPPED';
         this.state.reason = this.state.reason || 'Task stopped by user.';
         this.notifyProgress();
         break;
@@ -293,6 +263,7 @@ export class AgentLoop {
       // 1. Check max steps bound (endless-loop prevention)
       if (this.state.currentStep >= this.maxSteps) {
         this.state.status = 'FAILED';
+        this.state.goalStatus = 'FAILED';
         this.state.reason = `Task exceeded maximum step limit of ${this.maxSteps}.`;
         this.notifyProgress();
         break;
@@ -300,11 +271,13 @@ export class AgentLoop {
 
       // 2. Fresh perception cycle: obtain current sanitized context
       this.state.perceptionGeneration++;
+      this.state.currentPageGeneration = this.state.perceptionGeneration;
       const perceptionGen = this.state.perceptionGeneration;
       console.info('[AgentTrace] perception started', { perceptionGeneration: perceptionGen, url: this.state.currentUrl });
       const context = await this.callbacks.perceivePage();
       if (!context) {
         this.state.status = 'FAILED';
+        this.state.goalStatus = 'FAILED';
         this.state.reason = 'Perception failed: Unable to obtain sanitized page context.';
         this.notifyProgress();
         console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
@@ -317,6 +290,24 @@ export class AgentLoop {
       assertSanitizedContextSafe(context);
       this.state.currentUrl = context.url;
 
+      // Update observable page type
+      const uLower = context.url.toLowerCase();
+      if (uLower.includes('login') || uLower.includes('signin') || uLower.includes('auth')) {
+        this.state.pageType = 'login';
+      } else if (uLower.includes('result') || uLower.includes('search?')) {
+        this.state.pageType = 'results';
+      } else if (uLower.includes('search')) {
+        this.state.pageType = 'search';
+      } else if (uLower.includes('product') || uLower.includes('item') || uLower.includes('detail')) {
+        this.state.pageType = 'product_detail';
+      } else if (uLower.includes('bank') || uLower.includes('portal') || uLower.includes('account')) {
+        this.state.pageType = 'banking';
+      } else if (uLower.endsWith('/') || uLower.includes('index')) {
+        this.state.pageType = 'landing';
+      } else {
+        this.state.pageType = 'unknown';
+      }
+
       // 3. Goal Completion Detection
       if (this.isTaskGoalSatisfied(task, this.state, context)) {
         if (this.state.plan) {
@@ -327,7 +318,8 @@ export class AgentLoop {
           );
         }
         this.state.status = 'SUCCESS';
-        this.state.reason = 'Task goal successfully achieved.';
+        this.state.goalStatus = 'SUCCESS';
+        this.state.reason = this.state.reason || 'Task goal successfully achieved.';
         this.notifyProgress();
         console.info('[AgentTrace] M6 completed');
         break;
@@ -517,6 +509,8 @@ export class AgentLoop {
         confidence.directive === 'REQUIRE_CONFIRMATION'
       ) {
         this.state.status = 'NEEDS_USER_CONFIRMATION';
+        this.state.goalStatus = 'NEEDS_USER_CONFIRMATION';
+        this.state.confirmationState = 'PENDING';
         this.state.requiresUserConfirmationAction = action;
         this.state.reason = risk.rationale || 'Action requires user confirmation: Consequential or high-risk operation.';
         this.recordStep(
@@ -562,9 +556,42 @@ export class AgentLoop {
       }
 
       // 8. Deterministic Browser Execution + Post-Execution Self-Healing
+      let expectedTransition: 'URL_CHANGE' | 'DOM_UPDATE' | 'MODAL_OPEN' | 'PAGE_SETTLED' = 'DOM_UPDATE';
+      let transitionDesc = '';
+      switch (action.action) {
+        case 'navigate':
+          expectedTransition = 'URL_CHANGE';
+          transitionDesc = `Navigate to ${action.url}`;
+          break;
+        case 'click':
+          expectedTransition = 'DOM_UPDATE';
+          transitionDesc = `Click element ${action.target}`;
+          break;
+        case 'type':
+          expectedTransition = 'DOM_UPDATE';
+          transitionDesc = `Type text into element ${action.target}`;
+          break;
+        case 'scroll':
+          expectedTransition = 'PAGE_SETTLED';
+          transitionDesc = `Scroll ${action.direction} by ${action.amount}px`;
+          break;
+        case 'select':
+          expectedTransition = 'DOM_UPDATE';
+          transitionDesc = `Select option on ${action.target}`;
+          break;
+      }
+      this.state.expectedStateChange = {
+        actionType: action.action,
+        expectedTransition,
+        description: transitionDesc,
+        targetHint: 'target' in action ? (action as any).target : undefined,
+      };
+
       console.info('[AgentTrace] executeAction started');
       let execResult = await this.callbacks.executeAction(action);
       console.info('[AgentTrace] executeAction response received');
+      this.state.lastAction = action;
+      this.state.lastActionResult = { success: execResult.success, error: execResult.error };
 
       if (!execResult.success && 'target' in action && typeof (action as any).target === 'string' && !healingResult?.recovered) {
         const staleTargetId = (action as any).target;
@@ -576,6 +603,8 @@ export class AgentLoop {
             if (healedExec.success) {
               execResult = healedExec;
               action = healingResult.recoveredAction;
+              this.state.lastAction = action;
+              this.state.lastActionResult = { success: true };
             }
           }
         }
@@ -583,6 +612,7 @@ export class AgentLoop {
 
       if (!execResult.success) {
         this.state.retryCount++;
+        this.state.failureCount++;
         if (this.state.plan) {
           const diag = diagnoseFailureAndReplan(this.state.plan, action, execResult.error || 'Execution error', context);
           if (diag.canRecover) {
@@ -645,6 +675,7 @@ export class AgentLoop {
 
         if (this.state.retryCount > this.maxRetries) {
           this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
           this.state.reason = `Browser action execution failed repeatedly: ${execResult.error}`;
           console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
           break;
@@ -656,6 +687,8 @@ export class AgentLoop {
       // 9. Successful action execution
       this.state.retryCount = 0; // Reset retry count after success
       this.state.previousActions.push(action);
+      this.state.recentActions.push(action);
+      this.state.completedSteps.push(`${action.action}: ${transitionDesc}`);
       if ('target' in action && typeof (action as any).target === 'string') {
         this.state.visitedElementIds.push((action as any).target);
       }
@@ -723,10 +756,24 @@ export class AgentLoop {
       assertNoSensitiveDataInState(this.state);
       this.notifyProgress();
 
+      // Post-navigation page setup if navigate action succeeded
+      if (action.action === 'navigate' && typeof action.url === 'string' && this.callbacks.onNavigationComplete) {
+        console.info('[AgentTrace] POST_NAVIGATION_SETTLE_START', { destination: action.url });
+        const settled = await this.callbacks.onNavigationComplete(action.url);
+        console.info('[AgentTrace] POST_NAVIGATION_SETTLE_RESULT', {
+          destination: action.url,
+          postNavigationSettled: settled,
+        });
+        if (settled) {
+          advancePageGeneration(this.state, action.url);
+        }
+      }
+
       // Check immediate completion
       if (this.isTaskGoalSatisfied(task, this.state, context)) {
         this.state.status = 'SUCCESS';
-        this.state.reason = 'Task goal successfully achieved.';
+        this.state.goalStatus = 'SUCCESS';
+        this.state.reason = this.state.reason || 'Task goal successfully achieved.';
         this.notifyProgress();
         console.info('[AgentTrace] M6 completed');
         break;
@@ -763,7 +810,7 @@ export class AgentLoop {
    * Element IDs and perception context from before the navigation are NOT
    * forwarded — runTask starts a fresh perception cycle automatically.
    */
-  async resumeWithConfirmation(): Promise<TaskState> {
+  async resumeWithConfirmation(): Promise<AgentTaskState> {
     if (this.state.status !== 'NEEDS_USER_CONFIRMATION' || !this.state.requiresUserConfirmationAction) {
       throw new Error('Cannot resume: Task is not waiting for user confirmation.');
     }
@@ -868,11 +915,11 @@ export class AgentLoop {
           setTimeout(
             () =>
               reject(
-                new ProviderError('Reasoning provider request timed out after 25s.', 'timeout', {
-                  retryable: false,
+                new ProviderError('Reasoning provider request timed out after 55s.', 'timeout', {
+                  retryable: true,
                 })
               ),
-            25000
+            55000
           )
         );
         return await Promise.race([
@@ -907,81 +954,15 @@ export class AgentLoop {
     return false;
   }
 
-  private isTaskGoalSatisfied(task: string, state: TaskState, context: AgentContextPayload): boolean {
-    const lower = task.toLowerCase();
-
-    // Google search task: "search for X" or "search google for X"
-    //
-    // Success requires TWO conditions:
-    //   1. The target tab is actually on google.com (navigation + load verified).
-    //   2. A search has been submitted — detected by:
-    //      a. URL contains q= (Google redirected to results), OR
-    //      b. type action + click/submit (form submitted, results loading).
-    //
-    // perceptionGeneration is checked implicitly: if the context.url is google.com
-    // then the perception was taken AFTER navigation (new page, new generation).
-    if (
-      (lower.includes('search for') || lower.includes('search google')) &&
-      /(\.google\.)|(\/\/google\.)/i.test(context.url)
-    ) {
-      // Check 1: URL already has search query params (results page)
-      try {
-        const u = new URL(context.url);
-        if (u.searchParams.has('q') && u.searchParams.get('q')!.length > 0) {
-          console.info('[AgentTrace] GOAL_SATISFIED: Google results URL detected', { url: context.url });
-          return true;
-        }
-      } catch {
-        // ignore URL parse errors
+  private isTaskGoalSatisfied(task: string, state: AgentTaskState, context: AgentContextPayload): boolean {
+    const res = verifyTaskGoal(task, state, context);
+    if (res.satisfied) {
+      state.goalStatus = 'SUCCESS';
+      if (res.reason) {
+        state.reason = res.reason;
       }
-      // Check 2: type action occurred AND a submit/click happened after
-      const hasTyped = state.previousActions.some((a) => a.action === 'type');
-      const hasSubmitted = state.previousActions.some((a) => a.action === 'click' || a.action === 'navigate');
-      if (hasTyped && hasSubmitted) {
-        console.info('[AgentTrace] GOAL_SATISFIED: Google type+submit actions detected', { url: context.url });
-        return true;
-      }
-      return false;
+      return true;
     }
-
-    // Multi-step task: "Open the account details and find the recent transactions"
-    if (
-      (lower.includes('account details') || lower.includes('details')) &&
-      (lower.includes('transaction') || lower.includes('transactions'))
-    ) {
-      // Completed when at least 3 steps have executed (click details -> scroll down -> click transactions)
-      const hasClicked = state.previousActions.some((a) => a.action === 'click');
-      const hasScrolled = state.previousActions.some((a) => a.action === 'scroll');
-      return state.previousActions.length >= 3 && hasClicked && hasScrolled;
-    }
-
-    // Single-step demo task 1: "Find and click the account number field"
-    if (lower.includes('account number') || lower.includes('account_number')) {
-      return (
-        state.steps.some(
-          (s) => s.executionSuccess && s.action.action === 'click' && s.targetType === 'account_number'
-        ) ||
-        state.previousActions.some(
-          (a) =>
-            a.action === 'click' &&
-            state.visitedElementIds.some((id) => {
-              const det = context.detections.find((d) => d.id === id);
-              return det && det.type === 'account_number';
-            })
-        )
-      );
-    }
-
-    // Single-step demo task 2: "Scroll down and find the transaction section"
-    if (lower.includes('scroll down') || lower.includes('scroll')) {
-      return state.previousActions.some((a) => a.action === 'scroll');
-    }
-
-    // Single-step demo task 3: "Open the account details"
-    if (lower.includes('account details') || lower.includes('details')) {
-      return state.previousActions.some((a) => a.action === 'click');
-    }
-
     return false;
   }
 
@@ -1012,6 +993,9 @@ export class AgentLoop {
       semanticVerification,
       confidenceEvaluation,
       selfHealing,
+      expectedStateChange: this.state.expectedStateChange,
+      currentPageGeneration: this.state.currentPageGeneration,
+      pageType: this.state.pageType,
     };
     this.state.steps.push(record);
   }

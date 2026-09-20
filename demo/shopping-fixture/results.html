@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ApexCart — Search Results</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html" class="brand">ApexCart</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="search.html">Search</a>
+      <span style="color: var(--accent); margin-left: 1.5rem;">Hello, shopper</span>
+    </nav>
+  </header>
+
+  <main>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2>Search Results</h2>
+      <span style="color: var(--text-secondary);" id="results-count">4 items found</span>
+    </div>
+
+    <div class="grid" id="product-results-grid">
+      <!-- Product 1: QUALIFYING MATCH -->
+      <div class="product-card" id="product-xxl-black-baggy-bag-899" data-price="899" data-size="XXL" data-color="black" data-style="baggy" data-category="bag">
+        <h3 class="product-title">XXL Black Baggy Travel Bag</h3>
+        <div class="product-price">₹899</div>
+        <div>
+          <span class="product-badge">Size: XXL</span>
+          <span class="product-badge">Color: Black</span>
+          <span class="product-badge">Style: Baggy</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Spacious lightweight travel duffel with water-resistant fabric.</p>
+        <a href="product.html?id=1" class="btn" id="btn-view-qualifying-bag" style="text-align: center; margin-top: auto;">View Details</a>
+      </div>
+
+      <!-- Product 2: FAILS PRICE (₹1499 > ₹1000) -->
+      <div class="product-card" id="product-office-bag-1499" data-price="1499" data-size="L" data-color="black" data-category="bag">
+        <h3 class="product-title">Executive Leather Office Bag</h3>
+        <div class="product-price">₹1,499</div>
+        <div>
+          <span class="product-badge">Size: L</span>
+          <span class="product-badge">Color: Black</span>
+          <span class="product-badge">Style: Formal</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Premium full-grain leather briefcase for laptops and documents.</p>
+        <a href="product.html?id=2" class="btn" id="btn-view-office-bag" style="text-align: center; margin-top: auto; background-color: var(--bg-input); color: var(--text-primary);">View Details</a>
+      </div>
+
+      <!-- Product 3: FAILS COLOR & SIZE (Red, Size S) -->
+      <div class="product-card" id="product-red-bag-699" data-price="699" data-size="S" data-color="red" data-style="baggy" data-category="bag">
+        <h3 class="product-title">Red Canvas Baggy Gym Bag</h3>
+        <div class="product-price">₹699</div>
+        <div>
+          <span class="product-badge">Size: S</span>
+          <span class="product-badge">Color: Red</span>
+          <span class="product-badge">Style: Baggy</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Compact canvas shoulder bag for gym gear and essentials.</p>
+        <a href="product.html?id=3" class="btn" id="btn-view-red-bag" style="text-align: center; margin-top: auto; background-color: var(--bg-input); color: var(--text-primary);">View Details</a>
+      </div>
+
+      <!-- Product 4: FAILS COLOR (Blue != Black) -->
+      <div class="product-card" id="product-blue-bag-950" data-price="950" data-size="XXL" data-color="blue" data-style="baggy" data-category="bag">
+        <h3 class="product-title">XXL Blue Baggy Duffel Bag</h3>
+        <div class="product-price">₹950</div>
+        <div>
+          <span class="product-badge">Size: XXL</span>
+          <span class="product-badge">Color: Blue</span>
+          <span class="product-badge">Style: Baggy</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Heavy-duty oversized duffel bag in navy blue.</p>
+        <a href="product.html?id=4" class="btn" id="btn-view-blue-bag" style="text-align: center; margin-top: auto; background-color: var(--bg-input); color: var(--text-primary);">View Details</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 ApexCart Demo Shopping Portal — PrivAgent Test Environment</p>
+  </footer>
+</body>
+</html>

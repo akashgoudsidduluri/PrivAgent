@@ -40,7 +40,7 @@ export class BackendAgentProvider implements AgentProvider {
   constructor(opts: { timeoutMs?: number } = {}) {
     // 35s: backend NVIDIA timeout is 30s; giving backend 5s extra ensures the
     // backend's structured 503 arrives before the frontend AbortController fires.
-    this.timeoutMs = opts.timeoutMs ?? 35000;
+    this.timeoutMs = opts.timeoutMs ?? 55000;
   }
 
   async requestAction(

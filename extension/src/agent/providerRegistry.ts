@@ -78,7 +78,7 @@ export const AGENT_PROVIDERS: Record<ProviderType, AgentProviderDescriptor> = {
     kind: 'local_process',
     requiresClientApiKey: false,
     selectableInPopup: true,
-    create: (config) => new BackendAgentProvider({ timeoutMs: config.timeoutMs ?? 30000 }),
+    create: (config) => new BackendAgentProvider({ timeoutMs: config.timeoutMs ?? 55000 }),
   },
   mock: {
     id: 'mock',

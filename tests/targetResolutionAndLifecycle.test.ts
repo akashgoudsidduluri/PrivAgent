@@ -292,7 +292,7 @@ describe('PrivAgent Target-Tab & START_TASK Lifecycle Regression Suite', () => {
       sensitiveElementsDetected: 1,
       elementsProtected: 1,
       leakageCount: 0,
-      mode: 'blackout',
+      redactionMode: 'blackout',
       status: 'Sanitized Context — Local Privacy Check Passed',
       categories: {
         password: 0,

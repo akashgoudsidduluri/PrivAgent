@@ -62,6 +62,7 @@ describe('PrivAgent Capability-Based Privacy Policy', () => {
         pan: 0,
         otp: 0,
         cvv: 0,
+        address: 0,
       },
       detections: [
         {

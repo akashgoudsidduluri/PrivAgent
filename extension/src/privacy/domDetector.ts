@@ -298,7 +298,7 @@ export function scanDOM(root?: Document | HTMLElement): ScanResult {
 
   // 2. Scan Rendered Non-Input Content (Headings, Spans, Paragraphs, Card visuals, Table cells)
   const candidateSelectors = 'span, p, h1, h2, h3, h4, div, td, th';
-  const textCandidates = Array.from(root.querySelectorAll<HTMLElement>(candidateSelectors));
+  const textCandidates = Array.from(targetRoot.querySelectorAll<HTMLElement>(candidateSelectors));
   elementCount += textCandidates.length;
 
   for (const el of textCandidates) {

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ApexCart — Search Products</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html" class="brand">ApexCart</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="search.html" class="active">Search</a>
+      <span style="color: var(--accent); margin-left: 1.5rem;">Hello, shopper</span>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card" style="max-width: 600px;">
+      <h2 style="margin-bottom: 1.5rem; text-align: center;">Search Product Catalog</h2>
+      <form id="form-search" onsubmit="event.preventDefault(); const q = document.getElementById('input-search-query').value; window.location.href='results.html?q=' + encodeURIComponent(q);">
+        <div class="form-group">
+          <label for="input-search-query">Search keywords, size, style, or color</label>
+          <input type="text" id="input-search-query" class="form-control" placeholder="e.g. XXL black baggy bag under 1000" autofocus required>
+        </div>
+        <button type="submit" id="btn-search-submit" class="btn" style="width: 100%; margin-top: 1rem;">Search Catalog</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 ApexCart Demo Shopping Portal — PrivAgent Test Environment</p>
+  </footer>
+</body>
+</html>
