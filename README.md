@@ -134,76 +134,34 @@ PrivAgent establishes an inviolable **on-device privacy, perception, and control
 
 ## 2. Core Architectural Components
 
-```text
-  User Task Prompt
-        │
-        ▼
-  Web Dashboard / Controller
-        │ postMessage START_TASK
-        ▼
-  Content Script Bridge
-        │ chrome.runtime.sendMessage
-        ▼
-  MV3 Background Service Worker ◄──────────────────────────────────────────┐
-        │                                                                   │
-        ▼                                                                   │
-  Target Tab Resolver                                                       │
-        │                                                                   │
-        ▼                                                                   │
-  On-Device Visual Privacy Perception                                       │
-  ┌─────────────────────────────────┐                                       │
-  │  M1 Local DOM Scanner           │                                       │
-  │  M2 Local Visual Redactor       │                                       │
-  │  M3 Local Tesseract OCR         │                                       │
-  └────────────────┬────────────────┘                                       │
-                   │                                                        │
-                   ▼                                                        │
-  Local Privacy Firewall & Minimizer (M8)                                   │
-  ┌─────────────────────────────────┐                                       │
-  │  Privacy Fusion & Policy        │                                       │
-  │  Context Minimization           │                                       │
-  │  M8 Raw-Value Firewall          │                                       │
-  └────────────────┬────────────────┘                                       │
-                   │ Sanitized Context Only                                 │
-                   ▼                                                        │
-  FastAPI Agent Gateway (localhost:8010)                                    │
-        │                        ▲                                          │
-        │ Prompt                 │ Raw JSON BrowserAction                   │
-        ▼                        │                                          │
-  Groq Reasoner ─────────────────┘                                         │
-  (openai/gpt-oss-20b)                                                      │
-        │ Action Candidate                                                  │
-        ▼                                                                   │
-  ┌────────────────────────────────────────────────┐                        │
-  │            ON-DEVICE VALIDATION STACK          │                        │
-  │                                                │                        │
-  │  ┌──────────────────────────────────────────┐  │                        │
-  │  │  Action Risk Engine                      │  │                        │
-  │  │  (LOW / MEDIUM / HIGH / CRITICAL)        │  │                        │
-  │  └──────────────────────────────────────────┘  │                        │
-  │  ┌──────────────────────────────────────────┐  │                        │
-  │  │  Semantic Action Verifier                │  │                        │
-  │  │  (Injection & Goal Guard)                │  │                        │
-  │  └──────────────────────────────────────────┘  │                        │
-  │  ┌──────────────────────────────────────────┐  │                        │
-  │  │  M5 Structural Action Validator          │  │                        │
-  │  │  └─► Self-Healing Target Recovery        │  │                        │
-  │  └──────────────────────────────────────────┘  │                        │
-  └──────────────────────┬─────────────────────────┘                        │
-                         │ PASS / ALLOWED                                   │
-                         ▼                                                  │
-                   DOM Action Executor                                      │
-                         │                                                  │
-                         ▼                                                  │
-                   Target Web Tab DOM                                       │
-                         │                                                  │
-                         ▼                                                  │
-                   Deterministic Goal & Candidate Verifier                  │
-                         │                                                  │
-                         ▼                                                  │
-                   Stateful Page Generation Tracker                         │
-                         │ Monotonic Gen Advancement                        │
-                         └──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    User([User Task Prompt]) --> Dashboard[Web Dashboard / Controller]
+    Dashboard -->|postMessage START_TASK| ContentBridge[Content Script Bridge]
+    ContentBridge -->|chrome.runtime.sendMessage| SW[MV3 Background Service Worker]
+    
+    subgraph Browser Agent Runtime
+        SW --> TargetResolver[Target Tab Resolver]
+        TargetResolver --> Perception[On-Device Visual Privacy Perception]
+        Perception --> Firewall[Local Privacy Firewall & Minimizer]
+        Firewall -->|Sanitized Context Only| BackendGateway[FastAPI Agent Gateway]
+        
+        BackendGateway --> Groq[Groq Reasoner: openai/gpt-oss-20b]
+        Groq -->|Raw JSON BrowserAction| BackendGateway
+        BackendGateway -->|Action Candidate| SW
+        
+        SW --> RiskEngine[Action Risk Engine]
+        SW --> SemanticVerifier[Semantic Action Verifier]
+        SW --> M5[M5 Structural Action Validator]
+        
+        M5 -->|PASS / ALLOWED| Executor[DOM Action Executor]
+        Executor --> TargetDOM[Target Web Tab DOM]
+        
+        TargetDOM --> GoalVerifier[Deterministic Goal & Candidate Verifier]
+        GoalVerifier -->|Candidate Evaluation| StateTracker[Stateful Page Generation Tracker]
+    end
+    
+    StateTracker -->|Monotonic Gen Advancement| Perception
 ```
 
 ## SIH Official Evaluation Benchmark (Phases 1–7)
