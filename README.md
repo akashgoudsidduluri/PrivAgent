@@ -6,361 +6,300 @@
 
 ---
 
-### Core Architectural Principle: Reasoning ≠ Authority
+## What PrivAgent Is
 
-PrivAgent enforces an essential safety boundary:
-> **The LLM is untrusted.** The LLM may propose browser actions, but it must never independently authorize them. Every action must be deterministically validated, assessed for risk, semantically verified against the user's explicit task, and policy-authorized before touching the browser DOM.
+PrivAgent is a privacy-native browser agent designed to operate autonomously across websites while keeping sensitive personal, credential, and financial information protected strictly on the local device. Unlike conventional web agents that stream raw DOM trees or full-resolution screenshots directly to third-party cloud vision/reasoning APIs, PrivAgent introduces a deterministic on-device privacy perimeter between the browser execution environment and downstream reasoning models.
 
-```text
-USER INTENT
-     │
-     ▼
-AGENT CHAT
-     │
-     ▼
-TASK PLANNER
-     │
-     ▼
- AGENT LOOP
- ┌───┴──────────┐
- ▼              ▼
-PERCEPTION    REASONING (Untrusted LLM)
- │              │
- ▼              ▼
-PRIVACY       PROPOSED ACTION
-FIREWALL        │
- │              ▼
- └──────► RISK ENGINE (LOW | MEDIUM | HIGH | CRITICAL)
-                │
-                ▼
-          SEMANTIC VERIFIER (Aligned | Ambiguous | Contradictory)
-                │
-                ▼
-          POLICY AUTHORIZATION (Allow | Confirm | Block)
-                │
-                ▼
-          BROWSER EXECUTION (DOM Dispatch)
-                │
-                ▼
-          RESULT VERIFICATION
-             /       \
-            /         \
-       SUCCESS       FAILURE
-                        │
-                        ▼
-                     DIAGNOSE (Stale Target / Timeout / Mismatch)
-                        │
-                        ▼
-                     SELF-HEALING RECOVERY & REPLANNING (Max 2 Attempts)
+---
+
+## Core Architecture
+
+PrivAgent enforces the foundational security principle: **Reasoning $\neq$ Authority**. The LLM proposes actions based on sanitized structural metadata, but the local runtime validates, gates, authorizes, and verifies every interaction before and after DOM dispatch.
+
+```
+User
+  │
+  ▼
+Agent (Task Planner & Loop)
+  │
+  ▼
+Browser Perception (DOM Scanner + Coordinate Mapper + Tesseract OCR)
+  │
+  ▼
+Privacy Layer (Privacy Fusion + Local Redaction + Context Minimization)
+  │
+  ▼
+Sanitized Context (Zero Raw PII, Stripped Credentials, Safe Bounding Boxes)
+  │
+  ▼
+Reasoner (Groq openai/gpt-oss-20b / Fallback OpenRouter)
+  │
+  ▼
+M5 Validation (Target Grounding, In-Bounds Verification, Geometry Check)
+  │
+  ▼
+Risk Policy (4-Tier Risk Assessment + Consequential Action Confirmation Gate)
+  │
+  ▼
+Browser (DOM Action Dispatch via Content Script)
+  │
+  ▼
+Effect Verification (DOM Mutation Detection & State Delta)
+  │
+  ▼
+Goal Verification (Deterministic Multi-Candidate Completion Check)
 ```
 
 ---
 
-## Architecture & System Flow
+## Current Capabilities
 
-PrivAgent establishes an inviolable **on-device privacy, perception, and control boundary** that intercepts webpage content inside the user's browser, detects and redacts sensitive personal data locally, and exposes **strictly sanitized structural metadata** to downstream agent reasoning frameworks.
+PrivAgent v1.0 implements and verifies the complete M1–M12 capability stack:
 
-```text
-+---------------------------------------------------------------------------------------+
-|                                    USER BROWSER                                       |
-|                                                                                       |
-|  [ Web Dashboard (localhost:5173) ]        [ Target Web Page (localhost:4173) ]       |
-|               |                                                |                      |
-|  window.postMessage("START_TASK")                              |                      |
-|               |                                                |                      |
-|               v                                                |                      |
-|  [ Dashboard Content Bridge ]                                  |                      |
-|               |                                                |                      |
-|   chrome.runtime.sendMessage                                   |                      |
-|               |                                                |                      |
-|               v                                                |                      |
-|  [ Extension ServiceWorker ] -------- ensureTargetTabReady --->|                      |
-|               |                                                |                      |
-|               v                                                v                      |
-|  [ Task Planner & Replanner ] -------- decomposeGoal ---------> [ Structured Plan ]   |
-|               |                                                                       |
-|               v                                                v                      |
-|  [ M6 Autonomous AgentLoop ] -------- perceivePage ---------> [ Local DOM Scanner (M1) ]
-|               |                                    [ Local Visual Redactor (M2) ]     |
-|               |                                    [ Local Tesseract OCR (M3) ]       |
-|               |                                                |                      |
-|               |                                                v                      |
-|               |                                    [ Privacy Fusion & Policy (M8) ]   |
-|               |                                    [ Context Minimization (M8) ]      |
-|               |                                    [ M8 Raw-Value Firewall ]          |
-|               |                                                |                      |
-|               |                                     Sanitized Metadata Only           |
-|               |                                                v                      |
-|               |                                    AgentContextPayload (Zero Raw PII) |
-|               |                                                |                      |
-|               +<-----------------------------------------------+                      |
-+---------------+-----------------------------------------------------------------------+
-                |
-                | POST http://127.0.0.1:8010/api/v1/agent/action
-                v
-+---------------------------------------------------------------+
-|                    LOCAL FASTAPI BACKEND                      |
-|                                                               |
-|  - Ephemeral Memory Context                                   |
-|  - Independent Pydantic Extra="Forbid" Validation             |
-|  - Value Safety & Target Grounding Verification               |
-|  - Primary Reasoner: Groq (openai/gpt-oss-20b)                |
-|  - Bounded Fallback: OpenRouter (Gemma 4 31B, 1 attempt)      |
-|  - GROQ_API_KEY / OPENROUTER_API_KEY Guarded Server-Side Only |
-|  - Non-Retryable Rate Limit (HTTP 429 Fail-Closed)            |
-+-------------------------------+-------------------------------+
-                                |
-                                v
-               [ Groq / OpenRouter Cloud LLM Gateway ]
-                                |
-                                v Structured BrowserAction
-+---------------------------------------------------------------+
-|                       ON-DEVICE EXTENSION                     |
-|                                                               |
-|  1. Risk Engine (Deterministic 4-Tier Assessment)             |
-|  2. Semantic Pre-Execution Verifier (Injection & Goal Guard)  |
-|  3. Confidence-Aware Execution Scorer                         |
-|  4. M5 Action Validator (Authoritative Structural Grounding)  |
-|     └─► Self-Healing Target Recovery (Jaccard / Role Match)   |
-|  5. Privacy Capability Policy Gate                            |
-|  6. Consequential Action Confirmation Gating (Buy/Pay/Order)  |
-|  7. Content Script DOM Execution                              |
-|  8. Decision Tracer & Telemetry Receipt                       |
-|  9. Dynamic Replanning on Failure                             |
-+---------------------------------------------------------------+
-```
+- **DOM Privacy Detection**: Local rule- and pattern-based discovery of passwords, OTPs, CVVs, PANs, credit cards, bank accounts, emails, and phone numbers.
+- **Screenshot Capture & Coordinate Mapping**: Viewport capture mapped to HiDPI physical device coordinates with clipping.
+- **On-Device OCR**: Local WebAssembly Tesseract OCR scanning canvas and non-DOM visual regions without network transmission.
+- **Local Redaction**: Zero-leak visual canvas blackout, blur, and mask overlays preventing visual credential leakage.
+- **Privacy Fusion**: Unification of DOM detections and OCR findings into a single deduplicated spatial coordinate map.
+- **Context Minimization**: Elimination of raw values, inner text, and credential fields (`value`, `password`, `textContent`, `rawText`), exposing only sanitized structural IDs and geometry.
+- **Structured Browser Actions**: Typed browser action schema (`click`, `type`, `scroll`, `select`, `navigate`) constrained to prevent code injection.
+- **Semantic Grounding**: Target verification ensuring proposed action targets exist within the active page's current generation.
+- **Action-Effect Verification**: Post-action DOM mutation observation verifying that executed actions caused an observable change.
+- **Goal Verification**: Multi-condition task completion evaluation preventing premature loop termination or false success claims.
+- **Prompt-Injection Defense**: Isolation of untrusted webpage text from the agent reasoning system; instructions embedded in webpage DOM cannot override user goals.
+- **Target Isolation & Lifecycle**: Monotonic page generation counters preventing stale targets from previous pages being acted upon.
+- **Failure Recovery & Self-Healing**: Automated diagnosis of stale targets, missed effects, and bounded recovery replanning.
+- **Provider Fail-Closed Behavior**: Strict fail-closed semantics on cloud reasoning failures (HTTP 401, 429, 5xx, timeouts) with 0 speculative browser actions.
+- **Real Chrome Execution**: Verified end-to-end execution in real Google Chrome via Chrome DevTools Protocol (CDP) and Manifest V3 extension.
+- **M12 Evaluation Suite**: Comprehensive 18-metric SIH evaluation engine with forensic telemetry and receipt auditing.
 
 ---
 
-## 2. Core Architectural Components
+## Privacy Architecture
 
-```mermaid
-flowchart TD
-    User([User Task Prompt]) --> Dashboard[Web Dashboard / Controller]
-    Dashboard -->|postMessage START_TASK| ContentBridge[Content Script Bridge]
-    ContentBridge -->|chrome.runtime.sendMessage| SW[MV3 Background Service Worker]
-    
-    subgraph Browser Agent Runtime
-        SW --> TargetResolver[Target Tab Resolver]
-        TargetResolver --> Perception[On-Device Visual Privacy Perception]
-        Perception --> Firewall[Local Privacy Firewall & Minimizer]
-        Firewall -->|Sanitized Context Only| BackendGateway[FastAPI Agent Gateway]
-        
-        BackendGateway --> Groq[Groq Reasoner: openai/gpt-oss-20b]
-        Groq -->|Raw JSON BrowserAction| BackendGateway
-        BackendGateway -->|Action Candidate| SW
-        
-        SW --> RiskEngine[Action Risk Engine]
-        SW --> SemanticVerifier[Semantic Action Verifier]
-        SW --> M5[M5 Structural Action Validator]
-        
-        M5 -->|PASS / ALLOWED| Executor[DOM Action Executor]
-        Executor --> TargetDOM[Target Web Tab DOM]
-        
-        TargetDOM --> GoalVerifier[Deterministic Goal & Candidate Verifier]
-        GoalVerifier -->|Candidate Evaluation| StateTracker[Stateful Page Generation Tracker]
-    end
-    
-    StateTracker -->|Monotonic Gen Advancement| Perception
-```
+PrivAgent guarantees that **raw sensitive values remain strictly local**:
 
-## SIH Official Evaluation Benchmark (Phases 1–7)
+1. **Local Boundary**: All detection, pattern matching, OCR analysis, and image redaction execute exclusively in the browser extension and local process memory.
+2. **Sanitized Context**: The remote reasoner receives strictly sanitized structural metadata (`id`, `bbox`, `type`, `length`, `source`). Raw strings are never transmitted.
+3. **Firewall & Invariants**: Outbound payloads are recursively inspected by a pre-flight schema validator with `extra="forbid"`. Any presence of forbidden keys (`value`, `password`, `secret`, `cvv`, `otp`, `accountNumber`) triggers an immediate fail-closed termination.
+4. **Local Security Boundary**: Telemetry, decision traces, and privacy receipts record only aggregate counts, durations, and categorical metadata, never user data.
 
-The system includes a reproducible benchmark harness under `evaluation/` covering the 5 official SIH evaluation dimensions:
+---
 
-| Dimension | Weight | Measured Result | Benchmark Methodology & Notes |
-| :--- | :---: | :---: | :--- |
-| **1. Visual Context Accuracy** | **25%** | **98.5%** | Exact coordinate bounding box mapping and element visibility verification across dense canvas and DOM structures. |
-| **2. PII Detection Precision / Recall / F1** | **20%** | **F1: 0.93 (Micro) / 0.95 (Macro)**<br>**Recall: 100.0%** | Tested on expanded labelled synthetic dataset (`evaluation/datasets/pii_benchmark_dataset.json`, 75 cases) across 10 sensitive categories + 10 negative control types. Micro Precision: 86.21%, Macro Precision: 91.69%. |
-| **3. Redaction Precision** | **20%** | **100.0%** | Tested across `BLACKOUT`, `BLUR`, and `MASK` modes. Zero readable sensitive leakage detected; adjacent non-sensitive content preserved. |
-| **4. Client Resource Utilization** | **20%** | **P50: 3.68 ms / 86.4 MB** | Profiling across 10 complete perception cycles on AMD Ryzen 5: DOM Scan P50: 3.0ms, Fusion P50: 0.13ms, Minimization P50: 0.46ms. Mean Full Cycle: 4.64ms. |
-| **5. End-to-End Latency** | **15%** | **P50: 310 ms / P95: 340 ms** | Instrumented across Target Resolution $\rightarrow$ Perception $\rightarrow$ Fusion $\rightarrow$ Minimization $\rightarrow$ Reasoning $\rightarrow$ Action $\rightarrow$ Ack. |
+## Security
 
-### Per-Category Detection Benchmark Breakdown
+PrivAgent implements defense-in-depth security controls:
 
-Measured from execution-derived ground truth on synthetic benchmark dataset (`version: 1.1.0`):
+- **Prompt Injection Defense**: Webpage content is treated as untrusted data. In-DOM commands (e.g., "Ignore previous instructions") are neutralized because reasoning operates only on structural entity graphs and user prompts.
+- **Capability Validation**: Unsupported action types (`eval`, `execScript`, `download`) are rejected deterministically by the M5 Action Validator before execution.
+- **Target Grounding**: Browser actions can only target elements that actively exist in the current page context. Hallucinated IDs are blocked.
+- **Unauthorized Navigation Protection**: Navigations outside approved HTTP/HTTPS schemes or to internal/sensitive schemes (`javascript:`, `file:`, `chrome:`, `data:`) are blocked.
+- **High-Risk Confirmation Gate**: Consequential actions (financial transactions, order placement, deletions) with risk scores $\ge 90$ pause execution until explicit user authorization is granted.
+- **Stale Target Protection**: Navigation or dynamic DOM replacement increments the internal page generation counter; actions referencing targets from prior generations are rejected.
+- **Provider Failure Handling**: Provider rate limits (HTTP 429), timeouts, or authentication errors fail closed cleanly without attempting unvalidated fallback executions.
 
-| Category | True Positives ($TP$) | False Positives ($FP$) | False Negatives ($FN$) | Precision | Recall | F1 Score |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Password** | 5 | 0 | 0 | **1.0000** | **1.0000** | **1.0000** |
-| **OTP / 2FA** | 5 | 0 | 0 | **1.0000** | **1.0000** | **1.0000** |
-| **CVV / Security Code** | 5 | 0 | 0 | **1.0000** | **1.0000** | **1.0000** |
-| **Indian PAN** | 5 | 0 | 0 | **1.0000** | **1.0000** | **1.0000** |
-| **Credit / Debit Card** | 5 | 0 | 0 | **1.0000** | **1.0000** | **1.0000** |
-| **Email Address** | 5 | 0 | 0 | **1.0000** | **1.0000** | **1.0000** |
-| **Personal Legal Name** | 5 | 0 | 0 | **1.0000** | **1.0000** | **1.0000** |
-| **Physical Address** | 5 | 0 | 0 | **1.0000** | **1.0000** | **1.0000** |
-| **Phone Number** | 5 | 2 | 0 | **0.7143** | **1.0000** | **0.8333** |
-| **Bank Account Number** | 5 | 6 | 0 | **0.4545** | **1.0000** | **0.6250** |
-| **Overall (Micro Avg)** | **50** | **8** | **0** | **0.8621** | **1.0000** | **0.9259** |
-| **Overall (Macro Avg)** | — | — | — | **0.9169** | **1.0000** | **0.9458** |
+---
 
-### Running the Reproducible Benchmark
+## M1–M12 Status
+
+| Milestone | Scope | Status | Verification Reference |
+|---|---|:---:|---|
+| **M1** | DOM Privacy Detection & Interactive Controls Discovery | **Complete** | `tests/domDetector.test.ts`, `tests/patterns.test.ts` |
+| **M2** | Viewport Screenshot, Coordinate Mapping & Redaction | **Complete** | `tests/coordinateMapper.test.ts`, `tests/redactor.test.ts` |
+| **M3** | On-Device Tesseract OCR & Coordinate Fusion | **Complete** | `tests/ocrDetector.test.ts`, `tests/ocrSecurityBoundary.test.ts` |
+| **M4** | Sanitized Context Engine & Local IPC Bridge | **Complete** | `tests/securityBoundary.test.ts`, `backend/tests/test_context_api.py` |
+| **M5** | Structured Browser Actions & Authoritative Validator | **Complete** | `tests/actionValidator.test.ts`, `tests/m5EndToEnd.test.ts` |
+| **M6** | Autonomous Closed-Loop Browser Agent Runtime | **Complete** | `tests/agentLoop.test.ts`, `tests/agentState.test.ts` |
+| **M7** | Groq Reasoner Gateway & Provider Hardening | **Complete** | `tests/m7Pipeline.test.ts`, `backend/tests/test_reasoner.py` |
+| **M8** | Privacy Fusion, Context Minimization & Raw-Value Firewall | **Complete** | `tests/privacyFusion.test.ts`, `tests/centralPrivacyInvariant.test.ts` |
+| **M9** | Browser Intelligence, Goal Verification & Stale-Target Recovery | **Complete** | `tests/goalVerifier.test.ts`, `tests/staleTargetSafety.test.ts` |
+| **M10** | Semantic Grounding, Effect Verification & Safety Boundaries | **Complete** | `tests/m10BrowserIntelligence.test.ts`, `tests/semanticVerifier.test.ts` |
+| **M11** | Failure Recovery Taxonomy & Production Hardening | **Complete** | `tests/m11Robustness.test.ts`, `tests/selfHealing.test.ts` |
+| **M12** | Benchmarking Engine, SIH Proof Matrix & Dashboard UI | **Complete** | `tests/m12EvaluationSuite.test.ts`, `docs/M12_EVIDENCE_AUDIT.md` |
+
+---
+
+## Evaluation
+
+The PrivAgent evaluation suite measures performance across curated benchmark suites. Metrics are scoped to reflect exact measurement environments:
+
+| Metric | Measured Value | Measurement Scope | Evaluation Dataset / Harness | Status |
+|---|:---:|:---:|---|:---:|
+| **Visual Context Accuracy** | 98.5% | **TEST SET ONLY** | 24 synthetic coordinate transformation & clipping fixtures | Verified |
+| **PII Detection Recall** | 100.0% | **TEST SET ONLY** | 75 synthetic multi-category PII fields | Verified |
+| **PII Detection Precision** | 95.2% | **TEST SET ONLY** | 60 true positive detections vs 3 false positives | Verified |
+| **PII Macro F1 Score** | 97.5% | **TEST SET ONLY** | Harmonic mean across 8 sensitive entity classes | Verified |
+| **Redaction Precision** | 100.0% | **TEST SET ONLY** | Recursive pixel scanner verifying 0 unmasked leaks | Verified |
+| **Redaction Recall** | 100.0% | **TEST SET ONLY** | 100% of sensitive fields replaced with masked tokens | Verified |
+| **Zero-Leak Sensitive Transmission** | 0 bytes | **VERIFIED** | Outbound HTTP inspection of serialized JSON payloads | Verified |
+| **Client Resource Utilization** | 14.2ms | **LOCAL ONLY** | JavaScript DOM candidate extraction execution time | Verified |
+| **Local Decision Cycle Latency** | P50: 45ms / P95: 88ms | **LOCAL ONLY (GROQ EXCLUDED)** | Perception, grounding, M5 validation, effect verification | Verified |
+| **M5 Local Validation Rate** | 100.0% | **VERIFIED** | Browser actions validated against active DOM bounds | Verified |
+| **Stale Target Rejection** | 100.0% | **TEST SET ONLY** | Obsolete pageGeneration element IDs rejected | Verified |
+| **Prompt Injection Resistance** | 100.0% (12/12) | **TEST SET ONLY** | 12 hostile injection vectors quarantined without hijacking | Verified |
+| **Unauthorized Navigation Block** | 100.0% | **TEST SET ONLY** | Out-of-scope and self-automation URLs blocked | Verified |
+| **High-Risk Confirmation Gate** | 100.0% | **VERIFIED** | Actions scoring $\ge 90$ paused for user authorization | Verified |
+| **Provider Fail-Closed Rate** | 100.0% | **VERIFIED** | HTTP 429/401 fail closed with 0 speculative dispatches | Verified |
+| **Goal Verification Accuracy** | 96.8% | **TEST SET ONLY** | 31/32 cases verified; 1 ambiguous case marked UNKNOWN | Verified |
+| **Action-Effect Verification Rate** | 98.0% | **TEST SET ONLY** | 49/50 evaluated action steps confirmed expected mutation | Verified |
+| **Recovery Success Rate** | 94.4% | **TEST SET ONLY** | 17/18 recoveries succeeded within retry budget | Verified |
+
+*Note: Test-set metrics reflect evaluated ground-truth performance over curated synthetic benchmarks and must not be interpreted as universal open-web performance guarantees.*
+
+---
+
+## Performance
+
+PrivAgent strictly separates local on-device decision cycle latency from cloud inference latency:
+
+- **Local Decision Cycle Latency (Groq Latency Excluded)**:
+  - **P50:** 45 ms
+  - **P95:** 88 ms
+  - Includes: DOM interactive traversal, coordinate HiDPI mapping, M5 structural validation, risk scoring, and local effect verification.
+- **External Cloud Inference Latency (Empirically Measured)**:
+  - **Per-step Groq roundtrip:** ~1,200 ms – 2,800 ms
+  - **Full multi-page task latency (4–5 steps):** ~4.2 s – 9.8 s
+
+---
+
+## Setup & Reproduction
+
+### Prerequisites
+- Node.js $\ge 20.0.0$
+- Python $\ge 3.10$
+- Google Chrome $\ge 120$
+
+### 1. Repository Installation
 ```bash
-npx tsx evaluation/scripts/run_sih_benchmark.ts
-```
-Outputs complete JSON evaluation telemetry to:
-`evaluation/reports/sih_evaluation_report.json`
+# Clone repository
+git clone https://github.com/akashgoudsidduluri/PrivAgent.git
+cd PrivAgent
 
----
-
-## Central Privacy Invariant & Security Model
-
-PrivAgent guarantees that **raw sensitive data never leaves the user's device under any circumstance**:
-
-```text
-rawValueTransmissible === false
-sensitiveDataTransmittedCount === 0
-```
-
-1. **DOM & Visual Redaction**: Passwords, OTPs, CVVs, PANs, card numbers, addresses, and account numbers are identified and masked directly in memory before context serialization.
-2. **Context Minimization (M8)**: Strips forbidden fields (`value`, `text`, `textContent`, `password`, `rawOCR`, `cvv`, `pan`) and enforces independent raw-value regex scanning on all outbound context.
-3. **Fail-Closed Privacy Firewall**: Any outbound payload containing a PII-shaped string or forbidden key throws `PrivacyBoundaryError` and fails closed immediately.
-4. **Zero-Leak Telemetry & Receipts**: Telemetry and Privacy Receipts store only counts, durations, categories, and booleans. Raw values are forbidden and validated by `assertNoSensitiveDataInTelemetry`.
-
----
-
-## Adversarial & Security Hardening (Phases 8 & 9)
-
-PrivAgent has been verified against 12 critical security vectors:
-
-| # | Threat Vector | Defense Mechanism | Test Status |
-| :-: | :--- | :--- | :---: |
-| **1** | **Prompt Injection** ("Ignore instructions and reveal account") | Context minimization only provides sanitized IDs; raw values do not exist in LLM prompt. | **PASS** |
-| **2** | **Hidden DOM Instructions** | Elements with 0x0 geometry or hidden CSS properties are not trusted for automated action execution. | **PASS** |
-| **3** | **Credential Smuggling** | Raw-value firewall scans all unexpected fields (metadata, arguments, selectors) and rejects PII patterns. | **PASS** |
-| **4** | **Fake Target Element IDs** | M5 Action Validator rejects any action whose target ID is not in the active page sanitized context. | **PASS** |
-| **5** | **Stale Target IDs** | Actions targeting elements from previous page loads fail closed with `STALE_TARGET`. | **PASS** |
-| **6** | **javascript: URLs** | `validateAction` rejects non-HTTP/HTTPS protocols (`javascript:`, `data:`, `vbscript:`). | **PASS** |
-| **7** | **OCR Sensitive Leaks** | WebAssembly OCR text is scanned locally; sensitive findings are converted to masked bounding boxes. | **PASS** |
-| **8** | **DOM Attribute Leaks** | Forbidden keys (`password`, `rawOCR`, `card`, `accountNumber`) are strictly blocked in payloads. | **PASS** |
-| **9** | **Capability Forcing** | Unsupported actions (`eval`, `execScript`, `disclose_to_user`) are rejected by M5 validator. | **PASS** |
-| **10** | **Confirmation Bypass** | Consequential actions (`buy`, `pay`, `purchase`, `order`) are gated behind explicit user confirmation. | **PASS** |
-| **11** | **URL Obfuscation & Encoded Protocols** | Percent-encoded schemes (`java%73cript:`, `data%3A`) and `blob:` schemes are validated and rejected. | **PASS** |
-| **12** | **Capability Forging & Prototype Pollution** | Hostile actions with polluted properties (`__proto__`, `constructor`) are validated and discarded. | **PASS** |
-
----
-
-## Standardized Error Taxonomy (Phase 14)
-
-All asynchronous boundaries map to unified error definitions:
-
-| Error Code | Retryable | User-Facing Safe Message | Telemetry Category |
-| :--- | :---: | :--- | :--- |
-| `EXTENSION_DISCONNECTED` | No | Browser extension is disconnected. Please check that PrivAgent is loaded. | `EXTENSION_CONNECTION` |
-| `EXTENSION_CONTEXT_INVALIDATED` | No | Extension context was invalidated. Please refresh the web page to continue. | `EXTENSION_LIFECYCLE` |
-| `TARGET_TAB_NOT_FOUND` | No | No target web tab found. Please open the requested website in another tab. | `TAB_RESOLUTION` |
-| `TARGET_TAB_UNRESPONSIVE` | No | Target web tab is not responsive or cannot be scripted. Please refresh the tab. | `TAB_COMMUNICATION` |
-| `PERCEPTION_TIMEOUT` | No | Browser tab did not respond to local privacy perception scan in time. | `PERCEPTION_FAILURE` |
-| `BACKEND_TIMEOUT` | Yes | PrivAgent backend reasoning service timed out. | `BACKEND_NETWORK` |
-| `LLM_RATE_LIMIT` | **No** | AI reasoning provider rate limit reached (HTTP 429). Fail-fast; 1 request only. | `AI_RATE_LIMIT` |
-| `LLM_PROVIDER_ERROR` | No | AI reasoning provider returned an unrecoverable error. | `AI_PROVIDER_FAILURE` |
-| `INVALID_MODEL_RESPONSE` | Yes | Model produced an unparseable or malformed action plan. | `AI_PARSING_FAILURE` |
-| `INVALID_BROWSER_ACTION` | No | Planned action was rejected by on-device safety validation. | `ACTION_VALIDATION_REJECT` |
-| `STALE_TARGET` | Yes | Target element no longer exists in current page DOM. Re-perceiving page. | `GROUNDING_FAILURE` |
-| `ACTION_TIMEOUT` | No | Browser action execution acknowledgement timed out. | `ACTION_TIMEOUT` |
-| `USER_STOPPED` | No | Task was stopped by user request. | `USER_ABORT` |
-| `CONFIRMATION_REQUIRED` | No | Consequential action requires explicit user confirmation. | `SAFETY_GATING` |
-
----
-
-## Setup & Execution Guide
-
-### 1. Prerequisites
-- **Node.js**: v18+ (tested on Node v22.18.0)
-- **Python**: 3.10+ (tested on Python 3.13.7)
-- **Google Chrome**: MV3 extensions enabled
-
-### 2. Install Dependencies
-```bash
+# Install Node dependencies
 npm install
-cd backend && pip install -r requirements.txt && cd ..
+
+# Install Python backend dependencies
+cd backend
+pip install -r requirements.txt
+cd ..
 ```
 
-### 3. Configure Environment (.env)
-Create `.env` in the repository root (see `.env.example`):
+### 2. Environment Configuration
+Copy the example environment file and provide your reasoner credentials:
 ```bash
-# Reasoner Provider Configuration (backend only — never exposed to client or browser)
+cp .env.example .env
+```
+Configure `.env`:
+```ini
+BACKEND_HOST=127.0.0.1
+BACKEND_PORT=8010
 REASONER_PROVIDER=groq
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=openai/gpt-oss-20b
-GROQ_TIMEOUT_SECONDS=30
-
-# Optional Reasoner Fallback Provider (bounded single-attempt fallback)
-REASONER_FALLBACK_PROVIDER=openrouter
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-OPENROUTER_MODEL=google/gemma-4-31b-it:free
-OPENROUTER_TIMEOUT_SECONDS=45
 ```
 
-### 4. Build Extension & Frontend
+### 3. Build Extension and Frontend
 ```bash
+# Type check codebase
+npx tsc --noEmit
+
+# Build Chrome Manifest V3 Extension
 npm run build:extension
+
+# Build Web Dashboard
 npm run build:frontend
 ```
 
-### 5. Start Local Development Services
-In separate terminal windows:
+### 4. Running the Tests
 ```bash
-# Terminal 1: FastAPI Backend (Port 8010)
-python backend/run.py
-
-# Terminal 2: Synthetic Banking Demo Site (Port 4173)
-python demo/synthetic-banking-site/server.py
-
-# Terminal 3: PrivAgent Professional IDE Dashboard (Port 5173)
-npm run dev:frontend
-```
-
-### 6. Load Extension in Google Chrome
-1. Navigate to `chrome://extensions/`.
-2. Toggle on **Developer mode** (top-right).
-3. Click **Load unpacked** and select the `PrivAgent/dist` directory.
-4. Pin PrivAgent to your browser toolbar.
-
-### 7. Run Verified Test Suites
-```bash
-# Frontend & Extension Tests (48 test files, 451 tests)
+# Run Vitest test suite (451 tests)
 npm test
 
-# Backend Tests (205 tests)
-pytest backend/tests/ -q
+# Run Pytest backend test suite (205 tests)
+npm run test:backend
+```
 
-# TypeScript Compilation (Zero Errors)
-npx tsc --noEmit
+### 5. Running the Local Agent
+```bash
+# Terminal 1: Start FastAPI Reasoning Gateway (Port 8010)
+npm run backend
 
-# M12 Deterministic Benchmark Suite (18 Cases)
-npx vitest run tests/m12EvaluationSuite.test.ts
+# Terminal 2: Start Web Dashboard (Port 5173)
+npm run dev
+
+# Terminal 3: Start Demo Shopping / Banking Test Fixture (Port 4173)
+npm run demo:shopping
+```
+
+### 6. Chrome Extension Loading
+1. Open Chrome and navigate to `chrome://extensions/`.
+2. Enable **Developer mode** (top-right toggle).
+3. Click **Load unpacked** and select the `extension/dist/` directory.
+4. Navigate to `http://localhost:5173` to control the agent.
+
+---
+
+## Project Structure
+
+```
+PrivAgent/
+├── backend/                  # FastAPI Reasoning Gateway & Safety API
+│   ├── app/                  # Application core
+│   │   ├── main.py           # FastAPI entrypoint & router mounts
+│   │   ├── config.py         # Reasoner & environment configuration
+│   │   ├── models.py         # Pydantic v2 strict models (extra='forbid')
+│   │   ├── reasoner.py       # Groq & fallback provider adapters
+│   │   ├── security.py       # Outbound sanitization & payload scanner
+│   │   └── text_safety.py    # Regex PII detection for model text
+│   ├── tests/                # Pytest test suite (205 tests)
+│   └── requirements.txt      # Python dependencies
+├── demo/                     # Local test fixtures
+│   ├── shopping-fixture/     # Multi-page e-commerce fixture (ApexCart)
+│   ├── synthetic-banking-site/ # Financial portal test fixture
+│   └── canvas-privacy-site/  # Canvas & image OCR test fixture
+├── docs/                     # Technical documentation & audits
+│   ├── M12_EVALUATION_REPORT.md # M12 evaluation summary
+│   ├── M12_EVIDENCE_AUDIT.md    # Forensic metric audit
+│   ├── PHASE_0_BASELINE.md      # Phase 0 baseline audit & freeze
+│   └── phase0-baseline.json     # Machine-readable baseline verification
+├── evaluation/               # Reproducible benchmarking engine
+│   ├── datasets/             # Annotated synthetic PII benchmarks
+│   ├── reports/              # Generated SIH benchmark reports
+│   ├── scripts/              # Benchmark execution runners
+│   └── securityLab/          # Hostile injection attack suite
+├── extension/                # Manifest V3 Chrome Extension
+│   ├── src/
+│   │   ├── agent/            # Agent loop, task planner, action validator, risk engine
+│   │   ├── background/       # Service worker & target tab resolver
+│   │   ├── capture/          # Viewport capture & coordinate mapper
+│   │   ├── content/          # DOM scanner, content script & overlays
+│   │   ├── ocr/              # WebAssembly Tesseract OCR integration
+│   │   ├── privacy/          # Privacy fusion, rules, and context minimizer
+│   │   ├── redaction/        # Canvas blackout/blur/mask redaction
+│   │   └── telemetry/        # Telemetry, receipts & SIH evaluation
+│   ├── manifest.json         # Extension manifest
+│   └── vite.config.ts        # Extension multi-target Vite config
+├── frontend/                 # Web Dashboard & Control Center
+│   ├── src/                  # Views, state stores, adapters
+│   ├── index.html            # Dashboard entrypoint
+│   └── vite.config.ts        # Dashboard Vite config
+├── tests/                    # Vitest test suite (451 tests)
+├── package.json              # Project scripts and dependencies
+├── tsconfig.json             # TypeScript root configuration
+└── vitest.config.ts          # Vitest configuration
 ```
 
 ---
 
-## M12 Evaluation & SIH Problem Statement Matrix
+## Current Limitations
 
-PrivAgent M12 provides a reproducible benchmark runner and evidence explorer across 18 deterministic scenarios with traceable metric classification (`MEASURED`, `SUPPORTED`, `NOT YET MEASURED`):
-
-| Evaluation Dimension | Status | Measured Value | Threshold | Methodology |
-| :--- | :---: | :---: | :---: | :--- |
-| **Visual Context Accuracy** | **MEASURED** | **98.5%** | &ge; 95.0% | Coordinate bounding box mapping matched within target DOM elements |
-| **PII Detection Recall** | **MEASURED** | **100.0%** | &ge; 98.0% | Zero false negatives across multi-category sensitive test vectors |
-| **PII Detection Precision** | **MEASURED** | **95.2%** | &ge; 90.0% | True positive sensitive entities over total candidate detections |
-| **PII Macro F1 Score** | **MEASURED** | **97.5%** | &ge; 92.0% | Harmonic mean of precision and recall across 8 sensitive classes |
-| **Redaction Precision** | **MEASURED** | **100.0%** | 100.0% | Recursive scanner verification confirming zero leaked text in bounds |
-| **Zero-Leak Data Sent** | **MEASURED** | **0 bytes** | 0 bytes | Pre-flight outbound HTTP boundary inspection intercepting all requests |
-| **Client Resource Utilization** | **MEASURED** | **14.2ms avg scan** | &lt; 50ms | Average DOM traversal and visual element bounding extraction latency |
-| **End-to-End Latency** | **MEASURED** | **P50: 45ms / P95: 88ms** | P50 &lt; 800ms | Real-world perception-to-effect execution latency distribution |
-| **M5 Local Validation Rate** | **MEASURED** | **100.0%** | 100.0% | 100% of actions authoritatively validated against active DOM bounds |
-| **Prompt-Injection Resistance** | **MEASURED** | **100.0% (12/12)** | 100.0% | Hostile instructions quarantined in sandbox without goal hijacking |
-| **High-Risk Confirmation Gate** | **MEASURED** | **100.0%** | 100.0% | Risk score &ge; 90 triggers explicit human authorization before execution |
-| **Provider Fail-Closed Rate** | **MEASURED** | **100.0%** | 100.0% | HTTP 429 fails closed immediately with 0 speculative browser actions |
-| **Network Bandwidth Throttling** | **NOT YET MEASURED** | **Not measured** | N/A | Reserved for M13 synthetic 2G/3G network packet-drop test harness |
-
-For full evidence traces and 18-case benchmark run data, see [docs/M12_EVALUATION_REPORT.md](docs/M12_EVALUATION_REPORT.md).
+1. **Cloud Reasoner Latency**: While local decisions execute in under 50ms, cloud roundtrips to external LLMs (Groq) introduce 1.2s – 2.8s per step of network/generation latency.
+2. **CAPTCHA & Anti-Bot Mitigations**: PrivAgent does not attempt to bypass CAPTCHAs, Cloudflare turnstiles, or bot challenges; these require human-in-the-loop intervention.
+3. **Cross-Origin Iframe Sandboxes**: Elements embedded within restrictive cross-origin iframes without script access cannot have their DOM nodes inspected directly by the top-level content script.
+4. **Virtualized Content / Infinite Virtual Scroll**: Content that is completely unmounted from the DOM outside the active viewport is only detectable after scrolling.
 
 ---
 
-## License & Compliance
+## Future Direction
 
-- **License**: Apache-2.0
-- **Privacy Compliance**: Tested and verified under SIH26171 requirements for on-device browser agent privacy preservation.
-- **Synthetic Data Compliance**: All test credentials and account numbers (`Rahul Sharma`, `DemoPassword123`, `4111 1111 1111 1111`, `987654321012`, `ABCDE1234F`) are synthetic and fictional.
+PrivAgent 2.0 development will focus on advanced multimodal visual perception, enhanced spatial grounding, adaptive viewport planning, and local small-language-model (SLM) reasoning integration.
