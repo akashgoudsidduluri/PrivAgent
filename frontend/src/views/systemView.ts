@@ -223,7 +223,7 @@ export class SystemView {
     const grid = document.getElementById('system-health-grid');
     if (!grid) return;
 
-    const isConnected = this.adapter.isExtensionConnected();
+    const isConnected = this.adapter.isExtensionConnected?.() ?? false;
     const isOnline = this.latestHealth?.online !== false;
 
     grid.innerHTML = `

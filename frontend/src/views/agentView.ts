@@ -187,7 +187,7 @@ export class AgentView {
 
     if (allowBtn) {
       allowBtn.addEventListener('click', () => {
-        this.adapter.confirmUserAction(true);
+        this.adapter.confirmAction(true);
         const box = document.getElementById('agent-confirmation-box');
         if (box) box.style.display = 'none';
       });
@@ -195,7 +195,7 @@ export class AgentView {
 
     if (denyBtn) {
       denyBtn.addEventListener('click', () => {
-        this.adapter.confirmUserAction(false);
+        this.adapter.confirmAction(false);
         const box = document.getElementById('agent-confirmation-box');
         if (box) box.style.display = 'none';
       });

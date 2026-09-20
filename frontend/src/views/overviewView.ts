@@ -179,7 +179,7 @@ export class OverviewView {
     const grid = document.getElementById('overview-status-grid');
     if (!grid) return;
 
-    const isConnected = this.adapter.isExtensionConnected();
+    const isConnected = this.adapter.isExtensionConnected?.() ?? false;
     const isRunning = this.latestState?.status === 'RUNNING';
     const isReady = isConnected && this.latestHealth?.online !== false;
 
