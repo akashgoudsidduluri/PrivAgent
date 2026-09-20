@@ -62,6 +62,12 @@ export interface StepRecord {
   semanticVerification?: SemanticVerificationResult;
   confidenceEvaluation?: ConfidenceEvaluation;
   selfHealing?: SelfHealingResult;
+  /** Populated for navigate actions — the destination URL. */
+  navigationDestination?: string;
+  /** True if post-navigation page setup (load + re-inject) succeeded. */
+  postNavigationSettled?: boolean;
+  /** Monotonic counter: which perception cycle produced the context used this step. */
+  perceptionGeneration?: number;
 }
 
 export interface TaskState {
@@ -86,6 +92,11 @@ export interface TaskState {
   requiresUserConfirmationAction?: BrowserAction;
   plan?: TaskPlan;
   decisionTraceSummary?: ReturnType<AgentDecisionTracer['getSummary']>;
+  /**
+   * Monotonic counter incremented at the start of each perceivePage call.
+   * Lets the dashboard distinguish stale perception context from fresh.
+   */
+  perceptionGeneration: number;
 }
 
 export interface AgentLoopCallbacks {
@@ -105,6 +116,21 @@ export interface AgentLoopCallbacks {
    * Optional progress listener called after every step.
    */
   onStepProgress?: (state: TaskState) => void;
+
+  /**
+   * Called immediately after a successful NAVIGATE action is executed.
+   * The implementation must:
+   *   1. Wait for the target tab to finish loading (bounded timeout).
+   *   2. Re-inject the content script on the new page.
+   * Returns true when the new page is ready for perception; false on timeout.
+   *
+   * This ensures the next perceivePage call sees the NEW page's DOM, not
+   * stale content from the pre-navigation page.
+   *
+   * Privacy note: `destination` is the URL string from the already-validated
+   * BrowserAction — it has passed M5 and the confirmation gate.
+   */
+  onNavigationComplete?: (destination: string) => Promise<boolean>;
 }
 
 export interface AgentLoopOptions {
@@ -203,6 +229,7 @@ export class AgentLoop {
       maxSteps: this.maxSteps,
       maxRetries: this.maxRetries,
       providerAttempts: 0,
+      perceptionGeneration: 0,
     };
   }
 
@@ -239,6 +266,13 @@ export class AgentLoop {
     this.state.visitedElementIds = [];
     this.state.retryCount = 0;
     this.state.providerAttempts = 0;
+    // perceptionGeneration is NOT reset on resume (runTask called from
+    // resumeWithConfirmation): the counter stays monotonic across navigation
+    // so the dashboard can distinguish pre- and post-navigation perceptions.
+    // It IS reset to 0 for a brand-new task (status was not IN_PROGRESS).
+    if (this.state.status !== 'IN_PROGRESS') {
+      this.state.perceptionGeneration = 0;
+    }
     this.state.reason = undefined;
     this.state.requiresUserConfirmationAction = undefined;
 
@@ -265,6 +299,9 @@ export class AgentLoop {
       }
 
       // 2. Fresh perception cycle: obtain current sanitized context
+      this.state.perceptionGeneration++;
+      const perceptionGen = this.state.perceptionGeneration;
+      console.info('[AgentTrace] perception started', { perceptionGeneration: perceptionGen, url: this.state.currentUrl });
       const context = await this.callbacks.perceivePage();
       if (!context) {
         this.state.status = 'FAILED';
@@ -274,7 +311,7 @@ export class AgentLoop {
         break;
       }
       console.info('[AgentLoop] perception completed');
-      console.info('[AgentTrace] perception complete');
+      console.info('[AgentTrace] perception complete', { perceptionGeneration: perceptionGen, contextUrl: context.url });
 
       // Defense-in-depth: enforce zero raw PII in newly perceived context
       assertSanitizedContextSafe(context);
@@ -716,6 +753,15 @@ export class AgentLoop {
 
   /**
    * Resume an agent loop after explicit user confirmation of a consequential action.
+   *
+   * If the confirmed action is a NAVIGATE, this method:
+   *   1. Executes the navigation.
+   *   2. Calls onNavigationComplete() to wait for page load and re-inject
+   *      the content script on the new page.
+   *   3. Only then re-enters runTask for fresh perception on the new page.
+   *
+   * Element IDs and perception context from before the navigation are NOT
+   * forwarded — runTask starts a fresh perception cycle automatically.
    */
   async resumeWithConfirmation(): Promise<TaskState> {
     if (this.state.status !== 'NEEDS_USER_CONFIRMATION' || !this.state.requiresUserConfirmationAction) {
@@ -726,22 +772,80 @@ export class AgentLoop {
     this.state.requiresUserConfirmationAction = undefined;
     this.state.status = 'IN_PROGRESS';
 
+    const isNavigate = action.action === 'navigate' && typeof action.url === 'string';
+    const destination = isNavigate ? action.url! : undefined;
+
+    console.info('[AgentTrace] resumeWithConfirmation', {
+      action: action.action,
+      destination: destination ?? 'N/A',
+      confirmationState: 'AUTHORIZED',
+    });
+
     // Execute the confirmed action
     console.info('[AgentTrace] executeAction started');
     const execResult = await this.callbacks.executeAction(action);
-    console.info('[AgentTrace] executeAction response received');
+    console.info('[AgentTrace] executeAction response received', {
+      success: execResult.success,
+      action: action.action,
+      destination: destination ?? 'N/A',
+      navigationDestination: destination ?? undefined,
+    });
+
     if (!execResult.success) {
       this.state.status = 'FAILED';
       this.state.reason = `Confirmed action execution failed: ${execResult.error}`;
       this.notifyProgress();
+      console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
       return this.getState();
     }
 
+    // Record the confirmed step with navigation trace fields
+    const stepRecord: StepRecord = {
+      step: this.state.currentStep,
+      action,
+      validationAllowed: true,
+      validationReason: 'User explicitly confirmed consequential action',
+      executionSuccess: true,
+      url: this.state.currentUrl,
+      timestamp: Date.now(),
+      navigationDestination: destination,
+      perceptionGeneration: this.state.perceptionGeneration,
+    };
+    this.state.steps.push(stepRecord);
     this.state.previousActions.push(action);
-    this.recordStep(action, true, 'User explicitly confirmed consequential action', true);
     this.notifyProgress();
 
-    // Re-enter autonomous loop
+    // Post-navigation page setup: wait for new page to load and re-inject
+    // content script before re-entering the perception loop.
+    if (isNavigate && destination && this.callbacks.onNavigationComplete) {
+      console.info('[AgentTrace] POST_NAVIGATION_SETTLE_START', { destination });
+      const settled = await this.callbacks.onNavigationComplete(destination);
+      console.info('[AgentTrace] POST_NAVIGATION_SETTLE_RESULT', {
+        destination,
+        postNavigationSettled: settled,
+      });
+
+      // Update the step record with the settle result
+      stepRecord.postNavigationSettled = settled;
+
+      if (!settled) {
+        this.state.status = 'FAILED';
+        this.state.reason =
+          `Navigation to ${destination} succeeded but the new page did not become ready ` +
+          '(content script injection timed out). Please try the task again on the new page.';
+        this.notifyProgress();
+        console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+        return this.getState();
+      }
+
+      // Invalidate old element IDs — they belong to the pre-navigation DOM
+      this.state.visitedElementIds = [];
+      console.info('[AgentTrace] STALE_ELEMENT_IDS_CLEARED', {
+        reason: 'Navigation changed the page; old element IDs are invalid.',
+      });
+    }
+
+    // Re-enter autonomous loop with fresh perception on the new page
     return this.runTask(this.state.task);
   }
 
@@ -805,6 +909,40 @@ export class AgentLoop {
 
   private isTaskGoalSatisfied(task: string, state: TaskState, context: AgentContextPayload): boolean {
     const lower = task.toLowerCase();
+
+    // Google search task: "search for X" or "search google for X"
+    //
+    // Success requires TWO conditions:
+    //   1. The target tab is actually on google.com (navigation + load verified).
+    //   2. A search has been submitted — detected by:
+    //      a. URL contains q= (Google redirected to results), OR
+    //      b. type action + click/submit (form submitted, results loading).
+    //
+    // perceptionGeneration is checked implicitly: if the context.url is google.com
+    // then the perception was taken AFTER navigation (new page, new generation).
+    if (
+      (lower.includes('search for') || lower.includes('search google')) &&
+      /(\.google\.)|(\/\/google\.)/i.test(context.url)
+    ) {
+      // Check 1: URL already has search query params (results page)
+      try {
+        const u = new URL(context.url);
+        if (u.searchParams.has('q') && u.searchParams.get('q')!.length > 0) {
+          console.info('[AgentTrace] GOAL_SATISFIED: Google results URL detected', { url: context.url });
+          return true;
+        }
+      } catch {
+        // ignore URL parse errors
+      }
+      // Check 2: type action occurred AND a submit/click happened after
+      const hasTyped = state.previousActions.some((a) => a.action === 'type');
+      const hasSubmitted = state.previousActions.some((a) => a.action === 'click' || a.action === 'navigate');
+      if (hasTyped && hasSubmitted) {
+        console.info('[AgentTrace] GOAL_SATISFIED: Google type+submit actions detected', { url: context.url });
+        return true;
+      }
+      return false;
+    }
 
     // Multi-step task: "Open the account details and find the recent transactions"
     if (

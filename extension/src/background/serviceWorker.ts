@@ -164,6 +164,54 @@ async function ensureTargetTabReady(tabId: number): Promise<boolean> {
 }
 
 /**
+ * Wait for a tab to reach loading status 'complete', with a bounded timeout.
+ *
+ * Race-condition fix: checks the CURRENT tab state first before registering the
+ * onUpdated listener. If the navigation already finished before we registered
+ * the listener we would otherwise wait the full timeout and incorrectly return false.
+ *
+ * Timeline:
+ *   executeAction(navigate) → tab starts loading
+ *   ... (some ms) ...
+ *   waitForTabLoad() called
+ *     └─ chrome.tabs.get(tabId) → status already 'complete'? return true immediately.
+ *     └─ otherwise register chrome.tabs.onUpdated listener + start timer.
+ */
+async function waitForTabLoad(tabId: number, timeoutMs: number): Promise<boolean> {
+  // Fast-path: tab may have already finished loading before we registered the listener.
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab.status === 'complete') {
+      console.info('[PrivAgent SW] waitForTabLoad: tab already complete', { tabId });
+      return true;
+    }
+  } catch (e) {
+    // Tab may have been closed or is transitioning; fall through to the listener.
+    console.warn('[PrivAgent SW] waitForTabLoad: tabs.get failed', { tabId, err: String(e) });
+  }
+
+  // Slow-path: listen for the completion event with a timeout.
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      chrome.tabs.onUpdated.removeListener(listener);
+      console.warn('[PrivAgent SW] waitForTabLoad: timed out', { tabId, timeoutMs });
+      resolve(false);
+    }, timeoutMs);
+
+    function listener(id: number, info: chrome.tabs.TabChangeInfo) {
+      if (id === tabId && info.status === 'complete') {
+        clearTimeout(timer);
+        chrome.tabs.onUpdated.removeListener(listener);
+        console.info('[PrivAgent SW] waitForTabLoad: complete event received', { tabId });
+        resolve(true);
+      }
+    }
+
+    chrome.tabs.onUpdated.addListener(listener);
+  });
+}
+
+/**
  * Message handler — routes messages from content scripts, popup, and dashboard.
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -457,6 +505,60 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 error: err instanceof Error ? err.message : String(err),
               };
             }
+          },
+
+          onNavigationComplete: async (destination: string): Promise<boolean> => {
+            console.info('[AgentTrace] onNavigationComplete', { destination, targetTabId });
+
+            // Step 1: Wait for the tab to reach loading=complete.
+            // Uses race-condition-safe waitForTabLoad that checks current state first.
+            const loaded = await waitForTabLoad(targetTabId, 8000);
+            if (!loaded) {
+              console.error('[PrivAgent SW] onNavigationComplete: tab load timed out', { targetTabId, destination });
+              return false;
+            }
+            console.info('[AgentTrace] POST_NAVIGATION_TAB_LOADED', { targetTabId });
+
+            // Step 2: Verify the tab actually landed on the intended destination.
+            // Guards against: redirects, CSP blocks, network errors that left the
+            // tab on an error page, or a fast navigation that went somewhere else.
+            try {
+              const tab = await chrome.tabs.get(targetTabId);
+              const actualUrl = tab.url || (tab as any).pendingUrl || '';
+              const destOrigin = (() => { try { return new URL(destination).hostname; } catch { return destination; } })();
+              const actualOrigin = (() => { try { return new URL(actualUrl).hostname; } catch { return actualUrl; } })();
+
+              // Allow for www. prefix differences and subdomains of the same domain.
+              // e.g. google.com and www.google.com are the same destination.
+              const destinationMatches =
+                actualOrigin === destOrigin ||
+                actualOrigin.endsWith('.' + destOrigin) ||
+                destOrigin.endsWith('.' + actualOrigin);
+
+              console.info('[AgentTrace] POST_NAVIGATION_URL_VERIFY', {
+                destination,
+                destOrigin,
+                actualOrigin,
+                destinationMatches,
+              });
+
+              if (!destinationMatches) {
+                console.error(
+                  '[PrivAgent SW] onNavigationComplete: destination mismatch after load. ' +
+                  `Expected: ${destOrigin} | Actual: ${actualOrigin}`
+                );
+                return false;
+              }
+            } catch (e) {
+              console.warn('[PrivAgent SW] onNavigationComplete: URL verification failed', { err: String(e) });
+              // Non-fatal: proceed to content script injection.
+            }
+
+            // Step 3: Re-inject content script on the new page.
+            // The old content script was torn down when the page unloaded.
+            const ready = await ensureTargetTabReady(targetTabId);
+            console.info('[AgentTrace] POST_NAVIGATION_CONTENT_SCRIPT_READY', { targetTabId, ready });
+            return ready;
           },
 
           onStepProgress: (state: TaskState) => {
