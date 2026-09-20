@@ -135,6 +135,15 @@ export interface SafeOCRRegion {
   sensitiveType?: SensitiveEntityType;
 }
 
+import {
+  VisualRegion,
+  ImageFinding,
+  CanvasFinding,
+  VideoKeyFrameFinding,
+  VisualInteractiveCandidate,
+} from '../visualPerception/visualTypes';
+import { PrivacyFinding } from '../privacy/fusion';
+
 export interface ActiveWorldModelRef {
   pageGeneration: number;
   worldModelId: string;
@@ -151,6 +160,13 @@ export interface BrowserWorldModel {
   semanticRelationships: SemanticRelationship[];
   textRegions: SafeTextRegion[];
   ocrRegions: SafeOCRRegion[];
+  // Phase 2 Multimodal Extensions
+  visualRegions: VisualRegion[];
+  imageFindings: ImageFinding[];
+  canvasFindings: CanvasFinding[];
+  videoFindings: VideoKeyFrameFinding[];
+  interactiveCandidates: VisualInteractiveCandidate[];
+  privacyFindings: PrivacyFinding[];
   buildDurationMs: number;
 }
 
@@ -166,6 +182,9 @@ export interface SanitizedWorldModelSummary {
   elementCount: number;
   interactiveCount: number;
   entityCount: number;
+  visualRegionCount: number;
+  canvasCount: number;
+  videoCount: number;
   hasModal: boolean;
   keyEntities: Array<{
     id: string;
@@ -173,6 +192,12 @@ export interface SanitizedWorldModelSummary {
     title: string;
     actionElementId?: string;
     bbox: [number, number, number, number];
+  }>;
+  visualCandidates: Array<{
+    id: string;
+    type: string;
+    bbox: [number, number, number, number];
+    label?: string;
   }>;
   spatialHighlights: Array<{
     sourceId: string;

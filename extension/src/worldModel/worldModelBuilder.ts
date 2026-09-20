@@ -18,6 +18,16 @@ import {
   SafeTextRegion,
   SafeOCRRegion,
 } from './types';
+import {
+  VisualRegion,
+  ImageFinding,
+  CanvasFinding,
+  VideoKeyFrameFinding,
+  VisualInteractiveCandidate,
+} from '../visualPerception/visualTypes';
+import { PrivacyFinding } from '../privacy/fusion';
+import { extractVisualRegions } from '../visualPerception/visualRegions';
+import { detectCanvasAndImageUI } from '../visualPerception/canvasDetector';
 import { computeSpatialRelationships } from './spatialEngine';
 import { extractAccessibilityTree } from './accessibilityTree';
 import { buildEntityGraph } from './entityGraph';
@@ -46,6 +56,12 @@ export interface BuildWorldModelOptions {
   pageGeneration?: number;
   viewport?: ViewportGeometry;
   ocrRegions?: SafeOCRRegion[];
+  visualRegions?: VisualRegion[];
+  imageFindings?: ImageFinding[];
+  canvasFindings?: CanvasFinding[];
+  videoFindings?: VideoKeyFrameFinding[];
+  interactiveCandidates?: VisualInteractiveCandidate[];
+  privacyFindings?: PrivacyFinding[];
   root?: Document | HTMLElement;
 }
 
@@ -186,6 +202,13 @@ export function buildBrowserWorldModel(options: BuildWorldModelOptions = {}): Br
     }
   });
 
+  // 8. Extract Visual & Canvas Findings
+  const visualRegions = options.visualRegions ?? extractVisualRegions({ pageGeneration, root: options.root });
+  const canvasAndImage =
+    options.canvasFindings && options.interactiveCandidates
+      ? { canvasFindings: options.canvasFindings, interactiveCandidates: options.interactiveCandidates }
+      : detectCanvasAndImageUI({ pageGeneration, root: options.root });
+
   const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const buildDurationMs = Math.round((endTime - startTime) * 100) / 100;
 
@@ -200,6 +223,12 @@ export function buildBrowserWorldModel(options: BuildWorldModelOptions = {}): Br
     semanticRelationships,
     textRegions,
     ocrRegions: options.ocrRegions ?? [],
+    visualRegions,
+    imageFindings: options.imageFindings ?? [],
+    canvasFindings: canvasAndImage.canvasFindings,
+    videoFindings: options.videoFindings ?? [],
+    interactiveCandidates: canvasAndImage.interactiveCandidates,
+    privacyFindings: options.privacyFindings ?? [],
     buildDurationMs,
   };
 }

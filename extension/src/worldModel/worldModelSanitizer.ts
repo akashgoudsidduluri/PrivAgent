@@ -109,8 +109,17 @@ export function createSanitizedWorldModelSummary(
     elementCount: model.elements.length,
     interactiveCount: model.elements.filter(e => e.isEnabled).length,
     entityCount: model.entities.length,
+    visualRegionCount: model.visualRegions?.length ?? 0,
+    canvasCount: model.canvasFindings?.length ?? 0,
+    videoCount: model.videoFindings?.length ?? 0,
     hasModal: model.page.hasActiveModal,
     keyEntities,
+    visualCandidates: (model.interactiveCandidates || []).slice(0, 10).map(c => ({
+      id: c.id,
+      type: c.type,
+      bbox: c.bbox,
+      label: c.label,
+    })),
     spatialHighlights,
   };
 }
