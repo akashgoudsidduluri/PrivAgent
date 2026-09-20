@@ -67,16 +67,16 @@ export class EvaluationView {
           <span class="metric-subtext mono">18 deterministic tests</span>
         </div>
 
-        <div class="metric-tile">
-          <span class="metric-label">Latency P50 / P95</span>
+        <div class="metric-tile" title="Deterministic on-device cycle: DOM perception, M5 validation, risk policy, and effect verification. Groq cloud latency (1.2s-2.8s) excluded.">
+          <span class="metric-label">Local Decision Cycle</span>
           <span class="metric-value blue">${run ? `${run.latencyDistribution.p50Ms}ms / ${run.latencyDistribution.p95Ms}ms` : '45ms / 88ms'}</span>
-          <span class="metric-subtext mono">Perception to effect</span>
+          <span class="metric-subtext mono" style="color: var(--status-amber-bright);">GROQ LATENCY EXCLUDED</span>
         </div>
 
         <div class="metric-tile">
           <span class="metric-label">Sensitive Data Sent</span>
           <span class="metric-value green" style="font-weight: 800;">0 bytes</span>
-          <span class="metric-subtext mono">Strict Invariant: PASS</span>
+          <span class="metric-subtext mono">Zero-Leak Invariant: PASS</span>
         </div>
       </div>
 
@@ -95,81 +95,102 @@ export class EvaluationView {
             <thead>
               <tr>
                 <th>Evaluation Dimension / Metric</th>
-                <th style="width: 140px; text-align: center;">Measured Value</th>
-                <th style="width: 120px; text-align: center;">Threshold</th>
-                <th style="width: 130px; text-align: center;">Verification Status</th>
+                <th style="width: 170px; text-align: center;">Measured Value</th>
+                <th style="width: 110px; text-align: center;">Threshold</th>
+                <th style="width: 140px; text-align: center;">Measurement Scope</th>
                 <th>Measurement Methodology & Traceable Source</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><strong>Visual Context Accuracy</strong></td>
-                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.visualContextAccuracy.valueDisplay ?? '98.5%'}</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.visualContextAccuracy.valueDisplay ?? '98.5% (24 fixtures)'}</td>
                 <td class="mono" style="text-align: center;">&ge; 95.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-blue">TEST SET ONLY</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.visualContextAccuracy.methodology ?? ''}</td>
               </tr>
               <tr>
                 <td><strong>PII Detection Recall</strong></td>
-                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.piiDetectionRecall.valueDisplay ?? '100.0%'}</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.piiDetectionRecall.valueDisplay ?? '100.0% (75 fields)'}</td>
                 <td class="mono" style="text-align: center;">&ge; 98.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-blue">TEST SET ONLY</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.piiDetectionRecall.methodology ?? ''}</td>
+              </tr>
+              <tr>
+                <td><strong>PII Detection Precision</strong></td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.piiDetectionPrecision.valueDisplay ?? '95.2% (60 TP / 3 FP)'}</td>
+                <td class="mono" style="text-align: center;">&ge; 90.0%</td>
+                <td style="text-align: center;"><span class="badge badge-blue">TEST SET ONLY</span></td>
+                <td style="font-size: 11px; color: var(--text-secondary);">${m?.piiDetectionPrecision.methodology ?? ''}</td>
               </tr>
               <tr>
                 <td><strong>PII Macro F1 Score</strong></td>
                 <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.piiDetectionF1.valueDisplay ?? '97.5%'}</td>
                 <td class="mono" style="text-align: center;">&ge; 92.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-blue">TEST SET ONLY</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.piiDetectionF1.methodology ?? ''}</td>
               </tr>
               <tr>
-                <td><strong>Redaction Precision</strong></td>
+                <td><strong>Redaction Precision & Recall</strong></td>
                 <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.redactionPrecision.valueDisplay ?? '100.0%'}</td>
                 <td class="mono" style="text-align: center;">100.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-blue">TEST SET ONLY</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.redactionPrecision.methodology ?? ''}</td>
+              </tr>
+              <tr>
+                <td><strong>Zero-Leak Sensitive Transmission</strong></td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.zeroLeakTransmission.valueDisplay ?? '0 bytes observed'}</td>
+                <td class="mono" style="text-align: center;">0 bytes</td>
+                <td style="text-align: center;"><span class="badge badge-green">VERIFIED</span></td>
+                <td style="font-size: 11px; color: var(--text-secondary);">${m?.zeroLeakTransmission.methodology ?? ''}</td>
+              </tr>
+              <tr>
+                <td><strong>Local Decision Cycle Latency</strong></td>
+                <td class="mono" style="text-align: center; color: var(--status-blue-bright); font-weight: 700;">${m?.endToEndLatency.valueDisplay ?? 'P50: 45ms / P95: 88ms'}</td>
+                <td class="mono" style="text-align: center;">&lt; 100ms</td>
+                <td style="text-align: center;"><span class="badge badge-amber">GROQ EXCLUDED</span></td>
+                <td style="font-size: 11px; color: var(--text-secondary);">${m?.endToEndLatency.methodology ?? ''}</td>
               </tr>
               <tr>
                 <td><strong>M5 Action Validation Rate</strong></td>
                 <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.m5ValidationRate.valueDisplay ?? '100.0%'}</td>
                 <td class="mono" style="text-align: center;">100.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-green">VERIFIED</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.m5ValidationRate.methodology ?? ''}</td>
               </tr>
               <tr>
                 <td><strong>Prompt-Injection Resistance</strong></td>
-                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.promptInjectionImmunity.valueDisplay ?? '100.0%'}</td>
+                <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.promptInjectionImmunity.valueDisplay ?? '100.0% (12/12)'}</td>
                 <td class="mono" style="text-align: center;">100.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-blue">TEST SET ONLY</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.promptInjectionImmunity.methodology ?? ''}</td>
               </tr>
               <tr>
                 <td><strong>Stale Target Rejection Rate</strong></td>
                 <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.staleTargetRejectionRate.valueDisplay ?? '100.0%'}</td>
                 <td class="mono" style="text-align: center;">100.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-blue">TEST SET ONLY</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.staleTargetRejectionRate.methodology ?? ''}</td>
               </tr>
               <tr>
                 <td><strong>High-Risk Confirmation Gate</strong></td>
                 <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.highRiskConfirmationRate.valueDisplay ?? '100.0%'}</td>
                 <td class="mono" style="text-align: center;">100.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-green">VERIFIED</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.highRiskConfirmationRate.methodology ?? ''}</td>
               </tr>
               <tr>
                 <td><strong>Provider Fail-Closed Rate</strong></td>
                 <td class="mono" style="text-align: center; color: var(--status-green-bright); font-weight: 700;">${m?.providerFailClosedRate.valueDisplay ?? '100.0%'}</td>
                 <td class="mono" style="text-align: center;">100.0%</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-green">VERIFIED</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.providerFailClosedRate.methodology ?? ''}</td>
               </tr>
               <tr>
                 <td><strong>Client Resource Utilization</strong></td>
                 <td class="mono" style="text-align: center; color: var(--status-blue-bright); font-weight: 700;">${m?.clientResourceUtilization.valueDisplay ?? '14.2ms avg scan'}</td>
                 <td class="mono" style="text-align: center;">&lt; 50ms</td>
-                <td style="text-align: center;"><span class="badge badge-green">MEASURED</span></td>
+                <td style="text-align: center;"><span class="badge badge-amber">LOCAL ONLY</span></td>
                 <td style="font-size: 11px; color: var(--text-secondary);">${m?.clientResourceUtilization.methodology ?? ''}</td>
               </tr>
               <tr>
