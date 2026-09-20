@@ -30,7 +30,7 @@
  * policy for the resulting verdict.
  */
 
-import { AgentBoundingBox, AgentDetection, DetectionResult, DetectionSource, SensitiveEntityType, VisualDetectionResult } from './types';
+import { AgentBoundingBox, AgentDetection, DetectionResult, DetectionSource, InteractiveEntityType, isSensitiveEntityType, SensitiveEntityType, VisualDetectionResult } from './types';
 import { SafeOCRDetection } from '../ocr/types';
 import { decideTransmission, PolicyDecisionRecord, severityForCategory, severityRank } from './privacyDecision';
 
@@ -40,7 +40,7 @@ import { decideTransmission, PolicyDecisionRecord, severityForCategory, severity
 export type FindingSource = 'dom' | 'ocr' | 'visual';
 
 /** Privacy categories. A superset of M1's SensitiveEntityType. */
-export type PrivacyCategory = SensitiveEntityType | 'face' | 'unknown';
+export type PrivacyCategory = SensitiveEntityType | InteractiveEntityType | 'face' | 'unknown' | (string & {});
 
 /** Severity ladder used to pick the strongest applicable decision. */
 export type PrivacySeverity = 'critical' | 'high' | 'medium' | 'low' | 'unknown';
@@ -115,7 +115,7 @@ function clampConfidence(value: number): number {
 export function candidateFromDOMPageDetection(det: DetectionResult): FusionCandidate {
   return {
     evidenceId: det.id,
-    category: det.type,
+    category: det.type as PrivacyCategory,
     confidence: clampConfidence(det.confidence),
     source: 'dom',
     detectionSource: det.source,
@@ -176,7 +176,7 @@ export function candidateFromAgentDetection(
   const isSyntheticSelector = !det.selector || det.selector === 'canvas:visual-ocr';
   return {
     evidenceId: det.id,
-    category: det.type,
+    category: det.type as PrivacyCategory,
     confidence: clampConfidence(det.confidence),
     source: inferred,
     detectionSource: det.source,

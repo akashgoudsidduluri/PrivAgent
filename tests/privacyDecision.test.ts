@@ -70,10 +70,10 @@ describe('Category policy table (M8)', () => {
   });
 
   it('unknown and face categories fail closed / are redacted', () => {
-    expect(CATEGORY_POLICY.unknown.decision).toBe('FAIL_CLOSED');
-    expect(CATEGORY_POLICY.unknown.exportableMetadata).toBe(false);
-    expect(CATEGORY_POLICY.face.decision).toBe('REDACT');
-    expect(CATEGORY_POLICY.face.mustRedact).toBe(true);
+    expect(CATEGORY_POLICY['unknown']!.decision).toBe('FAIL_CLOSED');
+    expect(CATEGORY_POLICY['unknown']!.exportableMetadata).toBe(false);
+    expect(CATEGORY_POLICY['face']!.decision).toBe('REDACT');
+    expect(CATEGORY_POLICY['face']!.mustRedact).toBe(true);
   });
 });
 

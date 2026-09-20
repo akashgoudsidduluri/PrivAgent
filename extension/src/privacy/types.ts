@@ -10,6 +10,35 @@ export type SensitiveEntityType =
   | 'cvv'
   | 'address';
 
+export const SENSITIVE_ENTITY_TYPES: ReadonlySet<string> = new Set<SensitiveEntityType>([
+  'password',
+  'email',
+  'phone',
+  'credit_card',
+  'account_number',
+  'person_name',
+  'pan',
+  'otp',
+  'cvv',
+  'address',
+]);
+
+export function isSensitiveEntityType(type: string): type is SensitiveEntityType {
+  return SENSITIVE_ENTITY_TYPES.has(type as SensitiveEntityType);
+}
+
+export type InteractiveEntityType =
+  | 'button'
+  | 'link'
+  | 'input'
+  | 'search'
+  | 'select'
+  | 'form'
+  | 'heading'
+  | 'element';
+
+export type DetectionEntityType = SensitiveEntityType | InteractiveEntityType;
+
 export type DetectionSource = 
   | 'dom_input_type' 
   | 'dom_autocomplete' 
@@ -22,17 +51,18 @@ export type RedactionMode = 'blackout' | 'blur' | 'mask';
 
 /**
  * Strict Security Boundary Invariant:
- * DetectionResult MUST NEVER contain `value`, `textContent`, or `innerText`.
- * Only coordinate geometry, selector, classification, and statistical length are permitted.
+ * DetectionResult MUST NEVER contain raw PII values (value, textContent, innerText).
+ * Only coordinate geometry, selector, classification, statistical length, and sanitized labels are permitted.
  */
 export interface DetectionResult {
   id: string;
-  type: SensitiveEntityType;
+  type: DetectionEntityType;
   confidence: number;
   selector: string;
   bbox: [number, number, number, number]; // [x, y, width, height]
   length: number;
   source: DetectionSource;
+  label?: string;
 }
 
 export interface PrivacyScanReport {
@@ -123,13 +153,14 @@ export interface AgentBoundingBox {
 /** Allowlisted safe detection — ONLY metadata, no raw values. */
 export interface AgentDetection {
   id: string;
-  type: SensitiveEntityType;
+  type: DetectionEntityType;
   confidence: number;
   bbox: AgentBoundingBox;
   length: number;         // character count only, not the actual value
   source: DetectionSource;
   selector: string;
   is_partially_visible: boolean;
+  label?: string;
 }
 
 export interface AgentViewport {
@@ -168,6 +199,7 @@ export interface AgentContextPayload {
   sensitive_elements_detected: number;
   sanitized_status: 'sanitized_only';
   ocr_metrics: AgentOCRMetrics | null;
+  page_type?: string;
 }
 
 /**
@@ -215,6 +247,7 @@ export function buildAgentPayload(
         source: det.source,
         selector: det.selector,
         is_partially_visible: false,
+        label: det.label,
       });
     }
   }

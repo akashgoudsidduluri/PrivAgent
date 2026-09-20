@@ -50,7 +50,7 @@ const SAFE_KEYWORDS = [
 ];
 
 // Sensitive target categories that escalate risk
-const SENSITIVE_CATEGORIES: ReadonlySet<SensitiveEntityType> = new Set([
+const SENSITIVE_CATEGORIES: ReadonlySet<string> = new Set([
   'password', 'cvv', 'otp', 'pan', 'credit_card', 'account_number', 'address',
 ]);
 

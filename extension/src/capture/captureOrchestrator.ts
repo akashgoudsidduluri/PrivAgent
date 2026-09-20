@@ -19,6 +19,7 @@ import {
   CaptureMetadata,
   DetectionResult,
   ExtensionMessage,
+  isSensitiveEntityType,
   PrivacyScanReport,
   VisualCaptureReport,
   VisualDetectionResult,
@@ -102,6 +103,9 @@ function mapDetectionsToVisual(
   let totalOffscreenFiltered = 0;
 
   for (const det of detections) {
+    if (!isSensitiveEntityType(det.type)) {
+      continue;
+    }
     // det.bbox is always in document (page) coordinates
     const mapped = mapDOMToScreenshot(det.bbox, geometry, screenshotDimensions, true);
 

@@ -32,7 +32,7 @@
  *     introduces a new text channel toward a provider.
  */
 
-import { AgentBoundingBox, AgentContextPayload, AgentDetection, DetectionSource, SensitiveEntityType } from './types';
+import { AgentBoundingBox, AgentContextPayload, AgentDetection, DetectionSource, isSensitiveEntityType, SensitiveEntityType } from './types';
 import {
   FindingSource,
   PrivacyCategory,
@@ -320,7 +320,7 @@ function toExportedDetection(finding: PrivacyFinding): AgentDetection {
 
   return {
     id: representativeId,
-    type: finding.category as SensitiveEntityType,
+    type: finding.category as import('./types').DetectionEntityType,
     confidence: Number(finding.confidence.toFixed(2)),
     bbox,
     length: finding.length ?? 0,
@@ -343,7 +343,7 @@ export function buildModelFacingContext(
 ): ModelFacingContext {
   const elements: ModelFacingElement[] = payload.detections.map((detection) => {
     const category: PrivacyCategory = EXPORTABLE_TYPES.has(detection.type)
-      ? detection.type
+      ? (detection.type as PrivacyCategory)
       : 'unknown';
     const severity = severityForCategory(category);
     return {

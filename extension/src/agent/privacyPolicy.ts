@@ -26,7 +26,7 @@
  *  5. LLM can NEVER override this local policy.
  */
 
-import { SensitiveEntityType, AgentContextPayload, AgentDetection } from '../privacy/types';
+import { SensitiveEntityType, isSensitiveEntityType, AgentContextPayload, AgentDetection } from '../privacy/types';
 import { PrivacyBoundaryError, scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 import { BrowserAction } from './actionTypes';
 
@@ -167,6 +167,10 @@ export function canPerformAction(
       case 'select':
         capability = 'SELECT';
         break;
+    }
+
+    if (!isSensitiveEntityType(detection.type)) {
+      return { granted: true, reason: `Target element is a standard interactive control (${detection.type}).` };
     }
 
     return checkCapability(detection.type, capability, caller);

@@ -38,6 +38,7 @@ const ALLOWED_DETECTION_KEYS = new Set([
   'viewportBBox',
   'screenshotBBox',
   'isPartiallyVisible',
+  'label',
 ]);
 
 /**

@@ -40,6 +40,7 @@ class DetectionSource(str, Enum):
 
 
 class SensitiveEntityType(str, Enum):
+    # Sensitive entity types (redacted on-device)
     password = "password"
     email = "email"
     phone = "phone"
@@ -50,6 +51,15 @@ class SensitiveEntityType(str, Enum):
     otp = "otp"
     cvv = "cvv"
     address = "address"
+    # Interactive controls & elements (sanitized structural metadata)
+    button = "button"
+    link = "link"
+    input = "input"
+    search = "search"
+    select = "select"
+    form = "form"
+    heading = "heading"
+    element = "element"
 
 
 # ── Sub-models ────────────────────────────────────────────────────────────────
@@ -75,6 +85,15 @@ class SafeDetectionExport(StrictModel):
     source: DetectionSource
     selector: str = ""
     is_partially_visible: bool = False
+    label: Optional[str] = ""
+
+    @field_validator("label")
+    @classmethod
+    def validate_label_safety(cls, v: Optional[str]) -> Optional[str]:
+        """Ensure label contains zero raw passwords, cards, or security tokens."""
+        if v:
+            scan_text(v)
+        return v
 
     @model_validator(mode="before")
     @classmethod
@@ -146,6 +165,7 @@ class AgentContextPayload(StrictModel):
         validation_alias=AliasChoices("sanitized_status", "sanitizedStatus"),
     )
     ocr_metrics: Optional[OCRMetrics] = None
+    page_type: Optional[str] = "general"
 
     @field_validator("sanitized_status")
     @classmethod

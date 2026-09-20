@@ -77,7 +77,7 @@ export function severityRank(severity: PrivacySeverity): number {
  *   redacted and never exported") so a future visual face detector inherits the
  *   correct, already-tested policy instead of inventing a weaker one.
  */
-export const CATEGORY_POLICY: Record<PrivacyCategory, CategoryPolicy> = {
+export const CATEGORY_POLICY: Record<string, CategoryPolicy> = {
   password: {
     decision: 'NEVER_TRANSMIT',
     severity: 'critical',
@@ -205,7 +205,7 @@ export interface PolicyDecisionRecord {
 
 /** Policy lookup for any category (including future ones → fail closed). */
 export function policyForCategory(category: PrivacyCategory): CategoryPolicy {
-  return CATEGORY_POLICY[category] ?? CATEGORY_POLICY.unknown;
+  return CATEGORY_POLICY[category] ?? CATEGORY_POLICY['unknown']!;
 }
 
 export function severityForCategory(category: PrivacyCategory): PrivacySeverity {
@@ -228,13 +228,14 @@ export function decideTransmission(query: PolicyQuery): PolicyDecisionRecord {
   // it fails closed with the policy.unknown_category code.
   const isKnownCategory =
     Object.prototype.hasOwnProperty.call(CATEGORY_POLICY, category) && category !== 'unknown';
+  // CATEGORY_POLICY.unknown is always defined — it is the fail-closed sentinel.
   const isUncertain = !Number.isFinite(confidence) || confidence < policy.minConfidence;
 
   if (!isKnownCategory || isUncertain) {
     return {
       category,
       decision: 'FAIL_CLOSED',
-      severity: CATEGORY_POLICY.unknown.severity,
+      severity: CATEGORY_POLICY['unknown']!.severity,
       mustRedact: true,
       exportableMetadata: false,
       rawValueTransmissible: false,
@@ -244,7 +245,7 @@ export function decideTransmission(query: PolicyQuery): PolicyDecisionRecord {
       code: isKnownCategory ? 'policy.uncertain_low_confidence' : 'policy.unknown_category',
       rationale: isKnownCategory
         ? 'Finding confidence is below the category threshold — failing closed.'
-        : CATEGORY_POLICY.unknown.rationale,
+        : CATEGORY_POLICY['unknown']!.rationale,
     };
   }
 

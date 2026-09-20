@@ -1,9 +1,10 @@
 import { scanDOM } from '../privacy/domDetector';
+import { scanInteractiveElements } from './domInteractiveScanner';
 import { LocalRedactor } from '../redaction/redactor';
 import { OverlayManager } from '../redaction/overlayManager';
 import { createSanitizedExport } from '../privacy/securityBoundary';
 import { isUrlExcluded, getExclusionReason } from '../privacy/siteExclusions';
-import { ExtensionMessage, PrivacyScanReport, RedactionMode, SensitiveEntityType } from '../privacy/types';
+import { ExtensionMessage, isSensitiveEntityType, PrivacyScanReport, RedactionMode, SensitiveEntityType } from '../privacy/types';
 
 const currentUrl = window.location.href;
 const isCurrentSiteExcluded = isUrlExcluded(currentUrl);
@@ -79,7 +80,9 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
   };
 
   for (const det of detections) {
-    categories[det.type] = (categories[det.type] || 0) + 1;
+    if (isSensitiveEntityType(det.type)) {
+      categories[det.type] = (categories[det.type] || 0) + 1;
+    }
   }
 
   // 3. Local Redaction with timing
@@ -98,18 +101,27 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
   overlayManager.setDetections(detections, currentMode);
   overlayManager.renderFloatingPanel();
 
-  // 5. Construct & verify sanitized report (Guarantees zero raw PII values)
+  // 5. Scan visible interactive controls (buttons, links, search inputs)
+  const { interactiveElements } = scanInteractiveElements(document);
+  const sensitiveSelectors = new Set(detections.map((d) => d.selector));
+  const sensitiveIds = new Set(detections.map((d) => d.id));
+  const nonOverlappingInteractive = interactiveElements.filter(
+    (el) => !sensitiveSelectors.has(el.selector) && !sensitiveIds.has(el.id)
+  );
+  const allDetections = [...detections, ...nonOverlappingInteractive];
+
+  // 6. Construct & verify sanitized report (Guarantees zero raw PII values)
   const rawReport: PrivacyScanReport = {
     timestamp: Date.now(),
     url: window.location.href,
     scanLatencyMs,
     redactionLatencyMs,
-    totalElementsScanned,
+    totalElementsScanned: totalElementsScanned + interactiveElements.length,
     sensitiveElementsDetected: detections.length,
     elementsProtected,
     leakageCount: 0,
     categories,
-    detections,
+    detections: allDetections,
     status: 'Sanitized Context — Local Privacy Check Passed',
     redactionMode: currentMode,
   };
