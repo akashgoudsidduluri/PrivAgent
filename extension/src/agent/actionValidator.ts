@@ -169,6 +169,19 @@ export function validateAction(
 
   // 3. Action type check
   const actionType = actionObj.action;
+  if (typeof actionType === 'string' && [
+    'modify_security_policy',
+    'disable_privacy',
+    'disable_egress_firewall',
+    'trust_domain',
+    'trust_website',
+    'bypass_confirmation',
+    'allow_domain',
+    'mark_webpage_trusted'
+  ].includes(actionType.toLowerCase())) {
+    return fail('M5_UNMODIFIABLE: Remote model output cannot modify local security policy. Execution blocked.');
+  }
+
   if (typeof actionType !== 'string' || !SUPPORTED_ACTION_TYPES.includes(actionType as ActionType)) {
     return fail(
       `Invalid action type: '${String(actionType)}'. Allowed types: ${SUPPORTED_ACTION_TYPES.join(', ')}.`

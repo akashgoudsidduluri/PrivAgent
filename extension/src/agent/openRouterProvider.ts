@@ -23,6 +23,7 @@ import { BrowserAction, SUPPORTED_ACTION_TYPES } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { assertSanitizedContextSafe } from './privacyPolicy';
 import { buildModelFacingContext } from '../privacy/contextMinimizer';
+import { validateEgressPayload } from '../security/egressFirewall';
 
 export const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it:free';
 
@@ -131,6 +132,19 @@ export class OpenRouterProvider implements AgentProvider {
 
     let response: Response;
     try {
+      const payload = {
+          model: this.model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature: 0.1,
+          response_format: { type: 'json_object' },
+        };
+      const egressDecision = validateEgressPayload(payload, this.baseUrl);
+      if (egressDecision.directive === 'BLOCK') {
+        throw new ProviderError(`Egress Firewall Blocked Request: ${egressDecision.reason}`, 'unknown');
+      }
       response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
@@ -139,15 +153,7 @@ export class OpenRouterProvider implements AgentProvider {
           'HTTP-Referer': 'https://github.com/akashgoudsidduluri/PrivAgent',
           'X-Title': 'PrivAgent Browser Agent',
         },
-        body: JSON.stringify({
-          model: this.model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          temperature: 0.1,
-          response_format: { type: 'json_object' },
-        }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
       });
     } catch (err: unknown) {

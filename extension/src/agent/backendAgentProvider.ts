@@ -22,6 +22,7 @@ import { BrowserAction } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { assertSanitizedContextSafe } from './privacyPolicy';
 import { ProviderError, ProviderErrorKind } from './openRouterProvider';
+import { validateEgressPayload } from '../security/egressFirewall';
 
 const AGENT_ACTION_ENDPOINT = 'http://127.0.0.1:8010/api/v1/agent/action';
 const AGENT_REVIEW_ENDPOINT = 'http://127.0.0.1:8010/api/v1/agent/review';
@@ -58,10 +59,16 @@ export class BackendAgentProvider implements AgentProvider {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
+      const payload = { task, context, history, model_role: role };
+      const egressDecision = validateEgressPayload(payload, AGENT_ACTION_ENDPOINT);
+      if (egressDecision.directive === 'BLOCK') {
+        throw new ProviderError(`Egress Firewall Blocked Request: ${egressDecision.reason}`, 'unknown');
+      }
+
       const resp = await fetch(AGENT_ACTION_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task, context, history, model_role: role }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
       });
       clearTimeout(timer);
@@ -114,10 +121,15 @@ export class BackendAgentProvider implements AgentProvider {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
+      const payload = { action, task, context, model_role: 'SAFETY' };
+      const egressDecision = validateEgressPayload(payload, AGENT_REVIEW_ENDPOINT);
+      if (egressDecision.directive === 'BLOCK') {
+        throw new ProviderError(`Egress Firewall Blocked Review: ${egressDecision.reason}`, 'unknown');
+      }
       const resp = await fetch(AGENT_REVIEW_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, task, context, model_role: 'SAFETY' }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
       });
       clearTimeout(timer);

@@ -5,6 +5,8 @@
  */
 
 import { AnyMemoryRecord, MemoryClass } from './memoryTypes';
+import { validateEgressPayload } from '../security/egressFirewall';
+import { SecurityDecision } from '../security/types';
 
 const MAX_MEMORY_ITEMS = {
   WORKING: 0, // In-memory only, should not be persisted here, but we set to 0.
@@ -35,6 +37,13 @@ export class MemoryStore {
   public static async write(record: AnyMemoryRecord): Promise<boolean> {
     if (record.class === 'WORKING') {
       console.warn('Working memory should not be persisted to chrome.storage.local.');
+      return false;
+    }
+
+    // 1. Memory Egress Isolation Check
+    const egressDecision = validateEgressPayload(record, 'LOCAL_STORAGE');
+    if (egressDecision.directive === 'BLOCK') {
+      console.warn(`Memory Egress Blocked: ${egressDecision.reason}`);
       return false;
     }
 
