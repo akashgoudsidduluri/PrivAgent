@@ -63,6 +63,12 @@ GROQ_BASE_URL = os.environ.get(
     "GROQ_BASE_URL", "https://api.groq.com/openai/v1/chat/completions"
 ).strip()
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b").strip()
+
+# Phase 6 Model Routing Config
+MODEL_FAST = os.environ.get("MODEL_FAST", "openai/gpt-oss-20b").strip()
+MODEL_STRONG = os.environ.get("MODEL_STRONG", "openai/gpt-oss-120b").strip()
+MODEL_VISION = os.environ.get("MODEL_VISION", "qwen/qwen3.8-27b").strip()
+MODEL_SAFETY = os.environ.get("MODEL_SAFETY", "openai/gpt-oss-safeguard-20b").strip()
 GROQ_TIMEOUT_SECONDS = float(os.environ.get("GROQ_TIMEOUT_SECONDS", "30"))
 
 

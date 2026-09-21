@@ -415,6 +415,7 @@ export class AgentLoop {
 
       if (!validation.allowed) {
         this.state.retryCount++;
+        this.provider.registerFailure?.();
         if (this.state.plan) {
           const diag = diagnoseFailureAndReplan(this.state.plan, action, validation.reason, context);
           if (diag.canRecover) {
@@ -473,6 +474,25 @@ export class AgentLoop {
         continue;
       }
       console.info('[AgentTrace] action validated');
+
+      // 6a. SAFETY Review (Model-based)
+      if (this.provider.reviewAction) {
+        console.info('[AgentTrace] requesting safety review');
+        const review = await this.provider.reviewAction(action, task, context);
+        if (!review.safe) {
+          this.state.retryCount++;
+          this.recordStep(action, false, `SAFETY Rejected: ${review.reason}`, false, review.reason, undefined, risk, semantic, confidence);
+          this.notifyProgress();
+          if (this.state.retryCount > this.maxRetries) {
+            this.state.status = 'FAILED';
+            this.state.reason = `Safety model rejected action repeatedly: ${review.reason}`;
+            break;
+          }
+          await this.delay(this.delayBetweenStepsMs);
+          continue;
+        }
+        console.info('[AgentTrace] action passed safety review');
+      }
 
       // 7. Privacy Capability Policy Check
       const targetDet = 'target' in action ? context.detections.find((d) => d.id === (action as any).target) : undefined;
@@ -588,6 +608,8 @@ export class AgentLoop {
       };
 
       console.info('[AgentTrace] executeAction started');
+      // 5. Execute
+      this.provider.resetEscalation?.();
       let execResult = await this.callbacks.executeAction(action);
       console.info('[AgentTrace] executeAction response received');
       this.state.lastAction = action;
@@ -928,6 +950,7 @@ export class AgentLoop {
         ]);
       } catch (err: unknown) {
         lastError = err;
+        this.provider.registerFailure?.();
         const retryable = err instanceof ProviderError ? err.retryable : false;
         if (!retryable || attempt >= this.providerRetries) {
           break;

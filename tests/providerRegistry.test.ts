@@ -57,7 +57,14 @@ const CONTEXT: AgentContextPayload = {
 
 const TASK = 'Find and click the account number field';
 
-function backendCompletion(): Response {
+function backendCompletion(url?: string): Response {
+  if (url && url.endsWith('/review')) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ safe: true, reason: 'Safe' }),
+    } as unknown as Response;
+  }
   return {
     ok: true,
     status: 200,
@@ -145,7 +152,7 @@ describe('createAgentProvider (configuration-driven selection)', () => {
 
 describe('M6 is provider-agnostic (one loop, swappable provider)', () => {
   it('produces identical loop outcomes for backend→Gemma, mock, and a future provider', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => backendCompletion()));
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => backendCompletion(url)));
 
     // A stand-in for "Provider B": same interface, different reasoning backend.
     const futureProvider: AgentProvider = {
@@ -224,7 +231,7 @@ describe('M6 is provider-agnostic (one loop, swappable provider)', () => {
 
 describe('Sanitized context remains the provider boundary', () => {
   it('every registered provider refuses a context carrying a raw sensitive value', async () => {
-    const fetchMock = vi.fn(async () => backendCompletion());
+    const fetchMock = vi.fn(async (url: string) => backendCompletion(url));
     vi.stubGlobal('fetch', fetchMock);
 
     // Defense-in-depth fixture: a raw value that must never leave the device.

@@ -358,6 +358,12 @@ class BrowserActionModel(StrictModel):
         return self
 
 
+class ModelRole(str, Enum):
+    FAST = "FAST"
+    STRONG = "STRONG"
+    VISION = "VISION"
+    SAFETY = "SAFETY"
+
 class AgentActionRequest(StrictModel):
     """
     Incoming request to the Agent Reasoning API.
@@ -367,6 +373,7 @@ class AgentActionRequest(StrictModel):
     task: str
     context: AgentContextPayload
     history: List[BrowserActionModel] = Field(default_factory=list)
+    model_role: Optional[ModelRole] = None
 
 
 class ReasoningTelemetry(StrictModel):
@@ -375,7 +382,7 @@ class ReasoningTelemetry(StrictModel):
     Never contains prompts, model text, or API key material.
     """
     provider: str                      # "groq" | "openrouter" | "mock"
-    model: str                         # e.g. "openai/gpt-oss-20b"
+    role: str                          # e.g. "STRONG", "FAST"
     latency_ms: float
     attempts: int = 1
     fallback_used: bool = False

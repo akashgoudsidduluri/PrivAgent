@@ -141,6 +141,7 @@ class ReasonerProvider(Protocol):
         screenshot_dimensions: Optional[Dict[str, Any]] = None,
         steps_used: int = 0,
         max_steps: int = 10,
+        model: Optional[str] = None,
     ) -> ReasoningResult:
         ...
 
@@ -352,6 +353,7 @@ class OpenRouterReasoner:
         screenshot_dimensions: Optional[Dict[str, Any]] = None,
         steps_used: int = 0,
         max_steps: int = 10,
+        model: Optional[str] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request. Raises ReasoningError on failure."""
         if not self.configured:
@@ -372,7 +374,7 @@ class OpenRouterReasoner:
         )
 
         payload = {
-            "model": self.model,
+            "model": model or self.model,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
@@ -424,7 +426,7 @@ class OpenRouterReasoner:
                 raw_action = parse_model_action(content)
                 return ReasoningResult(
                     raw_action=raw_action,
-                    model=self.model,
+                    model=model or self.model,
                     latency_ms=(time.perf_counter() - started) * 1000.0,
                     attempts=attempts,
                 )
@@ -582,6 +584,7 @@ class GroqReasoner:
         screenshot_dimensions: Optional[Dict[str, Any]] = None,
         steps_used: int = 0,
         max_steps: int = 10,
+        model: Optional[str] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request to Groq. Raises ReasoningError on failure."""
         if not self.configured:
@@ -608,7 +611,7 @@ class GroqReasoner:
 
         # Try strict json_schema first; if model rejects json_schema with 400, fallback to json_object
         payload_schema = {
-            "model": self.model,
+            "model": model or self.model,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
@@ -766,6 +769,7 @@ class NvidiaReasoner:
         screenshot_dimensions: Optional[Dict[str, Any]] = None,
         steps_used: int = 0,
         max_steps: int = 10,
+        model: Optional[str] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request to NVIDIA NIM. Raises ReasoningError on failure."""
         if not self.configured:
@@ -791,7 +795,7 @@ class NvidiaReasoner:
         }
 
         payload = {
-            "model": self.model,
+            "model": model or self.model,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
@@ -946,6 +950,7 @@ class MockReasoner:
         screenshot_dimensions: Optional[Dict[str, Any]] = None,
         steps_used: int = 0,
         max_steps: int = 10,
+        model: Optional[str] = None,
     ) -> ReasoningResult:
         if self.fail_with:
             raise ReasoningError(self.fail_with, kind="mock_failure")

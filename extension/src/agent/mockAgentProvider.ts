@@ -9,7 +9,7 @@
  * Supports multi-step action sequences and history awareness for M6 autonomous loops.
  */
 
-import { AgentProvider } from './agentProvider';
+import { AgentProvider, ModelRole } from './agentProvider';
 import { BrowserAction } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { assertSanitizedContextSafe } from './privacyPolicy';
@@ -48,7 +48,8 @@ export class MockAgentProvider implements AgentProvider {
   async requestAction(
     task: string,
     context: AgentContextPayload,
-    history: BrowserAction[] = []
+    history: BrowserAction[] = [],
+    role?: ModelRole
   ): Promise<BrowserAction> {
     // Defense-in-depth: verify that context is sanitized before reasoning
     assertSanitizedContextSafe(context);

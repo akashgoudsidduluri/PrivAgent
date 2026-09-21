@@ -17,13 +17,14 @@
  *  5. Every failure throws a typed ProviderError — never a guessed action.
  */
 
-import { AgentProvider } from './agentProvider';
+import { AgentProvider, ModelRole } from './agentProvider';
 import { BrowserAction } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { assertSanitizedContextSafe } from './privacyPolicy';
 import { ProviderError, ProviderErrorKind } from './openRouterProvider';
 
 const AGENT_ACTION_ENDPOINT = 'http://127.0.0.1:8010/api/v1/agent/action';
+const AGENT_REVIEW_ENDPOINT = 'http://127.0.0.1:8010/api/v1/agent/review';
 
 export interface BackendAgentErrorDetail {
   success: false;
@@ -46,7 +47,8 @@ export class BackendAgentProvider implements AgentProvider {
   async requestAction(
     task: string,
     context: AgentContextPayload,
-    history: BrowserAction[] = []
+    history: BrowserAction[] = [],
+    role?: ModelRole
   ): Promise<BrowserAction> {
     // 1. Verify sanitized context safety
     assertSanitizedContextSafe(context);
@@ -59,7 +61,7 @@ export class BackendAgentProvider implements AgentProvider {
       const resp = await fetch(AGENT_ACTION_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task, context, history }),
+        body: JSON.stringify({ task, context, history, model_role: role }),
         signal: controller.signal,
       });
       clearTimeout(timer);
@@ -103,6 +105,34 @@ export class BackendAgentProvider implements AgentProvider {
           { retryable: true }
         );
       }
+      throw new ProviderError(`[BackendAgentProvider] ${msg}`, 'unknown');
+    }
+  }
+
+  async reviewAction(action: BrowserAction, task: string, context: AgentContextPayload): Promise<{ safe: boolean; reason: string }> {
+    assertSanitizedContextSafe(context);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const resp = await fetch(AGENT_REVIEW_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, task, context, model_role: 'SAFETY' }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!resp.ok) {
+        const { detail, kind, retryable } = await this.parseError(resp);
+        throw new ProviderError(`Backend review endpoint failed: ${detail}`, kind, { retryable, status: resp.status });
+      }
+      const data = await resp.json();
+      return { safe: data.safe, reason: data.reason };
+    } catch (err: unknown) {
+      clearTimeout(timer);
+      if (err instanceof ProviderError) throw err;
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes('abort')) throw new ProviderError(`Backend review timed out after ${this.timeoutMs}ms.`, 'timeout', { retryable: true });
+      if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) throw new ProviderError('Backend unavailable.', 'network', { retryable: true });
       throw new ProviderError(`[BackendAgentProvider] ${msg}`, 'unknown');
     }
   }  private async parseError(resp: Response): Promise<{ detail: string; kind: ProviderErrorKind; retryable: boolean }>

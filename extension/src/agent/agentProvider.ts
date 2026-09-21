@@ -38,12 +38,22 @@ export interface AgentProvider {
    * validators never branch on it.
    */
   readonly model?: string;
+  registerFailure?(): void;
+  resetEscalation?(): void;
   requestAction(
     task: string,
     context: AgentContextPayload,
-    history?: BrowserAction[]
+    history?: BrowserAction[],
+    role?: ModelRole
   ): Promise<BrowserAction>;
+  reviewAction?(
+    action: BrowserAction,
+    task: string,
+    context: AgentContextPayload
+  ): Promise<{ safe: boolean; reason: string }>;
 }
+
+export type ModelRole = 'FAST' | 'STRONG' | 'VISION' | 'SAFETY';
 
 /**
  * Registered provider ids. Adding a provider means adding its id to this union

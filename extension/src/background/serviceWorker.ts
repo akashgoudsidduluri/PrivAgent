@@ -1,5 +1,6 @@
 import { AgentLoop, TaskState } from '../agent/agentLoop';
 import { createAgentProvider } from '../agent/providerRegistry';
+import { ModelRouter } from '../agent/modelRouter';
 import { buildAgentPayload, PrivacyScanReport, AgentContextPayload } from '../privacy/types';
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
@@ -567,7 +568,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         };
 
         // Real provider: backend Gemma (or fallback to configured provider)
-        const provider = createAgentProvider({ provider: 'backend' });
+        const provider = new ModelRouter(createAgentProvider({ provider: 'backend' }));
 
         activeLoop = new AgentLoop(provider, loopCallbacks, {
           maxSteps: 10,

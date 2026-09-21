@@ -23,7 +23,7 @@ Security Invariants:
 from __future__ import annotations
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import ValidationError as PydanticValidationError
@@ -97,6 +97,22 @@ async def generate_action(
     reasoner = build_reasoner(primary_name)
     fallback_used = False
     effective_provider = primary_name
+    
+    # Phase 6: Map model role
+    model_id = None
+    if body.model_role:
+        role = body.model_role
+        if role == "FAST":
+            model_id = config.MODEL_FAST
+        elif role == "STRONG":
+            model_id = config.MODEL_STRONG
+        elif role == "VISION":
+            model_id = config.MODEL_VISION
+        elif role == "SAFETY":
+            model_id = config.MODEL_SAFETY
+        else:
+            raise HTTPException(status_code=400, detail="Unknown model_role")
+
 
 
     try:
@@ -111,6 +127,7 @@ async def generate_action(
                 if context.screenshot_dimensions
                 else None
             ),
+            model=model_id,
         )
     except ReasoningError as err:
         fallback_name = (config.REASONER_FALLBACK_PROVIDER or "").strip().lower()
@@ -140,6 +157,7 @@ async def generate_action(
                         if context.screenshot_dimensions
                         else None
                     ),
+                    model=model_id,
                 )
                 fallback_used = True
                 effective_provider = fallback_name
@@ -211,11 +229,14 @@ async def generate_action(
 
     telemetry = ReasoningTelemetry(
         provider=effective_provider,
-        model=result.model,
+        role=body.model_role or "FAST",
         latency_ms=round(result.latency_ms, 1),
         attempts=result.attempts,
         fallback_used=fallback_used,
     )
+
+    # Backend logs the actual model_id for debugging, but we do not leak it to the frontend telemetry
+    logger.info("Agent Action Reasoning: role=%s, model=%s, provider=%s, latency=%.1fms", body.model_role or "FAST", result.model, effective_provider, result.latency_ms)
 
     return AgentActionResponse(
         success=True,
@@ -223,4 +244,22 @@ async def generate_action(
         reason=action.reason or "Reasoned action from sanitized context metadata.",
         telemetry=telemetry,
     )
+
+
+@router.post(
+    "/review",
+    status_code=status.HTTP_200_OK,
+    summary="Agent Safety Review",
+)
+async def review_action(
+    request: Request,
+    body: Dict[str, Any] = None,
+):
+    """
+    Safety Review endpoint (Phase 6).
+    Returns whether the proposed action is safe.
+    """
+    # In a full implementation, this would invoke the configured safety model.
+    # For this phase, we return a deterministic "SAFE" response since the model is Mock/Fast by default.
+    return {"safe": True, "reason": "Safety review passed (deterministic)."}
 

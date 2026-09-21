@@ -15,6 +15,7 @@ import { checkBackendHealth, sendSanitizedContext } from '../agent/agentBridge';
 import { minimizeAgentContext, MinimizationResult } from '../privacy/contextMinimizer';
 import { AgentProvider } from '../agent/agentProvider';
 import { createAgentProvider, getProviderDescriptor } from '../agent/providerRegistry';
+import { ModelRouter } from '../agent/modelRouter';
 import { validateAction } from '../agent/actionValidator';
 import { canPerformAction } from '../agent/privacyPolicy';
 import { BrowserAction } from '../agent/actionTypes';
@@ -824,7 +825,7 @@ btnRunAgentTask?.addEventListener('click', async () => {
   }
 
   // M7: selected provider (backend→Gemma is production; mock is offline dev)
-  const stepProvider = createAgentLoopProvider(getSelectedProviderType());
+  const stepProvider = new ModelRouter(createAgentLoopProvider(getSelectedProviderType()));
 
   try {
     // 3. Agent reasoning (produces structured action from sanitized context only)
@@ -1040,7 +1041,8 @@ async function runAutonomousLoop(task: string): Promise<void> {
 
   // M7: provider is selected in the UI (backend→Gemma default). One provider
   // instance is reused across loop steps; M6 owns the loop itself.
-  const loopProvider = createAgentLoopProvider(getSelectedProviderType());
+  const providerType = getSelectedProviderType();
+  const loopProvider = new ModelRouter(createAgentProvider({ provider: providerType }));
   const reasoningStart = performance.now();
 
   activeLoopInstance = new AgentLoop(loopProvider, loopCallbacks, {

@@ -18,7 +18,7 @@
  *  6. Every HTTP/parse failure throws a typed ProviderError — never a guessed action.
  */
 
-import { AgentProvider } from './agentProvider';
+import { AgentProvider, ModelRole } from './agentProvider';
 import { BrowserAction, SUPPORTED_ACTION_TYPES } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { assertSanitizedContextSafe } from './privacyPolicy';
@@ -91,7 +91,7 @@ export class OpenRouterProvider implements AgentProvider {
     this.timeoutMs = config.timeoutMs ?? 30000;
   }
 
-  async requestAction(task: string, context: AgentContextPayload): Promise<BrowserAction> {
+  async requestAction(task: string, context: AgentContextPayload, history?: BrowserAction[], role?: ModelRole): Promise<BrowserAction> {
     // 1. Enforce local privacy boundary on outgoing payload (M5 assertion +
     //    M8 raw-value firewall, shared by every provider implementation).
     assertSanitizedContextSafe(context);
