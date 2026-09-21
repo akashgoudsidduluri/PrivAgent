@@ -1,0 +1,38 @@
+{
+  "phase": 5,
+  "test_suite_counts": {
+    "pytest": 205,
+    "vitest": 605
+  },
+  "real_chrome_acceptance": {
+    "passed": 10,
+    "failed": 0
+  },
+  "invariants_audited": [
+    "No password reaches persistent memory",
+    "No OTP reaches persistent memory",
+    "No CVV/card number reaches persistent memory",
+    "No authentication/session/API token reaches persistent memory",
+    "Recursive raw-value scanning is enforced",
+    "Webpage content cannot create trusted memory",
+    "Remote model cannot directly create trusted memory",
+    "Memory cannot bypass M5",
+    "Memory cannot bypass risk policy",
+    "Memory cannot bypass confirmation",
+    "Memory cannot directly authorize a browser target",
+    "Stale memory cannot become an executable target",
+    "Current BrowserWorldModel always outranks memory",
+    "Memory context remains <=2KB",
+    "Memory storage remains bounded",
+    "Cross-site memory isolation works",
+    "Memory conflicts are resolved deterministically",
+    "Memory provenance is recorded",
+    "Memory failures fail closed"
+  ],
+  "observations": {
+    "memory_context_minimization": "Memory hints are injected into PlannerContextBuilder but are explicitly marked as expendable. If the 2KB budget is exceeded, memory hints are trimmed before active DOM detections, ensuring current browser context always has priority.",
+    "memory_retriever": "MemoryRetriever successfully retrieves Working and Semantic memory hints deterministically based on SiteScope. It does not return executable targets, only semantic hints for the LLM.",
+    "storage_persistence": "chrome.storage.local implementation includes deterministic eviction (oldest first) and enforces MAX_MEMORY_ITEMS and MAX_GLOBAL_BYTES limits. M8 firewall prevents raw sensitive values from being written.",
+    "telemetry": "PlannerTelemetryLogger successfully records explicit memory observables (memoryInfluencedPlanning, memoryMetadata), allowing distinct identification of memory influence vs. actual authorization."
+  }
+}

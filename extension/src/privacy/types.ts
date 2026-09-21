@@ -210,6 +210,7 @@ export interface AgentContextPayload {
   ocr_metrics: AgentOCRMetrics | null;
   page_type?: string;
   semantic_groups?: SemanticGroupMetadata[];
+  memory_hints?: import('../memory/memoryRetriever').MemoryHints;
 }
 
 /**
