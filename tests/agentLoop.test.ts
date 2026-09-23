@@ -25,6 +25,9 @@ import { AgentLoop, assertNoSensitiveDataInState, TaskState } from '../extension
 import { MockAgentProvider } from '../extension/src/agent/mockAgentProvider';
 import { AgentContextPayload } from '../extension/src/privacy/types';
 import { BrowserAction } from '../extension/src/agent/actionTypes';
+import { buildBrowserWorldModel } from '../extension/src/worldModel/worldModelBuilder';
+import { worldModelStore } from '../extension/src/worldModel/worldModelStore';
+import { assertWorldModelSafe } from '../extension/src/worldModel/worldModelSanitizer';
 
 function createMockContext(step = 0): AgentContextPayload {
   return {
@@ -238,6 +241,124 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
     expect(receivedPayloadStr).toContain('"sanitized_status":"sanitized_only"');
     expect(receivedPayloadStr).not.toContain('123456789012');
     expect(receivedPayloadStr).not.toContain('"password"');
+  });
+
+  it('Stage 1: records and prefers the active world model when perception includes it', async () => {
+    const provider = new MockAgentProvider();
+    provider.setNextAction({ action: 'click', target: 'btn-submit' });
+
+    document.body.innerHTML = '<button id="btn-submit">Submit</button>';
+    const worldModel = buildBrowserWorldModel({ root: document, pageGeneration: 1, id: 'wm-1' });
+
+    const perceivePage = vi.fn(async () => ({
+      context: {
+        ...createMockContext(0),
+        url: 'http://localhost:4173/checkout',
+        detections: [{
+          id: 'btn-submit',
+          type: 'button',
+          confidence: 0.99,
+          bbox: { x: 80, y: 120, width: 200, height: 40 },
+          length: 6,
+          source: 'dom_input_type',
+          selector: '#btn-submit',
+          is_partially_visible: false,
+          label: 'Submit',
+        }] as any,
+      },
+      worldModel,
+      activeWorldModelRef: { pageGeneration: 1, worldModelId: 'wm-1' },
+    } as any));
+
+    const executeAction = vi.fn(async () => ({ success: true }));
+    const loop = new AgentLoop(provider, { perceivePage, executeAction }, { delayBetweenStepsMs: 5, maxSteps: 2 });
+
+    const finalState = await loop.runTask('Submit the checkout form');
+
+    expect(finalState.currentPageGeneration).toBe(1);
+    expect(finalState.activeWorldModelRef).toEqual({ pageGeneration: 1, worldModelId: 'wm-1' });
+    expect(finalState.status).toMatch(/SUCCESS|FAILED|STOPPED|NEEDS_USER_CONFIRMATION/);
+    expect(perceivePage).toHaveBeenCalledTimes(1);
+  });
+
+  it('Stage 1: accepts the live world model when its generation is authoritative', async () => {
+    const provider = new MockAgentProvider();
+    provider.setNextAction({ action: 'click', target: 'btn-submit' });
+
+    document.body.innerHTML = '<button id="btn-submit">Submit</button>';
+    const liveModel = buildBrowserWorldModel({ root: document, pageGeneration: 4, id: 'wm-live-4' });
+
+    const perceivePage = vi.fn(async () => ({
+      context: {
+        ...createMockContext(0),
+        url: 'http://localhost:4173/checkout',
+        detections: [{
+          id: 'btn-submit',
+          type: 'button',
+          confidence: 0.99,
+          bbox: { x: 80, y: 120, width: 200, height: 40 },
+          length: 6,
+          source: 'dom_input_type',
+          selector: '#btn-submit',
+          is_partially_visible: false,
+          label: 'Submit',
+        }] as any,
+      },
+      worldModel: liveModel,
+      activeWorldModelRef: { pageGeneration: 4, worldModelId: 'wm-live-4' },
+    } as any));
+
+    const executeAction = vi.fn(async () => ({ success: true }));
+    const loop = new AgentLoop(provider, { perceivePage, executeAction }, { maxSteps: 2, delayBetweenStepsMs: 5 });
+
+    const finalState = await loop.runTask('Submit the checkout form');
+
+    expect(finalState.currentPageGeneration).toBe(4);
+    expect(finalState.activeWorldModelRef).toEqual({ pageGeneration: 4, worldModelId: 'wm-live-4' });
+    expect(finalState.reason).not.toMatch(/Perception failed|stale|generation/i);
+    expect(finalState.status).not.toBe('FAILED');
+  });
+
+  it('Stage 1: generation mismatch rejects a stale world model before provider context', () => {
+    const provider = new MockAgentProvider();
+    const staleModel = buildBrowserWorldModel({ root: document, pageGeneration: 3, id: 'wm-stale-older' });
+    const loop = new AgentLoop(provider, {
+      perceivePage: vi.fn(async () => ({
+        context: createMockContext(0),
+        worldModel: staleModel,
+        activeWorldModelRef: { pageGeneration: 3, worldModelId: 'wm-stale-older' },
+      } as any)),
+      executeAction: vi.fn(async () => ({ success: true })),
+    }, { maxSteps: 1, delayBetweenStepsMs: 5 });
+
+    (loop as any).state.currentPageGeneration = 5;
+    (loop as any).state.perceptionGeneration = 5;
+
+    const normalized = (loop as any).normalizePerceptionResult({
+      context: createMockContext(0),
+      worldModel: staleModel,
+      activeWorldModelRef: { pageGeneration: 3, worldModelId: 'wm-stale-older' },
+    });
+
+    expect(normalized).toBeNull();
+  });
+
+  it('Stage 1: sanitization failure fails closed for dangerous world model payloads', () => {
+    document.body.innerHTML = '<button id="btn-danger">Pay now</button>';
+    const wm = buildBrowserWorldModel({ root: document, pageGeneration: 5, id: 'wm-danger' });
+    (wm as any).page.title = '4111111111111111';
+
+    expect(() => assertWorldModelSafe(wm)).toThrow(/Forbidden sensitive property|Raw sensitive credential/i);
+  });
+
+  it('Stage 1: world model store retains the active reference for the live page generation', async () => {
+    document.body.innerHTML = '<button id="btn-live">Next</button>';
+    const wm = buildBrowserWorldModel({ root: document, pageGeneration: 3, id: 'wm-live' });
+    const ref = worldModelStore.registerWorldModel(wm);
+
+    expect(ref).toEqual({ pageGeneration: 3, worldModelId: 'wm-live' });
+    expect(worldModelStore.getActiveWorldModel(ref)?.id).toBe('wm-live');
+    expect(worldModelStore.isTargetValid(ref, 'btn-live', 3)).toBe(true);
   });
 
   // Test 15 & 16: Consequential action check (NEEDS_USER_CONFIRMATION for external navigation)

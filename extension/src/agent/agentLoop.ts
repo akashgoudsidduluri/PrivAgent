@@ -59,14 +59,22 @@ import {
 } from './agentState';
 import { parseUserGoal } from './goalParser';
 import { verifyTaskGoal } from './goalVerifier';
+import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 
 export type { TaskStatus, StepRecord, TaskState, AgentTaskState } from './agentState';
 
+export interface WorldModelPerceptionResult {
+  context: AgentContextPayload;
+  worldModel?: BrowserWorldModel;
+  activeWorldModelRef?: ActiveWorldModelRef | null;
+}
+
 export interface AgentLoopCallbacks {
   /**
-   * Fresh perception provider: returns the latest sanitized context.
+   * Fresh perception provider: returns the latest sanitized context, optionally
+   * paired with the canonical world model for the current page generation.
    */
-  perceivePage: () => Promise<AgentContextPayload | null>;
+  perceivePage: () => Promise<AgentContextPayload | WorldModelPerceptionResult | null>;
 
   /**
    * Browser execution provider: executes the validated BrowserAction.
@@ -274,8 +282,9 @@ export class AgentLoop {
       this.state.currentPageGeneration = this.state.perceptionGeneration;
       const perceptionGen = this.state.perceptionGeneration;
       console.info('[AgentTrace] perception started', { perceptionGeneration: perceptionGen, url: this.state.currentUrl });
-      const context = await this.callbacks.perceivePage();
-      if (!context) {
+      const perceptionResult = await this.callbacks.perceivePage();
+      const normalized = this.normalizePerceptionResult(perceptionResult);
+      if (!normalized) {
         this.state.status = 'FAILED';
         this.state.goalStatus = 'FAILED';
         this.state.reason = 'Perception failed: Unable to obtain sanitized page context.';
@@ -283,15 +292,31 @@ export class AgentLoop {
         console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
         break;
       }
+      const { context, worldModel, activeWorldModelRef } = normalized;
       console.info('[AgentLoop] perception completed');
-      console.info('[AgentTrace] perception complete', { perceptionGeneration: perceptionGen, contextUrl: context.url });
+      console.info('[AgentTrace] perception complete', { perceptionGeneration: perceptionGen, contextUrl: context.url, worldModelId: worldModel?.id ?? null });
 
       // Defense-in-depth: enforce zero raw PII in newly perceived context
       assertSanitizedContextSafe(context);
-      this.state.currentUrl = context.url;
+      this.state.currentUrl = context.url || worldModel?.page.url || this.state.currentUrl;
+
+      if (worldModel) {
+        this.state.currentPageGeneration = worldModel.page.pageGeneration;
+        this.state.perceptionGeneration = worldModel.page.pageGeneration;
+        this.state.activeWorldModelRef = activeWorldModelRef ?? {
+          pageGeneration: worldModel.page.pageGeneration,
+          worldModelId: worldModel.id,
+        };
+        const worldModelPageType = worldModel.page.pageType as PageCategory;
+        if (worldModelPageType && ['search','login','article','listing','form','checkout','settings','dashboard','error','unknown','landing','results','product_detail','banking'].includes(worldModelPageType)) {
+          this.state.pageType = worldModelPageType;
+        }
+      } else {
+        this.state.currentPageGeneration = this.state.perceptionGeneration;
+      }
 
       // Update observable page type
-      const uLower = context.url.toLowerCase();
+      const uLower = this.state.currentUrl.toLowerCase();
       if (uLower.includes('login') || uLower.includes('signin') || uLower.includes('auth')) {
         this.state.pageType = 'login';
       } else if (uLower.includes('result') || uLower.includes('search?')) {
@@ -1021,6 +1046,60 @@ export class AgentLoop {
       pageType: this.state.pageType,
     };
     this.state.steps.push(record);
+  }
+
+  private normalizePerceptionResult(
+    result: AgentContextPayload | WorldModelPerceptionResult | null
+  ): { context: AgentContextPayload; worldModel?: BrowserWorldModel; activeWorldModelRef?: ActiveWorldModelRef | null } | null {
+    if (!result) {
+      return null;
+    }
+
+    if ('context' in result && result.context) {
+      const context = result.context as AgentContextPayload;
+      const worldModel = result.worldModel;
+      const activeWorldModelRef = result.activeWorldModelRef ?? (worldModel ? {
+        pageGeneration: worldModel.page.pageGeneration,
+        worldModelId: worldModel.id,
+      } : undefined);
+
+      if (worldModel && activeWorldModelRef) {
+        const liveGeneration = worldModel.page.pageGeneration;
+        const refGeneration = activeWorldModelRef.pageGeneration;
+        const localGeneration = this.state.currentPageGeneration || this.state.perceptionGeneration;
+
+        // The BrowserWorldModel is the canonical page snapshot generated on the
+        // live page. The local loop must not invent its own generation baseline
+        // and reject a fresh model merely because the counter is behind the page's
+        // authoritatively advancing generation.
+        if (liveGeneration !== refGeneration) {
+          console.warn('[AgentLoop] rejecting mismatched world model generations', {
+            localGeneration,
+            worldModelGeneration: liveGeneration,
+            refGeneration,
+            worldModelId: worldModel.id,
+          });
+          return null;
+        }
+
+        // Reject stale models that reflect a previous page generation even when
+        // the local AgentLoop has already advanced its own counter during a new
+        // perception cycle.
+        if (localGeneration > 0 && liveGeneration < localGeneration) {
+          console.warn('[AgentLoop] rejecting stale world model before attachment', {
+            localGeneration,
+            worldModelGeneration: liveGeneration,
+            refGeneration,
+            worldModelId: worldModel.id,
+          });
+          return null;
+        }
+      }
+
+      return { context, worldModel, activeWorldModelRef };
+    }
+
+    return { context: result as AgentContextPayload };
   }
 
   private notifyProgress(): void {
