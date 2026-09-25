@@ -239,6 +239,19 @@ export interface AgentTaskState extends TaskState {
    * task. Should stay at 0 for a well-behaved long-horizon run.
    */
   longHorizonRepeatCount?: number;
+
+  /**
+   * Phase 10: sanitized, value-free recovery history. Each entry records the
+   * failure CODE, the chosen strategy, the attempt number, the page generation
+   * and the outcome — never any raw value or raw page text.
+   */
+  recoveryHistory?: import('./recoveryEngine').RecoveryHistoryEntry[];
+
+  /** Phase 10: total recovery attempts charged against the task budget. */
+  totalRecoveryAttempts?: number;
+
+  /** Phase 10: strategy chosen for the most recent recovery decision. */
+  recoveryStrategy?: import('./recoveryEngine').RecoveryStrategy;
 }
 
 /**

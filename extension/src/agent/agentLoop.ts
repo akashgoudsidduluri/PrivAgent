@@ -79,6 +79,12 @@ import {
   type LongHorizonSnapshot,
 } from './longHorizon';
 import { verifyTaskGoal } from './goalVerifier';
+import {
+  RecoveryEngine,
+  DEFAULT_RECOVERY_BOUNDS,
+  type RecoveryDecision,
+  type RecoveryHistoryEntry,
+} from './recoveryEngine';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import {
   buildSemanticUnderstanding,
@@ -248,6 +254,13 @@ export class AgentLoop {
    * respect to authority: it can stop or de-scope work, never authorize it.
    */
   private readonly longHorizon = new LongHorizonTracker(DEFAULT_LONG_HORIZON_BOUNDS);
+  /**
+   * Phase 10: bounded deterministic Recovery Engine. It CLASSIFIES failures and
+   * SELECTS a strategy; it never executes anything. Every recovered action is
+   * re-proposed through the complete authoritative pipeline (Grounding → M5 →
+   * Security Critic → Privacy → Risk/Confirmation → Execution → Verification).
+   */
+  private readonly recoveryEngine = new RecoveryEngine(DEFAULT_RECOVERY_BOUNDS);
   private memoryHints?: MemoryHints;
 
   private extractOrigin(url?: string): string {
@@ -394,6 +407,12 @@ export class AgentLoop {
       decompResult.subgoals
     );
     this.state.longHorizon = this.longHorizon.snapshot();
+
+    // Phase 10: a fresh task starts with a fresh recovery budget. History from
+    // a previous task must never bleed into this one's bounds.
+    this.recoveryEngine.reset();
+    this.state.recoveryHistory = [];
+    this.state.totalRecoveryAttempts = 0;
 
     // Initialize Working Memory for the task
     try {
@@ -625,6 +644,9 @@ export class AgentLoop {
 
       const lhObservation = observeFromContext(context, {
         scrollY: context.viewport?.scroll_y ?? 0,
+        // A typed value's LENGTH is task-relevant state (the field now holds
+        // input); the value itself never leaves the local boundary.
+        targetValueLength: (context as any).typed_value_length ?? 0,
       });
       const lhProgress = this.longHorizon.observe(lhObservation, undefined, {
         subgoalJustCompleted: this.state.lastActionResult?.success ? this.longHorizon.activeSubgoalId ?? undefined : undefined,
@@ -1574,8 +1596,54 @@ export class AgentLoop {
           break;
         }
 
-        // Bounded Recovery Trigger:
+        // ── Phase 10: Recovery Engine classifies the failure and selects a
+        // bounded strategy. The engine PROPOSES ONLY: it never executes. The
+        // strategies map onto what the existing loop already does — REPERCEIVE
+        // to the fresh-perception retry below, REPLAN_SUBGOAL to the
+        // DynamicReplanner call, ABORT to the exhaustion failure. Any retry
+        // re-enters the complete pipeline from the top of the loop: Grounding
+        // → M5 → Security Critic → Privacy → Risk/Confirmation → Execution →
+        // Effect/Goal verification.
+        const recoveryDecision: RecoveryDecision = this.recoveryEngine.decide({
+          code: effectResult.status,
+          pageGeneration: this.state.currentPageGeneration,
+          targetId: 'target' in action ? (action as any).target : undefined,
+          subgoalId: activeSubgoal?.id,
+          noEffect: true,
+        });
+        this.state.recoveryHistory = [...this.recoveryEngine.history];
+        this.state.totalRecoveryAttempts = this.recoveryEngine.totalRecoveries;
+        console.info('[AgentTrace] recovery decision', {
+          code: recoveryDecision.code,
+          strategy: recoveryDecision.strategy,
+          attempt: recoveryDecision.attempt,
+          reason: recoveryDecision.reason,
+        });
+
+        if (recoveryDecision.strategy === 'ABORT') {
+          failureRecord.finalState = 'FAILED';
+          const abortRecord: FailureRecord = {
+            category: 'RECOVERY_EXHAUSTED',
+            reason: `Recovery engine aborted: ${recoveryDecision.reason}`,
+            pageGeneration: this.state.currentPageGeneration,
+            attemptedAction: action,
+            recoveryAttempted: true,
+            finalState: 'FAILED',
+            timestamp: Date.now(),
+          };
+          this.state.lastFailure = abortRecord;
+          this.state.failureHistory.push(abortRecord);
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = abortRecord.reason;
+          this.notifyProgress();
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+          break;
+        }
+
+        // Bounded Recovery Trigger (Phase 6, strategy named by Phase 10):
         this.state.recoveryCount++;
+        this.state.recoveryStrategy = recoveryDecision.strategy;
         advancePageGeneration(this.state);
         this.state.currentPageGeneration = this.state.perceptionGeneration;
 
@@ -1598,8 +1666,10 @@ export class AgentLoop {
           }
         }
 
-        // Re-perceive the page before retry
-        console.info('[AgentTrace] re-perceiving page after no-effect');
+        // Re-perceive the page before retry. REQUIRED by every non-abort
+        // recovery strategy: a recovered action must never be grounded in a
+        // stale page generation.
+        console.info('[AgentTrace] re-perceiving page after no-effect (recovery: ' + recoveryDecision.strategy + ')');
         const freshPerception = await this.callbacks.perceivePage();
         if (freshPerception) {
           const normalized = this.normalizePerceptionResult(freshPerception);
@@ -1607,6 +1677,10 @@ export class AgentLoop {
             context = normalized.context;
             worldModel = normalized.worldModel;
             semanticContext = normalized.semanticContext;
+            // Invalidate the stale generation so the recovered action can only
+            // ground against the FRESH one (stale-target protection).
+            advancePageGeneration(this.state);
+            this.state.currentPageGeneration = this.state.perceptionGeneration;
           }
         }
 

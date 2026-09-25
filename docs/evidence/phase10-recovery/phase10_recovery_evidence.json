@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-09-25T20:09:36.496Z",
+  "phase": "Phase 10: Bounded Recovery Engine",
+  "task": "Open Google and search cats",
+  "injectedFailure": "First submit dispatch on the home page is silently swallowed (no navigation, no DOM change) — exactly one recoverable ACTION_NO_EFFECT.",
+  "provenance": {
+    "kind": "REAL_CHROME_RECOVERY",
+    "browser": "Chromium (headless=new) driven over CDP",
+    "perception": "REAL PrivAgent content script in a REAL tab",
+    "execution": "REAL PrivAgent content-script action dispatch in the live page",
+    "securityPipeline": "REAL PrivAgent local source bundled from extension/src",
+    "reasoner": "DETERMINISTIC GOAL-DRIVEN LOCAL POLICY — proposes only; all authority is local.",
+    "harnessBypassesAgent": false,
+    "harnessPerformsRecovery": false,
+    "synthetic": false
+  },
+  "screenshots": [
+    "docs/evidence/phase10-recovery/phase10_final_state.png"
+  ],
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "result": {
+    "finalStatus": "SUCCESS",
+    "goalStatus": "SUCCESS",
+    "goalDecidedBy": "existing deterministic goal verifier (verifyTaskGoal) — unchanged",
+    "finalUrl": "http://localhost:4189/results?q=cats",
+    "stepsTaken": 3,
+    "actionsExecuted": 2,
+    "noEffectSteps": 1,
+    "e2eLatencyMs": 2917.71,
+    "recovery": {
+      "strategy": "REPERCEIVE",
+      "totalRecoveryAttempts": 1,
+      "history": [
+        {
+          "failureCode": "ACTION_NO_EFFECT",
+          "strategy": "REPERCEIVE",
+          "attempt": 1,
+          "pageGeneration": 3,
+          "subgoalId": "goal-muhe9uey-jawyu-sg1",
+          "targetId": "q",
+          "reason": "Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 3.",
+          "outcome": "OPEN",
+          "timestamp": 1790366979715
+        }
+      ]
+    },
+    "steps": [
+      {
+        "step": 1,
+        "action": "type",
+        "target": "q",
+        "validationAllowed": true,
+        "executionSuccess": false,
+        "effectStatus": "ACTION_NO_EFFECT"
+      },
+      {
+        "step": 2,
+        "action": "click",
+        "target": "search-button",
+        "validationAllowed": true,
+        "executionSuccess": true,
+        "effectStatus": "FOCUS_SHIFT_OBSERVED"
+      },
+      {
+        "step": 3,
+        "action": "click",
+        "target": "search-button",
+        "validationAllowed": true,
+        "executionSuccess": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED"
+      },
+      {
+        "step": 3,
+        "action": "click",
+        "target": "search-button",
+        "validationAllowed": true,
+        "executionSuccess": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED"
+      }
+    ]
+  },
+  "gates": {
+    "everyExecutedActionPassedGates": true,
+    "actionsExecuted": 2,
+    "finalSecurityCriticCode": "NO_OBJECTION",
+    "recoveredActionsReenteredPipeline": true
+  }
+}
