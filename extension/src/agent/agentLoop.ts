@@ -26,6 +26,7 @@
 
 import { BrowserAction, ActionType } from './actionTypes';
 import { validateAction } from './actionValidator';
+import { groundProposedTarget } from './groundingEngine';
 import { canPerformAction, assertSanitizedContextSafe } from './privacyPolicy';
 import { AgentProvider } from './agentProvider';
 import { ProviderError } from './openRouterProvider';
@@ -582,86 +583,102 @@ export class AgentLoop {
         const singleActionCheck = OneActionPlanner.validateSingleActionProposal(action);
         if (!singleActionCheck.valid) {
           this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
           this.state.reason = `OneActionPlanner rejected action: ${singleActionCheck.error}`;
           this.notifyProgress();
           console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
           break;
         }
         action = singleActionCheck.action!;
-
-        // State Machine: Register Grounding
-        if (this.planStateMachine && this.planStateMachine.getState() === 'TARGET_GROUNDING') {
-          if ('target' in action && typeof (action as any).target === 'string') {
-            this.planStateMachine.registerTargetGrounded((action as any).target, action);
-          } else {
-            this.planStateMachine.registerNonTargetedAction(action);
-          }
-          this.state.planningEngineState = this.planStateMachine.getState();
-        }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.state.status = 'FAILED';
+        this.state.goalStatus = 'FAILED';
         this.state.reason = `Agent reasoning failed: ${msg}`;
         this.notifyProgress();
         console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
         break;
       }
 
-      // 5. Next-Gen Pre-Execution Verification & Risk Assessment (Features 1, 2 & 5)
-      const risk = assessActionRisk(action, context, this.state.currentUrl);
-      const semantic = verifySemanticAction(action, task, context, risk);
-      const previousSuccessCount = this.state.steps.filter((s) => s.executionSuccess).length;
-      const confidence = evaluateExecutionConfidence(semantic, risk, previousSuccessCount);
+      // =========================================================================
+      // AUTHORITATIVE FAIL-CLOSED SECURITY ACTION PIPELINE (Stage 5)
+      // Reasoner -> Proposed Action -> Target Grounding -> M5 Validator ->
+      // Privacy Policy -> Risk Assessment -> Confirmation if required -> Browser Execution
+      // =========================================================================
 
-      // 5a. Deterministic Injection / Contradiction Block
-      if (confidence.directive === 'BLOCK' || semantic.targetAlignment === 'CONTRADICTORY') {
-        const blockReason = confidence.explanation || semantic.reason || 'Action blocked by security verification.';
-        this.recordStep(
-          action,
-          false,
-          'Security Verification Blocked',
-          false,
-          blockReason,
-          undefined,
-          risk,
-          semantic,
-          confidence
-        );
+      // GATE 1: Target Grounding (Authoritative local gatekeeper for target element)
+      const grounding = groundProposedTarget(action, context.detections, {
+        currentPageGeneration: this.state.currentPageGeneration ?? 0,
+        actionPageGeneration:
+          (action as any).pageGeneration ??
+          (action as any).actionPageGeneration ??
+          this.state.currentPageGeneration ??
+          0,
+        currentOrigin,
+      });
+
+      if (!grounding.grounded) {
+        this.state.retryCount++;
+        this.provider.registerFailure?.();
+        try {
+          await FailureMemoryManager.write({
+            id: `fail-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+            class: 'FAILURE',
+            scope: siteScope,
+            trustLevel: MemoryTrustLevel.HIGH_CONFIDENCE_MEMORY,
+            provenance: { source: 'ACTION_RESULT', timestamp: Date.now(), subgoalId: activeSubgoal?.id, actionType: action.action },
+            confidence: 1.0,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            failureType: 'GROUNDING_FAILURE',
+            contextCategory: (this.state.pageType as any) || 'unknown',
+            recoveryAttempted: 'NONE',
+            recoveryResult: 'FAILURE',
+          });
+        } catch (e) {}
+
+        const failReason = `Target Grounding Failed (${grounding.failureReason || 'ELEMENT_NOT_FOUND'}): ${grounding.details}`;
+        this.recordStep(action, false, failReason, false, failReason);
         tracer.recordStep({
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
-          riskAssessment: {
-            riskLevel: risk.level,
-            score: risk.score,
-            requiresConfirmation: risk.requiresUserConfirmation,
-          },
-          structuralValidation: {
-            passed: false,
-            reason: 'Confidence / Semantic Verification Blocked',
-          },
-          semanticVerification: {
-            verified: semantic.verified,
-            confidence: semantic.confidence,
-            alignment: semantic.targetAlignment,
-            reason: semantic.reason,
-          },
-          confidenceEvaluation: {
-            confidenceScore: confidence.confidenceScore,
-            directive: confidence.directive,
-            explanation: confidence.explanation,
-          },
-          finalOutcome: 'BLOCKED',
+          riskAssessment: { riskLevel: 'LOW', score: 0, requiresConfirmation: false },
+          structuralValidation: { passed: false, reason: failReason },
+          semanticVerification: { verified: false, confidence: 0, alignment: 'UNKNOWN', reason: failReason },
+          confidenceEvaluation: { confidenceScore: 0, directive: 'BLOCK', explanation: failReason },
+          finalOutcome: 'FAILED',
         });
         this.state.decisionTraceSummary = tracer.getSummary();
-        this.state.status = 'FAILED';
-        this.state.reason = blockReason;
         this.notifyProgress();
-        console.info('[AgentTrace] M6 blocked by security verifier', { reason: this.state.reason });
-        break;
+
+        if (this.state.retryCount > this.maxRetries) {
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = failReason;
+          console.info('[AgentTrace] Target grounding failed repeatedly', { reason: this.state.reason });
+          break;
+        }
+        await this.delay(this.delayBetweenStepsMs);
+        continue;
       }
 
-      // 6. Local Action Validator (M5 validator is authoritative) + Feature 4 Self-Healing
+      // Grounding successful: update action target if resolved
+      if (grounding.targetId && 'target' in action) {
+        (action as any).target = grounding.targetId;
+      }
+
+      // Plan State Machine: Register Grounding
+      if (this.planStateMachine && this.planStateMachine.getState() === 'TARGET_GROUNDING') {
+        if ('target' in action && typeof (action as any).target === 'string') {
+          this.planStateMachine.registerTargetGrounded((action as any).target, action);
+        } else {
+          this.planStateMachine.registerNonTargetedAction(action);
+        }
+        this.state.planningEngineState = this.planStateMachine.getState();
+      }
+
+      // GATE 2: M5 Validator (Authoritative Gatekeeper)
       let validation = validateAction(action, context);
       let healingResult: SelfHealingResult | undefined;
 
@@ -715,10 +732,152 @@ export class AgentLoop {
           false,
           validation.reason,
           undefined,
+          undefined,
+          undefined,
+          undefined,
+          healingResult
+        );
+        tracer.recordStep({
+          step: this.state.currentStep,
+          goal: task,
+          proposedAction: action,
+          riskAssessment: {
+            riskLevel: 'LOW',
+            score: 0,
+            requiresConfirmation: false,
+          },
+          structuralValidation: {
+            passed: false,
+            reason: validation.reason,
+          },
+          semanticVerification: {
+            verified: false,
+            confidence: 0,
+            alignment: 'UNKNOWN',
+            reason: validation.reason || 'Validator rejected action',
+          },
+          confidenceEvaluation: {
+            confidenceScore: 0,
+            directive: 'BLOCK',
+            explanation: validation.reason,
+          },
+          finalOutcome: 'FAILED',
+        });
+        this.state.decisionTraceSummary = tracer.getSummary();
+        this.notifyProgress();
+
+        if (this.state.retryCount > this.maxRetries) {
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = `Validator rejected action repeatedly: ${validation.reason}`;
+          console.info('[AgentTrace] M5 failed', { reason: this.state.reason });
+          break;
+        }
+        // Wait and retry with next perception
+        await this.delay(this.delayBetweenStepsMs);
+        continue;
+      }
+      console.info('[AgentTrace] action validated by M5');
+
+      // GATE 3: Privacy Policy (Capability-based access control)
+      const targetDet = 'target' in action ? context.detections.find((d) => d.id === (action as any).target) : undefined;
+      const policy = canPerformAction(action, targetDet, 'agent_llm');
+      if (!policy.granted) {
+        this.state.retryCount++;
+        this.provider.registerFailure?.();
+        try {
+          await FailureMemoryManager.write({
+            id: `fail-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+            class: 'FAILURE',
+            scope: siteScope,
+            trustLevel: MemoryTrustLevel.HIGH_CONFIDENCE_MEMORY,
+            provenance: { source: 'ACTION_RESULT', timestamp: Date.now(), subgoalId: activeSubgoal?.id, actionType: action.action },
+            confidence: 1.0,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            failureType: 'POLICY_REJECTION',
+            contextCategory: (this.state.pageType as any) || 'unknown',
+            recoveryAttempted: 'NONE',
+            recoveryResult: 'FAILURE',
+          });
+        } catch (e) {}
+
+        const policyReason = `Privacy Policy Denied: ${policy.reason}`;
+        this.recordStep(
+          action,
+          false,
+          policyReason,
+          false,
+          policy.reason,
+          targetDet?.type
+        );
+        tracer.recordStep({
+          step: this.state.currentStep,
+          goal: task,
+          proposedAction: action,
+          riskAssessment: {
+            riskLevel: 'HIGH',
+            score: 0.8,
+            requiresConfirmation: false,
+          },
+          structuralValidation: {
+            passed: true,
+            reason: 'Passed M5 validation',
+          },
+          semanticVerification: {
+            verified: false,
+            confidence: 0,
+            alignment: 'CONTRADICTORY',
+            reason: policyReason,
+          },
+          confidenceEvaluation: {
+            confidenceScore: 0,
+            directive: 'BLOCK',
+            explanation: policyReason,
+          },
+          finalOutcome: 'FAILED',
+        });
+        this.state.decisionTraceSummary = tracer.getSummary();
+        this.notifyProgress();
+
+        if (this.state.retryCount > this.maxRetries) {
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = `Privacy policy rejected action repeatedly: ${policy.reason}`;
+          console.info('[AgentTrace] Privacy policy rejected action', { reason: this.state.reason });
+          break;
+        }
+        await this.delay(this.delayBetweenStepsMs);
+        continue;
+      }
+      console.info('[AgentTrace] action passed privacy policy');
+
+      // GATE 4: Risk Assessment & Semantic Verification
+      const risk = assessActionRisk(action, context, this.state.currentUrl);
+      const semantic = verifySemanticAction(action, task, context, risk);
+      const previousSuccessCount = this.state.steps.filter((s) => s.executionSuccess).length;
+      const confidence = evaluateExecutionConfidence(semantic, risk, previousSuccessCount);
+
+      if (this.planStateMachine && this.planStateMachine.getState() === 'RISK_POLICY_CHECK') {
+        this.planStateMachine.registerRiskAssessment(risk);
+        this.state.planningEngineState = this.planStateMachine.getState();
+      }
+
+      // Deterministic Block: Risk engine disallowed, confidence BLOCK, or contradiction
+      if (!risk.allowed || confidence.directive === 'BLOCK' || semantic.targetAlignment === 'CONTRADICTORY') {
+        const blockReason = !risk.allowed
+          ? (risk.rationale || 'Action blocked by risk engine: critical risk or unauthorized navigation protocol.')
+          : (confidence.explanation || semantic.reason || 'Action blocked by security verification.');
+        this.recordStep(
+          action,
+          false,
+          'Security Verification Blocked',
+          false,
+          blockReason,
+          targetDet?.type,
           risk,
           semantic,
-          confidence,
-          healingResult
+          confidence
         );
         tracer.recordStep({
           step: this.state.currentStep,
@@ -731,50 +890,41 @@ export class AgentLoop {
           },
           structuralValidation: {
             passed: false,
-            reason: validation.reason,
+            reason: 'Confidence / Semantic Verification / Risk Blocked',
           },
           semanticVerification: {
             verified: semantic.verified,
             confidence: semantic.confidence,
             alignment: semantic.targetAlignment,
-            reason: semantic.reason || 'Validator rejected action',
+            reason: semantic.reason,
           },
           confidenceEvaluation: {
             confidenceScore: confidence.confidenceScore,
             directive: confidence.directive,
             explanation: confidence.explanation,
           },
-          finalOutcome: 'FAILED',
+          finalOutcome: 'BLOCKED',
         });
         this.state.decisionTraceSummary = tracer.getSummary();
+        this.state.status = 'FAILED';
+        this.state.goalStatus = 'FAILED';
+        this.state.reason = blockReason;
         this.notifyProgress();
-
-        if (this.state.retryCount > this.maxRetries) {
-          this.state.status = 'FAILED';
-          this.state.reason = `Validator rejected action repeatedly: ${validation.reason}`;
-          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
-          break;
-        }
-        // Wait and retry with next perception
-        await this.delay(this.delayBetweenStepsMs);
-        continue;
-      }
-      console.info('[AgentTrace] action validated');
-      if (this.planStateMachine && this.planStateMachine.getState() === 'RISK_POLICY_CHECK') {
-        this.planStateMachine.registerRiskAssessment(risk);
-        this.state.planningEngineState = this.planStateMachine.getState();
+        console.info('[AgentTrace] M6 blocked by security verifier', { reason: this.state.reason });
+        break;
       }
 
-      // 6a. SAFETY Review (Model-based)
+      // Safety Review (Model-based optional hook)
       if (this.provider.reviewAction) {
         console.info('[AgentTrace] requesting safety review');
         const review = await this.provider.reviewAction(action, task, context);
         if (!review.safe) {
           this.state.retryCount++;
-          this.recordStep(action, false, `SAFETY Rejected: ${review.reason}`, false, review.reason, undefined, risk, semantic, confidence);
+          this.recordStep(action, false, `SAFETY Rejected: ${review.reason}`, false, review.reason, targetDet?.type, risk, semantic, confidence);
           this.notifyProgress();
           if (this.state.retryCount > this.maxRetries) {
             this.state.status = 'FAILED';
+            this.state.goalStatus = 'FAILED';
             this.state.reason = `Safety model rejected action repeatedly: ${review.reason}`;
             break;
           }
@@ -784,40 +934,15 @@ export class AgentLoop {
         console.info('[AgentTrace] action passed safety review');
       }
 
-      // 7. Privacy Capability Policy Check
-      const targetDet = 'target' in action ? context.detections.find((d) => d.id === (action as any).target) : undefined;
-      const policy = canPerformAction(action, targetDet, 'agent_llm');
-      if (!policy.granted) {
-        this.state.retryCount++;
-        this.recordStep(
-          action,
-          false,
-          `Policy Denied: ${policy.reason}`,
-          false,
-          policy.reason,
-          targetDet?.type,
-          risk,
-          semantic,
-          confidence
-        );
-        this.notifyProgress();
-
-        if (this.state.retryCount > this.maxRetries) {
-          this.state.status = 'FAILED';
-          this.state.reason = `Privacy policy rejected action repeatedly: ${policy.reason}`;
-          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
-          break;
-        }
-        await this.delay(this.delayBetweenStepsMs);
-        continue;
-      }
-
-      // 8. Consequential action check: requires user confirmation
-      if (
+      // GATE 5: Confirmation Check (High-risk, consequential, or sensitive operations)
+      const isHighRisk = risk.level === 'HIGH' || risk.level === 'CRITICAL';
+      const requiresConfirmation =
         this.isConsequentialAction(action, this.state.currentUrl) ||
         risk.requiresUserConfirmation ||
-        confidence.directive === 'REQUIRE_CONFIRMATION'
-      ) {
+        isHighRisk ||
+        confidence.directive === 'REQUIRE_CONFIRMATION';
+
+      if (requiresConfirmation) {
         this.state.status = 'NEEDS_USER_CONFIRMATION';
         this.state.goalStatus = 'NEEDS_USER_CONFIRMATION';
         this.state.confirmationState = 'PENDING';

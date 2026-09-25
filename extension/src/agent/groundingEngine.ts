@@ -20,7 +20,8 @@ export type GroundingFailureReason =
   | 'TARGET_MISMATCH'
   | 'ELEMENT_NOT_FOUND'
   | 'INSUFFICIENT_CONFIDENCE'
-  | 'DISABLED_OR_HIDDEN';
+  | 'DISABLED_OR_HIDDEN'
+  | 'UNAUTHORIZED_ORIGIN';
 
 export interface GroundingSignals {
   idMatch: boolean;
@@ -125,6 +126,7 @@ export function groundProposedTarget(
     currentPageGeneration?: number;
     actionPageGeneration?: number;
     confidenceThreshold?: number;
+    currentOrigin?: string;
   } = {}
 ): GroundingResult {
   // Actions that don't target specific DOM elements (scroll, navigate) are inherently grounded
@@ -150,6 +152,26 @@ export function groundProposedTarget(
   const actionGen = options.actionPageGeneration ?? currentGen;
   const threshold = options.confidenceThreshold ?? 0.65;
 
+  // 1a. Origin Isolation Guard
+  if (options.currentOrigin) {
+    const actionOrigin = (action as any).targetOrigin || (action as any).origin;
+    if (actionOrigin && actionOrigin !== options.currentOrigin) {
+      return {
+        grounded: false,
+        confidence: 0,
+        failureReason: 'UNAUTHORIZED_ORIGIN',
+        signals: {
+          idMatch: false,
+          labelScore: 0,
+          typeCompatible: false,
+          visibilityValid: false,
+          generationValid: true,
+        },
+        details: `Action origin '${actionOrigin}' does not match current origin '${options.currentOrigin}'. Cross-origin execution blocked.`,
+      };
+    }
+  }
+
   // 1. Generation Lifecycle Guard
   if (actionGen < currentGen) {
     return {
@@ -171,6 +193,23 @@ export function groundProposedTarget(
   const exactMatch = detections.find(d => d.id === rawTarget);
 
   if (exactMatch) {
+    if (options.currentOrigin && (exactMatch as any).origin && (exactMatch as any).origin !== options.currentOrigin) {
+      return {
+        grounded: false,
+        confidence: 0,
+        failureReason: 'UNAUTHORIZED_ORIGIN',
+        matchedDetection: exactMatch,
+        signals: {
+          idMatch: true,
+          labelScore: 1.0,
+          typeCompatible: true,
+          visibilityValid: true,
+          generationValid: true,
+        },
+        details: `Target element '${rawTarget}' belongs to origin '${(exactMatch as any).origin}', not current origin '${options.currentOrigin}'. Cross-origin execution blocked.`,
+      };
+    }
+
     const compatible = isActionCompatibleWithType(action.action, exactMatch.type);
     const { width, height } = getBBoxDimensions(exactMatch);
     const visible = width > 0 && height > 0;

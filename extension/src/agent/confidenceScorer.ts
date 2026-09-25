@@ -47,32 +47,29 @@ export function evaluateExecutionConfidence(
   let directive: ExecutionDirective = 'AUTO_EXECUTE';
   let explanation = '';
 
-  // 1. Critical risk or semantic rejection immediately blocks
-  if (risk.riskLevel === 'CRITICAL' || !semantic.verified || !risk.allowed) {
+  // 1. Prohibited operation or unallowed risk immediately blocks
+  if (!risk.allowed || (!semantic.verified && semantic.policyDecision !== 'REQUIRE_CONFIRMATION')) {
     directive = 'BLOCK';
-    explanation = risk.riskLevel === 'CRITICAL'
-      ? 'Blocked: Action involves critical consequential financial or destructive operation.'
+    explanation = !risk.allowed
+      ? (risk.rationale || 'Blocked: Action involves unauthorized protocol or prohibited operation.')
       : `Blocked: ${semantic.reason}`;
   }
-  // 2. High risk or explicit confirmation requirement
-  else if (risk.requiresConfirmation || risk.riskLevel === 'HIGH' || semantic.policyDecision === 'REQUIRE_CONFIRMATION') {
+  // 2. High/Critical risk or consequential action requires explicit user confirmation
+  else if (risk.requiresConfirmation || risk.riskLevel === 'HIGH' || risk.riskLevel === 'CRITICAL' || semantic.policyDecision === 'REQUIRE_CONFIRMATION') {
     directive = 'REQUIRE_CONFIRMATION';
-    explanation = 'Action requires explicit user confirmation due to elevated consequential risk.';
+    explanation = risk.riskLevel === 'CRITICAL'
+      ? 'Action requires explicit user confirmation: Critical consequential financial or destructive operation.'
+      : 'Action requires explicit user confirmation due to elevated consequential risk.';
   }
-  // 3. Low risk benign operations auto-execute if verified and compositeScore >= 0.60
-  else if (risk.riskLevel === 'LOW' && compositeScore >= 0.60) {
+  // 3. Verified safe operations auto-execute if compositeScore >= 0.70
+  else if (compositeScore >= 0.70) {
     directive = 'AUTO_EXECUTE';
-    explanation = `Benign low-risk action (${compositeScore}) safe for autonomous execution.`;
+    explanation = `Benign action (${compositeScore}) safe for autonomous execution.`;
   }
-  // 4. Medium risk with moderate confidence requires confirmation
-  else if (compositeScore < 0.85) {
-    directive = 'REQUIRE_CONFIRMATION';
-    explanation = `Confidence (${compositeScore}) on moderate-risk action is below autonomous threshold (0.85). Confirming with user.`;
-  }
-  // 5. High confidence auto-executes
+  // 4. Low confidence requires confirmation
   else {
-    directive = 'AUTO_EXECUTE';
-    explanation = `High confidence (${compositeScore}) and safe risk profile (${risk.riskLevel}). Authorized for autonomous execution.`;
+    directive = 'REQUIRE_CONFIRMATION';
+    explanation = `Confidence (${compositeScore}) is below autonomous threshold (0.70). Confirming with user.`;
   }
 
   return {

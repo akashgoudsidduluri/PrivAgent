@@ -61,11 +61,7 @@ export class OneActionPlanner {
         }
         return {
           valid: true,
-          action: {
-            action: 'click',
-            target: proposal.target,
-            reason: typeof proposal.reason === 'string' ? proposal.reason : undefined,
-          },
+          action: proposal as unknown as BrowserAction,
         };
       }
 
@@ -78,12 +74,7 @@ export class OneActionPlanner {
         }
         return {
           valid: true,
-          action: {
-            action: 'type',
-            target: proposal.target,
-            text: proposal.text,
-            reason: typeof proposal.reason === 'string' ? proposal.reason : undefined,
-          },
+          action: proposal as unknown as BrowserAction,
         };
       }
 
@@ -98,12 +89,7 @@ export class OneActionPlanner {
         }
         return {
           valid: true,
-          action: {
-            action: 'scroll',
-            direction,
-            amount,
-            reason: typeof proposal.reason === 'string' ? proposal.reason : undefined,
-          },
+          action: proposal as unknown as BrowserAction,
         };
       }
 
@@ -116,12 +102,7 @@ export class OneActionPlanner {
         }
         return {
           valid: true,
-          action: {
-            action: 'select',
-            target: proposal.target,
-            option: proposal.option,
-            reason: typeof proposal.reason === 'string' ? proposal.reason : undefined,
-          },
+          action: proposal as unknown as BrowserAction,
         };
       }
 
@@ -131,11 +112,7 @@ export class OneActionPlanner {
         }
         return {
           valid: true,
-          action: {
-            action: 'navigate',
-            url: proposal.url,
-            reason: typeof proposal.reason === 'string' ? proposal.reason : undefined,
-          },
+          action: proposal as unknown as BrowserAction,
         };
       }
 

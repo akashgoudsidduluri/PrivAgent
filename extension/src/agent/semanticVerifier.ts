@@ -54,6 +54,11 @@ const DOMAIN_INTENT_MAPS: IntentSemanticMap[] = [
     expectedTargetKeywords: ['link', 'menu', 'button', 'nav'],
     conflictingTargetKeywords: ['javascript:', 'data:', 'vbscript:'],
   },
+  {
+    taskKeywords: ['search', 'query', 'find', 'lookup', 'google'],
+    expectedTargetKeywords: ['search', 'input', 'query', 'btn', 'button', 'text', 'box', 'q', 'find'],
+    conflictingTargetKeywords: ['delete', 'pay', 'checkout', 'transfer', 'logout'],
+  },
 ];
 
 /**

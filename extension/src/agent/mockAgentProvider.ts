@@ -21,6 +21,12 @@ export class MockAgentProvider implements AgentProvider {
   private actionSequence: BrowserAction[] = [];
   private customHandler: ((task: string, context: AgentContextPayload, history?: BrowserAction[]) => BrowserAction) | null = null;
 
+  constructor(initialActions?: BrowserAction[]) {
+    if (initialActions && Array.isArray(initialActions)) {
+      this.actionSequence = [...initialActions];
+    }
+  }
+
   /**
    * Override next action for testing edge cases (e.g. invalid targets, malformed actions).
    */
