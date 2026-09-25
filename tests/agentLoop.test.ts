@@ -180,7 +180,9 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
     const finalState = await loop.runTask('Click disappeared element');
 
     expect(finalState.status).toBe('FAILED');
-    expect(finalState.reason).toMatch(/Validator rejected action repeatedly/i);
+    // Target Grounding (GATE 1) rejects the vanished id before the M5 validator
+    // is ever reached — a strictly earlier and stronger fail-closed gate.
+    expect(finalState.reason).toMatch(/could not be grounded in the live DOM|Target Grounding Failed/i);
     expect(executeAction).not.toHaveBeenCalled(); // Stale action never reached browser
   });
 

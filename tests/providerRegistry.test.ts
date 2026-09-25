@@ -225,7 +225,11 @@ describe('M6 is provider-agnostic (one loop, swappable provider)', () => {
     const state = await loop.runTask(TASK);
     expect(state.status).toBe('FAILED');
     expect(state.previousActions).toEqual([]);
-    expect(state.reason).toMatch(/does not exist in the current sanitized context/i);
+    // The invented target is now rejected by GROUNDING (semantic matcher, 33%
+    // < 65% required) rather than by the M5 validator's exact-id lookup — a
+    // strictly stronger gate that runs FIRST. The security outcome is
+    // identical: nothing is executed, the task fails closed.
+    expect(state.reason).toMatch(/could not be grounded in the live DOM/i);
   });
 });
 

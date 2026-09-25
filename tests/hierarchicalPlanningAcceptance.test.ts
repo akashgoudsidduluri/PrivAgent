@@ -103,8 +103,24 @@ describe('PrivAgent Phase 4 — Hierarchical Planning Acceptance Suite', () => {
     sm.registerDecompositionComplete();
     sm.registerSubgoalSelected(mockSubgoal);
 
+    // UPDATED for commit 9247a26: the live AgentLoop performs an "early goal
+    // check" from TARGET_GROUNDING (it verifies the deterministic goal verifier
+    // BEFORE requesting a new action, so a finished task ends without a dummy
+    // action). GOAL_VERIFICATION from TARGET_GROUNDING is therefore an
+    // ALLOWED, provenance-recorded path — it is not a bypass. What must still
+    // throw is reaching GOAL_VERIFICATION from a state that skipped both the
+    // effect-verified path AND the grounding/early-check paths.
+    expect(() => sm.transitionTo('GOAL_VERIFICATION')).not.toThrow();
+    expect(sm.getState()).toBe('GOAL_VERIFICATION');
+
+    // The actual invariant: from a risk-locked state that has neither executed
+    // nor grounded anything, GOAL_VERIFICATION is unreachable.
+    const sm2 = new PlanStateMachine();
+    sm2.initialize(mockGoal);
+    sm2.registerDecompositionComplete();
+    sm2.transitionTo('RISK_POLICY_CHECK', 'test: jump ahead of grounding');
     expect(() => {
-      sm.transitionTo('GOAL_VERIFICATION');
+      sm2.transitionTo('GOAL_VERIFICATION');
     }).toThrow(/Pipeline Invariant Violation/);
   });
 

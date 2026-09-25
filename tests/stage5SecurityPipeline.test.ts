@@ -154,12 +154,22 @@ describe('PrivAgent Stage 5: Authoritative Fail-Closed Security Action Pipeline'
       { action: 'click', target: 'search-button', reason: 'Click search' },
     ]);
 
+    // The submit click navigates to the results page, so goal verification can
+    // observe the query in the live URL and the task terminates after 2 actions.
+    let submitted = false;
+
     const loop = new AgentLoop(
       provider,
       {
-        perceivePage: async () => context,
+        perceivePage: async () =>
+          submitted
+            ? createSafeContext({ url: 'https://example.com/shop/results?q=cats' })
+            : context,
         executeAction: async (action) => {
           executedActions.push(action);
+          if (action.action === 'click' && (action as any).target === 'search-button') {
+            submitted = true;
+          }
           return { success: true };
         },
       },
@@ -179,6 +189,7 @@ describe('PrivAgent Stage 5: Authoritative Fail-Closed Security Action Pipeline'
     expect((executedActions[1] as any)?.target).toBe('search-button');
     expect(state.steps[0]?.executionSuccess).toBe(true);
     expect(state.steps[1]?.executionSuccess).toBe(true);
+    expect(state.status).toBe('SUCCESS');
   });
 
   // 2. Invalid action -> blocked

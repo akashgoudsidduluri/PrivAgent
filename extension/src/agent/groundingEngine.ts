@@ -75,25 +75,38 @@ function computeTokenOverlap(a: string, b: string): number {
  * Check if the browser action type is compatible with the element detection type.
  */
 function isActionCompatibleWithType(actionType: ActionType, detectionType: string): boolean {
+  // Sensitive-classified controls (password, otp, account_number, ...) are
+  // still FORM CONTROLS that the agent must be able to focus or activate:
+  // the M8 privacy policy explicitly grants CLICK/TYPE/SELECT on them to the
+  // agent (values are redacted locally, never transmitted). The compatibility
+  // gate is STRUCTURAL (is this element kind interactable at all?), not a
+  // second privacy policy — rejecting `click` on an account-number row here
+  // dead-locked the whole banking demo pipeline. Structural compatibility
+  // therefore treats any form-control-like type as interactable.
+  const formControlLike =
+    detectionType === 'input' ||
+    detectionType === 'search' ||
+    detectionType === 'password' ||
+    detectionType === 'select' ||
+    detectionType === 'otp' ||
+    detectionType === 'cvv' ||
+    detectionType === 'credit_card' ||
+    detectionType === 'account_number' ||
+    detectionType === 'pan' ||
+    detectionType === 'person_name' ||
+    detectionType === 'address';
   switch (actionType) {
     case 'click':
       return (
         detectionType === 'button' ||
         detectionType === 'link' ||
         detectionType === 'element' ||
-        detectionType === 'search' ||
-        detectionType === 'select' ||
-        detectionType === 'input'
+        formControlLike
       );
     case 'type':
-      return (
-        detectionType === 'input' ||
-        detectionType === 'search' ||
-        detectionType === 'password' ||
-        detectionType === 'element'
-      );
+      return formControlLike;
     case 'select':
-      return detectionType === 'select' || detectionType === 'input' || detectionType === 'element';
+      return formControlLike;
     case 'scroll':
     case 'navigate':
       return true;

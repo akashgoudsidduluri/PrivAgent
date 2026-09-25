@@ -41,11 +41,26 @@ function policyEntry(category: string) {
 
 describe('Category policy table (M8)', () => {
   it('covers every known category plus unknown and the reserved face policy', () => {
+    // The interactive-affordance entries (button/link/input/search/select/
+    // form/heading/element) were deliberately added to the policy in commit
+    // f80fa7f: they are structural metadata only (id, type, selector, geometry)
+    // and are required for any target grounding to work live. The list below
+    // mirrors CATEGORY_POLICY's actual, audited keys.
     const expected = [
       'password', 'cvv', 'otp', 'credit_card', 'pan', 'account_number',
       'face', 'phone', 'email', 'person_name', 'address', 'unknown',
+      'button', 'link', 'input', 'search', 'select', 'form', 'heading', 'element',
     ];
     expect(Object.keys(CATEGORY_POLICY).sort()).toEqual(expected.sort());
+  });
+
+  it('interactive affordances are MINIMIZE with exportable metadata and no redaction', () => {
+    for (const category of ['button', 'link', 'input', 'search', 'select', 'form', 'heading', 'element']) {
+      expect(policyEntry(category).decision).toBe('MINIMIZE');
+      expect(policyEntry(category).exportableMetadata).toBe(true);
+      expect(policyEntry(category).mustRedact).toBe(false);
+      expect(policyEntry(category).severity).toBe('low');
+    }
   });
 
   it('credentials, OTP and CVV are NEVER_TRANSMIT', () => {
