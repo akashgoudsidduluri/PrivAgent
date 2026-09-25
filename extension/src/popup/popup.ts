@@ -691,6 +691,8 @@ function formatActionForDisplay(action: BrowserAction): string {
   switch (action.action) {
     case 'click':
       return `click(${action.target})`;
+    case 'pressKey':
+      return `pressKey(${action.key})`;
     case 'scroll':
       return `scroll(${action.direction}, ${action.amount}px)`;
     case 'type':

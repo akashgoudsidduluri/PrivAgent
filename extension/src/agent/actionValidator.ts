@@ -29,6 +29,7 @@ import {
 import { AgentContextPayload } from '../privacy/types';
 import { isValidLuhn } from '../privacy/patterns';
 import { groundProposedTarget } from './groundingEngine';
+import { isSafeKey } from './humanInteraction';
 
 // Sensitive keys that must not appear as properties anywhere in the action object
 const FORBIDDEN_SENSITIVE_KEYS = new Set([
@@ -44,6 +45,7 @@ const ALLOWED_ACTION_KEYS: Record<ActionType, ReadonlySet<string>> = {
   type: new Set(['action', 'target', 'text', 'reason']),
   select: new Set(['action', 'target', 'option', 'reason']),
   navigate: new Set(['action', 'url', 'reason']),
+  pressKey: new Set(['action', 'key', 'target', 'reason']),
 };
 
 // ── Sensitive-content scan for free-text action fields (M7) ───────────────
@@ -218,6 +220,8 @@ export function validateAction(
       return validateSelect(actionObj, context);
     case 'navigate':
       return validateNavigate(actionObj);
+    case 'pressKey':
+      return validatePressKey(actionObj, context);
   }
 }
 
@@ -380,6 +384,54 @@ function validateSelect(
   };
 
   return pass(`Validated select action '${action.option}' on known element '${resolvedTargetId}'.`, action);
+}
+
+/**
+ * Phase 11: pressKey — keyboard interaction restricted to a fixed allowlist
+ * of non-destructive keys delivered to the currently focused control. The key
+ * text is validator-controlled (the model cannot invent keys) and an optional
+ * target, when present, must be a known element in the sanitized context.
+ */
+function validatePressKey(
+  obj: Record<string, unknown>,
+  context: AgentContextPayload
+): ActionValidationResult {
+  const key = obj.key;
+  if (typeof key !== 'string' || key.length === 0 || key.length > 32) {
+    return fail("Action 'pressKey' requires a 'key' string.");
+  }
+  if (!isSafeKey(key)) {
+    return fail(`Action 'pressKey' key '${key}' is not on the safe-key allowlist.`);
+  }
+
+  // Optional target: if provided it must exist in the sanitized context so
+  // focus verification at execution time is grounded, not guessed.
+  const rawTarget = obj.target;
+  if (rawTarget !== undefined && rawTarget !== null) {
+    if (typeof rawTarget !== 'string' || !rawTarget.trim()) {
+      return fail("Action 'pressKey' target must be a non-empty string when provided.");
+    }
+    const targetId = rawTarget.trim();
+    const known = findDetection(targetId, context);
+    if (!known) {
+      const grounding = groundProposedTarget(
+        { action: 'click', target: targetId } as never,
+        context.detections
+      );
+      if (!(grounding.grounded && grounding.targetId)) {
+        return fail(`Action 'pressKey' target '${targetId}' does not exist in the current sanitized context.`);
+      }
+    }
+  }
+
+  const action: BrowserAction = {
+    action: 'pressKey',
+    key,
+    target: typeof rawTarget === 'string' ? rawTarget.trim() : undefined,
+    reason: typeof obj.reason === 'string' ? obj.reason : undefined,
+  };
+
+  return pass(`Validated pressKey '${key}' (focused-control keyboard interaction).`, action);
 }
 
 function validateNavigate(obj: Record<string, unknown>): ActionValidationResult {

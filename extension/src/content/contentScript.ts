@@ -11,6 +11,7 @@ import { worldModelStore } from '../worldModel/worldModelStore';
 import { BrowserWorldModel } from '../worldModel/types';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput } from '../semanticUnderstanding';
 import { fusePrivacyFindings, candidateFromDOMPageDetection, PrivacyFinding } from '../privacy/fusion';
+import { assessInteractability, isSafeKey, DuplicateClickGuard } from '../agent/humanInteraction';
 
 const currentUrl = window.location.href;
 const isCurrentSiteExcluded = isUrlExcluded(currentUrl);
@@ -660,9 +661,73 @@ function findElementByTarget(targetId: string): HTMLElement | null {
   return null;
 }
 
+// Phase 11: deterministic duplicate-click suppression shared for this page.
+const duplicateClickGuard = new DuplicateClickGuard();
+
+/**
+ * Phase 11 pre-flight: run the shared structural interactability assessment
+ * against the LIVE element, blocking dispatch on hidden/disabled/occluded
+ * targets BEFORE any interaction occurs. Deterministic and value-free.
+ */
+function assessLiveInteractability(el: HTMLElement): {
+  interactable: boolean;
+  report: ReturnType<typeof assessInteractability>;
+} {
+  const win = el.ownerDocument?.defaultView || window;
+  const style = win.getComputedStyle(el);
+  const rect = el.getBoundingClientRect();
+  const visible =
+    style.display !== 'none' &&
+    style.visibility !== 'hidden' &&
+    style.opacity !== '0' &&
+    style.pointerEvents !== 'none' &&
+    (rect.width > 2 || rect.height > 2 || (rect.width === 0 && rect.height === 0));
+  const enabled =
+    !(el as HTMLButtonElement | HTMLInputElement | HTMLSelectElement).disabled &&
+    el.getAttribute('aria-disabled') !== 'true';
+  const hasGeometry = !(rect.width === 0 && rect.height === 0);
+  const vh = win.innerHeight || document.documentElement.clientHeight;
+  const vw = win.innerWidth || document.documentElement.clientWidth;
+  const centreX = rect.left + rect.width / 2;
+  const centreY = rect.top + rect.height / 2;
+  const inViewport = centreY >= 0 && centreY <= vh && centreX >= 0 && centreX <= vw;
+  // Modal occlusion: reuse the scanner's deterministic modal detection.
+  const modal = (() => {
+    try {
+      const modalQuery = [
+        'dialog[open]',
+        '[aria-modal="true"]',
+        '[role="dialog"]',
+      ].join(', ');
+      const m = document.querySelector<HTMLElement>(modalQuery);
+      return m && !m.contains(el) ? m : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const report = assessInteractability({
+    exists: el.isConnected,
+    visible,
+    enabled,
+    hasGeometry,
+    inViewport,
+    occludedByModal: modal !== null,
+  });
+  return { interactable: report.interactable, report };
+}
+
 /**
  * Deterministically execute a validated BrowserAction using DOM APIs.
  * NO eval(), NO dynamic code execution.
+ *
+ * Phase 11 hardening (all value-free, all pre-verified by the local gates):
+ *  - pre-flight interactability check on the LIVE element
+ *  - focus verification for type/select/pressKey (FOCUS_MISMATCH fails closed)
+ *  - select post-state verification (SELECT_NOT_APPLIED fails closed)
+ *  - bounded scroll-into-view with the scroll effect reported
+ *  - duplicate-click suppression within a small window
+ *  - pressKey: safe-key dispatch to the FOCUSED element only
  */
 function executeBrowserAction(action: import('../agent/actionTypes').BrowserAction): import('../agent/actionTypes').ActionExecutionResult {
   try {
@@ -672,7 +737,26 @@ function executeBrowserAction(action: import('../agent/actionTypes').BrowserActi
         if (!el) {
           return { success: false, error: `Target element '${action.target}' not found in DOM.` };
         }
+        const pre = assessLiveInteractability(el);
+        if (!pre.report.enabled) {
+          return { success: false, error: `INTERACTABILITY_BLOCKED: ${pre.report.reason}` };
+        }
+        if (!pre.report.visible || !pre.report.hasGeometry) {
+          return { success: false, error: `INTERACTABILITY_BLOCKED: ${pre.report.reason}` };
+        }
+        // A modal that does not contain the target occludes it: fail closed
+        // rather than clicking through an overlay.
+        if (pre.report.occludedByModal) {
+          return { success: false, error: `INTERACTABILITY_BLOCKED: ${pre.report.reason}` };
+        }
+        if (!duplicateClickGuard.shouldClick(action.target)) {
+          return {
+            success: false,
+            error: 'DUPLICATE_CLICK_SUPPRESSED: identical target clicked within the duplicate window; use recovery.',
+          };
+        }
         highlightActionElement(el);
+        const wasInView = pre.report.inViewport;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.focus();
         el.click();
@@ -681,9 +765,18 @@ function executeBrowserAction(action: import('../agent/actionTypes').BrowserActi
 
       case 'scroll': {
         const top = action.direction === 'down' ? action.amount : -action.amount;
+        const beforeY = window.scrollY;
         window.scrollBy({ top, behavior: 'smooth' });
         window.scrollBy(0, top);
-        return { success: true, action, message: `Scrolled ${action.direction} by ${action.amount}px.` };
+        const afterY = window.scrollY;
+        const moved = Math.abs(afterY - beforeY);
+        return {
+          success: true,
+          action,
+          message: moved > 0
+            ? `Scrolled ${action.direction} by ${moved}px.`
+            : `Scroll produced no viewport movement (boundary reached).`,
+        };
       }
 
       case 'type': {
@@ -691,15 +784,36 @@ function executeBrowserAction(action: import('../agent/actionTypes').BrowserActi
         if (!el) {
           return { success: false, error: `Target element '${action.target}' not found in DOM.` };
         }
+        const pre = assessLiveInteractability(el);
+        if (!pre.report.enabled || !pre.report.visible) {
+          return { success: false, error: `INTERACTABILITY_BLOCKED: ${pre.report.reason}` };
+        }
         highlightActionElement(el);
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.focus();
 
         if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+          // Focus verification: typing into an unfocused field is how values
+          // land in the wrong control on dynamic pages.
+          if (document.activeElement !== el) {
+            return { success: false, error: `FOCUS_MISMATCH: expected focus on '${action.target}' but focus is elsewhere.` };
+          }
+          // Replace semantics: clear then set, so existing text does not
+          // silently concatenate with the new value.
+          const hadExistingValue = el.value.length > 0;
           el.value = action.text;
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
-          return { success: true, action, message: `Typed text into element '${action.target}'.` };
+          // Value-free verification: report the LENGTH match, never the value.
+          const applied = el.value.length === action.text.length;
+          if (!applied) {
+            return { success: false, error: `VALUE_NOT_APPLIED: element did not accept the requested input (length mismatch).` };
+          }
+          return {
+            success: true,
+            action,
+            message: `Typed ${action.text.length} chars into '${action.target}'${hadExistingValue ? ' (replacing existing value)' : ''}.`,
+          };
         }
         return { success: false, error: `Target element '${action.target}' is not an input or textarea.` };
       }
@@ -709,27 +823,78 @@ function executeBrowserAction(action: import('../agent/actionTypes').BrowserActi
         if (!el) {
           return { success: false, error: `Target element '${action.target}' not found in DOM.` };
         }
+        const pre = assessLiveInteractability(el);
+        if (!pre.report.enabled || !pre.report.visible) {
+          return { success: false, error: `INTERACTABILITY_BLOCKED: ${pre.report.reason}` };
+        }
         highlightActionElement(el);
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.focus();
 
         if (el instanceof HTMLSelectElement) {
-          let matched = false;
+          if (document.activeElement !== el) {
+            return { success: false, error: `FOCUS_MISMATCH: expected focus on '${action.target}' but focus is elsewhere.` };
+          }
+          let matchedIndex = -1;
           for (let i = 0; i < el.options.length; i++) {
             const opt = el.options[i];
             if (opt && (opt.text === action.option || opt.value === action.option)) {
-              el.selectedIndex = i;
-              matched = true;
+              matchedIndex = i;
               break;
             }
           }
-          if (!matched && el.options.length > 0) {
-            el.value = action.option;
+          if (matchedIndex < 0) {
+            // Deterministic fail-closed: guessing an option index would select
+            // arbitrary content. Recovery re-perceives the real options.
+            return { success: false, error: `SELECT_OPTION_NOT_FOUND: '${action.option}' is not an option of '${action.target}'.` };
           }
+          el.selectedIndex = matchedIndex;
           el.dispatchEvent(new Event('change', { bubbles: true }));
-          return { success: true, action, message: `Selected option '${action.option}' on element '${action.target}'.` };
+          // Post-state verification: the selected index must match afterwards.
+          const verified = el.selectedIndex === matchedIndex;
+          if (!verified) {
+            return { success: false, error: `SELECT_NOT_APPLIED: option state did not persist on '${action.target}'.` };
+          }
+          return { success: true, action, message: `Selected option index ${matchedIndex} on element '${action.target}'.` };
         }
         return { success: false, error: `Target element '${action.target}' is not a select element.` };
+      }
+
+      case 'pressKey': {
+        // Safe keys only — validated upstream, re-checked here (defence in
+        // depth). The key goes to the FOCUSED element; there is no global
+        // dispatch target.
+        if (!isSafeKey(action.key)) {
+          return { success: false, error: `UNSAFE_KEY: '${action.key}' is not on the safe-key allowlist.` };
+        }
+        const active = document.activeElement as HTMLElement | null;
+        if (!active || active === document.body) {
+          return { success: false, error: 'FOCUS_MISMATCH: no control currently holds focus for keyboard interaction.' };
+        }
+        if (action.target) {
+          const expected = findElementByTarget(action.target);
+          if (expected && !(active === expected || expected.contains(active))) {
+            return { success: false, error: `FOCUS_MISMATCH: expected focus on '${action.target}' but focus is elsewhere.` };
+          }
+        }
+        const accepted = active.dispatchEvent(
+          new KeyboardEvent('keydown', { key: action.key, bubbles: true, cancelable: true })
+        );
+        active.dispatchEvent(
+          new KeyboardEvent('keyup', { key: action.key, bubbles: true, cancelable: true })
+        );
+        if (action.key === 'Enter' && typeof (active as HTMLFormElement).requestSubmit === 'function') {
+          // Native activation semantics for the focused control.
+          const form = (active as HTMLInputElement).form;
+          if (form && typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+          }
+        }
+        return {
+          success: true,
+          action,
+          message: `Delivered '${action.key}' to the focused control${accepted ? '' : ' (default action prevented)'} `.trim() + '.',
+        };
       }
 
       case 'navigate': {

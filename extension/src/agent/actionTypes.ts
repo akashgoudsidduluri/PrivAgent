@@ -16,7 +16,7 @@
  *  - Targeted actions reference element IDs from the sanitized M4 context.
  */
 
-export type ActionType = 'click' | 'scroll' | 'type' | 'select' | 'navigate';
+export type ActionType = 'click' | 'scroll' | 'type' | 'select' | 'navigate' | 'pressKey';
 
 export const SUPPORTED_ACTION_TYPES: readonly ActionType[] = [
   'click',
@@ -24,6 +24,7 @@ export const SUPPORTED_ACTION_TYPES: readonly ActionType[] = [
   'type',
   'select',
   'navigate',
+  'pressKey',
 ] as const;
 
 export type ScrollDirection = 'up' | 'down';
@@ -66,12 +67,28 @@ export interface NavigateAction {
   reason?: string;
 }
 
+/**
+ * Phase 11: safe keyboard interaction. Restricted to a fixed allowlist of
+ * non-destructive keys (see humanInteraction.SAFE_KEYS) delivered to the
+ * CURRENTLY FOCUSED control. The key text is validator-controlled — the model
+ * cannot invent arbitrary keys — and the action passes the same gates as all
+ * others.
+ */
+export interface PressKeyAction {
+  action: 'pressKey';
+  key: string;
+  /** Optional: the control expected to hold focus (verified at execution). */
+  target?: string;
+  reason?: string;
+}
+
 export type BrowserAction =
   | ClickAction
   | ScrollAction
   | TypeAction
   | SelectAction
-  | NavigateAction;
+  | NavigateAction
+  | PressKeyAction;
 
 // ── Validation & Execution Result Types ─────────────────────────────────────
 

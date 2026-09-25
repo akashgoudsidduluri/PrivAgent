@@ -156,7 +156,7 @@ export function canPerformAction(
 
   // Targeted actions: check entity if target is sensitive
   if (detection) {
-    let capability: Capability;
+    let capability: Capability = 'CLICK';
     switch (action.action) {
       case 'click':
         capability = 'CLICK';
@@ -166,6 +166,11 @@ export function canPerformAction(
         break;
       case 'select':
         capability = 'SELECT';
+        break;
+      case 'pressKey':
+        // Keyboard interaction on a focused control: same capability class as
+        // click — it activates or navigates, it never reads values.
+        capability = 'CLICK';
         break;
     }
 
