@@ -141,6 +141,18 @@ const EXPORTABLE_TYPES: ReadonlySet<string> = new Set<SensitiveEntityType>([
   'person_name', 'pan', 'otp', 'cvv', 'address',
 ]);
 
+/**
+ * Interactive affordances are exportable STRUCTURAL metadata (id, type,
+ * selector, geometry, confidence). They carry no value, so exporting them does
+ * not widen the privacy boundary — and without them the local grounding gate can
+ * never resolve a real click/type target, leaving the agent unable to act at
+ * all. They are governed by the same policy table and the same raw-value
+ * firewall as every other category.
+ */
+const EXPORTABLE_INTERACTIVE_TYPES: ReadonlySet<string> = new Set([
+  'button', 'link', 'input', 'search', 'select', 'form', 'heading', 'element',
+]);
+
 /** Deterministic stopword list for task-term extraction. */
 const TASK_STOPWORDS: ReadonlySet<string> = new Set([
   'the', 'and', 'then', 'for', 'with', 'from', 'into', 'onto', 'this', 'that',
@@ -196,7 +208,7 @@ export function minimizeAgentContext(
 
     if (!finding.exportable) {
       dropReason = 'policy_fail_closed';
-    } else if (!EXPORTABLE_TYPES.has(finding.category)) {
+    } else if (!EXPORTABLE_TYPES.has(finding.category) && !EXPORTABLE_INTERACTIVE_TYPES.has(finding.category)) {
       // Categories the frozen M4 contract cannot express are dropped rather than
       // coerced — dropping can only ever tighten the boundary.
       dropReason = 'category_not_representable';

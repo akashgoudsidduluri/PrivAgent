@@ -31,7 +31,42 @@ let lastWorldModelRef: { pageGeneration: number; worldModelId: string } | null =
 let lastSemanticUnderstanding: SemanticUnderstandingOutput | null = null;
 let currentMode: RedactionMode = 'blackout';
 let isRedactionActive = true;
-let currentPageGeneration = 1;
+/**
+ * Page generation counter.
+ *
+ * The value is persisted per tab in sessionStorage so it stays MONOTONIC across
+ * real navigations. Without this the counter restarts at 1 on every new
+ * document, while the AgentLoop keeps its own monotonic counter, so after any
+ * real navigation the next genuine perception is rejected as a stale world
+ * model and the loop fails closed.
+ *
+ * This STRENGTHENS stale-target protection rather than weakening it: a freshly
+ * loaded document can no longer masquerade as an old page generation, and a
+ * genuinely stale model still carries a lower generation and is still rejected.
+ * It is scoped to the tab's origin; if storage is unavailable (sandboxed frames,
+ * blocked storage) the counter simply falls back to per-document numbering and
+ * the AgentLoop's guard behaves exactly as it did before.
+ */
+const PAGE_GENERATION_STORAGE_KEY = 'privagent.pageGeneration';
+
+function restorePageGeneration(): number {
+  try {
+    const stored = Number(window.sessionStorage.getItem(PAGE_GENERATION_STORAGE_KEY));
+    return Number.isFinite(stored) && stored > 0 ? stored : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function persistPageGeneration(value: number): void {
+  try {
+    window.sessionStorage.setItem(PAGE_GENERATION_STORAGE_KEY, String(value));
+  } catch {
+    // Storage unavailable: keep the in-memory counter only.
+  }
+}
+
+let currentPageGeneration = restorePageGeneration();
 
 function buildCurrentWorldModel(privacyFindings?: PrivacyFinding[]): { worldModel: BrowserWorldModel; activeWorldModelRef: { pageGeneration: number; worldModelId: string }; summary: ReturnType<typeof createSanitizedWorldModelSummary> } {
   const pageGeneration = currentPageGeneration;
@@ -170,6 +205,7 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
     );
     const { worldModel, activeWorldModelRef } = buildCurrentWorldModel(fusion.findings);
     currentPageGeneration += 1;
+    persistPageGeneration(currentPageGeneration);
     lastWorldModel = worldModel;
     lastWorldModelRef = activeWorldModelRef;
 

@@ -77,6 +77,24 @@ export function severityRank(severity: PrivacySeverity): number {
  *   redacted and never exported") so a future visual face detector inherits the
  *   correct, already-tested policy instead of inventing a weaker one.
  */
+/**
+ * Shared policy for interactive affordances (buttons, links, inputs, ...).
+ *
+ * These findings are structural, not semantic: they describe WHERE a control is
+ * and WHAT KIND it is, never WHAT it contains. The M8 exporter copies no value
+ * and no free-text label for them, so exporting their metadata grants the
+ * reasoner no page content — it can locate a control, not read it.
+ */
+const INTERACTIVE_POLICY: CategoryPolicy = {
+  decision: 'MINIMIZE',
+  severity: 'low',
+  mustRedact: false,
+  exportableMetadata: true,
+  minConfidence: 0.5,
+  rationale:
+    'Interactive affordances carry no sensitive value; only structural metadata (id, type, selector, geometry) is exported so actions can be grounded locally.',
+};
+
 export const CATEGORY_POLICY: Record<string, CategoryPolicy> = {
   password: {
     decision: 'NEVER_TRANSMIT',
@@ -166,6 +184,25 @@ export const CATEGORY_POLICY: Record<string, CategoryPolicy> = {
     minConfidence: 0.5,
     rationale: 'Physical and billing residential addresses are protected on-device.',
   },
+  // ── Interactive affordances ────────────────────────────────────────────────
+  // Browser controls carry NO sensitive value: the frozen M4 contract exports
+  // only id, type, selector, confidence, geometry, length and visibility. The
+  // reasoner needs these metadata to ground an action at all — without them the
+  // local grounding gate can never resolve a real click/type target, so the
+  // agent is blind and the security pipeline is never even reached.
+  //
+  // These entries do NOT weaken the boundary: no value is ever attached, the
+  // raw-value firewall still scans the exported payload, and any category that
+  // is not listed here (including a future unregistered one) still fails closed.
+  button: INTERACTIVE_POLICY,
+  link: INTERACTIVE_POLICY,
+  input: INTERACTIVE_POLICY,
+  search: INTERACTIVE_POLICY,
+  select: INTERACTIVE_POLICY,
+  form: INTERACTIVE_POLICY,
+  heading: INTERACTIVE_POLICY,
+  element: INTERACTIVE_POLICY,
+
   unknown: {
     decision: 'FAIL_CLOSED',
     severity: 'unknown',

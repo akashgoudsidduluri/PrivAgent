@@ -69,9 +69,22 @@ export class PlannerContextBuilder {
 
       // Then trim detections
       if (byteSize > TARGET_PLANNER_CONTEXT_BUDGET_BYTES && currentContext.detections.length > 3) {
-        // Keep at least top 3 detections; trim from the end of the ranked list
+        // Keep at least top 3 detections; trim from the end of the ranked list.
+        //
+        // Capability preservation: a byte budget must never eliminate an ENTIRE
+        // interaction capability. On a large real page (200+ controls) naive
+        // end-trimming can drop every input and leave the reasoner with only
+        // buttons, so no click/type target can ever be grounded. We therefore
+        // drop the lowest-ranked element whose capability still has another
+        // representative, and only fall back to blind trimming when a capability
+        // has exactly one member left.
         while (byteSize > TARGET_PLANNER_CONTEXT_BUDGET_BYTES && currentContext.detections.length > 3) {
-          currentContext.detections.pop();
+          const idx = PlannerContextBuilder.findRedundantIndex(currentContext.detections);
+          if (idx >= 0) {
+            currentContext.detections.splice(idx, 1);
+          } else {
+            currentContext.detections.pop();
+          }
           trimmedCount += 1;
           serialized = JSON.stringify(currentContext);
           byteSize = new TextEncoder().encode(serialized).length;
@@ -90,6 +103,26 @@ export class PlannerContextBuilder {
   /**
    * Deterministically scores and ranks detections based on relevance to the active subgoal.
    */
+  /**
+   * Returns the index of the lowest-ranked detection whose type still has at
+   * least one other representative in the list, or -1 when every remaining
+   * detection is the last of its type.
+   */
+  private static findRedundantIndex(detections: AgentDetection[]): number {
+    const counts = new Map<string, number>();
+    for (const det of detections) {
+      const key = (det.type || 'element').toLowerCase();
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    for (let i = detections.length - 1; i >= 0; i--) {
+      const key = (detections[i]!.type || 'element').toLowerCase();
+      if ((counts.get(key) ?? 0) > 1) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
   private static rankDetections(
     detections: AgentDetection[],
     goal: HighLevelGoal,
