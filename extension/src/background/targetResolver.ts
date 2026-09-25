@@ -9,6 +9,10 @@
  *  3. Explicit target URL/port in task has highest priority (e.g. "localhost 4173" or "localhost:4173").
  *  4. Otherwise, falls back to an active eligible web tab, then demo tab (localhost:4173), then first eligible web tab.
  *  5. Honest failure (returns null) when no eligible web tab is found.
+ *  6. Target Tab Provisioning: when NO eligible tab exists, the resolver may propose a
+ *     DETERMINISTIC destination for the service worker to open in a NEW dedicated tab.
+ *     Provisioning is only ever a *destination* — it never proposes an action, never
+ *     targets the dashboard, and never invents a website.
  */
 
 export interface MinimalTab {
@@ -19,10 +23,28 @@ export interface MinimalTab {
   title?: string;
 }
 
+/**
+ * A deterministic destination the service worker may open in a NEW dedicated tab.
+ * This is a URL only — it is never an action, so it cannot bypass the agent pipeline.
+ */
+export interface ProvisioningDestination {
+  url: string;
+  source: 'explicit-url' | 'google-intent';
+}
+
+export type TargetFailureCode = 'DESTINATION_REQUIRED';
+
 export interface TargetResolutionResult {
   selectedTab: MinimalTab | null;
   discoveredTabs: Array<{ id?: number; origin?: string; url?: string }>;
   reason: string;
+  /**
+   * Present ONLY when no eligible tab exists AND a deterministic destination could be
+   * extracted from the task. The service worker provisions a new tab for this URL.
+   */
+  provisioning?: ProvisioningDestination;
+  /** Present ONLY when no eligible tab exists AND no deterministic destination exists. */
+  failureCode?: TargetFailureCode;
 }
 
 /**
@@ -58,6 +80,75 @@ export function extractExplicitTargetFromTask(task: string): { hostname?: string
       hostname: spacePortMatch[1],
       port: spacePortMatch[2],
     };
+  }
+
+  return null;
+}
+
+const GOOGLE_ORIGIN = 'https://www.google.com';
+
+/**
+ * True when a URL points at the PrivAgent dashboard (or any port-5173 origin).
+ * Provisioning MUST fail closed on these: the agent is never allowed to drive its
+ * own control surface.
+ */
+export function isDashboardUrl(url: string, dashboardOrigin = 'http://localhost:5173'): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.port === '5173') return true;
+  try {
+    return parsed.origin === new URL(dashboardOrigin).origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Extracts a DETERMINISTIC destination URL from task text for Target Tab Provisioning.
+ * Zero LLM calls — pure regex inspection. Returns null when nothing can be
+ * determined with certainty; the caller must then fail with DESTINATION_REQUIRED
+ * rather than inventing a website.
+ *
+ * Supported (initial) cases:
+ *  - an explicit http:// or https:// URL in the task
+ *  - clear Google intent ("open google", "go to google and search ...")
+ *
+ * A destination is only produced for http/https origins and never for the dashboard.
+ */
+export function extractProvisioningDestination(
+  task: string,
+  dashboardOrigin = 'http://localhost:5173'
+): ProvisioningDestination | null {
+  if (!task) return null;
+
+  // 1. Explicit http(s) URL — highest priority, and never the dashboard.
+  const urlMatch = task.match(/https?:\/\/[^\s"'`)\]]+/i);
+  if (urlMatch && urlMatch[0]) {
+    const candidate = urlMatch[0];
+    try {
+      const parsed = new URL(candidate);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        if (isDashboardUrl(candidate, dashboardOrigin)) return null; // fail closed
+        return { url: parsed.toString(), source: 'explicit-url' };
+      }
+    } catch {
+      // fall through to intent detection
+    }
+  }
+
+  // 2. Clear Google intent. Requires BOTH the site name and a navigation/search verb
+  // so that incidental mentions (e.g. "the google chrome settings") never provision.
+  const lower = task.toLowerCase();
+  const mentionsGoogle = /\bgoogle\b/.test(lower);
+  const hasNavVerb = /\b(open|opens|go|goes|visit|visits|navigate|navigates|launch|launches|search|searches|searching|browse|browses)\b/.test(
+    lower
+  );
+  if (mentionsGoogle && hasNavVerb && !isDashboardUrl(GOOGLE_ORIGIN, dashboardOrigin)) {
+    return { url: GOOGLE_ORIGIN, source: 'google-intent' };
   }
 
   return null;
@@ -147,10 +238,22 @@ export function resolveTargetWebTab(
         reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port}.`,
       };
     }
+    // No eligible tab: fall back to Target Tab Provisioning when — and only when —
+    // a deterministic destination can be extracted from the task itself.
+    const provisioning = extractProvisioningDestination(task, dashboardOrigin);
+    if (provisioning) {
+      return {
+        selectedTab: null,
+        discoveredTabs,
+        reason: `No eligible web tab is open. Provisioning a dedicated target tab at ${provisioning.url} (${provisioning.source}).`,
+        provisioning,
+      };
+    }
     return {
       selectedTab: null,
       discoveredTabs,
       reason: 'No browser tab is available for this task. Open the webpage you want PrivAgent to work with and try again.',
+      failureCode: 'DESTINATION_REQUIRED',
     };
   }
 

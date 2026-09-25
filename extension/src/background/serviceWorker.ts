@@ -4,7 +4,7 @@ import { ModelRouter } from '../agent/modelRouter';
 import { buildAgentPayload, PrivacyScanReport, AgentContextPayload, VisualCaptureReport } from '../privacy/types';
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
-import { resolveTargetWebTab, isEligibleWebTab } from './targetResolver';
+import { resolveTargetWebTab, isEligibleWebTab, isDashboardUrl } from './targetResolver';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
@@ -166,6 +166,72 @@ async function ensureTargetTabReady(tabId: number): Promise<boolean> {
   } catch (e) {
     console.warn('[PrivAgent SW] Target tab content script auto-injection failed:', e);
     return false;
+  }
+}
+
+/**
+ * Target Tab Provisioning.
+ *
+ * Opens a DEDICATED new Chrome tab for a deterministically extracted destination so
+ * the agent has something to perceive when the user has only the dashboard open.
+ *
+ * Invariants (deliberately narrow):
+ *  - The dashboard is NEVER provisioned or targeted.
+ *  - Provisioning supplies a DESTINATION only. It proposes no action, so nothing here
+ *    can bypass Target Grounding, M5, the Security Critic, the Privacy Policy or the
+ *    Risk/Confirmation gate — the AgentLoop still performs every step in the new tab.
+ *  - No default/blank landing page is ever invented: the caller supplies an explicit
+ *    URL that was extracted from the user's own task text.
+ *  - The returned tab id is pinned by the caller as the stable targetTabId.
+ */
+async function provisionTargetTab(url: string): Promise<{ id: number; url: string } | null> {
+  // Fail closed: never provision a non-http(s) or dashboard URL.
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    console.warn('[PrivAgent SW] provisionTargetTab: refusing non-http(s) destination');
+    return null;
+  }
+  if (isDashboardUrl(parsed.toString())) {
+    console.warn('[PrivAgent SW] provisionTargetTab: refusing dashboard destination');
+    return null;
+  }
+
+  try {
+    const created = await chrome.tabs.create({ url: parsed.toString(), active: false });
+    const newTabId = created?.id;
+    if (typeof newTabId !== 'number') {
+      console.warn('[PrivAgent SW] provisionTargetTab: chrome.tabs.create returned no tab id');
+      return null;
+    }
+
+    console.info('TARGET_TAB_PROVISIONED', { tabId: newTabId, origin: parsed.origin });
+    console.info('[AgentTrace] target tab provisioned', { tabId: newTabId, origin: parsed.origin });
+
+    // Wait for the page to finish loading before attaching the content script.
+    const loaded = await waitForTabLoad(newTabId, 15000);
+
+    // Attach the content script / world model. A fresh tab starts at pageGeneration 1
+    // on both sides because the content script is injected into a page that has never
+    // been controlled before, keeping the generations in sync.
+    const ready = await ensureTargetTabReady(newTabId);
+    if (!ready) {
+      console.warn('[PrivAgent SW] provisionTargetTab: content script not responsive in new tab', {
+        tabId: newTabId,
+        loaded,
+      });
+      return null;
+    }
+
+    console.info('TARGET_TAB_READY', { tabId: newTabId, provisioned: true });
+    return { id: newTabId, url: parsed.toString() };
+  } catch (e) {
+    console.warn('[PrivAgent SW] provisionTargetTab failed:', e);
+    return null;
   }
 }
 
@@ -361,11 +427,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Safe diagnostics: strictly tab IDs & origins only
         console.info('TARGET_TAB_CANDIDATES', resolution.discoveredTabs.map((t) => ({ id: t.id, origin: t.origin })));
 
-        const targetTab = resolution.selectedTab;
+        // Target Tab Provisioning: only when resolution found NO eligible tab AND
+        // extracted a deterministic destination from the task. An existing eligible
+        // tab always wins (the resolver returns it above, so this never runs).
+        let targetTab = resolution.selectedTab;
+        if ((!targetTab || !targetTab.id) && resolution.provisioning) {
+          const provisioned = await provisionTargetTab(resolution.provisioning.url);
+          if (provisioned) {
+            targetTab = provisioned;
+          } else {
+            console.info('TARGET_TAB_FAILED: provisioning did not yield a ready tab');
+          }
+        }
+
         if (!targetTab || !targetTab.id) {
-          console.info('TARGET_TAB_FAILED: no eligible tab found');
+          console.info('TARGET_TAB_FAILED: no eligible tab found', {
+            failureCode: resolution.failureCode || null,
+          });
           console.info('[AgentTrace] terminal progress emitted', { status: 'FAILED' });
-          const failReason = resolution.reason || 'No target web tab found. Please open http://localhost:4173.';
+          const failReason =
+            resolution.failureCode === 'DESTINATION_REQUIRED'
+              ? 'No target web tab is open and no destination could be determined from the task. Name a site explicitly (for example "open https://example.com" or "open google and search for cats"), or open the page you want PrivAgent to work with.'
+              : resolution.reason || 'No target web tab found. Please open http://localhost:4173.';
           try {
             sendResponse({
               started: false,
@@ -390,11 +473,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
+        // Stable target: pinned here and never re-resolved for the life of the task.
         const targetTabId = targetTab.id;
         console.info('TARGET_TAB_SELECTED', {
           tabId: targetTabId,
           origin: targetTab.url ? new URL(targetTab.url).origin : null,
-          reason: resolution.reason,
+          reason: targetTab === resolution.selectedTab ? resolution.reason : `Provisioned from task destination: ${resolution.provisioning?.url}`,
         });
         console.info('[AgentTrace] target resolved', { tabId: targetTabId });
 
