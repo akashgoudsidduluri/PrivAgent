@@ -1,0 +1,345 @@
+{
+  "timestamp": "2026-09-25T08:47:41.004Z",
+  "task": "Open localhost:4174 and find a black backpack",
+  "chromeVersion": "Chrome/153.0.8010.53",
+  "backendStatus": "CONNECTED",
+  "reasoner": "groq",
+  "evidence": {
+    "worldModelCreated": true,
+    "worldModelDetails": [
+      "[ContentScript] perception completed {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"8337170438315098939.2.2\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"elementsScanned\",\"type\":\"number\",\"value\":\"18\"},{\"name\":\"sensitiveDetected\",\"type\":\"number\",\"value\":\"0\"},{\"name\":\"worldModelId\",\"type\":\"string\",\"value\":\"wm-g2-mugpv6rw-tjee\"}]}}",
+      "[AgentLoop] perception completed",
+      "[AgentTrace] perception complete {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.19\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"perceptionGeneration\",\"type\":\"number\",\"value\":\"1\"},{\"name\":\"contextUrl\",\"type\":\"string\",\"value\":\"http://localhost:4174/\"},{\"name\":\"worldModelId\",\"type\":\"string\",\"value\":\"wm-g2-mugpv6rw-tjee\"}]}}",
+      "[ContentScript] perception completed {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"8337170438315098939.2.4\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"elementsScanned\",\"type\":\"number\",\"value\":\"18\"},{\"name\":\"sensitiveDetected\",\"type\":\"number\",\"value\":\"0\"},{\"name\":\"worldModelId\",\"type\":\"string\",\"value\":\"wm-g3-mugpw5iu-ev6c\"}]}}",
+      "[AgentLoop] perception completed",
+      "[AgentTrace] perception complete {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.35\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"perceptionGeneration\",\"type\":\"number\",\"value\":\"3\"},{\"name\":\"contextUrl\",\"type\":\"string\",\"value\":\"http://localhost:4174/\"},{\"name\":\"worldModelId\",\"type\":\"string\",\"value\":\"wm-g3-mugpw5iu-ev6c\"}]}}"
+    ],
+    "semanticUnderstandingExecuted": true,
+    "semanticUnderstandingDetails": [
+      "[AgentTrace] semantic understanding complete {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.20\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pageType\",\"type\":\"string\",\"value\":\"UNKNOWN\"},{\"name\":\"pageState\",\"type\":\"string\",\"value\":\"populated\"},{\"name\":\"pageGeneration\",\"type\":\"number\",\"value\":\"2\"},{\"name\":\"entityCount\",\"type\":\"number\",\"value\":\"0\"},{\"name\":\"affordanceCount\",\"type\":\"number\",\"value\":\"1\"}]}}",
+      "[AgentTrace] semantic understanding complete {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.36\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pageType\",\"type\":\"string\",\"value\":\"UNKNOWN\"},{\"name\":\"pageState\",\"type\":\"string\",\"value\":\"populated\"},{\"name\":\"pageGeneration\",\"type\":\"number\",\"value\":\"3\"},{\"name\":\"entityCount\",\"type\":\"number\",\"value\":\"0\"},{\"name\":\"affordanceCount\",\"type\":\"number\",\"value\":\"1\"}]}}"
+    ],
+    "generationSynchronized": true,
+    "uiPerceptionRendered": true,
+    "uiTraceStep3Rendered": true,
+    "reasoningRequested": true,
+    "reasoningResponseReceived": true,
+    "actionValidatedByM5": true,
+    "privacyPreservedZeroRawCredentials": true,
+    "finalStatus": "FAILED",
+    "finalStep": "1 / 10",
+    "dashboardPreviewText": "// ON-DEVICE SEMANTIC UNDERSTANDING Page Classification: LANDING Page State: ready (confidence: 90%) Semantic Entities: Structure parsed Key Affordances: SEARCH, CLICK, SELECT Prompt Injection Scan: CLEAN (Zero-Risk) // ON-DEVICE PERCEPTION METADATA Target URL: http://localhost:5173/ Active Step: 1 Last Proposed Action: scroll Grounded Target: Step 1 // LOCAL PRIVACY MASKING (Zero-Leak) Sensitive Fields Detected: 0 Password Quarantine: ACTIVE (Value never leaves device) Payment Token Quarantine: ACTIVE (Local isolate only) Outbound PII Bytes: 0 bytes",
+    "dashboardTraceSteps": [
+      "1. USER GOAL\nOpen localhost:4174 and find a black backpack",
+      "2. CURRENT PAGE\nhttp://localhost:5173/",
+      "3. WHAT THE AGENT UNDERSTANDS\nClassified page as LANDING (state: ready). Perceived interactive candidates in viewport. Affordances: . Deterministic privacy boundary verified zero raw values.",
+      "4. PROPOSED ACTION (GROQ CLOUD)\nSCROLL\nRISK: 0.1/100\nTarget: Step 1",
+      "5. M5 AUTHORITATIVE DECISION\nALLOWED\nValidated scroll down by 500px.",
+      "6. ACTUAL CHROME EFFECT\nCDP command executed successfully; DOM mutated as expected.",
+      "7. EFFECT VERIFICATION\nVERIFIED\nBrowser state progressed; ready for next perception cycle."
+    ]
+  },
+  "tracesCount": 189,
+  "allTraces": [
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "[ContentScript] perception started",
+      "timestamp": 1790326029556
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "perception:start",
+      "timestamp": 1790326029557
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "dom:start",
+      "timestamp": 1790326029557
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "dom:done",
+      "timestamp": 1790326029573
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "visual:start",
+      "timestamp": 1790326029573
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "visual:done",
+      "timestamp": 1790326029574
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "fusion:start",
+      "timestamp": 1790326029575
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "fusion:done",
+      "timestamp": 1790326029576
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "minimization:start",
+      "timestamp": 1790326029576
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "minimization:done",
+      "timestamp": 1790326029576
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "response:start",
+      "timestamp": 1790326029576
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "[ContentScript] perception completed {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"8337170438315098939.2.4\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"elementsScanned\",\"type\":\"number\",\"value\":\"18\"},{\"name\":\"sensitiveDetected\",\"type\":\"number\",\"value\":\"0\"},{\"name\":\"worldModelId\",\"type\":\"string\",\"value\":\"wm-g3-mugpw5iu-ev6c\"}]}}",
+      "timestamp": 1790326029577
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "response:sent",
+      "timestamp": 1790326029577
+    },
+    {
+      "sessionId": "72869EB64C5484C6736406D5A20E74A5",
+      "type": "info",
+      "text": "[ContentScript] response sent",
+      "timestamp": 1790326029577
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[ServiceWorker] response forwarded",
+      "timestamp": 1790326029585
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[AgentLoop] perception completed",
+      "timestamp": 1790326029588
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[AgentTrace] perception complete {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.35\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"perceptionGeneration\",\"type\":\"number\",\"value\":\"3\"},{\"name\":\"contextUrl\",\"type\":\"string\",\"value\":\"http://localhost:4174/\"},{\"name\":\"worldModelId\",\"type\":\"string\",\"value\":\"wm-g3-mugpw5iu-ev6c\"}]}}",
+      "timestamp": 1790326029588
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[AgentTrace] semantic understanding complete {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.36\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pageType\",\"type\":\"string\",\"value\":\"UNKNOWN\"},{\"name\":\"pageState\",\"type\":\"string\",\"value\":\"populated\"},{\"name\":\"pageGeneration\",\"type\":\"number\",\"value\":\"3\"},{\"name\":\"entityCount\",\"type\":\"number\",\"value\":\"0\"},{\"name\":\"affordanceCount\",\"type\":\"number\",\"value\":\"1\"}]}}",
+      "timestamp": 1790326029589
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[AgentTrace] requesting reasoning",
+      "timestamp": 1790326029590
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[Adapter][PING] PING_SENT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.1.27\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"origin\",\"type\":\"string\",\"value\":\"http://localhost:5173\"}]}}",
+      "timestamp": 1790326041249
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.2.22\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"origin\",\"type\":\"string\",\"value\":\"http://localhost:5173\"},{\"name\":\"validContext\",\"type\":\"boolean\",\"value\":\"true\"}]}}",
+      "timestamp": 1790326041249
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.2.23\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"attempt\",\"type\":\"number\",\"value\":\"1\"}]}}",
+      "timestamp": 1790326041250
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.37\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"}]}}",
+      "timestamp": 1790326041250
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.38\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"}]}}",
+      "timestamp": 1790326041251
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.39\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"targetFound\",\"type\":\"boolean\",\"value\":\"true\"},{\"name\":\"tabId\",\"type\":\"number\",\"value\":\"1148930230\"},{\"name\":\"urlOrigin\",\"type\":\"string\",\"value\":\"http://localhost:4174\"}]}}",
+      "timestamp": 1790326041252
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.40\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"targetFound\",\"type\":\"boolean\",\"value\":\"true\"}]}}",
+      "timestamp": 1790326041253
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.2.24\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"attempt\",\"type\":\"number\",\"value\":\"1\"},{\"name\":\"targetTab\",\"type\":\"string\",\"value\":\"FOUND\"},{\"name\":\"urlOrigin\",\"type\":\"string\",\"value\":\"http://localhost:4174\"}]}}",
+      "timestamp": 1790326041254
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.2.25\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"connected\",\"type\":\"boolean\",\"value\":\"true\"},{\"name\":\"targetTab\",\"type\":\"string\",\"value\":\"FOUND\"}]}}",
+      "timestamp": 1790326041254
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.1.28\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":true,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"connected\",\"type\":\"boolean\",\"value\":\"true\"},{\"name\":\"extension\",\"type\":\"string\",\"value\":\"CONNECTED\"},{\"name\":\"serviceWorker\",\"type\":\"string\",\"value\":\"REACHABLE\"},{\"name\":\"targetTab\",\"type\":\"string\",\"value\":\"FOUND\"}]}}",
+      "timestamp": 1790326041255
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.1.29\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326041245\"},{\"name\":\"connected\",\"type\":\"boolean\",\"value\":\"true\"}]}}",
+      "timestamp": 1790326041255
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "Extension: CONNECTED",
+      "timestamp": 1790326041255
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "Service Worker: REACHABLE",
+      "timestamp": 1790326041256
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "Target Tab: FOUND",
+      "timestamp": 1790326041256
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "Content Script: REACHABLE",
+      "timestamp": 1790326041256
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[Adapter][PING] PING_SENT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.1.30\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"origin\",\"type\":\"string\",\"value\":\"http://localhost:5173\"}]}}",
+      "timestamp": 1790326056247
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.2.26\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"origin\",\"type\":\"string\",\"value\":\"http://localhost:5173\"},{\"name\":\"validContext\",\"type\":\"boolean\",\"value\":\"true\"}]}}",
+      "timestamp": 1790326056250
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.2.27\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"attempt\",\"type\":\"number\",\"value\":\"1\"}]}}",
+      "timestamp": 1790326056251
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.41\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"}]}}",
+      "timestamp": 1790326056252
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.42\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"}]}}",
+      "timestamp": 1790326056252
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.43\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"targetFound\",\"type\":\"boolean\",\"value\":\"true\"},{\"name\":\"tabId\",\"type\":\"number\",\"value\":\"1148930230\"},{\"name\":\"urlOrigin\",\"type\":\"string\",\"value\":\"http://localhost:4174\"}]}}",
+      "timestamp": 1790326056253
+    },
+    {
+      "sessionId": "D1221BA61E84CA7A6DC4717202B683CE",
+      "type": "info",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"2520746552233945718.1.44\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"targetFound\",\"type\":\"boolean\",\"value\":\"true\"}]}}",
+      "timestamp": 1790326056254
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.2.28\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"attempt\",\"type\":\"number\",\"value\":\"1\"},{\"name\":\"targetTab\",\"type\":\"string\",\"value\":\"FOUND\"},{\"name\":\"urlOrigin\",\"type\":\"string\",\"value\":\"http://localhost:4174\"}]}}",
+      "timestamp": 1790326056256
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.2.29\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"connected\",\"type\":\"boolean\",\"value\":\"true\"},{\"name\":\"targetTab\",\"type\":\"string\",\"value\":\"FOUND\"}]}}",
+      "timestamp": 1790326056257
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.1.31\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":true,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"connected\",\"type\":\"boolean\",\"value\":\"true\"},{\"name\":\"extension\",\"type\":\"string\",\"value\":\"CONNECTED\"},{\"name\":\"serviceWorker\",\"type\":\"string\",\"value\":\"REACHABLE\"},{\"name\":\"targetTab\",\"type\":\"string\",\"value\":\"FOUND\"}]}}",
+      "timestamp": 1790326056258
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"type\":\"object\",\"className\":\"Object\",\"description\":\"Object\",\"objectId\":\"-3518171396829265913.1.32\",\"preview\":{\"type\":\"object\",\"description\":\"Object\",\"overflow\":false,\"properties\":[{\"name\":\"pingId\",\"type\":\"string\",\"value\":\"adapter-1790326056244\"},{\"name\":\"connected\",\"type\":\"boolean\",\"value\":\"true\"}]}}",
+      "timestamp": 1790326056259
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "Extension: CONNECTED",
+      "timestamp": 1790326056260
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "Service Worker: REACHABLE",
+      "timestamp": 1790326056260
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "Target Tab: FOUND",
+      "timestamp": 1790326056260
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "info",
+      "text": "Content Script: REACHABLE",
+      "timestamp": 1790326056260
+    },
+    {
+      "sessionId": "A78B7E0715CC05A25FCD1CCC4CE03B64",
+      "type": "warning",
+      "text": "[AgentTrace] dashboard task watchdog timed out (WATCHDOG_TIMEOUT). Last stage: BROWSER_EXECUTION",
+      "timestamp": 1790326059048
+    }
+  ]
+}

@@ -196,7 +196,25 @@ async def generate_action(
 
     # 2. LLM output is UNTRUSTED: strict schema validation + re-validation.
     try:
-        action = BrowserActionModel.model_validate(result.raw_action)
+        raw_dict = dict(result.raw_action) if isinstance(result.raw_action, dict) else result.raw_action
+        if isinstance(raw_dict, dict):
+            act_type = raw_dict.get("action")
+            if act_type == "scroll":
+                for k in ["target", "text", "option", "url"]:
+                    raw_dict.pop(k, None)
+            elif act_type == "click":
+                for k in ["direction", "amount", "text", "option", "url"]:
+                    raw_dict.pop(k, None)
+            elif act_type == "type":
+                for k in ["direction", "amount", "option", "url"]:
+                    raw_dict.pop(k, None)
+            elif act_type == "select":
+                for k in ["direction", "amount", "text", "url"]:
+                    raw_dict.pop(k, None)
+            elif act_type == "navigate":
+                for k in ["target", "direction", "amount", "text", "option"]:
+                    raw_dict.pop(k, None)
+        action = BrowserActionModel.model_validate(raw_dict)
     except PydanticValidationError as err:
         logger.warning("Reasoner produced schema-invalid action: %s | raw: %s | error: %s", err.error_count(), result.raw_action, err)
         raise HTTPException(

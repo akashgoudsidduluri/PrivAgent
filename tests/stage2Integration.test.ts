@@ -64,7 +64,7 @@ describe('Phase 7.5 Stage 2: World Model + Semantic Understanding + Agent Contex
 
     const semanticOutput = buildSemanticUnderstanding({
       worldModel,
-      targetDoc: document,
+      root: document,
       pageGeneration: worldModel.page.pageGeneration,
       userGoal: 'Find a black backpack under 1000',
     });
@@ -93,7 +93,7 @@ describe('Phase 7.5 Stage 2: World Model + Semantic Understanding + Agent Contex
     const semCtx: SanitizedSemanticContext = {
       pageType: 'SEARCH',
       confidence: 0.95,
-      pageState: 'ready',
+      pageState: 'results_available',
       entities: [
         { id: 'item-1', type: 'Product', label: 'Black Travel Backpack', confidence: 0.92, actionIds: [] },
       ],
@@ -129,7 +129,7 @@ describe('Phase 7.5 Stage 2: World Model + Semantic Understanding + Agent Contex
     expect(modelView.semantic_context?.entities.length).toBe(1);
 
     // 2. Test minimizeAgentContext
-    const minResult = minimizeAgentContext(payload!, 'Find backpacks');
+    const minResult = minimizeAgentContext(payload!, { task: 'Find backpacks' });
     expect(minResult.payload.page_type).toBe('SEARCH');
     expect(minResult.payload.semantic_context).toBeDefined();
     expect(minResult.payload.semantic_context?.pageType).toBe('SEARCH');
@@ -142,7 +142,7 @@ describe('Phase 7.5 Stage 2: World Model + Semantic Understanding + Agent Contex
     const cleanSemCtx: SanitizedSemanticContext = {
       pageType: 'FORM',
       confidence: 0.9,
-      pageState: 'ready',
+      pageState: 'form_complete',
       entities: [
         { id: 'field-username', type: 'GenericEntity', label: 'Username field', confidence: 0.88, actionIds: [] },
       ],
@@ -189,7 +189,7 @@ describe('Phase 7.5 Stage 2: World Model + Semantic Understanding + Agent Contex
     const staleSemanticContext: SanitizedSemanticContext = {
       pageType: 'SEARCH',
       confidence: 0.9,
-      pageState: 'ready',
+      pageState: 'results_available',
       entities: [],
       affordances: [],
       promptInjectionDetected: false,
@@ -248,7 +248,7 @@ describe('Phase 7.5 Stage 2: World Model + Semantic Understanding + Agent Contex
     const worldModel = buildBrowserWorldModel({ root: document, pageGeneration: 1 });
     const semanticOutput = buildSemanticUnderstanding({
       worldModel,
-      targetDoc: document,
+      root: document,
       pageGeneration: 1,
       userGoal: 'View account details',
     });
@@ -312,9 +312,9 @@ describe('Phase 7.5 Stage 2: World Model + Semantic Understanding + Agent Contex
 
     // 3. Step records preserve semanticContext
     const firstStep = finalState.steps[0];
-    expect(firstStep.semanticContext).toBeDefined();
-    expect(firstStep.semanticContext?.pageGeneration).toBe(1);
-    expect(firstStep.semanticContext?.promptInjectionDetected).toBe(false);
+    expect(firstStep?.semanticContext).toBeDefined();
+    expect(firstStep?.semanticContext?.pageGeneration).toBe(1);
+    expect(firstStep?.semanticContext?.promptInjectionDetected).toBe(false);
 
     // 4. Zero sensitive data leaked in task state
     expect(finalState.task).toBe('Check account details');

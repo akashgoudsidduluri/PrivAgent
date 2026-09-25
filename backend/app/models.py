@@ -11,7 +11,7 @@ Security Contract:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, ClassVar, Dict, List, Optional
+from typing import Annotated, Any, ClassVar, Dict, List, Optional
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -398,4 +398,9 @@ class AgentActionResponse(StrictModel):
     action: BrowserActionModel
     reason: str
     telemetry: Optional[ReasoningTelemetry] = None
+
+
+AgentContextPayload.model_rebuild()
+AgentActionRequest.model_rebuild()
+AgentActionResponse.model_rebuild()
 

@@ -66,8 +66,9 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
   private lastLifecycleStage = 'IDLE';
 
-  private resetWatchdog(timeoutMs = 30000): void {
+  private resetWatchdog(timeoutMs?: number): void {
     this.clearWatchdog();
+    const effectiveTimeout = timeoutMs ?? (this.lastLifecycleStage === 'REASONING' ? 60000 : 30000);
     this.watchdogTimer = setTimeout(() => {
       if (this.state.status === 'RUNNING') {
         const stage = this.lastLifecycleStage || 'UNKNOWN';
@@ -80,7 +81,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         };
         this.notify();
       }
-    }, timeoutMs);
+    }, effectiveTimeout);
   }
 
   private clearWatchdog(): void {
