@@ -166,7 +166,7 @@ export function decomposeTask(
 
   const taskCategory = classifyTaskCategory(userPrompt);
 
-  const goalId = `goal-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  const goalId = `goal-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`;
   const { targetEntities, constraints } = extractEntitiesAndConstraints(userPrompt, taskCategory);
 
   const highLevelGoal: HighLevelGoal = {

@@ -61,6 +61,7 @@ const FORBIDDEN_PAYLOAD_KEYS_NORMALIZED: ReadonlySet<string> = new Set(
 /** Machine-generated identifier keys — strong rules only. */
 export const STRUCTURAL_VALUE_KEYS: ReadonlySet<string> = new Set([
   'id', 'selector', 'url', 'path', 'href', 'src', 'sanitized_status',
+  'goalid', 'subgoalid', 'taskid', 'worldmodelid', 'pagegeneration',
 ]);
 
 // ── Patterns (reused from the project's single pattern source) ───────────────
@@ -119,6 +120,8 @@ export interface RawValueScanOptions {
   structuralKeys?: ReadonlySet<string>;
   /** Extra keys to treat as structural. */
   extraStructuralKeys?: readonly string[];
+  /** Keys permitted despite being in FORBIDDEN_PAYLOAD_KEYS (their string values are still scanned for PII). */
+  allowedKeyNames?: readonly string[];
 }
 
 /**
@@ -136,8 +139,12 @@ export function scanForRawSensitiveValues(
     structural.add(key.toLowerCase());
   }
 
+  const allowed = new Set<string>(
+    (options.allowedKeyNames ?? []).map((k) => k.toLowerCase())
+  );
+
   const violations: RawValueViolation[] = [];
-  walk(value, '<root>', structural, violations);
+  walk(value, '<root>', structural, allowed, violations);
   return violations;
 }
 
@@ -145,25 +152,28 @@ function walk(
   node: unknown,
   path: string,
   structural: Set<string>,
+  allowed: Set<string>,
   violations: RawValueViolation[]
 ): void {
   if (node === null || node === undefined) return;
 
   if (Array.isArray(node)) {
-    node.forEach((item, index) => walk(item, `${path}[${index}]`, structural, violations));
+    node.forEach((item, index) => walk(item, `${path}[${index}]`, structural, allowed, violations));
     return;
   }
 
   if (typeof node === 'object') {
     for (const [key, child] of Object.entries(node as Record<string, unknown>)) {
-      const normalizedKey = key.toLowerCase().replace(/_/g, '');
-      if (FORBIDDEN_PAYLOAD_KEYS.has(key) || FORBIDDEN_PAYLOAD_KEYS_NORMALIZED.has(normalizedKey)) {
+      const lowerKey = key.toLowerCase();
+      const normalizedKey = lowerKey.replace(/_/g, '');
+      const isAllowed = allowed.has(lowerKey) || allowed.has(normalizedKey);
+      if (!isAllowed && (FORBIDDEN_PAYLOAD_KEYS.has(key) || FORBIDDEN_PAYLOAD_KEYS_NORMALIZED.has(normalizedKey))) {
         violations.push({ path: `${path}.${key}`, rule: 'forbidden_key' });
       }
       if (typeof child === 'string') {
         scanString(child, `${path}.${key}`, key.toLowerCase(), structural, violations);
       } else {
-        walk(child, `${path}.${key}`, structural, violations);
+        walk(child, `${path}.${key}`, structural, allowed, violations);
       }
     }
     return;

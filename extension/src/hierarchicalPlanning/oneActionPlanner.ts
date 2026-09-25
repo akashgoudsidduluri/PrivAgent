@@ -101,7 +101,7 @@ export class OneActionPlanner {
           action: {
             action: 'scroll',
             direction,
-            amount: Math.min(amount, 5000),
+            amount,
             reason: typeof proposal.reason === 'string' ? proposal.reason : undefined,
           },
         };

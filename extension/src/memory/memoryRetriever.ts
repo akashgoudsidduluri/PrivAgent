@@ -29,7 +29,12 @@ export class MemoryRetriever {
 
     // 1. Working Memory (Scoped to current goal)
     const working = WorkingMemoryManager.readByGoal(goalId);
-    hints.workingMemory = working.map(w => `[Working] ${w.key}: ${JSON.stringify(w.memoryContent)}`);
+    hints.workingMemory = working.map(w => {
+      const contentStr = typeof w.memoryContent === 'string'
+        ? w.memoryContent
+        : JSON.stringify(w.memoryContent, null, 1).replace(/\n/g, ' ');
+      return `[Working] ${w.key}: ${contentStr}`;
+    });
 
     // 2. Semantic Memory
     const semantic = await SemanticMemoryManager.findRelevant(scope);

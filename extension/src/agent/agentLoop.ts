@@ -65,6 +65,28 @@ import {
   SemanticUnderstandingOutput,
   SanitizedSemanticContext,
 } from '../semanticUnderstanding';
+import {
+  decomposeTask,
+  SubgoalGraph,
+  SubgoalSelector,
+  OneActionPlanner,
+  PlanStateMachine,
+  PlannerContextBuilder,
+  HighLevelGoal,
+  Subgoal,
+  SubgoalGraphData,
+  PlanningEngineState,
+} from '../hierarchicalPlanning';
+import {
+  WorkingMemoryManager,
+  EpisodicMemoryManager,
+  SemanticMemoryManager,
+  FailureMemoryManager,
+  MemoryRetriever,
+  MemoryHints,
+  MemoryTrustLevel,
+  SiteScope,
+} from '../memory';
 
 export type { TaskStatus, StepRecord, TaskState, AgentTaskState } from './agentState';
 
@@ -179,6 +201,41 @@ export class AgentLoop {
   private providerRetryDelayMs: number;
   private state: AgentTaskState;
   private isStopped = false;
+  private hierarchicalGoal?: HighLevelGoal;
+  private subgoalGraph?: SubgoalGraph;
+  private planStateMachine?: PlanStateMachine;
+  private memoryHints?: MemoryHints;
+
+  private extractOrigin(url?: string): string {
+    if (!url) return 'http://localhost';
+    try {
+      return new URL(url).origin;
+    } catch {
+      return 'http://localhost';
+    }
+  }
+
+  private extractSiteKey(url?: string): string {
+    if (!url) return 'localhost';
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return 'localhost';
+    }
+  }
+
+  private getRecentFailures(): Array<{ subgoalId: string; reason: string }> {
+    const fails: Array<{ subgoalId: string; reason: string }> = [];
+    for (const step of this.state.steps) {
+      if (!step.executionSuccess && step.executionError) {
+        fails.push({
+          subgoalId: this.state.activeSubgoal?.id || 'unknown',
+          reason: step.executionError,
+        });
+      }
+    }
+    return fails;
+  }
 
   constructor(
     provider: AgentProvider,
@@ -260,10 +317,45 @@ export class AgentLoop {
     this.state.reason = undefined;
     this.state.requiresUserConfirmationAction = undefined;
 
+    // Clear working memory for task isolation
+    WorkingMemoryManager.clearAll();
+
     // Feature 3 & 7: Multi-Step Task Planner and Explainable Decision Tracer
-    const tracer = new AgentDecisionTracer(`task-${Date.now()}`);
+    const tracer = new AgentDecisionTracer(`task-${Date.now().toString(36)}`);
     const plan = createTaskPlan(task);
     this.state.plan = plan;
+
+    // Phase 4: Hierarchical Task Planning & Subgoal DAG Initialization
+    const decompResult = decomposeTask(task);
+    this.hierarchicalGoal = decompResult.goal;
+    this.subgoalGraph = new SubgoalGraph(decompResult.goal.goalId, decompResult.subgoals);
+    this.planStateMachine = new PlanStateMachine();
+    this.planStateMachine.initialize(this.hierarchicalGoal);
+    this.planStateMachine.registerDecompositionComplete();
+
+    this.state.highLevelGoal = this.hierarchicalGoal;
+    this.state.subgoalGraphData = this.subgoalGraph.toData();
+    this.state.planningEngineState = this.planStateMachine.getState();
+
+    // Initialize Working Memory for the task
+    try {
+      WorkingMemoryManager.write({
+        id: `wm-${this.hierarchicalGoal.goalId}-init`,
+        class: 'WORKING',
+        goalId: this.hierarchicalGoal.goalId,
+        key: 'INITIAL_GOAL',
+        memoryContent: this.hierarchicalGoal.sanitizedGoalDescription,
+        scope: { origin: this.extractOrigin(this.state.currentUrl), siteKey: this.extractSiteKey(this.state.currentUrl) },
+        trustLevel: MemoryTrustLevel.HIGH_CONFIDENCE_MEMORY,
+        provenance: { source: 'USER', timestamp: Date.now() },
+        confidence: 1.0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    } catch (e) {
+      console.warn('[AgentLoop] WorkingMemoryManager init skipped:', e);
+    }
+
     this.notifyProgress();
 
     while (this.state.status === 'IN_PROGRESS') {
@@ -384,6 +476,78 @@ export class AgentLoop {
         }
       }
 
+      // 2b. Phase 4 Memory Retrieval & Subgoal Selection
+      // SECURITY INVARIANT: Fresh live perception ALWAYS has authority over stale memory.
+      const currentOrigin = this.extractOrigin(this.state.currentUrl || context.url);
+      const siteScope: SiteScope = {
+        origin: currentOrigin,
+        siteKey: this.extractSiteKey(this.state.currentUrl || context.url),
+        pageTaxonomy: this.state.pageType,
+      };
+
+      // Retrieve sanitized memory hints (bounded & M8 sanitized)
+      let memoryHints: MemoryHints | undefined;
+      try {
+        memoryHints = await MemoryRetriever.getHintsForContext(
+          siteScope,
+          this.hierarchicalGoal?.goalId || `goal-${Date.now().toString(36)}`
+        );
+        this.state.memoryHints = memoryHints;
+        context.memory_hints = memoryHints;
+      } catch (e) {
+        console.warn('[AgentLoop] MemoryRetriever hints fetch failed:', e);
+      }
+
+      // Subgoal selection from dependency DAG
+      let activeSubgoal: Subgoal | undefined;
+      if (this.subgoalGraph) {
+        const selection = SubgoalSelector.selectNextSubgoal({
+          graph: this.subgoalGraph,
+          worldModel,
+          affordances: (semanticContext?.affordances as any) ?? [],
+          recentFailures: this.getRecentFailures(),
+        });
+
+        if (selection.status === 'SELECTED' && selection.selectedSubgoal) {
+          activeSubgoal = selection.selectedSubgoal;
+          this.subgoalGraph.startSubgoal(activeSubgoal.id);
+          this.state.activeSubgoal = activeSubgoal;
+          this.state.subgoalGraphData = this.subgoalGraph.toData();
+          if (
+            this.planStateMachine &&
+            (this.planStateMachine.getState() === 'SUBGOAL_SELECTION' ||
+              this.planStateMachine.getState() === 'DYNAMIC_REPLANNING')
+          ) {
+            if (this.planStateMachine.getState() === 'DYNAMIC_REPLANNING') {
+              this.planStateMachine.transitionTo(
+                'SUBGOAL_SELECTION',
+                'Re-entering subgoal selection after replanning'
+              );
+            }
+            this.planStateMachine.registerSubgoalSelected(activeSubgoal);
+            this.state.planningEngineState = this.planStateMachine.getState();
+          }
+          console.info('[AgentTrace] subgoal selected', {
+            subgoalId: activeSubgoal.id,
+            category: activeSubgoal.category,
+            description: activeSubgoal.description,
+          });
+        } else if (selection.status === 'ALL_COMPLETED') {
+          console.info('[AgentTrace] all subgoals completed');
+        }
+      }
+
+      // Build minimized planner context incorporating activeSubgoal and memoryHints
+      if (this.hierarchicalGoal) {
+        const builtPlannerCtx = PlannerContextBuilder.buildContext(
+          context,
+          this.hierarchicalGoal,
+          activeSubgoal,
+          memoryHints
+        );
+        context = builtPlannerCtx.contextPayload;
+      }
+
       // 3. Goal Completion Detection
       if (this.isTaskGoalSatisfied(task, this.state, context)) {
         if (this.state.plan) {
@@ -392,6 +556,10 @@ export class AgentLoop {
             this.state.plan.currentStepIndex,
             'COMPLETED'
           );
+        }
+        if (this.planStateMachine && this.planStateMachine.getState() !== 'COMPLETED') {
+          this.planStateMachine.registerGoalVerification(true, true);
+          this.state.planningEngineState = this.planStateMachine.getState();
         }
         this.state.status = 'SUCCESS';
         this.state.goalStatus = 'SUCCESS';
@@ -409,6 +577,27 @@ export class AgentLoop {
         console.info('[AgentTrace] requesting reasoning');
         action = await this.requestActionWithBoundedRetry(task, context);
         console.info('[AgentTrace] reasoning response received');
+
+        // Enforce the One-Action Proposal constraint: exactly ONE atomic action from allowlist
+        const singleActionCheck = OneActionPlanner.validateSingleActionProposal(action);
+        if (!singleActionCheck.valid) {
+          this.state.status = 'FAILED';
+          this.state.reason = `OneActionPlanner rejected action: ${singleActionCheck.error}`;
+          this.notifyProgress();
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+          break;
+        }
+        action = singleActionCheck.action!;
+
+        // State Machine: Register Grounding
+        if (this.planStateMachine && this.planStateMachine.getState() === 'TARGET_GROUNDING') {
+          if ('target' in action && typeof (action as any).target === 'string') {
+            this.planStateMachine.registerTargetGrounded((action as any).target, action);
+          } else {
+            this.planStateMachine.registerNonTargetedAction(action);
+          }
+          this.state.planningEngineState = this.planStateMachine.getState();
+        }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.state.status = 'FAILED';
@@ -489,9 +678,30 @@ export class AgentLoop {
         }
       }
 
+      if (this.planStateMachine && this.planStateMachine.getState() === 'M5_VALIDATION') {
+        this.planStateMachine.registerM5Approval(validation.allowed, validation.reason);
+        this.state.planningEngineState = this.planStateMachine.getState();
+      }
+
       if (!validation.allowed) {
         this.state.retryCount++;
         this.provider.registerFailure?.();
+        try {
+          await FailureMemoryManager.write({
+            id: `fail-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+            class: 'FAILURE',
+            scope: siteScope,
+            trustLevel: MemoryTrustLevel.HIGH_CONFIDENCE_MEMORY,
+            provenance: { source: 'ACTION_RESULT', timestamp: Date.now(), subgoalId: activeSubgoal?.id, actionType: action.action },
+            confidence: 1.0,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            failureType: 'POLICY_REJECTION',
+            contextCategory: (this.state.pageType as any) || 'unknown',
+            recoveryAttempted: healingResult?.recovered ? 'HEALING' : 'NONE',
+            recoveryResult: 'FAILURE',
+          });
+        } catch (e) {}
         if (this.state.plan) {
           const diag = diagnoseFailureAndReplan(this.state.plan, action, validation.reason, context);
           if (diag.canRecover) {
@@ -550,6 +760,10 @@ export class AgentLoop {
         continue;
       }
       console.info('[AgentTrace] action validated');
+      if (this.planStateMachine && this.planStateMachine.getState() === 'RISK_POLICY_CHECK') {
+        this.planStateMachine.registerRiskAssessment(risk);
+        this.state.planningEngineState = this.planStateMachine.getState();
+      }
 
       // 6a. SAFETY Review (Model-based)
       if (this.provider.reviewAction) {
@@ -691,6 +905,16 @@ export class AgentLoop {
       this.state.lastAction = action;
       this.state.lastActionResult = { success: execResult.success, error: execResult.error };
 
+      if (this.planStateMachine && this.planStateMachine.getState() === 'CHROME_EXECUTION') {
+        this.planStateMachine.registerExecutionResult(execResult.success, 'PRIVAGENT_ACTION', execResult.error);
+        this.state.planningEngineState = this.planStateMachine.getState();
+      }
+
+      if (this.planStateMachine && this.planStateMachine.getState() === 'EFFECT_VERIFICATION') {
+        this.planStateMachine.registerEffectVerification(execResult.success, execResult.error);
+        this.state.planningEngineState = this.planStateMachine.getState();
+      }
+
       if (!execResult.success && 'target' in action && typeof (action as any).target === 'string' && !healingResult?.recovered) {
         const staleTargetId = (action as any).target;
         healingResult = recoverStaleTarget(staleTargetId, action, context);
@@ -711,6 +935,22 @@ export class AgentLoop {
       if (!execResult.success) {
         this.state.retryCount++;
         this.state.failureCount++;
+        try {
+          await FailureMemoryManager.write({
+            id: `fail-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            class: 'FAILURE',
+            scope: siteScope,
+            trustLevel: MemoryTrustLevel.HIGH_CONFIDENCE_MEMORY,
+            provenance: { source: 'ACTION_RESULT', timestamp: Date.now(), subgoalId: activeSubgoal?.id, actionType: action.action },
+            confidence: 1.0,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            failureType: 'EXECUTION_ERROR',
+            contextCategory: (this.state.pageType as any) || 'unknown',
+            recoveryAttempted: healingResult?.recovered ? 'HEALING' : 'NONE',
+            recoveryResult: 'FAILURE',
+          });
+        } catch (e) {}
         if (this.state.plan) {
           const diag = diagnoseFailureAndReplan(this.state.plan, action, execResult.error || 'Execution error', context);
           if (diag.canRecover) {
@@ -790,6 +1030,79 @@ export class AgentLoop {
       if ('target' in action && typeof (action as any).target === 'string') {
         this.state.visitedElementIds.push((action as any).target);
       }
+
+      // Update Working Memory after observation
+      try {
+        WorkingMemoryManager.write({
+          id: `wm-${this.hierarchicalGoal?.goalId || 'task'}-s${this.state.currentStep}`,
+          class: 'WORKING',
+          goalId: this.hierarchicalGoal?.goalId || 'task',
+          key: `STEP_${this.state.currentStep}_RESULT`,
+          memoryContent: {
+            action: action.action,
+            success: execResult.success,
+            subgoalId: activeSubgoal?.id,
+            target: 'target' in action ? (action as any).target : undefined,
+          },
+          scope: siteScope,
+          trustLevel: MemoryTrustLevel.CURRENT_VERIFIED_OBSERVATION,
+          provenance: { source: 'ACTION_RESULT', timestamp: Date.now(), subgoalId: activeSubgoal?.id, actionType: action.action },
+          confidence: 1.0,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      } catch (memErr) {
+        console.warn('[AgentLoop] WorkingMemoryManager write skipped:', memErr);
+      }
+
+      // Update Episodic Memory with sanitized historical event
+      try {
+        await EpisodicMemoryManager.write({
+          id: `ep-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+          class: 'EPISODIC',
+          scope: siteScope,
+          trustLevel: MemoryTrustLevel.VERIFIED_MEMORY,
+          provenance: { source: 'VERIFIED_OUTCOME', timestamp: Date.now(), subgoalId: activeSubgoal?.id, actionType: action.action },
+          confidence: 0.95,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          taskType: this.hierarchicalGoal?.taskCategory || 'GENERIC_INTERACTION',
+          outcome: execResult.success ? 'SUCCESS' : 'FAILURE',
+          sanitizedSummary: `Step ${this.state.currentStep}: ${action.action} outcome ${execResult.success ? 'SUCCESS' : 'FAILED'}`,
+          metrics: {
+            durationMs: 0,
+            actionsTaken: 1,
+          },
+        });
+      } catch (memErr) {
+        console.warn('[AgentLoop] EpisodicMemoryManager write skipped:', memErr);
+      }
+
+      // Progress active subgoal in DAG
+      if (execResult.success && activeSubgoal && this.subgoalGraph) {
+        this.subgoalGraph.completeSubgoal(activeSubgoal.id);
+        this.state.subgoalGraphData = this.subgoalGraph.toData();
+        console.info('[AgentTrace] subgoal completed', {
+          subgoalId: activeSubgoal.id,
+          category: activeSubgoal.category,
+        });
+      } else if (!execResult.success && activeSubgoal && this.subgoalGraph) {
+        this.subgoalGraph.failSubgoal(activeSubgoal.id, execResult.error || 'Execution failed');
+        this.state.subgoalGraphData = this.subgoalGraph.toData();
+      }
+
+      // Transition state machine to SUBGOAL_SELECTION for next iteration if not in terminal state
+      if (this.planStateMachine && (this.planStateMachine.getState() === 'GOAL_VERIFICATION' || this.planStateMachine.getState() === 'DYNAMIC_REPLANNING')) {
+        const allDone = this.subgoalGraph?.isAllCompleted() ?? false;
+        if (allDone || this.isTaskGoalSatisfied(task, this.state, context)) {
+          this.planStateMachine.registerGoalVerification(true, true);
+          this.state.planningEngineState = this.planStateMachine.getState();
+        } else {
+          this.planStateMachine.transitionTo('SUBGOAL_SELECTION', 'Preparing next subgoal selection');
+          this.state.planningEngineState = this.planStateMachine.getState();
+        }
+      }
+
       if (this.state.plan) {
         this.state.plan = updateTaskPlanProgress(
           this.state.plan,

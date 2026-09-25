@@ -25,6 +25,7 @@ export class MemoryStore {
    * Initializes or verifies the memory store.
    */
   public static async initialize(): Promise<void> {
+    if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
     const data = await this.readAll();
     if (!data) {
       await chrome.storage.local.set({ [STORE_KEY]: { EPISODIC: [], SEMANTIC: [], FAILURE: [] } });
@@ -84,7 +85,9 @@ export class MemoryStore {
         return false;
       }
 
-      await chrome.storage.local.set({ [STORE_KEY]: data });
+      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+        await chrome.storage.local.set({ [STORE_KEY]: data });
+      }
       return true;
     } catch (e) {
       console.error('Corruption handling: Failed to write memory', e);
@@ -104,7 +107,9 @@ export class MemoryStore {
    * Clear memory store (mainly for testing).
    */
   public static async clear(): Promise<void> {
-    await chrome.storage.local.remove([STORE_KEY]);
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+      await chrome.storage.local.remove([STORE_KEY]);
+    }
   }
 
   /**
@@ -128,9 +133,12 @@ export class MemoryStore {
   }
 
   private static async readAll(): Promise<any> {
+    if (typeof chrome === 'undefined' || !chrome.storage?.local) {
+      return null;
+    }
     return new Promise((resolve) => {
       chrome.storage.local.get([STORE_KEY], (result) => {
-        resolve(result[STORE_KEY]);
+        resolve(result?.[STORE_KEY]);
       });
     });
   }

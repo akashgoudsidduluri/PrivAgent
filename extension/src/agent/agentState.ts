@@ -210,6 +210,13 @@ export interface AgentTaskState extends TaskState {
   activeWorldModelRef?: ActiveWorldModelRef | null;
   lastFailure?: FailureRecord | null;
   failureHistory?: FailureRecord[];
+
+  // Hierarchical Planning & Memory (Phase 4)
+  highLevelGoal?: import('../hierarchicalPlanning/hierarchicalTypes').HighLevelGoal;
+  activeSubgoal?: import('../hierarchicalPlanning/hierarchicalTypes').Subgoal;
+  subgoalGraphData?: import('../hierarchicalPlanning/hierarchicalTypes').SubgoalGraphData;
+  planningEngineState?: import('../hierarchicalPlanning/hierarchicalTypes').PlanningEngineState;
+  memoryHints?: import('../memory/memoryRetriever').MemoryHints;
 }
 
 /**

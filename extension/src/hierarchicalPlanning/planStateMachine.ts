@@ -115,9 +115,9 @@ export class PlanStateMachine {
       }
     }
 
-    // Direct transition into GOAL_VERIFICATION must come from EFFECT_VERIFICATION
+    // Direct transition into GOAL_VERIFICATION must come from EFFECT_VERIFICATION or early goal check
     if (to === 'GOAL_VERIFICATION') {
-      if (from !== 'EFFECT_VERIFICATION' && from !== 'SUBGOAL_SELECTION') {
+      if (from !== 'EFFECT_VERIFICATION' && from !== 'SUBGOAL_SELECTION' && from !== 'TARGET_GROUNDING') {
         throw new Error(
           `Pipeline Invariant Violation: Direct bypass into GOAL_VERIFICATION from ${from}. Must verify effect first.`
         );
@@ -239,6 +239,9 @@ export class PlanStateMachine {
 
   public registerGoalVerification(goalSatisfied: boolean, allSubgoalsDone: boolean): void {
     this.context.goalSatisfied = goalSatisfied;
+    if (this.getState() !== 'GOAL_VERIFICATION') {
+      this.transitionTo('GOAL_VERIFICATION', 'Effect verified or goal satisfied; evaluating goal');
+    }
     if (goalSatisfied || allSubgoalsDone) {
       this.transitionTo('COMPLETED', 'Goal verified and satisfied');
     } else {

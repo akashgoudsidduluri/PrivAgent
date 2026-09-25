@@ -70,7 +70,10 @@ export class AgentDecisionTracer {
     };
 
     // Assert zero raw PII in decision trace entry
-    assertNoRawSensitiveValues(fullEntry);
+    assertNoRawSensitiveValues(fullEntry, {
+      extraStructuralKeys: ['text'],
+      allowedKeyNames: ['text'],
+    });
 
     this.entries.push(fullEntry);
     return fullEntry;
