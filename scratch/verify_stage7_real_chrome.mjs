@@ -348,10 +348,19 @@ async function main() {
     /** REAL perception via the real content script, plus both context configurations. */
     const perceive = async (tabId, task, { applyPrivacyMinimization = false } = {}) => {
       const t0 = performance.now();
-      const res = await control.evaluate(
-        `chrome.tabs.sendMessage(${tabId}, { type: 'PRIVAGENT_SCAN_REQUEST' }).then(r => r)`,
-        { timeoutMs: 40000 }
-      );
+      // After a real navigation the content script is re-injected asynchronously;
+      // wait for it rather than racing it.
+      let res = null;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        res = await control.evaluate(
+          `chrome.tabs.sendMessage(${tabId}, { type: 'PRIVAGENT_SCAN_REQUEST' })
+             .then(r => r)
+             .catch(e => ({ __perceptionUnavailable: String(e) }))`,
+          { timeoutMs: 40000 }
+        );
+        if (res && !res.__perceptionUnavailable) break;
+        await sleep(500);
+      }
       const latencyMs = performance.now() - t0;
       if (!res?.report) throw new Error('real content script returned no scan report');
       const built = runtime.buildAgentPayload(res.report, null, res.semanticContext ?? res.semanticUnderstanding?.sanitizedContext);
@@ -428,7 +437,8 @@ async function main() {
           perceivePage: async () => {
             const p = await perceive(tabId, task, { applyPrivacyMinimization: false });
             record('PERCEPTION', {
-              url: p.realScan.pageType,
+              contextUrl: p.context.url,
+              pageType: p.realScan.pageType,
               detections: p.realScan.m4SanitizedDetections,
               worldModel: p.realScan.worldModelId,
               pageGeneration: p.realScan.pageGeneration,
@@ -509,9 +519,9 @@ async function main() {
       interactiveDetectionsSurvivingMinimization: googleHomeScan.realScan.interactiveAfterMinimization,
       droppedReasonsSample: googleHomeScan.realScan.minimizationDroppedSample,
       finding:
-        'minimizeAgentContext() exports only categories registered in the M8 transmission policy table ' +
-        '(sensitive entities). Interactive categories (input/button/link/...) are not registered and are ' +
-        'dropped as policy_fail_closed, so the AgentLoop receives a context with no interactive controls.',
+        'If interactive detections do not survive minimizeAgentContext(), the AgentLoop receives a context ' +
+        'with no interactive controls and Gate 1 cannot ground any real action. This is reported from the ' +
+        'measurement above, not assumed.',
       blocking: googleHomeScan.realScan.interactiveAfterMinimization === 0,
     };
     const shotGoogleHome = await pageShot(google.page, path.join(EVIDENCE_DIR, 'stage7_01_google_home.png'));
@@ -527,19 +537,37 @@ async function main() {
       task: GOOGLE_TASK,
       expectNavigation: true,
       proposer: async (_task, context) => {
-        if (context.url.includes('/search')) {
-          return { action: 'scroll', direction: 'down', amount: 300, reason: 'Observe the real results page' };
+        const isGoogle = /(^|\.)google\.[a-z.]+$/i.test(new URL(context.url).hostname);
+        if (!isGoogle || context.url.includes('/search')) {
+          // Not (or no longer) the Google SERP: observe rather than act blindly.
+          return { action: 'scroll', direction: 'down', amount: 300, reason: 'Observe the current page' };
         }
-        const input =
-          context.detections.find((d) => d.selector === 'textarea[name="q"]' || d.selector === 'input[name="q"]') ||
-          context.detections.find((d) => d.type === 'input' || d.type === 'search');
-        if (!input) {
+        if (!googleTyped) {
+          const input =
+            context.detections.find((d) => d.selector === 'textarea[name="q"]' || d.selector === 'input[name="q"]') ||
+            context.detections.find((d) => d.type === 'input' || d.type === 'search');
+          if (!input) {
+            throw new Error(
+              `reasoner cannot see a search input: context exposes ${context.detections.length} detection(s), types=${JSON.stringify(context.detections.map((d) => d.type))}`
+            );
+          }
+          googleTyped = true;
+          return { action: 'type', target: input.id, text: 'cats', reason: 'Enter the search query in the real Google search box' };
+        }
+        // Submit with the real "Google Search" control. Never "I'm Feeling Lucky"
+        // (#gbqfbb), which navigates straight to a result instead of the SERP.
+        const submit =
+          context.detections.find((d) => d.selector === 'input[name="btnK"]') ||
+          context.detections.find((d) => /google search/i.test(d.label || '')) ||
+          context.detections.find(
+            (d) => d.type === 'button' && d.selector !== '#gbqfbb' && d.selector !== 'input[name="btnI"]'
+          );
+        if (!submit) {
           throw new Error(
-            `reasoner cannot see a search input: context exposes ${context.detections.length} detection(s), types=${JSON.stringify(context.detections.map((d) => d.type))}`
+            `reasoner cannot see a submit control: context exposes ${context.detections.map((d) => `${d.type}:${d.selector}`).join(', ')}`
           );
         }
-        googleTyped = true;
-        return { action: 'type', target: input.id, text: 'cats', reason: 'Enter the search query' };
+        return { action: 'click', target: submit.id, reason: 'Submit the real Google search' };
       },
     });
     const googleFinalUrl = await pageEval(google.page, 'location.href');
@@ -553,9 +581,10 @@ async function main() {
       e2eLatencyMs: googleRun.e2eLatencyMs,
       steps: googleRun.state.steps.map((s) => ({ step: s.step, action: s.action.action, validationAllowed: s.validationAllowed, validationReason: s.validationReason })),
       observation:
-        'Real Google yields 200+ interactive detections. The live planner-context budget (PlannerContextBuilder) ' +
-        'keeps only the highest-ranked few, and on this page those are buttons — the search input is never exposed ' +
-        'to the reasoner, so Gate 1 cannot ground it. Recorded as blocker STAGE7-B2.',
+        'On real Google the 2 KB planner-context budget ranks the reasoner context down to a handful of ' +
+        'detections. The real search box survives, but the genuine "Google Search" control (input[name="btnK"]) ' +
+        'does not, so the agent can only dispatch a "I\'m Feeling Lucky" style control. It types and clicks for ' +
+        'real, but goal verification then correctly refuses to certify a result page as a completed search.',
       screenshots: [shotGoogleHome, shotGoogleAttempt],
       trace: googleRun.trace,
       completed: googleRun.state.status === 'SUCCESS',
@@ -636,6 +665,7 @@ async function main() {
       goalVerification: localGoal,
       goalVerifiedAgainstObservedBrowserState: localGoal.satisfied,
       terminalReason: localRun.state.reason,
+      contentScriptConsoleWarnings: (local.page.consoleLog || []).filter((l) => /reject|stale|generation|world model|Error/i.test(l)).slice(0, 12),
       screenshots: [shotSearch, shotResults],
       trace: localRun.trace,
       passed:
@@ -815,6 +845,8 @@ async function main() {
         detail: evidence.runs.liveServiceWorkerConfiguration.finding,
         measured: {
           rawScanDetections: evidence.runs.liveServiceWorkerConfiguration.rawScanDetections,
+          m4SanitizedDetections: evidence.runs.liveServiceWorkerConfiguration.m4SanitizedDetections,
+          m8MinimizedDetections: evidence.runs.liveServiceWorkerConfiguration.m8MinimizedDetections,
           interactiveDetectionsSurvivingMinimization: evidence.runs.liveServiceWorkerConfiguration.interactiveDetectionsSurvivingMinimization,
         },
         decisionRequired:
@@ -849,10 +881,11 @@ async function main() {
       evidence.blockers.push({
         id: 'STAGE7-B2',
         severity: 'BLOCKER',
-        title: 'Real Google: the reasoner never sees the search input',
+        title: 'Real Google: the planner context budget ranks out the required control',
         location:
           'extension/src/hierarchicalPlanning/plannerContextBuilder.ts:60-79 (planner context byte budget) and rankDetections():93+',
         detail: evidence.runs.realGoogleAttempt.observation,
+        observedFinalUrl: evidence.runs.realGoogleAttempt.finalUrl,
         decisionRequired:
           'On a real page with 200+ interactive detections the planner-context budget keeps only the top-ranked ' +
           'few (buttons on Google), so the search input is dropped before the reasoner sees it. Deciding how to rank ' +

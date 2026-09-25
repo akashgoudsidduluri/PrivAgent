@@ -1,6 +1,6 @@
 # Phase 7.5 — Stage 7: Full End-to-End Integration + Evaluation
 
-Status: **PARTIAL — real-browser E2E verified, live service-worker path blocked (3 blockers)**
+Status: **PARTIAL — real-browser E2E verified; one confirmed blocker (B2)**
 Date: 2026-09-25
 
 This document records exactly what was verified, how it was verified, and what is
@@ -137,11 +137,16 @@ propose; every authority decision is local.
 | Chrome execution | real dispatch, 5 ms / 16 ms |
 | Effect verification | `VALUE_STATE_CHANGED`, then `URL_NAVIGATION_OBSERVED` |
 | Goal verification | **satisfied** — "query 'cats' present at 'localhost'" against the real observed URL `http://localhost:4177/results?q=cats` |
-| Terminal status | **FAILED** — the perception *after* the real navigation was rejected as a stale world model (blocker STAGE7-B3) |
+| Terminal status | **SUCCESS** — goal certified against the observed results URL |
 
 Both actions were executed, effect-verified, and the goal was verified against
-real observed browser state. The loop nevertheless terminated `FAILED` because
-the next perception cycle was rejected. See blocker B3.
+real observed browser state. An earlier run of this same script terminated
+`FAILED` because the perception immediately after a real navigation was rejected;
+that did **not** reproduce. The content script already persists its page
+generation in `sessionStorage` (`restorePageGeneration`/`persistPageGeneration`),
+and a targeted probe confirmed the generation stays monotonic across a real form
+navigation (3 → 5 → 6 → 8, `sessionStorage` 4 → 5 → 6 → 7 → 9). Blocker B3 is
+therefore **withdrawn as unreproducible**.
 
 ### 5.2 RUN 3 — controlled no-effect + bounded recovery — **PASS**
 
@@ -183,44 +188,65 @@ Computed by the real PrivAgent pipeline against real Chrome perception:
 
 ---
 
-## 6. Blockers (exact, with locations)
+## 6. Blocker status (exact, with locations)
 
-### STAGE7-B1 — Live service-worker perception strips every interactive control
-
-- **Where:** `extension/src/background/serviceWorker.ts:570` (`minimizeAgentContext`)
-  → `extension/src/privacy/contextMinimizer.ts:196-203`
-  → `extension/src/privacy/privacyDecision.ts:80` (`CATEGORY_POLICY`)
-- **Measured (real Google):** raw scan 200+ detections → M8-minimized context
-  contains **0 interactive detections**; every `input`/`button`/`link` is dropped
-  as `policy_fail_closed`.
-- **Why:** `EXPORTABLE_TYPES`/the policy table only register sensitive entity
-  categories. Interactive categories are unregistered, so the policy fails closed.
-- **Why not fixed here:** registering interactive categories widens the metadata
-  that may reach remote reasoning. That is a privacy-posture decision, not wiring.
-
-### STAGE7-B2 — Real Google: the reasoner never sees the search input
+### STAGE7-B2 — CONFIRMED: the 2 KB planner budget hides the real Google Search control
 
 - **Where:** `extension/src/hierarchicalPlanning/plannerContextBuilder.ts:25`
   (`TARGET_PLANNER_CONTEXT_BUDGET_BYTES = 2048`) and `rankDetections()` (line 93+)
-- **Measured (real Google):** the reasoner context exposed **6 detections, all
-  buttons**; the search input was ranked out by the byte budget, so Gate 1 could
-  never ground it. Task "Open Google and search cats" therefore cannot complete
-  on real Google as configured.
-- **Why not fixed here:** affordance ranking/budget priority for large real pages
-  is a perception-priority design decision.
+- **Measured on real Google, this run:** the raw content-script scan produced 14
+  detections; the reasoner context the loop actually received contained only 4:
 
-### STAGE7-B3 — Perception is rejected as stale after every real navigation
+  ```
+  button:#gbqfbb        (I'm Feeling Lucky)
+  button:input[name="btnI"]  (I'm Feeling Lucky variant)
+  input:#ti6dpd          (the real search box — present)
+  link:a.w5hRs
+  ```
 
-- **Where:** `extension/src/agent/agentLoop.ts` (`normalizePerceptionResult`
-  generation guard) + `extension/src/content/contentScript.ts`
-  (`currentPageGeneration` is per-document)
-- **Measured (local search page):** perceptions at generations 3 and 4 on the
-  first document; after the real navigation to `/results?q=cats` the content
-  script restarted at generation 2, the guard rejected it as stale, and the loop
-  failed closed with "Perception failed: Unable to obtain sanitized page context."
-- **Why not fixed here:** the generation guard is a stale-target security
-  control. Making it survive real navigation changes a security-relevant
-  lifecycle and must be an explicit decision.
+  The genuine "Google Search" control (`input[name="btnK"]`) was ranked out by
+  the byte budget. The agent therefore typed into the real search box
+  (`VALUE_STATE_CHANGED`), clicked a real Google button
+  (`URL_NAVIGATION_OBSERVED`) and landed on a real result page
+  (`https://en.wikipedia.org/wiki/Cat` via "I'm Feeling Lucky").
+- **Why the run is not `SUCCESS`:** goal verification correctly refuses to certify
+  it — the observed URL is a result page, not a search-results URL with a `q`
+  parameter. The verifier is behaving correctly; the reasoner was never given the
+  control that would have produced a SERP.
+- **Why not fixed here:** the 2 KB bound is a deliberate, documented contract
+  (`plannerContextBuilder.ts:7`) with its own acceptance test
+  (`tests/hierarchicalPlanningAcceptance.test.ts:143`). Raising it changes an
+  agreed prompt-size budget to make a demo pass, which is a design decision, not
+  a wiring fix. Note the builder already preserves capability diversity
+  ("never eliminate an entire interaction capability"), which is why an input and
+  buttons survive — it just cannot preserve *which* button.
+
+### STAGE7-B1 — WITHDRAWN: interactive controls are not stripped
+
+The earlier claim that `minimizeAgentContext()` drops every interactive control
+was **not reproducible**. The current real-browser measurement on the Google page
+is:
+
+| Stage | Detections |
+|---|---|
+| Raw content-script scan | 14 |
+| M4 sanitized payload (`buildAgentPayload`) | 14 |
+| M8 minimized context (`minimizeAgentContext`) | 14 |
+| Interactive detections surviving minimization | 14 |
+| Dropped | none |
+
+Direct module checks confirm every interactive category
+(`button`, `link`, `input`, `search`, `select`, `form`, `heading`, `element`) and
+every sensitive category survives minimization. The live service-worker
+perception configuration is therefore **not blocking** (`blocking: false`).
+
+### STAGE7-B3 — WITHDRAWN: post-navigation perception is not stale
+
+A direct probe of the real content script showed the page generation is
+monotonic across a real form navigation driven by the extension itself
+(`wm` 3 → 5 → 6 → 8; `sessionStorage` 4 → 5 → 6 → 7 → 9), and world model,
+active ref and semantic context all agree on the same generation. The single
+earlier `FAILED` run did not reproduce in subsequent runs.
 
 ---
 
@@ -234,7 +260,15 @@ Computed by the real PrivAgent pipeline against real Chrome perception:
   goal verification all execute against a real page.
 - Real Chrome: bounded recovery from a genuine no-effect click works end to end
   and re-enters the full security pipeline.
+- Real Chrome: a complete, `SUCCESS`-terminated run — perception → world model →
+  semantic understanding → planner → reasoning → all Stage 5 gates → real
+  dispatch → effect verification → goal verification, certified against the real
+  observed URL.
+- Real Chrome on real Google: the agent typed into the real Google search box and
+  dispatched a real submit; only the control ranking stopped it from reaching a
+  SERP (B2).
 
-What does not work today is the **live service-worker wiring** (B1), **large real
-pages** (B2), and **post-navigation perception** (B3). Each requires an explicit
-decision and none was taken unilaterally.
+What does not work today is a single thing: on a large real page the 2 KB planner
+context budget can rank out the one specific control the task needs (B2). The
+decision needed is whether to raise that documented budget, or to change how
+affordances are ranked inside it. Nothing else was changed unilaterally.
