@@ -135,6 +135,9 @@ export interface StepRecord {
   currentPageGeneration?: number;
   pageType?: PageCategory;
   semanticContext?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
+  effectVerified?: boolean;
+  effectStatus?: import('./effectVerifier').EffectStatus;
+  effectDetails?: string;
 }
 
 export interface TaskState {

@@ -172,13 +172,13 @@ describe('PrivAgent Stage 5: Authoritative Fail-Closed Security Action Pipeline'
 
     const state = await loop.runTask('Search cats');
     expect(executedActions.length).toBe(2);
-    expect(executedActions[0].action).toBe('type');
-    expect((executedActions[0] as any).target).toBe('search-input');
-    expect((executedActions[0] as any).text).toBe('cats');
-    expect(executedActions[1].action).toBe('click');
-    expect((executedActions[1] as any).target).toBe('search-button');
-    expect(state.steps[0].executionSuccess).toBe(true);
-    expect(state.steps[1].executionSuccess).toBe(true);
+    expect(executedActions[0]?.action).toBe('type');
+    expect((executedActions[0] as any)?.target).toBe('search-input');
+    expect((executedActions[0] as any)?.text).toBe('cats');
+    expect(executedActions[1]?.action).toBe('click');
+    expect((executedActions[1] as any)?.target).toBe('search-button');
+    expect(state.steps[0]?.executionSuccess).toBe(true);
+    expect(state.steps[1]?.executionSuccess).toBe(true);
   });
 
   // 2. Invalid action -> blocked
@@ -491,7 +491,7 @@ describe('PrivAgent Stage 5: Authoritative Fail-Closed Security Action Pipeline'
         authorizedAction: { action: 'execute_code', code: 'malicious()' },
         validTarget: 'non-existent-element',
       },
-      scope: { origin: 'https://example.com' },
+      scope: { origin: 'https://example.com', siteKey: 'example.com' },
       trustLevel: MemoryTrustLevel.CURRENT_VERIFIED_OBSERVATION,
       provenance: { source: 'ACTION_RESULT', timestamp: Date.now() },
       confidence: 1.0,

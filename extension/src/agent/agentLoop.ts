@@ -55,9 +55,17 @@ import {
   SubGoalItem,
   CandidateProductItem,
   ExpectedStateChange,
+  FailureRecord,
   createAgentTaskState,
   advancePageGeneration,
 } from './agentState';
+import {
+  verifyActionEffect,
+  PreActionSnapshot,
+  PostActionSnapshot,
+  ActionEffectResult,
+  EffectStatus,
+} from './effectVerifier';
 import { parseUserGoal } from './goalParser';
 import { verifyTaskGoal } from './goalVerifier';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
@@ -77,6 +85,7 @@ import {
   Subgoal,
   SubgoalGraphData,
   PlanningEngineState,
+  DynamicReplanner,
 } from '../hierarchicalPlanning';
 import {
   WorkingMemoryManager,
@@ -111,7 +120,24 @@ export interface AgentLoopCallbacks {
    */
   executeAction: (
     action: BrowserAction
-  ) => Promise<{ success: boolean; error?: string; message?: string }>;
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+    message?: string;
+    postSnapshot?: PostActionSnapshot;
+    effect?: ActionEffectResult;
+    noEffect?: boolean;
+    inert?: boolean;
+    domMutated?: boolean;
+    urlChanged?: string;
+    focusChanged?: boolean;
+    scrollDelta?: number;
+  }>;
+
+  /**
+   * Optional snapshot provider for pre/post action state.
+   */
+  getEffectSnapshot?: () => Promise<PreActionSnapshot | PostActionSnapshot>;
 
   /**
    * Optional progress listener called after every step.
@@ -1023,7 +1049,23 @@ export class AgentLoop {
       };
 
       console.info('[AgentTrace] executeAction started');
-      // 5. Execute
+      // 5. Pre-Action Snapshot for Effect Verification
+      const preSnapshot: PreActionSnapshot = (this.callbacks.getEffectSnapshot ? await this.callbacks.getEffectSnapshot() : null) ?? {
+        url: context.url || this.state.currentUrl || '',
+        scrollX: 0,
+        scrollY: 0,
+        domElementCount: (context as any).totalElementsScanned ?? (context as any).total_elements_scanned ?? context.detections?.length ?? 0,
+        openModalsCount: ((context as any).semanticGroups || (context as any).semantic_groups)?.filter((g: any) => g.type === 'modal_overlay').length ?? 0,
+        targetValueLength: 'target' in action && typeof (action as any).target === 'string'
+          ? (context.detections?.find((d) => d.id === (action as any).target || d.selector === (action as any).target)?.length ?? 0)
+          : 0,
+        activeElementSelector: 'target' in action && typeof (action as any).target === 'string'
+          ? context.detections?.find((d) => d.id === (action as any).target || d.selector === (action as any).target)?.selector
+          : undefined,
+        timestamp: Date.now(),
+      };
+
+      // 6. Execute
       this.provider.resetEscalation?.();
       let execResult = await this.callbacks.executeAction(action);
       console.info('[AgentTrace] executeAction response received');
@@ -1032,11 +1074,6 @@ export class AgentLoop {
 
       if (this.planStateMachine && this.planStateMachine.getState() === 'CHROME_EXECUTION') {
         this.planStateMachine.registerExecutionResult(execResult.success, 'PRIVAGENT_ACTION', execResult.error);
-        this.state.planningEngineState = this.planStateMachine.getState();
-      }
-
-      if (this.planStateMachine && this.planStateMachine.getState() === 'EFFECT_VERIFICATION') {
-        this.planStateMachine.registerEffectVerification(execResult.success, execResult.error);
         this.state.planningEngineState = this.planStateMachine.getState();
       }
 
@@ -1147,7 +1184,231 @@ export class AgentLoop {
         continue;
       }
 
-      // 9. Successful action execution
+      // 7. Authoritative Effect Verification
+      let postSnapshot: PostActionSnapshot | undefined = (execResult as any).postSnapshot;
+      if (!postSnapshot && this.callbacks.getEffectSnapshot) {
+        postSnapshot = await this.callbacks.getEffectSnapshot();
+      }
+      if (!postSnapshot) {
+        const targetId = 'target' in action ? (action as any).target : undefined;
+        const isNoEffectDeclared = (execResult as any).noEffect === true || (execResult as any).inert === true;
+
+        if (isNoEffectDeclared) {
+          postSnapshot = {
+            ...preSnapshot,
+            timestamp: Date.now(),
+          };
+        } else {
+          let newUrl = preSnapshot.url;
+          let newDomCount = preSnapshot.domElementCount ?? 0;
+          let newModalsCount = preSnapshot.openModalsCount ?? 0;
+          let newScrollY = preSnapshot.scrollY;
+          let newScrollX = preSnapshot.scrollX;
+          let newValLen = preSnapshot.targetValueLength ?? 0;
+          let newActiveSelector = preSnapshot.activeElementSelector;
+
+          if (action.action === 'navigate') {
+            newUrl = action.url;
+          } else if (action.action === 'scroll') {
+            const delta = (execResult as any).scrollDelta ?? (action.amount || 250);
+            newScrollY += action.direction === 'down' ? delta : -delta;
+          } else if (action.action === 'type') {
+            newValLen = (action.text || '').length;
+            newActiveSelector = targetId;
+          } else if (action.action === 'click') {
+            if ((execResult as any).urlChanged) {
+              newUrl = (execResult as any).urlChanged;
+            } else if ((execResult as any).domMutated) {
+              newDomCount += 1;
+            } else if ((execResult as any).modalsChanged) {
+              newModalsCount += 1;
+            } else {
+              newActiveSelector = targetId;
+            }
+          } else if (action.action === 'select') {
+            newValLen = (action.option || '').length;
+            newActiveSelector = targetId;
+          }
+
+          postSnapshot = {
+            url: newUrl,
+            scrollX: newScrollX,
+            scrollY: newScrollY,
+            domElementCount: newDomCount,
+            openModalsCount: newModalsCount,
+            targetValueLength: newValLen,
+            activeElementSelector: newActiveSelector,
+            timestamp: Date.now(),
+          };
+        }
+      }
+
+      const effectResult: ActionEffectResult = (execResult as any).effect ?? verifyActionEffect(action, preSnapshot, postSnapshot);
+
+      if (this.planStateMachine && this.planStateMachine.getState() === 'EFFECT_VERIFICATION') {
+        this.planStateMachine.registerEffectVerification(effectResult.hasEffect, effectResult.details);
+        this.state.planningEngineState = this.planStateMachine.getState();
+      }
+
+      if (!effectResult.hasEffect) {
+        console.warn('[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT', {
+          status: effectResult.status,
+          details: effectResult.details,
+        });
+        this.state.lastActionResult = { success: false, error: effectResult.details || 'ACTION_NO_EFFECT' };
+        this.state.retryCount++;
+        this.state.failureCount++;
+
+        const failureRecord: FailureRecord = {
+          category: 'ACTION_NO_EFFECT',
+          reason: effectResult.details || `Action '${action.action}' produced no observable effect.`,
+          pageGeneration: this.state.currentPageGeneration,
+          attemptedAction: action,
+          recoveryAttempted: true,
+          finalState: 'IN_PROGRESS',
+          timestamp: Date.now(),
+        };
+        this.state.lastFailure = failureRecord;
+        if (!this.state.failureHistory) this.state.failureHistory = [];
+        this.state.failureHistory.push(failureRecord);
+
+        try {
+          await FailureMemoryManager.write({
+            id: `fail-noeffect-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            class: 'FAILURE',
+            scope: siteScope,
+            trustLevel: MemoryTrustLevel.HIGH_CONFIDENCE_MEMORY,
+            provenance: { source: 'ACTION_RESULT', timestamp: Date.now(), subgoalId: activeSubgoal?.id, actionType: action.action },
+            confidence: 1.0,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            failureType: 'NO_EFFECT',
+            contextCategory: (this.state.pageType as any) || 'unknown',
+            recoveryAttempted: 'DYNAMIC_REPLANNING',
+            recoveryResult: 'FAILURE',
+          });
+        } catch (e) {}
+
+        if (activeSubgoal && this.subgoalGraph) {
+          this.subgoalGraph.failSubgoal(activeSubgoal.id, effectResult.details);
+          this.state.subgoalGraphData = this.subgoalGraph.toData();
+        }
+
+        this.recordStep(
+          action,
+          true,
+          validation.reason,
+          false,
+          effectResult.details,
+          targetDet?.type,
+          risk,
+          semantic,
+          confidence,
+          healingResult,
+          false,
+          effectResult.status,
+          effectResult.details
+        );
+
+        tracer.recordStep({
+          step: this.state.currentStep,
+          goal: task,
+          proposedAction: action,
+          riskAssessment: {
+            riskLevel: risk.level,
+            score: risk.score,
+            requiresConfirmation: risk.requiresUserConfirmation,
+          },
+          structuralValidation: {
+            passed: true,
+            reason: validation.reason,
+          },
+          semanticVerification: {
+            verified: semantic.verified,
+            confidence: semantic.confidence,
+            alignment: semantic.targetAlignment,
+            reason: semantic.reason || 'Effect verification failed',
+          },
+          confidenceEvaluation: {
+            confidenceScore: confidence.confidenceScore,
+            directive: confidence.directive,
+            explanation: confidence.explanation,
+          },
+          executionResult: {
+            success: false,
+            error: effectResult.details,
+          },
+          finalOutcome: 'FAILED',
+        });
+        this.state.decisionTraceSummary = tracer.getSummary();
+        this.notifyProgress();
+
+        if (this.state.retryCount > this.maxRetries) {
+          failureRecord.finalState = 'FAILED';
+          const exhaustedRecord: FailureRecord = {
+            category: 'RECOVERY_EXHAUSTED',
+            reason: `Recovery limit exceeded (${this.maxRetries} retries). Action produced no observable effect: ${effectResult.details}`,
+            pageGeneration: this.state.currentPageGeneration,
+            attemptedAction: action,
+            recoveryAttempted: true,
+            finalState: 'FAILED',
+            timestamp: Date.now(),
+          };
+          this.state.lastFailure = exhaustedRecord;
+          this.state.failureHistory.push(exhaustedRecord);
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = exhaustedRecord.reason;
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+          break;
+        }
+
+        // Bounded Recovery Trigger:
+        this.state.recoveryCount++;
+        advancePageGeneration(this.state);
+        this.state.currentPageGeneration = this.state.perceptionGeneration;
+
+        if (this.subgoalGraph && this.hierarchicalGoal) {
+          DynamicReplanner.replan({
+            graph: this.subgoalGraph,
+            goal: this.hierarchicalGoal,
+            failedSubgoal: activeSubgoal,
+            trigger: 'ACTION_NO_EFFECT',
+            triggerReason: effectResult.details,
+            replanCount: this.state.recoveryCount,
+          });
+          this.state.subgoalGraphData = this.subgoalGraph.toData();
+        }
+
+        if (this.state.plan) {
+          const diag = diagnoseFailureAndReplan(this.state.plan, action, effectResult.details, context);
+          if (diag.canRecover) {
+            this.state.plan.recoveryAttempts++;
+          }
+        }
+
+        // Re-perceive the page before retry
+        console.info('[AgentTrace] re-perceiving page after no-effect');
+        const freshPerception = await this.callbacks.perceivePage();
+        if (freshPerception) {
+          const normalized = this.normalizePerceptionResult(freshPerception);
+          if (normalized) {
+            context = normalized.context;
+            worldModel = normalized.worldModel;
+            semanticContext = normalized.semanticContext;
+          }
+        }
+
+        await this.delay(this.delayBetweenStepsMs);
+        continue;
+      }
+
+      // 8. Successful Action Execution + Verified Effect
+      console.info('[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED', {
+        status: effectResult.status,
+        details: effectResult.details,
+      });
+      this.state.lastActionResult = { success: true };
       this.state.retryCount = 0; // Reset retry count after success
       this.state.previousActions.push(action);
       this.state.recentActions.push(action);
@@ -1246,7 +1507,10 @@ export class AgentLoop {
         risk,
         semantic,
         confidence,
-        healingResult
+        healingResult,
+        true,
+        effectResult.status,
+        effectResult.details
       );
       tracer.recordStep({
         step: this.state.currentStep,
@@ -1492,6 +1756,9 @@ export class AgentLoop {
   }
 
   private isTaskGoalSatisfied(task: string, state: AgentTaskState, context: AgentContextPayload): boolean {
+    if (state.lastActionResult && !state.lastActionResult.success) {
+      return false;
+    }
     const res = verifyTaskGoal(task, state, context);
     if (res.satisfied) {
       state.goalStatus = 'SUCCESS';
@@ -1513,7 +1780,10 @@ export class AgentLoop {
     riskAssessment?: ActionRiskAssessment,
     semanticVerification?: SemanticVerificationResult,
     confidenceEvaluation?: ConfidenceEvaluation,
-    selfHealing?: SelfHealingResult
+    selfHealing?: SelfHealingResult,
+    effectVerified?: boolean,
+    effectStatus?: EffectStatus,
+    effectDetails?: string
   ): void {
     const record: StepRecord = {
       step: this.state.currentStep,
@@ -1534,6 +1804,9 @@ export class AgentLoop {
       currentPageGeneration: this.state.currentPageGeneration,
       pageType: this.state.pageType,
       semanticContext: this.state.semanticContext,
+      effectVerified,
+      effectStatus,
+      effectDetails,
     };
     this.state.steps.push(record);
   }
