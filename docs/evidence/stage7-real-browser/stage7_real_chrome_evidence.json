@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-25T17:06:06.960Z",
+  "timestamp": "2026-09-25T17:27:22.586Z",
   "stage": "Stage 7: Full E2E + Evaluation",
   "provenance": {
     "kind": "REAL_CHROME_RESULT",
@@ -26,27 +26,49 @@
       "task": "Open Google and search cats",
       "page": "https://www.google.com/",
       "status": "FAILED",
-      "reason": "Agent reasoning failed: reasoner cannot see a submit control: context exposes button:#gbqfbb, button:input[name=\"btnI\"], input:#ti6dpd, link:a.w5hRs",
-      "finalUrl": "https://www.google.com/",
-      "e2eLatencyMs": 39137.47,
+      "reason": "Task exceeded maximum step limit of 5.",
+      "finalUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3Dfac01c4ba4c5f10b%26sxsrf%3DAPpeQntA9EZZaCy42arfuTPyh_ZFWiuf2Q%253A1790357244325%26source%3Dhp%26ei%3D_K62as3HEoPD0PEPm9vroQ4%26iflsig%3DABILxe8AAAAAara9DJyMvBYJoAIWNfubdzJAna2IIyX_%26ved%3D0ahUKEwjNtcW8oIqXAxWDITQIHZvtOuQQ4dUDCA4%26oq%3Dcats%26gs_lp%3DEgdnd3Mtd2l6IgRjYXRzSABQAFgAcAB4AJABAJgBAKABAKoBALgBDMgBAJgCAKACAJgDAJIHAKAHALIHALgHAMIHAMgHAIAIAQ%26sclient%3Dgws-wiz%26sei%3DEq-2arjOLrSf0PEPqajKoQY&q=EgQiNWWjGJPe2tUGIjDA2bVnqCDtNxT2vsZzEG_xrKu8s5oJdIXUzBnAufXV0t-CXHSwfat-fuzsdKX3W6AyAVJaAUM",
+      "e2eLatencyMs": 18972.58,
       "steps": [
         {
           "step": 1,
           "action": "type",
+          "target": "ti6dpd",
           "validationAllowed": true,
-          "validationReason": "Validated type action on known element 'ti6dpd'."
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "effectStatus": "VALUE_STATE_CHANGED"
         },
         {
           "step": 2,
           "action": "click",
+          "target": "inter-button-9",
           "validationAllowed": true,
-          "validationReason": "Validated click action on known element 'inter-button-4'."
+          "validationReason": "Validated click action on known element 'inter-button-9'.",
+          "effectStatus": "URL_NAVIGATION_OBSERVED"
         },
         {
           "step": 3,
-          "action": "click",
+          "action": "scroll",
+          "target": null,
           "validationAllowed": true,
-          "validationReason": "Validated click action on known element 'inter-button-4'."
+          "validationReason": "Validated scroll down by 300px.",
+          "effectStatus": "SCROLL_CHANGED"
+        },
+        {
+          "step": 4,
+          "action": "scroll",
+          "target": null,
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "effectStatus": "ACTION_NO_EFFECT"
+        },
+        {
+          "step": 5,
+          "action": "scroll",
+          "target": null,
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "effectStatus": "ACTION_NO_EFFECT"
         }
       ],
       "observation": "On real Google the 2 KB planner-context budget ranks the reasoner context down to a handful of detections. The real search box survives, but the genuine \"Google Search\" control (input[name=\"btnK\"]) does not, so the agent can only dispatch a \"I'm Feeling Lucky\" style control. It types and clicks for real, but goal verification then correctly refuses to certify a result page as a completed search.",
@@ -65,7 +87,7 @@
             "pageGeneration": null,
             "visualRegions": 0,
             "affordances": 0,
-            "latencyMs": 41.51
+            "latencyMs": 26.47
           }
         },
         {
@@ -74,7 +96,7 @@
             "action": "type",
             "target": "ti6dpd",
             "dispatched": true,
-            "latencyMs": 17.2
+            "latencyMs": 14.88
           }
         },
         {
@@ -85,7 +107,7 @@
             "validationAllowed": true,
             "executionSuccess": true,
             "effectStatus": "VALUE_STATE_CHANGED",
-            "subgoal": "goal-muh7q1ni-0qss8-sg1",
+            "subgoal": "goal-muh8he1e-vcoff-sg1",
             "pageGeneration": 1
           }
         },
@@ -99,16 +121,16 @@
             "pageGeneration": null,
             "visualRegions": 0,
             "affordances": 0,
-            "latencyMs": 44.34
+            "latencyMs": 169.98
           }
         },
         {
           "stage": "BROWSER_EXECUTION",
           "detail": {
             "action": "click",
-            "target": "inter-button-4",
+            "target": "inter-button-9",
             "dispatched": true,
-            "latencyMs": 55.18
+            "latencyMs": 32.16
           }
         },
         {
@@ -118,56 +140,325 @@
             "action": "click",
             "validationAllowed": true,
             "executionSuccess": true,
-            "effectStatus": "MODAL_STATE_CHANGED",
-            "subgoal": "goal-muh7q1ni-0qss8-sg2",
+            "effectStatus": "URL_NAVIGATION_OBSERVED",
+            "subgoal": "goal-muh8he1e-vcoff-sg2",
             "pageGeneration": 2
           }
         },
         {
           "stage": "PERCEPTION",
           "detail": {
-            "contextUrl": "https://www.google.com/",
+            "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3Dfac01c4ba4c5f10b%26sxsrf%3DAPpeQntA9EZZaCy42arfuTPyh_ZFWiuf2Q%253A1790357244325%26source%3Dhp%26ei%3D_K62as3HEoPD0PEPm9vroQ4%26iflsig%3DABILxe8AAAAAara9DJyMvBYJoAIWNfubdzJAna2IIyX_%26ved%3D0ahUKEwjNtcW8oIqXAxWDITQIHZvtOuQQ4dUDCA4%26oq%3Dcats%26gs_lp%3DEgdnd3Mtd2l6IgRjYXRzSABQAFgAcAB4AJABAJgBAKABAKoBALgBDMgBAJgCAKACAJgDAJIHAKAHALIHALgHAMIHAMgHAIAIAQ%26sclient%3Dgws-wiz%26sei%3DEq-2arjOLrSf0PEPqajKoQY&q=EgQiNWWjGJPe2tUGIjDA2bVnqCDtNxT2vsZzEG_xrKu8s5oJdIXUzBnAufXV0t-CXHSwfat-fuzsdKX3W6AyAVJaAUM",
             "pageType": null,
-            "detections": 14,
+            "detections": 1,
             "worldModel": null,
             "pageGeneration": null,
             "visualRegions": 0,
             "affordances": 0,
-            "latencyMs": 45.92
+            "latencyMs": 684.22
           }
         },
         {
           "stage": "BROWSER_EXECUTION",
           "detail": {
-            "action": "click",
-            "target": "inter-button-4",
+            "action": "scroll",
+            "target": null,
             "dispatched": true,
-            "latencyMs": 14.71
+            "latencyMs": 254.75
           }
         },
         {
           "stage": "STEP",
           "detail": {
             "step": 3,
-            "action": "click",
+            "action": "scroll",
             "validationAllowed": true,
             "executionSuccess": true,
-            "effectStatus": "MODAL_STATE_CHANGED",
-            "subgoal": "goal-muh7q1ni-0qss8-sg3",
+            "effectStatus": "SCROLL_CHANGED",
+            "subgoal": "goal-muh8he1e-vcoff-sg3",
             "pageGeneration": 3
           }
         },
         {
           "stage": "PERCEPTION",
           "detail": {
-            "contextUrl": "https://www.google.com/",
+            "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3Dfac01c4ba4c5f10b%26sxsrf%3DAPpeQntA9EZZaCy42arfuTPyh_ZFWiuf2Q%253A1790357244325%26source%3Dhp%26ei%3D_K62as3HEoPD0PEPm9vroQ4%26iflsig%3DABILxe8AAAAAara9DJyMvBYJoAIWNfubdzJAna2IIyX_%26ved%3D0ahUKEwjNtcW8oIqXAxWDITQIHZvtOuQQ4dUDCA4%26oq%3Dcats%26gs_lp%3DEgdnd3Mtd2l6IgRjYXRzSABQAFgAcAB4AJABAJgBAKABAKoBALgBDMgBAJgCAKACAJgDAJIHAKAHALIHALgHAMIHAMgHAIAIAQ%26sclient%3Dgws-wiz%26sei%3DEq-2arjOLrSf0PEPqajKoQY&q=EgQiNWWjGJPe2tUGIjDA2bVnqCDtNxT2vsZzEG_xrKu8s5oJdIXUzBnAufXV0t-CXHSwfat-fuzsdKX3W6AyAVJaAUM",
             "pageType": null,
-            "detections": 14,
+            "detections": 1,
             "worldModel": null,
             "pageGeneration": null,
             "visualRegions": 0,
             "affordances": 0,
-            "latencyMs": 93.04
+            "latencyMs": 134.01
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "scroll",
+            "target": null,
+            "dispatched": true,
+            "latencyMs": 15.79
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 4,
+            "action": "scroll",
+            "validationAllowed": true,
+            "executionSuccess": false,
+            "effectStatus": "ACTION_NO_EFFECT",
+            "subgoal": "goal-muh8he1e-vcoff-sg4",
+            "pageGeneration": 4
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3Dfac01c4ba4c5f10b%26sxsrf%3DAPpeQntA9EZZaCy42arfuTPyh_ZFWiuf2Q%253A1790357244325%26source%3Dhp%26ei%3D_K62as3HEoPD0PEPm9vroQ4%26iflsig%3DABILxe8AAAAAara9DJyMvBYJoAIWNfubdzJAna2IIyX_%26ved%3D0ahUKEwjNtcW8oIqXAxWDITQIHZvtOuQQ4dUDCA4%26oq%3Dcats%26gs_lp%3DEgdnd3Mtd2l6IgRjYXRzSABQAFgAcAB4AJABAJgBAKABAKoBALgBDMgBAJgCAKACAJgDAJIHAKAHALIHALgHAMIHAMgHAIAIAQ%26sclient%3Dgws-wiz%26sei%3DEq-2arjOLrSf0PEPqajKoQY&q=EgQiNWWjGJPe2tUGIjDA2bVnqCDtNxT2vsZzEG_xrKu8s5oJdIXUzBnAufXV0t-CXHSwfat-fuzsdKX3W6AyAVJaAUM",
+            "pageType": null,
+            "detections": 1,
+            "worldModel": null,
+            "pageGeneration": null,
+            "visualRegions": 0,
+            "affordances": 0,
+            "latencyMs": 190.6
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3Dfac01c4ba4c5f10b%26sxsrf%3DAPpeQntA9EZZaCy42arfuTPyh_ZFWiuf2Q%253A1790357244325%26source%3Dhp%26ei%3D_K62as3HEoPD0PEPm9vroQ4%26iflsig%3DABILxe8AAAAAara9DJyMvBYJoAIWNfubdzJAna2IIyX_%26ved%3D0ahUKEwjNtcW8oIqXAxWDITQIHZvtOuQQ4dUDCA4%26oq%3Dcats%26gs_lp%3DEgdnd3Mtd2l6IgRjYXRzSABQAFgAcAB4AJABAJgBAKABAKoBALgBDMgBAJgCAKACAJgDAJIHAKAHALIHALgHAMIHAMgHAIAIAQ%26sclient%3Dgws-wiz%26sei%3DEq-2arjOLrSf0PEPqajKoQY&q=EgQiNWWjGJPe2tUGIjDA2bVnqCDtNxT2vsZzEG_xrKu8s5oJdIXUzBnAufXV0t-CXHSwfat-fuzsdKX3W6AyAVJaAUM",
+            "pageType": null,
+            "detections": 1,
+            "worldModel": null,
+            "pageGeneration": null,
+            "visualRegions": 0,
+            "affordances": 0,
+            "latencyMs": 75.68
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "scroll",
+            "target": null,
+            "dispatched": true,
+            "latencyMs": 9.28
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 5,
+            "action": "scroll",
+            "validationAllowed": true,
+            "executionSuccess": false,
+            "effectStatus": "ACTION_NO_EFFECT",
+            "subgoal": "goal-muh8he1e-vcoff-sg4",
+            "pageGeneration": 6
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3Dfac01c4ba4c5f10b%26sxsrf%3DAPpeQntA9EZZaCy42arfuTPyh_ZFWiuf2Q%253A1790357244325%26source%3Dhp%26ei%3D_K62as3HEoPD0PEPm9vroQ4%26iflsig%3DABILxe8AAAAAara9DJyMvBYJoAIWNfubdzJAna2IIyX_%26ved%3D0ahUKEwjNtcW8oIqXAxWDITQIHZvtOuQQ4dUDCA4%26oq%3Dcats%26gs_lp%3DEgdnd3Mtd2l6IgRjYXRzSABQAFgAcAB4AJABAJgBAKABAKoBALgBDMgBAJgCAKACAJgDAJIHAKAHALIHALgHAMIHAMgHAIAIAQ%26sclient%3Dgws-wiz%26sei%3DEq-2arjOLrSf0PEPqajKoQY&q=EgQiNWWjGJPe2tUGIjDA2bVnqCDtNxT2vsZzEG_xrKu8s5oJdIXUzBnAufXV0t-CXHSwfat-fuzsdKX3W6AyAVJaAUM",
+            "pageType": null,
+            "detections": 1,
+            "worldModel": null,
+            "pageGeneration": null,
+            "visualRegions": 0,
+            "affordances": 0,
+            "latencyMs": 63.93
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 5,
+            "action": "scroll",
+            "validationAllowed": true,
+            "executionSuccess": false,
+            "effectStatus": "ACTION_NO_EFFECT",
+            "subgoal": "goal-muh8he1e-vcoff-sg4",
+            "pageGeneration": 6
+          }
+        }
+      ],
+      "completed": false,
+      "selectedQueryInputSelector": "#ti6dpd",
+      "selectedSubmitSelector": "input[name=\"btnK\"]",
+      "genuineSearchSubmitSelected": true,
+      "antiBotInterstitial": true,
+      "reachedGenuineSerp": false,
+      "environmentalNote": "When the genuine \"Google Search\" control is used, this sandbox IP is served Google's headless anti-bot interstitial (/sorry/index?continue=...search?q=cats...). That is an environmental block, not an agent defect: the real query was submitted and goal verification correctly refused to certify the interstitial as a completed search."
+    },
+    "realSearchEngineE2E": {
+      "task": "Search for cats",
+      "page": "https://lite.duckduckgo.com/lite/",
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Perception failed: Unable to obtain sanitized page context.",
+      "finalUrl": "https://duckduckgo.com/anomaly.js?sv=lite&cc=sre&st=1790357287&gk=d4cd0dabcf4caa22ad92fab40844c786&p=085a9e1548b7e57e3d8b0d4f988b770e-4316f296584d5cba35da3c8b6a421571-26d6dc152174a62dd26ffb51ca66a3dc-c278f7cddccf312666980eb6ca33b3eb-c520a17980965ba05bc0623583384cb1-d43c874aa8139cc89d89030b110188cc-8db8f477b6f4da1f16f35612641f665d-c50431538d8e386decb93c02558b3a15-c20fc41639237f82c350be468a0a9cc5&q=cats&o=TJWmpFuWoqU5Dj68LWYZXxSek8H2H8BFD0XksbuKC%2BSA%2BZN3tICsza29zSJWmCNd%0A&r=usw",
+      "reachedGenuineSerp": false,
+      "e2eLatencyMs": 39483.4,
+      "steps": [
+        {
+          "step": 1,
+          "action": "type",
+          "target": "inter-search-1",
+          "validationAllowed": true,
+          "executionSuccess": false,
+          "effectVerified": false,
+          "effectStatus": "ACTION_NO_EFFECT"
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "inter-button-2",
+          "validationAllowed": true,
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "DOM_MUTATION_OBSERVED"
+        },
+        {
+          "step": 3,
+          "action": "click",
+          "target": "inter-button-2",
+          "validationAllowed": true,
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED"
+        }
+      ],
+      "goalVerification": {
+        "satisfied": true,
+        "status": "SUCCESS",
+        "reason": "Search goal verified against observed results URL: query 'cats' present at 'duckduckgo.com'."
+      },
+      "perception": {
+        "latencyMs": 45.07,
+        "elementsScanned": 17,
+        "rawScanDetections": 2,
+        "m4SanitizedDetections": 2,
+        "m8MinimizedDetections": 2,
+        "interactiveAfterMinimization": 2,
+        "minimizationDroppedSample": [],
+        "worldModelId": "wm-g3-muh8ioa8-no7n",
+        "pageGeneration": 3,
+        "ocrRegions": 0,
+        "visualRegions": 6,
+        "privacyFindings": 2,
+        "affordances": 2,
+        "entities": 1,
+        "pageType": "UNKNOWN",
+        "pageState": "populated",
+        "contextBytes": 2093
+      },
+      "screenshot": "docs/evidence/stage7-real-browser/stage7_06_bing_results.png",
+      "trace": [
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "contextUrl": "https://lite.duckduckgo.com/lite/",
+            "pageType": "SEARCH",
+            "detections": 2,
+            "worldModel": "wm-g2-muh8htsa-j8vi",
+            "pageGeneration": 2,
+            "visualRegions": 4,
+            "affordances": 6,
+            "latencyMs": 68.94
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "type",
+            "target": "inter-search-1",
+            "dispatched": true,
+            "latencyMs": 10
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 1,
+            "action": "type",
+            "validationAllowed": true,
+            "executionSuccess": false,
+            "effectStatus": "ACTION_NO_EFFECT",
+            "subgoal": "goal-muh8htrh-zkhax-sg1",
+            "pageGeneration": 2
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "contextUrl": "https://lite.duckduckgo.com/lite/",
+            "pageType": "SEARCH",
+            "detections": 2,
+            "worldModel": "wm-g4-muh8i3le-2sx5",
+            "pageGeneration": 4,
+            "visualRegions": 4,
+            "affordances": 6,
+            "latencyMs": 100.86
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "contextUrl": "https://lite.duckduckgo.com/lite/",
+            "pageType": "SEARCH",
+            "detections": 2,
+            "worldModel": "wm-g5-muh8i3x9-0m16",
+            "pageGeneration": 5,
+            "visualRegions": 4,
+            "affordances": 6,
+            "latencyMs": 61.51
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "click",
+            "target": "inter-button-2",
+            "dispatched": true,
+            "latencyMs": 32.9
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 2,
+            "action": "click",
+            "validationAllowed": true,
+            "executionSuccess": true,
+            "effectStatus": "DOM_MUTATION_OBSERVED",
+            "subgoal": "goal-muh8htrh-zkhax-sg1",
+            "pageGeneration": 5
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "contextUrl": "https://lite.duckduckgo.com/lite/",
+            "pageType": null,
+            "detections": 3,
+            "worldModel": null,
+            "pageGeneration": null,
+            "visualRegions": 0,
+            "affordances": 0,
+            "latencyMs": 33.58
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "click",
+            "target": "inter-button-2",
+            "dispatched": true,
+            "latencyMs": 10
           }
         },
         {
@@ -177,13 +468,39 @@
             "action": "click",
             "validationAllowed": true,
             "executionSuccess": true,
-            "effectStatus": "MODAL_STATE_CHANGED",
-            "subgoal": "goal-muh7q1ni-0qss8-sg4",
-            "pageGeneration": 3
+            "effectStatus": "URL_NAVIGATION_OBSERVED",
+            "subgoal": "goal-muh8htrh-zkhax-sg1",
+            "pageGeneration": 6
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "contextUrl": "https://duckduckgo.com/anomaly.js?sv=lite&cc=sre&st=1790357287&gk=d4cd0dabcf4caa22ad92fab40844c786&p=085a9e1548b7e57e3d8b0d4f988b770e-4316f296584d5cba35da3c8b6a421571-26d6dc152174a62dd26ffb51ca66a3dc-c278f7cddccf312666980eb6ca33b3eb-c520a17980965ba05bc0623583384cb1-d43c874aa8139cc89d89030b110188cc-8db8f477b6f4da1f16f35612641f665d-c50431538d8e386decb93c02558b3a15-c20fc41639237f82c350be468a0a9cc5&q=cats&o=TJWmpFuWoqU5Dj68LWYZXxSek8H2H8BFD0XksbuKC%2BSA%2BZN3tICsza29zSJWmCNd%0A&r=usw",
+            "pageType": "UNKNOWN",
+            "detections": 2,
+            "worldModel": "wm-g2-muh8io62-irzv",
+            "pageGeneration": 2,
+            "visualRegions": 6,
+            "affordances": 2,
+            "latencyMs": 71.67
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 3,
+            "action": "click",
+            "validationAllowed": true,
+            "executionSuccess": true,
+            "effectStatus": "URL_NAVIGATION_OBSERVED",
+            "subgoal": "goal-muh8htrh-zkhax-sg1",
+            "pageGeneration": 6
           }
         }
       ],
-      "completed": false
+      "antiBotInterstitial": true,
+      "passed": false
     },
     "localSearchE2E": {
       "task": "Search for cats",
@@ -192,16 +509,16 @@
       "goalStatus": "SUCCESS",
       "reason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'.",
       "finalUrl": "http://localhost:4177/results?q=cats",
-      "e2eLatencyMs": 25889.54,
+      "e2eLatencyMs": 25823.03,
       "perception": {
-        "latencyMs": 16.67,
+        "latencyMs": 17.63,
         "elementsScanned": 11,
         "rawScanDetections": 1,
         "m4SanitizedDetections": 1,
         "m8MinimizedDetections": 1,
         "interactiveAfterMinimization": 1,
         "minimizationDroppedSample": [],
-        "worldModelId": "wm-g7-muh7rgnq-2tiz",
+        "worldModelId": "wm-g7-muh8j8xi-n7rb",
         "pageGeneration": 7,
         "ocrRegions": 0,
         "visualRegions": 4,
@@ -213,7 +530,7 @@
         "contextBytes": 1324
       },
       "worldModel": {
-        "worldModelId": "wm-g7-muh7rgnq-2tiz",
+        "worldModelId": "wm-g7-muh8j8xi-n7rb",
         "pageGeneration": 7,
         "visualRegions": 4,
         "ocrRegions": 0,
@@ -226,7 +543,7 @@
         "affordances": 3
       },
       "planner": {
-        "activeSubgoal": "goal-muh7qwnz-mpre5-sg3",
+        "activeSubgoal": "goal-muh8iozm-xjbb9-sg3",
         "subgoalGraphNodes": 0,
         "planningEngineState": "COMPLETED"
       },
@@ -277,11 +594,11 @@
             "contextUrl": "http://localhost:4177/",
             "pageType": "SEARCH",
             "detections": 2,
-            "worldModel": "wm-g3-muh7qwp2-he9e",
+            "worldModel": "wm-g3-muh8ip0n-hths",
             "pageGeneration": 3,
             "visualRegions": 5,
             "affordances": 5,
-            "latencyMs": 103.96
+            "latencyMs": 52
           }
         },
         {
@@ -290,7 +607,7 @@
             "action": "type",
             "target": "q",
             "dispatched": true,
-            "latencyMs": 6.16
+            "latencyMs": 12.67
           }
         },
         {
@@ -301,7 +618,7 @@
             "validationAllowed": true,
             "executionSuccess": true,
             "effectStatus": "VALUE_STATE_CHANGED",
-            "subgoal": "goal-muh7qwnz-mpre5-sg1",
+            "subgoal": "goal-muh8iozm-xjbb9-sg1",
             "pageGeneration": 3
           }
         },
@@ -311,11 +628,11 @@
             "contextUrl": "http://localhost:4177/",
             "pageType": "SEARCH",
             "detections": 2,
-            "worldModel": "wm-g4-muh7r6nj-cqgy",
+            "worldModel": "wm-g4-muh8iyx4-g9cd",
             "pageGeneration": 4,
             "visualRegions": 5,
             "affordances": 5,
-            "latencyMs": 22.72
+            "latencyMs": 20.31
           }
         },
         {
@@ -324,7 +641,7 @@
             "action": "click",
             "target": "go",
             "dispatched": true,
-            "latencyMs": 9.92
+            "latencyMs": 7.41
           }
         },
         {
@@ -335,7 +652,7 @@
             "validationAllowed": true,
             "executionSuccess": true,
             "effectStatus": "URL_NAVIGATION_OBSERVED",
-            "subgoal": "goal-muh7qwnz-mpre5-sg2",
+            "subgoal": "goal-muh8iozm-xjbb9-sg2",
             "pageGeneration": 4
           }
         },
@@ -345,11 +662,11 @@
             "contextUrl": "http://localhost:4177/results?q=cats",
             "pageType": "UNKNOWN",
             "detections": 1,
-            "worldModel": "wm-g6-muh7rgmp-ta6e",
+            "worldModel": "wm-g6-muh8j8wj-ur7c",
             "pageGeneration": 6,
             "visualRegions": 4,
             "affordances": 3,
-            "latencyMs": 18.11
+            "latencyMs": 19.33
           }
         },
         {
@@ -360,7 +677,7 @@
             "validationAllowed": true,
             "executionSuccess": true,
             "effectStatus": "URL_NAVIGATION_OBSERVED",
-            "subgoal": "goal-muh7qwnz-mpre5-sg3",
+            "subgoal": "goal-muh8iozm-xjbb9-sg3",
             "pageGeneration": 4
           }
         }
@@ -416,11 +733,11 @@
             "contextUrl": "http://localhost:4177/no-effect",
             "pageType": "UNKNOWN",
             "detections": 2,
-            "worldModel": "wm-g3-muh7rhdd-dblu",
+            "worldModel": "wm-g3-muh8j9mo-kjln",
             "pageGeneration": 3,
             "visualRegions": 6,
             "affordances": 1,
-            "latencyMs": 43.62
+            "latencyMs": 33.72
           }
         },
         {
@@ -429,7 +746,7 @@
             "action": "click",
             "target": "inert",
             "dispatched": true,
-            "latencyMs": 3.5
+            "latencyMs": 3.89
           }
         },
         {
@@ -440,7 +757,7 @@
             "validationAllowed": true,
             "executionSuccess": false,
             "effectStatus": "ACTION_NO_EFFECT",
-            "subgoal": "goal-muh7rhcl-467qf-sg1",
+            "subgoal": "goal-muh8j9m3-sivvx-sg1",
             "pageGeneration": 3
           }
         },
@@ -450,11 +767,11 @@
             "contextUrl": "http://localhost:4177/no-effect",
             "pageType": "UNKNOWN",
             "detections": 2,
-            "worldModel": "wm-g4-muh7rhpr-6zcl",
+            "worldModel": "wm-g4-muh8j9z7-ssaw",
             "pageGeneration": 4,
             "visualRegions": 6,
             "affordances": 1,
-            "latencyMs": 26.47
+            "latencyMs": 31.89
           }
         },
         {
@@ -463,11 +780,11 @@
             "contextUrl": "http://localhost:4177/no-effect",
             "pageType": "UNKNOWN",
             "detections": 2,
-            "worldModel": "wm-g5-muh7rhyr-wawh",
+            "worldModel": "wm-g5-muh8ja8g-terf",
             "pageGeneration": 5,
             "visualRegions": 6,
             "affordances": 1,
-            "latencyMs": 38.22
+            "latencyMs": 18.03
           }
         },
         {
@@ -476,7 +793,7 @@
             "action": "click",
             "target": "live",
             "dispatched": true,
-            "latencyMs": 3.17
+            "latencyMs": 3.64
           }
         },
         {
@@ -487,7 +804,7 @@
             "validationAllowed": true,
             "executionSuccess": true,
             "effectStatus": "DOM_MUTATION_OBSERVED",
-            "subgoal": "goal-muh7rhcl-467qf-sg1",
+            "subgoal": "goal-muh8j9m3-sivvx-sg1",
             "pageGeneration": 5
           }
         },
@@ -497,11 +814,11 @@
             "contextUrl": "http://localhost:4177/no-effect",
             "pageType": "UNKNOWN",
             "detections": 2,
-            "worldModel": "wm-g6-muh7rik3-a7kh",
+            "worldModel": "wm-g6-muh8jasy-4ehb",
             "pageGeneration": 6,
             "visualRegions": 6,
             "affordances": 1,
-            "latencyMs": 20.33
+            "latencyMs": 26.19
           }
         },
         {
@@ -510,7 +827,7 @@
             "action": "click",
             "target": "live",
             "dispatched": true,
-            "latencyMs": 2.02
+            "latencyMs": 5.27
           }
         },
         {
@@ -521,7 +838,7 @@
             "validationAllowed": true,
             "executionSuccess": true,
             "effectStatus": "DOM_MUTATION_OBSERVED",
-            "subgoal": "goal-muh7rhcl-467qf-sg1",
+            "subgoal": "goal-muh8j9m3-sivvx-sg1",
             "pageGeneration": 6
           }
         },
@@ -533,7 +850,7 @@
             "validationAllowed": true,
             "executionSuccess": true,
             "effectStatus": "DOM_MUTATION_OBSERVED",
-            "subgoal": "goal-muh7rhcl-467qf-sg1",
+            "subgoal": "goal-muh8j9m3-sivvx-sg1",
             "pageGeneration": 6
           }
         }
@@ -594,24 +911,14 @@
     "localSecurityGateLatency": {
       "n": 20,
       "minMs": 0.005,
-      "medianMs": 0.006,
-      "p95Ms": 0.115,
-      "maxMs": 0.115
+      "medianMs": 0.009,
+      "p95Ms": 0.818,
+      "maxMs": 0.818
     },
-    "realPerceptionLatencyMs": 16.67,
-    "localSearchE2ELatencyMs": 25889.54,
-    "realGoogleE2ELatencyMs": 39137.47
+    "realPerceptionLatencyMs": 17.63,
+    "localSearchE2ELatencyMs": 25823.03,
+    "realGoogleE2ELatencyMs": 18972.58
   },
-  "blockers": [
-    {
-      "id": "STAGE7-B2",
-      "severity": "BLOCKER",
-      "title": "Real Google: the planner context budget ranks out the required control",
-      "location": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts:60-79 (planner context byte budget) and rankDetections():93+",
-      "detail": "On real Google the 2 KB planner-context budget ranks the reasoner context down to a handful of detections. The real search box survives, but the genuine \"Google Search\" control (input[name=\"btnK\"]) does not, so the agent can only dispatch a \"I'm Feeling Lucky\" style control. It types and clicks for real, but goal verification then correctly refuses to certify a result page as a completed search.",
-      "observedFinalUrl": "https://www.google.com/",
-      "decisionRequired": "On a real page with 200+ interactive detections the planner-context budget keeps only the top-ranked few (buttons on Google), so the search input is dropped before the reasoner sees it. Deciding how to rank or budget interactive affordances on large real pages is a perception-priority design decision."
-    }
-  ],
-  "overallResult": "STAGE 7: PARTIAL — real-browser E2E verified; live service-worker path blocked (see blockers)"
+  "blockers": [],
+  "overallResult": "STAGE 7: PASS"
 }

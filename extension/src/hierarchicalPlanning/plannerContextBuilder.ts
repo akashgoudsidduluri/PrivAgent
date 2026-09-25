@@ -42,8 +42,13 @@ export class PlannerContextBuilder {
       ? baseContext.detections.map((d) => ({ ...d }))
       : [];
 
-    // 2. Score and rank detections deterministically based on active subgoal relevance
-    const rankedDetections = this.rankDetections(candidateDetections, goal, activeSubgoal);
+    // 2. Score and rank detections deterministically based on the goal
+    const rankedDetections = this.rankDetections(
+      candidateDetections,
+      goal,
+      activeSubgoal,
+      baseContext.semantic_context
+    );
 
     // 3. Assemble initial context
     const currentContext: AgentContextPayload = {
@@ -123,14 +128,57 @@ export class PlannerContextBuilder {
     return -1;
   }
 
+  /** Deterministic stopwords excluded from goal-token matching. */
+  private static readonly GOAL_STOPWORDS: ReadonlySet<string> = new Set([
+    'the', 'and', 'then', 'for', 'with', 'from', 'into', 'onto', 'this', 'that',
+    'these', 'those', 'please', 'open', 'show', 'go', 'goto', 'navigate', 'click',
+    'on', 'in', 'at', 'to', 'of', 'a', 'an', 'is', 'are', 'it', 'its', 'page',
+    'using', 'use', 'find', 'search', 'look', 'up', 'me', 'my', 'all', 'any',
+  ]);
+
+  /** Deterministic tokens a search-intent goal needs, split on non-alphanumerics. */
+  private static tokenize(text: string): string[] {
+    return text
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((t) => t.length >= 3 && !this.GOAL_STOPWORDS.has(t));
+  }
+
   private static rankDetections(
     detections: AgentDetection[],
     goal: HighLevelGoal,
-    subgoal?: Subgoal
+    subgoal?: Subgoal,
+    semanticContext?: AgentContextPayload['semantic_context']
   ): AgentDetection[] {
+    // ── Deterministic goal profile ───────────────────────────────────────────
+    // Every signal below is derived from data already inside the sanitized
+    // contract: the goal's target entities, its sanitized description, the
+    // active subgoal, and the local semantic understanding. No raw page text,
+    // no OCR, no values.
     const targetTerms: string[] = [];
     if (subgoal?.targetEntity) targetTerms.push(subgoal.targetEntity.toLowerCase());
     for (const ent of goal.targetEntities) targetTerms.push(ent.toLowerCase());
+
+    const goalTokens = new Set<string>([
+      ...targetTerms.flatMap((t) => this.tokenize(t)),
+      ...this.tokenize(goal.sanitizedGoalDescription || ''),
+    ]);
+
+    // Search intent is a property of the goal, not of any single subgoal, so a
+    // NAVIGATE/LOCATE subgoal on the way to a search still ranks the affordance
+    // the task actually needs: the query input.
+    const searchIntent =
+      subgoal?.category === 'SEARCH' || /\bsearch|look\s*up|find\s+information/i.test(
+        `${goal.sanitizedGoalDescription || ''} ${goal.taskCategory || ''}`
+      );
+
+    // Semantic affordances are computed locally and already name the element
+    // they apply to, so they are an exact, deterministic relevance signal.
+    const affordanceTargets = new Set<string>(
+      (semanticContext?.affordances ?? [])
+        .map((a) => a.targetElementId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    );
 
     const expectedAction = subgoal?.expectedActionType;
 
@@ -138,15 +186,45 @@ export class PlannerContextBuilder {
       let score = 0;
       const label = (det.label || '').toLowerCase();
       const type = (det.type || '').toLowerCase();
+      const selector = (det.selector || '').toLowerCase();
+      const id = (det.id || '').toLowerCase();
+      const surface = `${label} ${selector} ${id}`;
 
       // Action type alignment
       if (expectedAction === 'type' && (type === 'search' || type === 'input')) score += 50;
       if (expectedAction === 'click' && (type === 'button' || type === 'link')) score += 40;
 
-      // Entity keyword matches
+      // Entity keyword matches (exact substring, as before)
       for (const term of targetTerms) {
-        if (term && (label.includes(term) || det.selector.toLowerCase().includes(term))) {
+        if (term && (label.includes(term) || selector.includes(term))) {
           score += 60;
+        }
+      }
+
+      // Goal-token overlap: deterministic token-level relevance across the
+      // machine-generated surface (label, selector, id). Capped so one long
+      // label cannot dominate the ranking.
+      let tokenHits = 0;
+      const detTokens = new Set(this.tokenize(surface));
+      for (const token of goalTokens) {
+        if (detTokens.has(token)) tokenHits++;
+      }
+      score += Math.min(tokenHits, 3) * 12;
+
+      // Locally computed semantic affordance: the strongest exact signal.
+      if (affordanceTargets.has(det.id)) score += 35;
+
+      // Search affordance priors. For a search goal the query input is the only
+      // way to express the task, and the submit control is the only way to run
+      // it — both must outrank decorative controls that merely mention the goal
+      // entity in their label.
+      if (searchIntent) {
+        if (type === 'search' || type === 'input') score += 45;
+        else if (
+          (type === 'button' || type === 'link') &&
+          /\bsearch|\bgo\b|submit|find/.test(surface)
+        ) {
+          score += 25;
         }
       }
 
