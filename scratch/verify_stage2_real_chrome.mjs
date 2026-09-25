@@ -280,8 +280,8 @@ async function runStage2Verification() {
   }
   console.log('  -> Dashboard Agent Run button active:', connected);
 
-  // 5. Trigger task in Dashboard: "Open localhost:4174 and find a black backpack"
-  const taskPrompt = "Open localhost:4174 and find a black backpack";
+  // 5. Trigger task in Dashboard: "Open Google and search cats"
+  const taskPrompt = "Open Google and search cats";
   console.log(`\n[5/7] Dispatching task via Dashboard UI: "${taskPrompt}" ...`);
 
   await cdp.evaluate(dashboardTab.sessionId, `
