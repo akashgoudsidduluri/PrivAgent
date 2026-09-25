@@ -188,7 +188,36 @@ export function verifyTaskGoal(
   const lower = task.toLowerCase();
   const currentUrl = context.url || state.currentUrl || '';
 
-  // ── 1. Google Search Goal Verification ────────────────────────────────────
+  // ── 1. Generic Web Search Goal Verification (any search engine) ─────────────
+  // PrivAgent is a GENERAL-PURPOSE browser agent, so search goals are not
+  // Google-specific. Success requires an OBSERVED query in the live URL
+  // (or an already-observed query on a results page). A typed-but-unsubmitted
+  // query is never treated as success.
+  const searchIntent = lower.match(/\bsearch(?:e[ds]?|ing)?\s+(?:for\s+)?["']?([a-z0-9\s-]{2,60}?)["']?(?:\s+on\s+|\s+in\s+|\s+using\s+)?(?:[.?]|$)/);
+  if (searchIntent) {
+    const intent = (searchIntent[1] || '').trim().toLowerCase();
+
+    // Observed in the live URL query string of a search results page
+    try {
+      const u = new URL(currentUrl);
+      const q = (u.searchParams.get('q') || u.searchParams.get('query') || u.searchParams.get('search') || '').trim();
+      if (q.length > 0 && u.pathname.toLowerCase() !== '/' && (intent.length === 0 || q.toLowerCase().includes(intent) || intent.includes(q.toLowerCase()))) {
+        return {
+          satisfied: true,
+          status: 'SUCCESS',
+          reason: `Search goal verified against observed results URL: query '${q}' present at '${u.hostname}'.`,
+        };
+      }
+    } catch {
+      // Non-parsable URL: fall through to the action-history check below.
+    }
+
+    // Otherwise the goal is NOT satisfied. A prior type action alone is
+    // insufficient — the query must be observed in the browser state.
+    return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
+  // ── 1b. Google Search Goal Verification ────────────────────────────────────
   if (
     (lower.includes('search for') || lower.includes('search google')) &&
     /(\.google\.)|(\/\/google\.)/i.test(currentUrl)

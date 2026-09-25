@@ -1,0 +1,506 @@
+{
+  "timestamp": "2026-09-25T16:35:01.465Z",
+  "stage": "Stage 7: Full E2E + Evaluation",
+  "provenance": {
+    "kind": "REAL_CHROME_RESULT",
+    "browser": "Google Chrome for Testing (headless=new) driven over CDP",
+    "perception": "REAL PrivAgent content script in a REAL tab (DOM scan + world model + semantic understanding + visual/OCR regions)",
+    "execution": "REAL PrivAgent content-script action dispatch in the live page",
+    "securityPipeline": "REAL PrivAgent local source (extension/src) bundled and executed locally",
+    "reasoner": "DETERMINISTIC LOCAL SCRIPTED PROPOSER — not a remote LLM. Proposals only; all authority decisions are local.",
+    "synthetic": false
+  },
+  "runs": {
+    "liveServiceWorkerConfiguration": {
+      "page": "https://www.google.com/",
+      "description": "Measures the exact context the live service worker hands to the AgentLoop (serviceWorker.ts:570 applies minimizeAgentContext).",
+      "rawScanDetections": 14,
+      "m4SanitizedDetections": 14,
+      "m8MinimizedDetections": 0,
+      "interactiveDetectionsSurvivingMinimization": 0,
+      "droppedReasonsSample": [
+        "finding-link-1:policy_fail_closed",
+        "finding-link-2:policy_fail_closed",
+        "finding-link-3:policy_fail_closed",
+        "finding-button-4:policy_fail_closed",
+        "finding-link-5:policy_fail_closed"
+      ],
+      "finding": "minimizeAgentContext() exports only categories registered in the M8 transmission policy table (sensitive entities). Interactive categories (input/button/link/...) are not registered and are dropped as policy_fail_closed, so the AgentLoop receives a context with no interactive controls.",
+      "blocking": true
+    },
+    "realGoogleAttempt": {
+      "task": "Open Google and search cats",
+      "page": "https://www.google.com/",
+      "status": "FAILED",
+      "reason": "Agent reasoning failed: reasoner cannot see a search input: context exposes 6 detection(s), types=[\"button\",\"button\",\"button\",\"button\",\"button\",\"button\"]",
+      "finalUrl": "https://www.google.com/",
+      "e2eLatencyMs": 122.54,
+      "steps": [],
+      "observation": "Real Google yields 200+ interactive detections. The live planner-context budget (PlannerContextBuilder) keeps only the highest-ranked few, and on this page those are buttons — the search input is never exposed to the reasoner, so Gate 1 cannot ground it. Recorded as blocker STAGE7-B2.",
+      "screenshots": [
+        "docs/evidence/stage7-real-browser/stage7_01_google_home.png",
+        "docs/evidence/stage7-real-browser/stage7_02_google_attempt.png"
+      ],
+      "trace": [
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "url": null,
+            "detections": 14,
+            "worldModel": null,
+            "pageGeneration": null,
+            "visualRegions": 0,
+            "affordances": 0,
+            "latencyMs": 19.35
+          }
+        }
+      ],
+      "completed": false
+    },
+    "localSearchE2E": {
+      "task": "Search for cats",
+      "page": "http://localhost:4177/",
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Perception failed: Unable to obtain sanitized page context.",
+      "finalUrl": "http://localhost:4177/results?q=cats",
+      "e2eLatencyMs": 25810.61,
+      "perception": {
+        "latencyMs": 17.85,
+        "elementsScanned": 11,
+        "rawScanDetections": 1,
+        "m4SanitizedDetections": 1,
+        "m8MinimizedDetections": 0,
+        "interactiveAfterMinimization": 0,
+        "minimizationDroppedSample": [
+          "finding-link-1:policy_fail_closed"
+        ],
+        "worldModelId": "wm-g3-muh6mmwi-12up",
+        "pageGeneration": 3,
+        "ocrRegions": 0,
+        "visualRegions": 4,
+        "privacyFindings": 1,
+        "affordances": 3,
+        "entities": 0,
+        "pageType": "UNKNOWN",
+        "pageState": "populated",
+        "contextBytes": 1324
+      },
+      "worldModel": {
+        "worldModelId": "wm-g3-muh6mmwi-12up",
+        "pageGeneration": 3,
+        "visualRegions": 4,
+        "ocrRegions": 0,
+        "privacyFindings": 1
+      },
+      "semanticUnderstanding": {
+        "pageType": "UNKNOWN",
+        "pageState": "populated",
+        "entities": 0,
+        "affordances": 3
+      },
+      "planner": {
+        "activeSubgoal": "goal-muh6m2z2-bnq6f-sg2",
+        "subgoalGraphNodes": 0,
+        "planningEngineState": "SUBGOAL_SELECTION"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "type",
+          "target": "q",
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'q'.",
+          "riskLevel": "MEDIUM",
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'q' (length: 4).",
+          "pageGeneration": 3
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "go",
+          "validationAllowed": true,
+          "validationReason": "Validated click action on known element 'go'.",
+          "riskLevel": "LOW",
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "Click on 'go' triggered page navigation to 'http://localhost:4177/results?q=cats'.",
+          "pageGeneration": 4
+        }
+      ],
+      "goalVerification": {
+        "satisfied": true,
+        "status": "SUCCESS",
+        "reason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'."
+      },
+      "goalVerifiedAgainstObservedBrowserState": true,
+      "terminalReason": "Perception failed: Unable to obtain sanitized page context.",
+      "screenshots": [
+        "docs/evidence/stage7-real-browser/stage7_03_local_search.png",
+        "docs/evidence/stage7-real-browser/stage7_04_local_results.png"
+      ],
+      "trace": [
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "url": "SEARCH",
+            "detections": 2,
+            "worldModel": "wm-g3-muh6m2zn-507h",
+            "pageGeneration": 3,
+            "visualRegions": 5,
+            "affordances": 5,
+            "latencyMs": 32.99
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "type",
+            "target": "q",
+            "dispatched": true,
+            "latencyMs": 4.28
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 1,
+            "action": "type",
+            "validationAllowed": true,
+            "executionSuccess": true,
+            "effectStatus": "VALUE_STATE_CHANGED",
+            "subgoal": "goal-muh6m2z2-bnq6f-sg1",
+            "pageGeneration": 3
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "url": "SEARCH",
+            "detections": 2,
+            "worldModel": "wm-g4-muh6mcwk-578z",
+            "pageGeneration": 4,
+            "visualRegions": 5,
+            "affordances": 5,
+            "latencyMs": 17.26
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "click",
+            "target": "go",
+            "dispatched": true,
+            "latencyMs": 15.92
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 2,
+            "action": "click",
+            "validationAllowed": true,
+            "executionSuccess": true,
+            "effectStatus": "URL_NAVIGATION_OBSERVED",
+            "subgoal": "goal-muh6m2z2-bnq6f-sg2",
+            "pageGeneration": 4
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "url": "UNKNOWN",
+            "detections": 1,
+            "worldModel": "wm-g2-muh6mmvl-dl4d",
+            "pageGeneration": 2,
+            "visualRegions": 4,
+            "affordances": 3,
+            "latencyMs": 34.78
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 2,
+            "action": "click",
+            "validationAllowed": true,
+            "executionSuccess": true,
+            "effectStatus": "URL_NAVIGATION_OBSERVED",
+            "subgoal": "goal-muh6m2z2-bnq6f-sg2",
+            "pageGeneration": 4
+          }
+        }
+      ],
+      "passed": false
+    },
+    "recoveryPath": {
+      "page": "http://localhost:4177/no-effect",
+      "task": "Open the working control on the fixture page",
+      "status": "FAILED",
+      "recoveryCount": 1,
+      "failureHistory": [
+        {
+          "category": "ACTION_NO_EFFECT",
+          "reason": "Click on target 'inert' produced no observable URL change, modal, focus shift, or DOM mutation."
+        }
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "action": "click",
+          "target": "inert",
+          "executionSuccess": false,
+          "effectVerified": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Click on target 'inert' produced no observable URL change, modal, focus shift, or DOM mutation."
+        },
+        {
+          "step": 2,
+          "action": "click",
+          "target": "live",
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "DOM_MUTATION_OBSERVED",
+          "effectDetails": "Click on 'live' mutated DOM contents (23 -> 24 elements)."
+        },
+        {
+          "step": 3,
+          "action": "click",
+          "target": "live",
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "DOM_MUTATION_OBSERVED",
+          "effectDetails": "Click on 'live' mutated DOM contents (24 -> 25 elements)."
+        }
+      ],
+      "fixtureOutcomeText": "effect-observed",
+      "screenshot": "docs/evidence/stage7-real-browser/stage7_05_recovery_fixture.png",
+      "trace": [
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "url": "UNKNOWN",
+            "detections": 2,
+            "worldModel": "wm-g3-muh6mnka-3exe",
+            "pageGeneration": 3,
+            "visualRegions": 6,
+            "affordances": 1,
+            "latencyMs": 35.63
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "click",
+            "target": "inert",
+            "dispatched": true,
+            "latencyMs": 3.7
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 1,
+            "action": "click",
+            "validationAllowed": true,
+            "executionSuccess": false,
+            "effectStatus": "ACTION_NO_EFFECT",
+            "subgoal": "goal-muh6mnjo-1u951-sg1",
+            "pageGeneration": 3
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "url": "UNKNOWN",
+            "detections": 2,
+            "worldModel": "wm-g4-muh6mnwr-dbhn",
+            "pageGeneration": 4,
+            "visualRegions": 6,
+            "affordances": 1,
+            "latencyMs": 18.99
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "url": "UNKNOWN",
+            "detections": 2,
+            "worldModel": "wm-g5-muh6mo5n-ip48",
+            "pageGeneration": 5,
+            "visualRegions": 6,
+            "affordances": 1,
+            "latencyMs": 16.57
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "click",
+            "target": "live",
+            "dispatched": true,
+            "latencyMs": 7.88
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 2,
+            "action": "click",
+            "validationAllowed": true,
+            "executionSuccess": true,
+            "effectStatus": "DOM_MUTATION_OBSERVED",
+            "subgoal": "goal-muh6mnjo-1u951-sg1",
+            "pageGeneration": 5
+          }
+        },
+        {
+          "stage": "PERCEPTION",
+          "detail": {
+            "url": "UNKNOWN",
+            "detections": 2,
+            "worldModel": "wm-g6-muh6moq9-z6il",
+            "pageGeneration": 6,
+            "visualRegions": 6,
+            "affordances": 1,
+            "latencyMs": 26.19
+          }
+        },
+        {
+          "stage": "BROWSER_EXECUTION",
+          "detail": {
+            "action": "click",
+            "target": "live",
+            "dispatched": true,
+            "latencyMs": 2.38
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 3,
+            "action": "click",
+            "validationAllowed": true,
+            "executionSuccess": true,
+            "effectStatus": "DOM_MUTATION_OBSERVED",
+            "subgoal": "goal-muh6mnjo-1u951-sg1",
+            "pageGeneration": 6
+          }
+        },
+        {
+          "stage": "STEP",
+          "detail": {
+            "step": 3,
+            "action": "click",
+            "validationAllowed": true,
+            "executionSuccess": true,
+            "effectStatus": "DOM_MUTATION_OBSERVED",
+            "subgoal": "goal-muh6mnjo-1u951-sg1",
+            "pageGeneration": 6
+          }
+        }
+      ],
+      "passed": true
+    },
+    "securityInvariants": {
+      "note": "All decisions below were computed locally by the real PrivAgent pipeline against real Chrome perception.",
+      "invariants": {
+        "rawValuesNeverLeaveDevice": {
+          "firewallViolations": 0,
+          "sanitizedStatus": "sanitized_only",
+          "passed": true
+        },
+        "m5CannotBeBypassed": {
+          "allowed": false,
+          "reason": "Action 'navigate' rejected unsafe or non-web protocol URL: 'javascript:alert(document.cookie)'.",
+          "passed": true
+        },
+        "staleTargetsBlocked": {
+          "grounded": false,
+          "failureReason": "STALE_TARGET",
+          "passed": true
+        },
+        "crossOriginBlocked": {
+          "grounded": false,
+          "failureReason": "UNAUTHORIZED_ORIGIN",
+          "passed": true
+        },
+        "webpageCannotAuthorize": {
+          "pageContainsInjectionText": false,
+          "maliciousActionStillBlocked": true,
+          "passed": true
+        },
+        "privacyPolicyEnforced": {
+          "readSensitiveValueGranted": false,
+          "transmitExternallyGranted": false,
+          "discloseToUserGranted": false,
+          "passed": true
+        },
+        "highRiskRequiresConfirmation": {
+          "riskLevel": "CRITICAL",
+          "requiresUserConfirmation": true,
+          "passed": true
+        },
+        "providerFailsClosed": {
+          "status": "FAILED",
+          "reason": "Agent reasoning failed: simulated provider outage",
+          "passed": true
+        }
+      },
+      "passed": true
+    }
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "measurements": {
+    "provenance": "REAL_CHROME_RESULT — in-process timings measured on the sandbox host during this run; not a user-device benchmark.",
+    "localSecurityGateLatency": {
+      "n": 20,
+      "minMs": 0.005,
+      "medianMs": 0.01,
+      "p95Ms": 0.099,
+      "maxMs": 0.099
+    },
+    "realPerceptionLatencyMs": 17.85,
+    "localSearchE2ELatencyMs": 25810.61,
+    "realGoogleE2ELatencyMs": 122.54
+  },
+  "blockers": [
+    {
+      "id": "STAGE7-B1",
+      "severity": "BLOCKER",
+      "title": "Live service-worker perception strips every interactive control",
+      "location": "extension/src/background/serviceWorker.ts:570 (minimizeAgentContext) → extension/src/privacy/contextMinimizer.ts:196-203 → extension/src/privacy/privacyDecision.ts:80 (CATEGORY_POLICY)",
+      "detail": "minimizeAgentContext() exports only categories registered in the M8 transmission policy table (sensitive entities). Interactive categories (input/button/link/...) are not registered and are dropped as policy_fail_closed, so the AgentLoop receives a context with no interactive controls.",
+      "measured": {
+        "rawScanDetections": 14,
+        "interactiveDetectionsSurvivingMinimization": 0
+      },
+      "decisionRequired": "Registering interactive categories (input/button/link/search/select/form/heading/element) in the M8 transmission policy table is a privacy-posture decision — it widens the metadata that may reach remote reasoning. It was deliberately NOT made unilaterally."
+    },
+    {
+      "id": "STAGE7-B3",
+      "severity": "BLOCKER",
+      "title": "Perception is rejected as stale after every real navigation",
+      "location": "extension/src/agent/agentLoop.ts (normalizePerceptionResult generation guard) + extension/src/content/contentScript.ts (currentPageGeneration is per-document)",
+      "detail": "The content script page-generation counter restarts on every new document, while the AgentLoop keeps a monotonic local counter that it advances across navigation. After the real navigation to http://localhost:4177/results?q=cats the next real perception carries a LOWER generation, so normalizePerceptionResult() rejects the world model as stale and the loop fails closed with \"Perception failed: Unable to obtain sanitized page context.\".",
+      "measured": {
+        "terminalReason": "Perception failed: Unable to obtain sanitized page context.",
+        "goalVerificationStillSatisfied": true
+      },
+      "decisionRequired": "The generation guard is a stale-target security control. Making it survive real navigation (e.g. persisting the page generation per tab) changes a security-relevant lifecycle and must be an explicit decision, not a silent fix."
+    },
+    {
+      "id": "STAGE7-B2",
+      "severity": "BLOCKER",
+      "title": "Real Google: the reasoner never sees the search input",
+      "location": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts:60-79 (planner context byte budget) and rankDetections():93+",
+      "detail": "Real Google yields 200+ interactive detections. The live planner-context budget (PlannerContextBuilder) keeps only the highest-ranked few, and on this page those are buttons — the search input is never exposed to the reasoner, so Gate 1 cannot ground it. Recorded as blocker STAGE7-B2.",
+      "decisionRequired": "On a real page with 200+ interactive detections the planner-context budget keeps only the top-ranked few (buttons on Google), so the search input is dropped before the reasoner sees it. Deciding how to rank or budget interactive affordances on large real pages is a perception-priority design decision."
+    }
+  ],
+  "overallResult": "STAGE 7: FAIL"
+}
