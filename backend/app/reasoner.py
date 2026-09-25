@@ -142,6 +142,8 @@ class ReasonerProvider(Protocol):
         steps_used: int = 0,
         max_steps: int = 10,
         model: Optional[str] = None,
+        page_type: Optional[str] = None,
+        semantic_context: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         ...
 
@@ -184,6 +186,8 @@ def _build_user_prompt(
     history: List[Dict[str, Any]],
     steps_used: int,
     max_steps: int,
+    page_type: Optional[str] = None,
+    semantic_context: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Build the user prompt strictly from allowlisted sanitized fields.
 
@@ -221,6 +225,19 @@ def _build_user_prompt(
         f'User task: "{task}"',
         f"Current page URL: {url}",
     ]
+    if page_type or semantic_context:
+        sem = semantic_context or {}
+        sem_data = {
+            "pageType": page_type or sem.get("pageType", "general"),
+        }
+        if sem.get("pageState"):
+            sem_data["pageState"] = sem["pageState"]
+        if sem.get("entities"):
+            sem_data["entities"] = sem["entities"]
+        if sem.get("affordances"):
+            sem_data["affordances"] = sem["affordances"]
+        parts.append(f"Semantic Understanding (on-device local inference):\n{json.dumps(sem_data, indent=1)}")
+
     if viewport:
         parts.append(f"Viewport: {json.dumps(viewport)}")
     if screenshot_dimensions:
@@ -354,6 +371,8 @@ class OpenRouterReasoner:
         steps_used: int = 0,
         max_steps: int = 10,
         model: Optional[str] = None,
+        page_type: Optional[str] = None,
+        semantic_context: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request. Raises ReasoningError on failure."""
         if not self.configured:
@@ -371,6 +390,8 @@ class OpenRouterReasoner:
             history=history or [],
             steps_used=steps_used,
             max_steps=max_steps,
+            page_type=page_type,
+            semantic_context=semantic_context,
         )
 
         payload = {
@@ -585,6 +606,8 @@ class GroqReasoner:
         steps_used: int = 0,
         max_steps: int = 10,
         model: Optional[str] = None,
+        page_type: Optional[str] = None,
+        semantic_context: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request to Groq. Raises ReasoningError on failure."""
         if not self.configured:
@@ -602,6 +625,8 @@ class GroqReasoner:
             history=history or [],
             steps_used=steps_used,
             max_steps=max_steps,
+            page_type=page_type,
+            semantic_context=semantic_context,
         )
 
         headers = {
@@ -770,6 +795,8 @@ class NvidiaReasoner:
         steps_used: int = 0,
         max_steps: int = 10,
         model: Optional[str] = None,
+        page_type: Optional[str] = None,
+        semantic_context: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request to NVIDIA NIM. Raises ReasoningError on failure."""
         if not self.configured:
@@ -787,6 +814,8 @@ class NvidiaReasoner:
             history=history or [],
             steps_used=steps_used,
             max_steps=max_steps,
+            page_type=page_type,
+            semantic_context=semantic_context,
         )
 
         headers = {
@@ -951,6 +980,8 @@ class MockReasoner:
         steps_used: int = 0,
         max_steps: int = 10,
         model: Optional[str] = None,
+        page_type: Optional[str] = None,
+        semantic_context: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         if self.fail_with:
             raise ReasoningError(self.fail_with, kind="mock_failure")

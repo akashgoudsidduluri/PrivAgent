@@ -120,12 +120,31 @@ export class OpenRouterProvider implements AgentProvider {
       'Do not include markdown code fences or conversational text. Output raw JSON only.',
     ].join('\n');
 
-    const userPrompt = [
+    const userPromptParts = [
       `User Task: "${task}"`,
       `Current URL: ${context.url}`,
+    ];
+
+    if (modelView.page_type || modelView.semantic_context) {
+      const sem = modelView.semantic_context;
+      userPromptParts.push(
+        `Semantic Page Understanding (on-device local inference):`,
+        JSON.stringify({
+          pageType: modelView.page_type || sem?.pageType,
+          pageState: sem?.pageState,
+          entities: sem?.entities,
+          affordances: sem?.affordances,
+          promptInjectionDetected: sem?.promptInjectionDetected,
+        }, null, 2)
+      );
+    }
+
+    userPromptParts.push(
       `Available Elements (sanitized metadata only):`,
-      JSON.stringify(elementSummaries, null, 2),
-    ].join('\n\n');
+      JSON.stringify(elementSummaries, null, 2)
+    );
+
+    const userPrompt = userPromptParts.join('\n\n');
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);

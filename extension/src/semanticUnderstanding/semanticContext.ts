@@ -50,7 +50,10 @@ const KNOWN_INJECTION_PATTERNS = [
  * Scans webpage text for hostile prompt-injection attempts.
  * Quarantines any detected strings as untrusted webpage evidence.
  */
-export function inspectPageForPromptInjection(root?: Document | HTMLElement): PromptInjectionInspection {
+export function inspectPageForPromptInjection(
+  root?: Document | HTMLElement,
+  worldModel?: import('../worldModel/types').BrowserWorldModel
+): PromptInjectionInspection {
   const targetDoc: Document = root
     ? 'defaultView' in root
       ? (root as Document)
@@ -59,23 +62,43 @@ export function inspectPageForPromptInjection(root?: Document | HTMLElement): Pr
     ? document
     : (null as unknown as Document);
 
-  if (!targetDoc || !targetDoc.body) {
-    return { detected: false, suspiciousSnippets: [], confidence: 0.1, quarantinedText: [] };
-  }
-
   const suspiciousSnippets: string[] = [];
   const quarantinedText: string[] = [];
-
   const textNodes: string[] = [];
-  const walker = targetDoc.createTreeWalker(targetDoc.body, NodeFilter.SHOW_TEXT);
-  let currentNode = walker.nextNode();
 
-  while (currentNode) {
-    const text = (currentNode.textContent || '').trim();
-    if (text.length > 10) {
-      textNodes.push(text);
+  if (targetDoc && targetDoc.body) {
+    const walker = targetDoc.createTreeWalker(targetDoc.body, NodeFilter.SHOW_TEXT);
+    let currentNode = walker.nextNode();
+
+    while (currentNode) {
+      const text = (currentNode.textContent || '').trim();
+      if (text.length > 10) {
+        textNodes.push(text);
+      }
+      currentNode = walker.nextNode();
     }
-    currentNode = walker.nextNode();
+  }
+
+  // Also check BrowserWorldModel safe text regions & element labels if available
+  if (worldModel) {
+    if (worldModel.textRegions) {
+      for (const tr of worldModel.textRegions) {
+        if (tr.sanitizedPreview && tr.sanitizedPreview.length > 10) {
+          textNodes.push(tr.sanitizedPreview);
+        }
+      }
+    }
+    if (worldModel.elements) {
+      for (const el of worldModel.elements) {
+        if (el.label && el.label.length > 10) {
+          textNodes.push(el.label);
+        }
+      }
+    }
+  }
+
+  if (textNodes.length === 0) {
+    return { detected: false, suspiciousSnippets: [], confidence: 0.1, quarantinedText: [] };
   }
 
   for (const snippet of textNodes) {

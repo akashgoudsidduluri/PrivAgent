@@ -18,6 +18,7 @@ import { SelfHealingResult } from './selfHealing';
 import { TaskPlan } from './taskPlanner';
 import { AgentDecisionTracer } from './decisionTrace';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
+import { worldModelStore } from '../worldModel/worldModelStore';
 
 export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION' | 'STOPPED';
 
@@ -133,6 +134,7 @@ export interface StepRecord {
   expectedStateChange?: ExpectedStateChange | null;
   currentPageGeneration?: number;
   pageType?: PageCategory;
+  semanticContext?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
 }
 
 export interface TaskState {
@@ -198,6 +200,7 @@ export interface AgentTaskState extends TaskState {
   candidateItems: CandidateProductItem[];
   candidateEntities?: any[];
   semanticGroups?: any[];
+  semanticContext?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
 
   // Execution & failure metrics
   goalStatus: TaskStatus;
@@ -280,6 +283,7 @@ export function advancePageGeneration(
   newUrl?: string,
   detectedPageType?: PageCategory
 ): AgentTaskState {
+  const previousGeneration = state.currentPageGeneration;
   state.currentPageGeneration += 1;
   state.perceptionGeneration = state.currentPageGeneration;
   if (newUrl) {
@@ -291,5 +295,8 @@ export function advancePageGeneration(
   // Old element IDs and active world model ref belong to destroyed or mutated DOM tree; clear them
   state.visitedElementIds = [];
   state.activeWorldModelRef = null;
+  if (previousGeneration > 0) {
+    worldModelStore.invalidateGeneration(previousGeneration);
+  }
   return state;
 }

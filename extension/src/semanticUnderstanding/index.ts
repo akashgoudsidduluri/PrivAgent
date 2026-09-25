@@ -108,7 +108,7 @@ export function buildSemanticUnderstanding(
     : undefined;
 
   // 8. Prompt Injection Defense (P3.11)
-  const promptInjection = inspectPageForPromptInjection(options.root);
+  const promptInjection = inspectPageForPromptInjection(options.root, options.worldModel);
 
   // 9. Sanitized Semantic Context Assembly (P3.8)
   const sanitizedContext = createSanitizedSemanticContext({

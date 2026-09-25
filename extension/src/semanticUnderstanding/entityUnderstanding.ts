@@ -100,6 +100,25 @@ export function extractSemanticEntities(
   const entities: SemanticEntity[] = [];
   const seenIds = new Set<string>();
 
+  // 1. If BrowserWorldModel is provided, consume its structured entities
+  if (wm?.entities && wm.entities.length > 0) {
+    for (const we of wm.entities) {
+      if (seenIds.has(we.id)) continue;
+      seenIds.add(we.id);
+      entities.push({
+        id: we.id,
+        type: (we.type as SemanticEntityType) || 'GenericEntity',
+        label: sanitizeLabel(we.title || 'Entity'),
+        confidence: we.confidence ?? 0.90,
+        bbox: we.bbox,
+        source: 'layout',
+        associatedInteractiveElements: we.associatedElementIds || [],
+        pageGeneration: we.pageGeneration ?? pageGeneration,
+        safeAttributes: filterSafeAttributes(we.attributes || {}),
+      });
+    }
+  }
+
   if (!targetDoc) return entities;
 
   // ──────────────────────────────────────────────────────────────────────────

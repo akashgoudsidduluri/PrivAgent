@@ -65,6 +65,30 @@ export function discoverActionAffordances(
     });
   }
 
+  // Discover affordances directly from BrowserWorldModel elements
+  if (wm?.elements && wm.elements.length > 0) {
+    for (const el of wm.elements) {
+      const lowerLabel = (el.label || '').toLowerCase();
+      const lowerSel = (el.selector || '').toLowerCase();
+
+      if (el.type === 'search' || (el.tag === 'input' && (lowerLabel.includes('search') || lowerSel.includes('search') || lowerLabel.includes('query')))) {
+        addAffordance('ENTER_QUERY', el.id, 'Input search keyword query into query bar', 0.95);
+      } else if (el.type === 'button' && (lowerLabel.includes('search') || lowerSel.includes('search'))) {
+        addAffordance('SUBMIT_SEARCH', el.id, 'Execute and submit search query', 0.95);
+      } else if (el.type === 'button' && (lowerLabel.includes('add to cart') || lowerLabel.includes('add to bag') || lowerSel.includes('cart'))) {
+        addAffordance('ADD_TO_CART', el.id, 'Add selected product item to shopping cart', 0.95);
+      } else if (el.type === 'button' && (lowerLabel.includes('buy now') || lowerLabel.includes('proceed to buy'))) {
+        addAffordance('BUY_NOW', el.id, 'Proceed directly to checkout purchase', 0.95, true);
+      } else if (el.type === 'link' && (lowerSel.includes('result') || lowerLabel.includes('result'))) {
+        addAffordance('SELECT_RESULT', el.id, `Navigate to search result candidate (${el.label.slice(0, 30)})`, 0.90);
+      } else if (el.type === 'select') {
+        addAffordance('SELECT_OPTION', el.id, `Select option for ${el.label.slice(0, 30) || 'selection control'}`, 0.85);
+      } else if (el.type === 'input') {
+        addAffordance('FILL_FIELD', el.id, `Fill form input field (${el.label.slice(0, 30) || 'input'})`, 0.85);
+      }
+    }
+  }
+
   if (!targetDoc) return affordances;
 
   // ──────────────────────────────────────────────────────────────────────────

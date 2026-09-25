@@ -5,6 +5,11 @@ import { OverlayManager } from '../redaction/overlayManager';
 import { createSanitizedExport } from '../privacy/securityBoundary';
 import { isUrlExcluded, getExclusionReason } from '../privacy/siteExclusions';
 import { ExtensionMessage, isSensitiveEntityType, PrivacyScanReport, RedactionMode, SensitiveEntityType } from '../privacy/types';
+import { buildBrowserWorldModel } from '../worldModel/worldModelBuilder';
+import { assertWorldModelSafe, createSanitizedWorldModelSummary } from '../worldModel/worldModelSanitizer';
+import { worldModelStore } from '../worldModel/worldModelStore';
+import { BrowserWorldModel } from '../worldModel/types';
+import { buildSemanticUnderstanding, SemanticUnderstandingOutput } from '../semanticUnderstanding';
 
 const currentUrl = window.location.href;
 const isCurrentSiteExcluded = isUrlExcluded(currentUrl);
@@ -20,8 +25,34 @@ const redactor = new LocalRedactor();
 const overlayManager = new OverlayManager(redactor);
 
 let lastReport: PrivacyScanReport | null = null;
+let lastWorldModel: BrowserWorldModel | null = null;
+let lastWorldModelRef: { pageGeneration: number; worldModelId: string } | null = null;
+let lastSemanticUnderstanding: SemanticUnderstandingOutput | null = null;
 let currentMode: RedactionMode = 'blackout';
 let isRedactionActive = true;
+let currentPageGeneration = 1;
+
+function buildCurrentWorldModel(): { worldModel: BrowserWorldModel; activeWorldModelRef: { pageGeneration: number; worldModelId: string }; summary: ReturnType<typeof createSanitizedWorldModelSummary> } {
+  const pageGeneration = currentPageGeneration;
+  const worldModel = buildBrowserWorldModel({
+    root: document,
+    pageGeneration,
+  });
+
+  assertWorldModelSafe(worldModel);
+  const ref = worldModelStore.registerWorldModel(worldModel);
+  const storedWorldModel = worldModelStore.getActiveWorldModel(ref);
+  if (!storedWorldModel) {
+    throw new Error('World model registration failed for the current page generation.');
+  }
+
+  const summary = createSanitizedWorldModelSummary(storedWorldModel);
+  return {
+    worldModel: storedWorldModel,
+    activeWorldModelRef: ref,
+    summary,
+  };
+}
 
 function createExcludedReport(): PrivacyScanReport {
   return {
@@ -130,6 +161,30 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
 
   const safeExport = createSanitizedExport(rawReport);
   lastReport = safeExport as PrivacyScanReport;
+
+  try {
+    const { worldModel, activeWorldModelRef } = buildCurrentWorldModel();
+    currentPageGeneration += 1;
+    lastWorldModel = worldModel;
+    lastWorldModelRef = activeWorldModelRef;
+
+    try {
+      lastSemanticUnderstanding = buildSemanticUnderstanding({
+        worldModel,
+        root: document,
+        pageGeneration: activeWorldModelRef.pageGeneration,
+      });
+    } catch (semErr) {
+      console.warn('[ContentScript] semantic understanding build failed:', semErr instanceof Error ? semErr.message : String(semErr));
+      lastSemanticUnderstanding = null;
+    }
+  } catch (err) {
+    console.warn('[ContentScript] world model build/sanitization failed:', err instanceof Error ? err.message : String(err));
+    lastWorldModel = null;
+    lastWorldModelRef = null;
+    lastSemanticUnderstanding = null;
+  }
+
   return lastReport;
 }
 
@@ -153,8 +208,16 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
       console.info('[ContentScript] perception completed', {
         elementsScanned: report.totalElementsScanned,
         sensitiveDetected: report.sensitiveElementsDetected,
+        worldModelId: lastWorldModel?.id ?? null,
       });
-      sendResponse({ type: 'PRIVAGENT_SCAN_RESPONSE', report });
+      sendResponse({
+        type: 'PRIVAGENT_SCAN_RESPONSE',
+        report,
+        worldModel: lastWorldModel,
+        activeWorldModelRef: lastWorldModelRef,
+        semanticUnderstanding: lastSemanticUnderstanding,
+        semanticContext: lastSemanticUnderstanding?.sanitizedContext ?? undefined,
+      });
       console.info('response:sent');
       console.info('[ContentScript] response sent');
     } catch (err: unknown) {

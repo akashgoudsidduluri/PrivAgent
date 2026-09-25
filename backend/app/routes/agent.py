@@ -128,6 +128,8 @@ async def generate_action(
                 else None
             ),
             model=model_id,
+            page_type=context.page_type,
+            semantic_context=context.semantic_context,
         )
     except ReasoningError as err:
         fallback_name = (config.REASONER_FALLBACK_PROVIDER or "").strip().lower()
@@ -158,6 +160,8 @@ async def generate_action(
                         else None
                     ),
                     model=model_id,
+                    page_type=context.page_type,
+                    semantic_context=context.semantic_context,
                 )
                 fallback_used = True
                 effective_provider = fallback_name

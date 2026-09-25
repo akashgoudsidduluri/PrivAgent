@@ -81,6 +81,16 @@ export interface ModelFacingContext {
   task_terms: string[];
   elements: ModelFacingElement[];
   sanitization: 'minimized_sanitized_only';
+  page_type?: string;
+  semantic_context?: {
+    pageType: string;
+    confidence: number;
+    pageState: string;
+    pageGeneration: number;
+    entities: Array<{ id: string; type: string; label: string; confidence: number; actionIds: string[] }>;
+    affordances: Array<{ id: string; type: string; targetElementId?: string; description: string; requiresConfirmation: boolean }>;
+    promptInjectionDetected: boolean;
+  };
 }
 
 export interface MinimizationDecisionView {
@@ -250,6 +260,8 @@ export function minimizeAgentContext(
     sensitive_elements_detected: payload.sensitive_elements_detected,
     sanitized_status: 'sanitized_only',
     ocr_metrics: payload.ocr_metrics ? { ...payload.ocr_metrics } : null,
+    ...(payload.page_type ? { page_type: payload.page_type } : {}),
+    ...(payload.semantic_context ? { semantic_context: payload.semantic_context } : {}),
   };
 
   // ── Privacy firewall: refuse to hand out anything that fails the scan ──────
@@ -363,5 +375,17 @@ export function buildModelFacingContext(
     task_terms: extractTaskTerms(task),
     elements,
     sanitization: 'minimized_sanitized_only',
+    ...(payload.page_type ? { page_type: payload.page_type } : {}),
+    ...(payload.semantic_context ? {
+      semantic_context: {
+        pageType: payload.semantic_context.pageType,
+        confidence: payload.semantic_context.confidence,
+        pageState: payload.semantic_context.pageState,
+        pageGeneration: payload.semantic_context.pageGeneration,
+        entities: payload.semantic_context.entities,
+        affordances: payload.semantic_context.affordances,
+        promptInjectionDetected: payload.semantic_context.promptInjectionDetected,
+      }
+    } : {}),
   };
 }

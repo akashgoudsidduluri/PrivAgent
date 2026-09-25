@@ -128,7 +128,14 @@ export interface VisualCaptureReport {
 
 export type ExtensionMessage =
   | { type: 'PRIVAGENT_SCAN_REQUEST'; mode?: RedactionMode }
-  | { type: 'PRIVAGENT_SCAN_RESPONSE'; report: PrivacyScanReport }
+  | {
+      type: 'PRIVAGENT_SCAN_RESPONSE';
+      report: PrivacyScanReport;
+      worldModel?: import('../worldModel/types').BrowserWorldModel;
+      activeWorldModelRef?: import('../worldModel/types').ActiveWorldModelRef;
+      semanticUnderstanding?: import('../semanticUnderstanding/semanticTypes').SemanticUnderstandingOutput;
+      semanticContext?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
+    }
   | { type: 'PRIVAGENT_SET_REDACTION_MODE'; mode: RedactionMode }
   | { type: 'PRIVAGENT_TOGGLE_REDACTION'; enabled: boolean }
   | { type: 'PRIVAGENT_GET_STATE' }
@@ -211,6 +218,7 @@ export interface AgentContextPayload {
   page_type?: string;
   semantic_groups?: SemanticGroupMetadata[];
   memory_hints?: import('../memory/memoryRetriever').MemoryHints;
+  semantic_context?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
 }
 
 /**
@@ -225,6 +233,7 @@ export interface AgentContextPayload {
 export function buildAgentPayload(
   domScanReport: PrivacyScanReport,
   visualReport: VisualCaptureReport | null,
+  semanticContext?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext | null,
 ): AgentContextPayload | null {
   if (domScanReport.status !== 'Sanitized Context — Local Privacy Check Passed') {
     return null;
@@ -298,7 +307,8 @@ export function buildAgentPayload(
     sensitive_elements_detected: domScanReport.sensitiveElementsDetected,
     sanitized_status: 'sanitized_only',
     ocr_metrics,
-    ...(domScanReport.pageType ? { page_type: domScanReport.pageType } : {}),
+    ...(domScanReport.pageType || semanticContext?.pageType ? { page_type: domScanReport.pageType || semanticContext?.pageType } : {}),
     ...(domScanReport.semanticGroups ? { semantic_groups: domScanReport.semanticGroups } : {}),
+    ...(semanticContext ? { semantic_context: semanticContext } : {}),
   };
 }

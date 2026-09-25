@@ -60,6 +60,11 @@ import {
 import { parseUserGoal } from './goalParser';
 import { verifyTaskGoal } from './goalVerifier';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
+import {
+  buildSemanticUnderstanding,
+  SemanticUnderstandingOutput,
+  SanitizedSemanticContext,
+} from '../semanticUnderstanding';
 
 export type { TaskStatus, StepRecord, TaskState, AgentTaskState } from './agentState';
 
@@ -67,6 +72,8 @@ export interface WorldModelPerceptionResult {
   context: AgentContextPayload;
   worldModel?: BrowserWorldModel;
   activeWorldModelRef?: ActiveWorldModelRef | null;
+  semanticUnderstanding?: SemanticUnderstandingOutput;
+  semanticContext?: SanitizedSemanticContext;
 }
 
 export interface AgentLoopCallbacks {
@@ -292,7 +299,7 @@ export class AgentLoop {
         console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
         break;
       }
-      const { context, worldModel, activeWorldModelRef } = normalized;
+      let { context, worldModel, activeWorldModelRef, semanticUnderstanding, semanticContext } = normalized;
       console.info('[AgentLoop] perception completed');
       console.info('[AgentTrace] perception complete', { perceptionGeneration: perceptionGen, contextUrl: context.url, worldModelId: worldModel?.id ?? null });
 
@@ -307,30 +314,66 @@ export class AgentLoop {
           pageGeneration: worldModel.page.pageGeneration,
           worldModelId: worldModel.id,
         };
-        const worldModelPageType = worldModel.page.pageType as PageCategory;
-        if (worldModelPageType && ['search','login','article','listing','form','checkout','settings','dashboard','error','unknown','landing','results','product_detail','banking'].includes(worldModelPageType)) {
-          this.state.pageType = worldModelPageType;
+
+        // Fallback / calibration: derive semantic understanding directly from live world model if missing
+        if (!semanticUnderstanding) {
+          try {
+            semanticUnderstanding = buildSemanticUnderstanding({
+              worldModel,
+              pageGeneration: worldModel.page.pageGeneration,
+              userGoal: task,
+            });
+            semanticContext = semanticUnderstanding.sanitizedContext;
+          } catch (semErr) {
+            console.warn('[AgentLoop] fallback semantic understanding build failed:', semErr);
+          }
+        }
+
+        if (semanticContext) {
+          const worldModelPageType = semanticContext.pageType.toLowerCase() as PageCategory;
+          if (worldModelPageType && ['search','login','article','listing','form','checkout','settings','dashboard','error','unknown','landing','results','product_detail','banking'].includes(worldModelPageType)) {
+            this.state.pageType = worldModelPageType;
+          }
+          this.state.candidateEntities = semanticUnderstanding?.entities ?? [];
+          this.state.semanticContext = semanticContext;
+          context.semantic_context = semanticContext;
+          context.page_type = context.page_type || semanticContext.pageType;
+
+          console.info('[AgentTrace] semantic understanding complete', {
+            pageType: semanticContext.pageType,
+            pageState: semanticContext.pageState,
+            pageGeneration: semanticContext.pageGeneration,
+            entityCount: semanticContext.entities.length,
+            affordanceCount: semanticContext.affordances.length,
+          });
+        } else {
+          const worldModelPageType = worldModel.page.pageType as PageCategory;
+          if (worldModelPageType && ['search','login','article','listing','form','checkout','settings','dashboard','error','unknown','landing','results','product_detail','banking'].includes(worldModelPageType)) {
+            this.state.pageType = worldModelPageType;
+          }
         }
       } else {
         this.state.currentPageGeneration = this.state.perceptionGeneration;
       }
 
-      // Update observable page type
-      const uLower = this.state.currentUrl.toLowerCase();
-      if (uLower.includes('login') || uLower.includes('signin') || uLower.includes('auth')) {
-        this.state.pageType = 'login';
-      } else if (uLower.includes('result') || uLower.includes('search?')) {
-        this.state.pageType = 'results';
-      } else if (uLower.includes('search')) {
-        this.state.pageType = 'search';
-      } else if (uLower.includes('product') || uLower.includes('item') || uLower.includes('detail')) {
-        this.state.pageType = 'product_detail';
-      } else if (uLower.includes('bank') || uLower.includes('portal') || uLower.includes('account')) {
-        this.state.pageType = 'banking';
-      } else if (uLower.endsWith('/') || uLower.includes('index')) {
-        this.state.pageType = 'landing';
-      } else {
-        this.state.pageType = 'unknown';
+      // Fallback observable page type heuristic only when semantic classification was not established
+      if (!this.state.pageType || this.state.pageType === 'unknown') {
+        const uLower = this.state.currentUrl.toLowerCase();
+        if (uLower.includes('login') || uLower.includes('signin') || uLower.includes('auth')) {
+          this.state.pageType = 'login';
+        } else if (uLower.includes('result') || uLower.includes('search?')) {
+          this.state.pageType = 'results';
+        } else if (uLower.includes('search')) {
+          this.state.pageType = 'search';
+        } else if (uLower.includes('product') || uLower.includes('item') || uLower.includes('detail')) {
+          this.state.pageType = 'product_detail';
+        } else if (uLower.includes('bank') || uLower.includes('portal') || uLower.includes('account')) {
+          this.state.pageType = 'banking';
+        } else if (uLower.endsWith('/') || uLower.includes('index')) {
+          this.state.pageType = 'landing';
+        } else {
+          this.state.pageType = 'unknown';
+        }
       }
 
       // 3. Goal Completion Detection
@@ -1044,13 +1087,20 @@ export class AgentLoop {
       expectedStateChange: this.state.expectedStateChange,
       currentPageGeneration: this.state.currentPageGeneration,
       pageType: this.state.pageType,
+      semanticContext: this.state.semanticContext,
     };
     this.state.steps.push(record);
   }
 
   private normalizePerceptionResult(
     result: AgentContextPayload | WorldModelPerceptionResult | null
-  ): { context: AgentContextPayload; worldModel?: BrowserWorldModel; activeWorldModelRef?: ActiveWorldModelRef | null } | null {
+  ): {
+    context: AgentContextPayload;
+    worldModel?: BrowserWorldModel;
+    activeWorldModelRef?: ActiveWorldModelRef | null;
+    semanticUnderstanding?: SemanticUnderstandingOutput;
+    semanticContext?: SanitizedSemanticContext;
+  } | null {
     if (!result) {
       return null;
     }
@@ -1062,6 +1112,8 @@ export class AgentLoop {
         pageGeneration: worldModel.page.pageGeneration,
         worldModelId: worldModel.id,
       } : undefined);
+      const semanticUnderstanding = ('semanticUnderstanding' in result ? result.semanticUnderstanding : undefined);
+      const semanticContext = ('semanticContext' in result ? result.semanticContext : undefined) ?? context.semantic_context ?? semanticUnderstanding?.sanitizedContext;
 
       if (worldModel && activeWorldModelRef) {
         const liveGeneration = worldModel.page.pageGeneration;
@@ -1094,9 +1146,19 @@ export class AgentLoop {
           });
           return null;
         }
+
+        // Reject mismatched or stale semantic context
+        if (semanticContext && semanticContext.pageGeneration !== liveGeneration) {
+          console.warn('[AgentLoop] rejecting stale semantic context generation', {
+            semanticGeneration: semanticContext.pageGeneration,
+            worldModelGeneration: liveGeneration,
+            worldModelId: worldModel.id,
+          });
+          return null;
+        }
       }
 
-      return { context, worldModel, activeWorldModelRef };
+      return { context, worldModel, activeWorldModelRef, semanticUnderstanding, semanticContext };
     }
 
     return { context: result as AgentContextPayload };

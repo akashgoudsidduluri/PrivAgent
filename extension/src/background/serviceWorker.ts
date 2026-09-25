@@ -5,6 +5,10 @@ import { buildAgentPayload, PrivacyScanReport, AgentContextPayload } from '../pr
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
 import { resolveTargetWebTab, isEligibleWebTab } from './targetResolver';
+import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
+import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
+import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
+import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 
 // PrivAgent Background Service Worker (Manifest V3)
 let activeLoop: AgentLoop | null = null;
@@ -454,7 +458,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         );
 
         const loopCallbacks = {
-          perceivePage: async (): Promise<AgentContextPayload | null> => {
+          perceivePage: async (): Promise<AgentContextPayload | { context: AgentContextPayload; worldModel?: BrowserWorldModel; activeWorldModelRef?: ActiveWorldModelRef | null; semanticUnderstanding?: SemanticUnderstandingOutput; semanticContext?: SanitizedSemanticContext } | null> => {
             try {
               console.info('[AgentTrace] perception started');
               // Ensure target tab is still ready before perception
@@ -472,13 +476,79 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chrome.tabs.sendMessage(targetTabId, { type: 'PRIVAGENT_SCAN_REQUEST' }),
                 10000,
                 'Page perception timed out (10s).'
-              )) as { report?: PrivacyScanReport } | null;
+              )) as {
+                report?: PrivacyScanReport;
+                worldModel?: BrowserWorldModel;
+                activeWorldModelRef?: ActiveWorldModelRef;
+                semanticUnderstanding?: SemanticUnderstandingOutput;
+                semanticContext?: SanitizedSemanticContext;
+              } | null;
 
               if (!scanRes?.report) return null;
+
+              let worldModel = scanRes.worldModel;
+              if (worldModel) {
+                try {
+                  assertWorldModelSafe(worldModel);
+                  const ref = scanRes.activeWorldModelRef ?? { pageGeneration: worldModel.page.pageGeneration, worldModelId: worldModel.id };
+                  if (ref.pageGeneration !== worldModel.page.pageGeneration) {
+                    throw new Error('World model generation mismatch detected before AgentLoop attachment.');
+                  }
+                  worldModel = { ...worldModel };
+                } catch (err) {
+                  console.warn('[PrivAgent SW] rejected stale or unsafe world model before AgentLoop attachment:', err instanceof Error ? err.message : String(err));
+                  worldModel = undefined;
+                }
+              }
+
+              let semanticUnderstanding = scanRes.semanticUnderstanding;
+              let semanticContext = scanRes.semanticContext ?? semanticUnderstanding?.sanitizedContext;
+
+              if (semanticUnderstanding && worldModel) {
+                try {
+                  const semGen = semanticUnderstanding.sanitizedContext.pageGeneration;
+                  if (semGen !== worldModel.page.pageGeneration) {
+                    throw new Error('Semantic understanding generation mismatch detected before AgentLoop attachment.');
+                  }
+                  const violations = scanForRawSensitiveValues(semanticUnderstanding.sanitizedContext);
+                  if (violations.length > 0) {
+                    throw new Error('Semantic context failed M8 privacy firewall.');
+                  }
+                } catch (semErr) {
+                  console.warn('[PrivAgent SW] rejected stale or unsafe semantic context:', semErr instanceof Error ? semErr.message : String(semErr));
+                  semanticUnderstanding = undefined;
+                  semanticContext = undefined;
+                }
+              }
+
+              // Fallback / calibration: If semantic understanding was not provided by scan, build directly from live world model
+              if (!semanticUnderstanding && worldModel) {
+                try {
+                  semanticUnderstanding = buildSemanticUnderstanding({
+                    worldModel,
+                    pageGeneration: worldModel.page.pageGeneration,
+                    userGoal: task,
+                  });
+                  semanticContext = semanticUnderstanding.sanitizedContext;
+                } catch (semErr) {
+                  console.warn('[PrivAgent SW] local semantic understanding build failed:', semErr instanceof Error ? semErr.message : String(semErr));
+                  semanticUnderstanding = undefined;
+                  semanticContext = undefined;
+                }
+              }
+
               console.info('[ServiceWorker] response forwarded');
-              const built = buildAgentPayload(scanRes.report, null);
+              const built = buildAgentPayload(scanRes.report, null, semanticContext);
               if (!built) return null;
-              return minimizeAgentContext(built, { task }).payload;
+
+              const minimized = minimizeAgentContext(built, { task });
+              return {
+                context: minimized.payload,
+                worldModel,
+                activeWorldModelRef: worldModel ? (scanRes.activeWorldModelRef ?? { pageGeneration: worldModel.page.pageGeneration, worldModelId: worldModel.id }) : undefined,
+                semanticUnderstanding,
+                semanticContext,
+              };
             } catch (err) {
               console.error('[PrivAgent SW] perceivePage error:', err);
               return null;

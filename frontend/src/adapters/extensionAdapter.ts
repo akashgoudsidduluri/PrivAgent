@@ -267,6 +267,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       semanticVerification: s.semanticVerification,
       confidenceScore: s.confidenceEvaluation?.confidenceScore,
       selfHealingRecovered: s.selfHealing?.recovered,
+      semanticContext: s.semanticContext,
     }));
 
     const latestStep = steps.length > 0 ? steps[steps.length - 1] : undefined;
@@ -277,6 +278,9 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       currentStep: data.currentStep || steps.length,
       currentPipelineStage: stage,
       reason: data.reason,
+      pageType: data.pageType || latestStep?.semanticContext?.pageType,
+      candidateEntities: data.candidateEntities || latestStep?.semanticContext?.entities,
+      semanticContext: data.semanticContext || latestStep?.semanticContext,
       requiresUserConfirmationAction: data.requiresUserConfirmationAction
         ? {
             action: data.requiresUserConfirmationAction.action,

@@ -36,6 +36,39 @@ export function detectPageState(options: PageStateOptions = {}): PageStateResult
   const evidence: string[] = [];
 
   if (!targetDoc) {
+    if (wm) {
+      if (wm.page?.hasActiveModal) {
+        return {
+          state: 'modal_open',
+          confidence: 0.90,
+          evidence: ['Active modal overlay indicated in BrowserWorldModel'],
+          pageGeneration,
+          hasModal: true,
+        };
+      }
+      if (wm.page?.pageType === 'results' || wm.entities.some(e => e.type === 'Product' || e.type === 'SearchResult')) {
+        return {
+          state: 'results_available',
+          confidence: 0.88,
+          evidence: ['Result candidate entities present in BrowserWorldModel'],
+          pageGeneration,
+        };
+      }
+      if (wm.page?.pageType === 'login' || wm.elements.some(e => e.type === 'password')) {
+        return {
+          state: 'login_required',
+          confidence: 0.90,
+          evidence: ['Authentication controls present in BrowserWorldModel'],
+          pageGeneration,
+        };
+      }
+      return {
+        state: wm.elements.length > 0 ? 'populated' : 'loaded',
+        confidence: 0.75,
+        evidence: [`BrowserWorldModel elements evaluated (count: ${wm.elements.length})`],
+        pageGeneration,
+      };
+    }
     return {
       state: 'loaded',
       confidence: 0.5,

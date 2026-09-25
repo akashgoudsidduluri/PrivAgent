@@ -166,6 +166,7 @@ class AgentContextPayload(StrictModel):
     )
     ocr_metrics: Optional[OCRMetrics] = None
     page_type: Optional[str] = "general"
+    semantic_context: Optional[Dict[str, Any]] = None
 
     @field_validator("sanitized_status")
     @classmethod

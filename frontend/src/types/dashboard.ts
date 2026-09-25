@@ -114,6 +114,7 @@ export interface StepTelemetry {
   semanticVerification?: SemanticVerificationResult;
   confidenceScore?: number;
   selfHealingRecovered?: boolean;
+  semanticContext?: any;
 }
 
 export interface PrivacyReceipt {
@@ -142,6 +143,9 @@ export interface DashboardAgentState {
   currentPipelineStage: PipelineStage;
   currentUrl: string;
   reason?: string;
+  pageType?: string;
+  candidateEntities?: any[];
+  semanticContext?: any;
   requiresUserConfirmationAction?: {
     action: string;
     description: string;
