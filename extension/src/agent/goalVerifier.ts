@@ -176,6 +176,91 @@ export function extractCandidatesFromContext(
   return candidates;
 }
 
+/** Words that carry no identifying meaning in a research item. */
+const RESEARCH_STOPWORDS = new Set([
+  'the', 'a', 'an', 'of', 'for', 'and', 'or', 'all', 'their', 'its', 'his', 'her',
+  'who', 'what', 'which', 'name', 'names', 'list',
+]);
+
+/**
+ * Detects a multi-page research goal and returns the discrete items the user's
+ * OWN goal text asks for, or null when the goal is not of that shape.
+ *
+ * Deterministic string analysis of the user-typed task only. Two conditions must
+ * both hold, so ordinary navigation/search/shopping goals are untouched:
+ *   1. the goal asks for MULTIPLE items ("find the director, producers and ...")
+ *   2. the goal expects MULTIPLE pages / a synthesis of what was inspected.
+ */
+function extractResearchItems(task: string): string[] | null {
+  const lower = task.toLowerCase();
+  // Exclude goals owned by the stronger, earlier rules. `product` is matched on
+  // a word boundary deliberately: substring matching would claim "production
+  // team" as a shopping goal and send a research task down the shopping branch.
+  if (
+    /\b(search|log ?in|sign ?in|add to cart|checkout|buy|purchase|book|product|shop|bag)\b/.test(lower)
+  ) {
+    return null;
+  }
+  if (!/\b(research|investigate|find|identify|compile|gather)\b/.test(lower)) return null;
+  if (!/\b(multiple|several|each|different)\b[^.]*\b(pages?|sources?|articles?|links?)\b|\b(summar|overviews?|breakdown|report)\b/.test(lower)) {
+    return null;
+  }
+
+  // "find the A, B, and C" / "identify the X and Y". A goal may contain more
+  // than one research clause ("Research the production team of Avengers:
+  // Endgame. Find the director, producers, screenwriters and cinematographer."),
+  // so evaluate every clause and keep the one that is a genuine enumeration.
+  const clausePattern =
+    /\b(?:find|identify|compile|gather|research)\s+(?:the\s+|all\s+the\s+)?([^.]*?)(?:\.\s|\.$|,\s*(?:and\s+)?(?:return|provide|inspect|review)\b|$)/g;
+
+  let best: string[] = [];
+  for (const match of lower.matchAll(clausePattern)) {
+    const clause = match[1];
+    if (!clause) continue;
+    const parts = clause
+      .split(/,|\band\b|\bor\b|&/)
+      .map((p) => p.replace(/[^a-z0-9\s'-]/g, ' ').replace(/\s+/g, ' ').trim())
+      .filter((p) => {
+        const words = p.split(' ').filter((w) => w && !RESEARCH_STOPWORDS.has(w));
+        return words.length > 0 && words.length <= 3;
+      });
+    const unique = Array.from(new Set(parts));
+    if (unique.length > best.length) best = unique;
+  }
+
+  return best.length >= 2 ? best : null;
+}
+
+/**
+ * True when an OBSERVED page URL genuinely corresponds to a requested research
+ * item. Matching is on the item's meaningful words appearing in the URL path or
+ * query — structural evidence from the browser, never a model claim.
+ */
+function urlMentionsResearchItem(observedUrl: string, item: string): boolean {
+  const words = item.split(' ').filter((w) => w && !RESEARCH_STOPWORDS.has(w));
+  if (words.length === 0) return false;
+  let path = observedUrl;
+  try {
+    const u = new URL(observedUrl);
+    path = `${u.pathname} ${u.search}`;
+  } catch {
+    path = observedUrl;
+  }
+  const haystack = path.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+  const singular = (w: string) => (w.endsWith('s') && w.length > 3 ? w.slice(0, -1) : w);
+  // Empty tokens are dropped: without that, the empty string is a prefix of
+  // every word and every item would trivially "match" any page.
+  const tokens = haystack.split(' ').filter(Boolean);
+  return words.every((w) =>
+    tokens.some(
+      (t) =>
+        t === w ||
+        singular(t) === singular(w) ||
+        (t.length >= 4 && w.length >= 4 && (t.startsWith(w) || w.startsWith(t)))
+    )
+  );
+}
+
 /**
  * Main goal verification function. Evaluates current observable browser state
  * and decides whether the goal is genuinely achieved.
@@ -260,6 +345,48 @@ export function verifyTaskGoal(
         satisfied: true,
         status: 'SUCCESS',
         reason: `Login successful: authenticated state observed at '${currentUrl}'.`,
+      };
+    }
+    return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
+  // ── 2b. Multi-page research goals (Phase 9) ────────────────────────────────
+  // A long-horizon research goal ("find the A, B and C, inspect multiple pages,
+  // return a summary") has no single observable end-state, so it would otherwise
+  // never terminate: the agent keeps working and the task fails closed on its
+  // step bound. The rule below is DETERMINISTIC and derives success ONLY from
+  // observed evidence already in local state:
+  //   * the items the USER'S OWN goal text asks for, and
+  //   * pages the agent actually reached in successfully executed steps.
+  // The reasoner and the remote model cannot influence it: nothing here reads a
+  // model-supplied claim, and a missing observation is never treated as a match
+  // (UNKNOWN !== MATCH), so it fails closed by staying IN_PROGRESS.
+  //
+  // It is evaluated BEFORE the shopping rule because that rule's substring test
+  // for 'product' would otherwise claim a "production team" goal as shopping.
+  const researchItems = extractResearchItems(task);
+  if (researchItems) {
+    // Every page the agent genuinely observed during this task.
+    const observedUrls = new Set<string>();
+    if (currentUrl) observedUrls.add(currentUrl);
+    for (const step of state.steps) {
+      if (!step.executionSuccess) continue;
+      if (step.url) observedUrls.add(step.url);
+      if (step.navigationDestination) observedUrls.add(step.navigationDestination);
+    }
+
+    const observedLower = Array.from(observedUrls).map((u) => u.toLowerCase());
+    const unmatched = researchItems.filter(
+      (item) => !observedLower.some((u) => urlMentionsResearchItem(u, item))
+    );
+
+    if (unmatched.length === 0 && observedLower.length >= Math.min(2, researchItems.length)) {
+      return {
+        satisfied: true,
+        status: 'SUCCESS',
+        reason:
+          `Research goal verified from observed browser state: all ${researchItems.length} requested ` +
+          `item(s) were reached across ${observedLower.length} distinct page(s).`,
       };
     }
     return { satisfied: false, status: 'IN_PROGRESS' };

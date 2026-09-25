@@ -1,0 +1,199 @@
+{
+  "timestamp": "2026-09-25T19:22:13.096Z",
+  "phase": "Phase 9: Long-Horizon Autonomous Agent",
+  "task": "Research the production team of Avengers: Endgame. Find the director, producers, screenwriters, and cinematographer. Inspect multiple relevant pages and return a structured summary.",
+  "provenance": {
+    "kind": "REAL_CHROME_LONG_HORIZON",
+    "browser": "Google Chrome for Testing (headless=new) driven over CDP",
+    "perception": "REAL PrivAgent content script in a REAL tab",
+    "execution": "REAL PrivAgent content-script action dispatch in the live page",
+    "securityPipeline": "REAL PrivAgent local source bundled from extension/src",
+    "reasoner": "DETERMINISTIC GOAL-DRIVEN LOCAL POLICY — not an LLM, not a scripted click list. Proposes only; all authority is local.",
+    "harnessBypassesAgent": false,
+    "synthetic": false
+  },
+  "screenshots": [
+    "docs/evidence/phase9-long-horizon/phase9_final_state.png"
+  ],
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "result": {
+    "finalStatus": "SUCCESS",
+    "goalStatus": "SUCCESS",
+    "goalDecidedBy": "existing deterministic goal verifier (verifyTaskGoal) — unchanged",
+    "reasonerDeclaredSuccess": false,
+    "finalUrl": "http://localhost:4188/credit/cinematographer",
+    "finalHeading": "cinematographer of Avengers: Endgame",
+    "stepsTaken": 4,
+    "actionsExecuted": 4,
+    "e2eLatencyMs": 4361.39,
+    "distinctPagesInspected": 4,
+    "pages": [
+      "http://localhost:4188/film",
+      "http://localhost:4188/credit/director",
+      "http://localhost:4188/credit/producers",
+      "http://localhost:4188/credit/screenwriters"
+    ],
+    "creditsRequested": [
+      "director",
+      "producers",
+      "screenwriters",
+      "cinematographer"
+    ],
+    "creditsSatisfied": [
+      "director",
+      "producers",
+      "screenwriters"
+    ],
+    "policyDecisions": [
+      {
+        "step": 1,
+        "decision": "open-credit-page",
+        "credit": "director",
+        "target": "credit-director"
+      },
+      {
+        "step": 2,
+        "decision": "navigate-to-credit-page",
+        "credit": "producers",
+        "url": "http://localhost:4188/credit/producers"
+      },
+      {
+        "step": 3,
+        "decision": "navigate-to-credit-page",
+        "credit": "screenwriters",
+        "url": "http://localhost:4188/credit/screenwriters"
+      },
+      {
+        "step": 4,
+        "decision": "navigate-to-credit-page",
+        "credit": "cinematographer",
+        "url": "http://localhost:4188/credit/cinematographer"
+      }
+    ],
+    "longHorizon": {
+      "originalGoal": "Research the production team of Avengers: Endgame. Find the director, producers, screenwriters, and cinematographer. Inspect multiple relevant pages and return a structured summary.",
+      "completedSubgoalIds": [
+        "goal-muhckw45-scq4r-sg1",
+        "goal-muhckw45-scq4r-sg2",
+        "goal-muhckw45-scq4r-sg3",
+        "goal-muhckw45-scq4r-sg4"
+      ],
+      "pendingSubgoalIds": [],
+      "failedSubgoalIds": [],
+      "discoveryCount": 0,
+      "discoverySample": [],
+      "actionCount": 4,
+      "recoveryCount": 0,
+      "totalNoProgress": 0,
+      "lastLoop": null,
+      "completedSubgoalRepeatCount": 0
+    },
+    "steps": [
+      {
+        "step": 1,
+        "action": "click",
+        "target": "credit-director",
+        "validationAllowed": true,
+        "executionSuccess": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED",
+        "subgoal": "goal-muhckw45-scq4r-sg1",
+        "longHorizon": {
+          "completedSubgoals": 0,
+          "pendingSubgoals": 4,
+          "failedSubgoals": 0,
+          "discoveries": 0,
+          "actions": 0,
+          "recoveries": 0,
+          "consecutiveNoProgress": 0,
+          "totalNoProgress": 0,
+          "loop": null
+        }
+      },
+      {
+        "step": 2,
+        "action": "navigate",
+        "target": null,
+        "validationAllowed": true,
+        "executionSuccess": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED",
+        "subgoal": "goal-muhckw45-scq4r-sg2",
+        "longHorizon": {
+          "completedSubgoals": 1,
+          "pendingSubgoals": 3,
+          "failedSubgoals": 0,
+          "discoveries": 0,
+          "actions": 1,
+          "recoveries": 0,
+          "consecutiveNoProgress": 0,
+          "totalNoProgress": 0,
+          "loop": null
+        }
+      },
+      {
+        "step": 3,
+        "action": "navigate",
+        "target": null,
+        "validationAllowed": true,
+        "executionSuccess": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED",
+        "subgoal": "goal-muhckw45-scq4r-sg3",
+        "longHorizon": {
+          "completedSubgoals": 2,
+          "pendingSubgoals": 2,
+          "failedSubgoals": 0,
+          "discoveries": 0,
+          "actions": 2,
+          "recoveries": 0,
+          "consecutiveNoProgress": 0,
+          "totalNoProgress": 0,
+          "loop": null
+        }
+      },
+      {
+        "step": 4,
+        "action": "navigate",
+        "target": null,
+        "validationAllowed": true,
+        "executionSuccess": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED",
+        "subgoal": "goal-muhckw45-scq4r-sg4",
+        "longHorizon": {
+          "completedSubgoals": 3,
+          "pendingSubgoals": 1,
+          "failedSubgoals": 0,
+          "discoveries": 0,
+          "actions": 3,
+          "recoveries": 0,
+          "consecutiveNoProgress": 0,
+          "totalNoProgress": 0,
+          "loop": null
+        }
+      },
+      {
+        "step": 4,
+        "action": "navigate",
+        "target": null,
+        "validationAllowed": true,
+        "executionSuccess": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED",
+        "subgoal": "goal-muhckw45-scq4r-sg4",
+        "longHorizon": {
+          "completedSubgoals": 4,
+          "pendingSubgoals": 0,
+          "failedSubgoals": 0,
+          "discoveries": 0,
+          "actions": 4,
+          "recoveries": 0,
+          "consecutiveNoProgress": 0,
+          "totalNoProgress": 0,
+          "loop": null
+        }
+      }
+    ]
+  },
+  "gates": {
+    "everyExecutedActionPassedGates": true,
+    "actionsExecuted": 4,
+    "finalSecurityCriticCode": "NO_OBJECTION"
+  }
+}

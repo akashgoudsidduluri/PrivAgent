@@ -93,6 +93,15 @@ const DANGEROUS_PROTOCOLS = ['javascript:', 'data:', 'vbscript:', 'file:', 'blob
  * domain rules: the critic must work for any site, not just one vertical.
  */
 const SEARCH_TERMS = ['search', 'look up', 'find', 'query', 'google', 'bing', 'duckduckgo'];
+/**
+ * STRONG search markers, used only to decide whether a GOAL is search-shaped.
+ * 'find' is deliberately excluded: it is an ordinary English verb ("find the
+ * director, producers, screenwriters...") and would classify almost any
+ * research goal as a search task, which wrongly blocked legitimate
+ * long-horizon navigation between pages. It is still used to recognise search
+ * CONTROLS, where the wording really is a signal.
+ */
+const STRONG_SEARCH_TERMS = ['search', 'look up', 'query', 'google', 'bing', 'duckduckgo'];
 const NAVIGATE_TERMS = ['open', 'go to', 'navigate', 'visit', 'browse', 'show me'];
 const READ_TERMS = ['show', 'read', 'display', 'view', 'what', 'check', 'see'];
 const TYPE_TERMS = ['enter', 'type', 'fill', 'input', 'write', 'search for'];
@@ -409,7 +418,7 @@ function detectGoalMismatch(
   targetSurface: string,
   goalAnchored: boolean
 ): boolean {
-  const goalIsSearch = hasAnyTerm(goal, SEARCH_TERMS);
+  const goalIsSearch = hasAnyTerm(goal, STRONG_SEARCH_TERMS);
   const goalIsNavigate = hasAnyTerm(goal, NAVIGATE_TERMS);
   const goalIsType = hasAnyTerm(goal, TYPE_TERMS);
   const goalIsScroll = hasAnyTerm(goal, SCROLL_TERMS);
@@ -429,11 +438,16 @@ function detectGoalMismatch(
     case 'navigate': {
       if (goalIsReadOnly) return true;
       if (goalSaysNothingSpecific) return true;
-      // A search goal that navigates somewhere unrelated is a mismatch; a
-      // navigate goal is fine.
-      if (goalIsSearch && !goalIsNavigate && !hasAnyTerm(descriptor, SEARCH_TERMS)) {
-        return true;
-      }
+      // A navigate is a mismatch only on POSITIVE evidence of conflict. The
+      // absence of a search/navigation word in the model-supplied reason proves
+      // nothing: reasons are untrusted free text, and a long research goal
+      // ("...find the director, producers, screenwriters and cinematographer")
+      // legitimately moves between many pages of the same site.
+      //
+      // Genuinely suspicious destinations — unsafe schemes, raw-IP or
+      // credential-in-host URLs, and cross-origin targets the goal does not
+      // imply — remain BLOCK-level via the dedicated navigation-safety checks.
+      // Nothing is given up by refusing to guess from a bare verb here.
       return false;
     }
     case 'type': {
@@ -451,9 +465,12 @@ function detectGoalMismatch(
       if (hasAnyTerm(descriptor, DESTRUCTIVE_TERMS) && !hasAnyTerm(goal, DESTRUCTIVE_TERMS)) {
         return true;
       }
-      if (goalIsSearch && !goalIsNavigate && !hasAnyTerm(descriptor, [...SEARCH_TERMS, ...TYPE_TERMS, ...READ_TERMS])) {
-        return true;
-      }
+      // NOTE: we deliberately do NOT treat "the control/reason mentions no
+      // search word" as a mismatch. That reads untrusted model free text and
+      // the model may word a perfectly legitimate step however it likes. A real
+      // mismatch (e.g. clicking a theme toggle during a search task) is caught
+      // below by the control-surface overlap rule, which uses only the control's
+      // own machine-generated metadata.
       // A click is only expected on a control that relates to the goal. Judge
       // the CONTROL's own machine-generated surface, never the model-supplied
       // reason: an untrusted reason can name any intent it likes.

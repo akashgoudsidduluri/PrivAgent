@@ -226,6 +226,19 @@ export interface AgentTaskState extends TaskState {
    * Codes and reasons only — never any value.
    */
   lastSecurityCritic?: import('./securityCritic').SecurityCriticResult;
+
+  /**
+   * Phase 9: long-horizon task state. Remembers what this task has already
+   * accomplished so long multi-step work does not repeat itself. Observational
+   * and bounding only — it grants no permission and bypasses no gate.
+   */
+  longHorizon?: import('./longHorizon').LongHorizonSnapshot;
+
+  /**
+   * Phase 9: how many times a COMPLETED subgoal was re-selected during this
+   * task. Should stay at 0 for a well-behaved long-horizon run.
+   */
+  longHorizonRepeatCount?: number;
 }
 
 /**

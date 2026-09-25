@@ -68,6 +68,16 @@ import {
 } from './effectVerifier';
 import { parseUserGoal } from './goalParser';
 import { reviewProposedAction, SecurityCriticResult } from './securityCritic';
+import {
+  LongHorizonTracker,
+  DEFAULT_LONG_HORIZON_BOUNDS,
+  observeFromContext,
+  recordWorkingProgress,
+  recordLongHorizonFailure,
+  recordEpisodicOutcome,
+  syncFromSubgoalGraph,
+  type LongHorizonSnapshot,
+} from './longHorizon';
 import { verifyTaskGoal } from './goalVerifier';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import {
@@ -232,6 +242,12 @@ export class AgentLoop {
   private hierarchicalGoal?: HighLevelGoal;
   private subgoalGraph?: SubgoalGraph;
   private planStateMachine?: PlanStateMachine;
+  /**
+   * Phase 9: deterministic long-horizon task state — progress, loops, stalls,
+   * subgoal lifecycle, hard bounds and state-aware replanning. Read-only with
+   * respect to authority: it can stop or de-scope work, never authorize it.
+   */
+  private readonly longHorizon = new LongHorizonTracker(DEFAULT_LONG_HORIZON_BOUNDS);
   private memoryHints?: MemoryHints;
 
   private extractOrigin(url?: string): string {
@@ -364,6 +380,20 @@ export class AgentLoop {
     this.state.highLevelGoal = this.hierarchicalGoal;
     this.state.subgoalGraphData = this.subgoalGraph.toData();
     this.state.planningEngineState = this.planStateMachine.getState();
+
+    // Phase 9: initialize long-horizon task state for the whole task. The
+    // tracker owns NO authority: it only remembers what has been accomplished,
+    // bounds the task, and refuses to repeat finished or failed work. M5, the
+    // Security Critic, privacy/risk/confirmation and goal verification remain
+    // the authoritative gates and are untouched.
+    this.longHorizon.initialize(
+      task,
+      Object.entries(parsed.constraints as Record<string, unknown>)
+        .filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => `${k}=${String(v)}`),
+      decompResult.subgoals
+    );
+    this.state.longHorizon = this.longHorizon.snapshot();
 
     // Initialize Working Memory for the task
     try {
@@ -564,6 +594,99 @@ export class AgentLoop {
           console.info('[AgentTrace] all subgoals completed');
         }
       }
+
+      // ── Phase 9: long-horizon task state ─────────────────────────────────
+      // Observes THIS task between successive perceptions: what has been
+      // accomplished, whether the agent is still making progress, and whether
+      // it is looping or stalled. It can only remember, bound and de-scope —
+      // it never authorizes an action, never executes one, and never replaces
+      // M5, the Security Critic, privacy/risk/confirmation or goal
+      // verification, all of which remain authoritative below.
+      syncFromSubgoalGraph(this.longHorizon, this.subgoalGraph?.toData());
+
+      // Completed work must not be needlessly re-executed.
+      if (activeSubgoal && this.longHorizon.isAlreadyCompleted(activeSubgoal.id)) {
+        this.state.longHorizonRepeatCount = (this.state.longHorizonRepeatCount ?? 0) + 1;
+        console.info('[AgentTrace] long-horizon: completed subgoal re-selected, skipping repeat', {
+          subgoalId: activeSubgoal.id,
+        });
+      }
+
+      // Record useful, sanitized discoveries (labels/types only, no values).
+      for (const entity of semanticContext?.entities ?? []) {
+        this.longHorizon.addDiscovery({
+          id: `ent-${entity.id}`,
+          label: entity.type,
+          source: 'ENTITY',
+          subgoalId: activeSubgoal?.id,
+          url: this.state.currentUrl,
+        });
+      }
+
+      const lhObservation = observeFromContext(context, {
+        scrollY: context.viewport?.scroll_y ?? 0,
+      });
+      const lhProgress = this.longHorizon.observe(lhObservation, undefined, {
+        subgoalJustCompleted: this.state.lastActionResult?.success ? this.longHorizon.activeSubgoalId ?? undefined : undefined,
+        // Only count an observation as an action once a step has actually run.
+        countsAsAction: this.state.lastActionResult !== null,
+      });
+      const lhLoop = this.longHorizon.detectLoop();
+      const lhStall = this.longHorizon.detectStall();
+      this.state.longHorizon = this.longHorizon.snapshot();
+
+      console.info('[AgentTrace] long-horizon update', {
+        meaningfulProgress: lhProgress.meaningful,
+        signals: lhProgress.signals,
+        completedSubgoals: this.longHorizon.completedSubgoalIds.length,
+        pendingSubgoals: this.longHorizon.pendingSubgoalIds.length,
+        discoveries: this.longHorizon.discoveries.length,
+        actions: this.longHorizon.actionCount,
+        loop: lhLoop.loop ? lhLoop.kind : false,
+        stalled: lhStall.stalled,
+      });
+
+      // Loop / stall: stop blindly repeating, remember it, and replan ONLY the
+      // remaining work. Completed subgoals and discoveries are preserved.
+      if (lhLoop.loop || lhStall.stalled) {
+        const why = lhLoop.loop ? lhLoop.reason : lhStall.reason;
+        await recordLongHorizonFailure(siteScope, this.hierarchicalGoal?.goalId ?? 'unknown-goal', {
+          failureType: lhLoop.loop ? 'REPEATED_STATE' : 'ACTION_NO_EFFECT',
+          reason: why,
+          subgoalId: activeSubgoal?.id,
+        });
+        const replan = this.longHorizon.replanRemaining(
+          activeSubgoal?.id,
+          lhLoop.loop ? 'loop detected' : 'stall detected'
+        );
+        this.state.longHorizon = this.longHorizon.snapshot();
+        console.info('[AgentTrace] long-horizon replan', {
+          reason: why,
+          reopened: replan.reopened,
+          preservedCompleted: replan.preservedCompleted,
+          preservedDiscoveries: replan.preservedDiscoveries,
+        });
+      }
+
+      // Hard task-level bounds. On exhaustion the task fails closed.
+      const lhBounds = this.longHorizon.checkBounds();
+      if (lhBounds.exhausted) {
+        this.state.reason = `Long-horizon bounds exhausted: ${lhBounds.detail ?? lhBounds.reason}`;
+        this.state.status = 'FAILED';
+        this.state.goalStatus = 'FAILED';
+        await recordLongHorizonFailure(siteScope, this.hierarchicalGoal?.goalId ?? 'unknown-goal', {
+          failureType: 'RECOVERY_EXHAUSTED',
+          reason: this.state.reason,
+          subgoalId: activeSubgoal?.id,
+        });
+        this.state.longHorizon = this.longHorizon.snapshot();
+        console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+        break;
+      }
+
+      // Persist progress through the EXISTING memory subsystem. Only sanitized,
+      // value-free counts are written, and the firewall still applies.
+      recordWorkingProgress(this.longHorizon, siteScope, this.hierarchicalGoal?.goalId ?? 'unknown-goal');
 
       // Build minimized planner context incorporating activeSubgoal and memoryHints
       if (this.hierarchicalGoal) {
