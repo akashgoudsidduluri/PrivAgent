@@ -220,6 +220,12 @@ export interface AgentTaskState extends TaskState {
   subgoalGraphData?: import('../hierarchicalPlanning/hierarchicalTypes').SubgoalGraphData;
   planningEngineState?: import('../hierarchicalPlanning/hierarchicalTypes').PlanningEngineState;
   memoryHints?: import('../memory/memoryRetriever').MemoryHints;
+
+  /**
+   * Phase 8: verdict of the most recent independent Security Critic review.
+   * Codes and reasons only — never any value.
+   */
+  lastSecurityCritic?: import('./securityCritic').SecurityCriticResult;
 }
 
 /**

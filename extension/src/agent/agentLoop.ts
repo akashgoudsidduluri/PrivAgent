@@ -67,6 +67,7 @@ import {
   EffectStatus,
 } from './effectVerifier';
 import { parseUserGoal } from './goalParser';
+import { reviewProposedAction, SecurityCriticResult } from './securityCritic';
 import { verifyTaskGoal } from './goalVerifier';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import {
@@ -817,6 +818,79 @@ export class AgentLoop {
         continue;
       }
       console.info('[AgentTrace] action validated by M5');
+
+      // GATE 2.5: SECURITY CRITIC (Phase 8)
+      // An independent, deterministic, LOCAL review of the proposed action.
+      // It runs AFTER M5 and BEFORE the privacy/risk gates, and it can only
+      // tighten the pipeline: BLOCK stops the action here, REVIEW only
+      // annotates and lets the existing authoritative gates decide, and ALLOW
+      // means "no objection" — never permission. M5, privacy policy, risk
+      // assessment, user confirmation, grounding and goal verification all keep
+      // their existing authority and are unaffected by this review.
+      const critic: SecurityCriticResult = reviewProposedAction({
+        action,
+        task,
+        context,
+        subgoal: activeSubgoal
+          ? { id: activeSubgoal.id, description: activeSubgoal.description, category: activeSubgoal.category }
+          : undefined,
+        history: this.state.previousActions,
+        currentUrl: this.state.currentUrl,
+      });
+      this.state.lastSecurityCritic = critic;
+      console.info('[AgentTrace] security critic', {
+        verdict: critic.verdict,
+        code: critic.code,
+        findings: critic.findings,
+      });
+
+      if (critic.verdict === 'BLOCK') {
+        // Fail closed: the action never reaches the privacy, risk, confirmation
+        // or execution stages. Bounded exactly like the other gates.
+        this.state.retryCount++;
+        this.provider.registerFailure?.();
+        try {
+          await FailureMemoryManager.write({
+            id: `fail-critic-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+            class: 'FAILURE',
+            scope: siteScope,
+            trustLevel: MemoryTrustLevel.HIGH_CONFIDENCE_MEMORY,
+            provenance: { source: 'ACTION_RESULT', timestamp: Date.now(), subgoalId: activeSubgoal?.id, actionType: action.action },
+            confidence: 1.0,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            failureType: 'POLICY_REJECTION',
+            contextCategory: (this.state.pageType as any) || 'unknown',
+            recoveryAttempted: 'NONE',
+            recoveryResult: 'FAILURE',
+          });
+        } catch (e) {}
+
+        const criticReason = `Security Critic BLOCKED (${critic.code}): ${critic.reason}`;
+        this.recordStep(action, false, criticReason, false, criticReason);
+        tracer.recordStep({
+          step: this.state.currentStep,
+          goal: task,
+          proposedAction: action,
+          riskAssessment: { riskLevel: 'LOW', score: 0, requiresConfirmation: false },
+          structuralValidation: { passed: true, reason: validation.reason },
+          semanticVerification: { verified: false, confidence: 0, alignment: 'UNKNOWN', reason: critic.reason },
+          confidenceEvaluation: { confidenceScore: 0, directive: 'BLOCK', explanation: critic.reason },
+          finalOutcome: 'BLOCKED',
+        });
+        this.state.decisionTraceSummary = tracer.getSummary();
+        this.notifyProgress();
+
+        if (this.state.retryCount > this.maxRetries) {
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = `Security critic blocked actions repeatedly: ${criticReason}`;
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+          break;
+        }
+        await this.delay(this.delayBetweenStepsMs);
+        continue;
+      }
 
       // GATE 3: Privacy Policy (Capability-based access control)
       const targetDet = 'target' in action ? context.detections.find((d) => d.id === (action as any).target) : undefined;
