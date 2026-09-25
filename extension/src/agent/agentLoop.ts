@@ -302,6 +302,14 @@ export class AgentLoop {
       let { context, worldModel, activeWorldModelRef, semanticUnderstanding, semanticContext } = normalized;
       console.info('[AgentLoop] perception completed');
       console.info('[AgentTrace] perception complete', { perceptionGeneration: perceptionGen, contextUrl: context.url, worldModelId: worldModel?.id ?? null });
+      if (context.screenshot_dimensions || (worldModel && (worldModel.ocrRegions.length > 0 || worldModel.visualRegions.length > 0 || worldModel.privacyFindings.length > 0))) {
+        console.info('[AgentTrace] multimodal perception complete', {
+          screenshotDimensions: context.screenshot_dimensions ?? null,
+          ocrRegionsCount: worldModel?.ocrRegions?.length ?? (context.ocr_metrics?.regions_scanned ?? 0),
+          visualRegionsCount: worldModel?.visualRegions?.length ?? 0,
+          privacyFindingsCount: worldModel?.privacyFindings?.length ?? 0,
+        });
+      }
 
       // Defense-in-depth: enforce zero raw PII in newly perceived context
       assertSanitizedContextSafe(context);

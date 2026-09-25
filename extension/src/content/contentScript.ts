@@ -10,6 +10,7 @@ import { assertWorldModelSafe, createSanitizedWorldModelSummary } from '../world
 import { worldModelStore } from '../worldModel/worldModelStore';
 import { BrowserWorldModel } from '../worldModel/types';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput } from '../semanticUnderstanding';
+import { fusePrivacyFindings, candidateFromDOMPageDetection, PrivacyFinding } from '../privacy/fusion';
 
 const currentUrl = window.location.href;
 const isCurrentSiteExcluded = isUrlExcluded(currentUrl);
@@ -32,11 +33,12 @@ let currentMode: RedactionMode = 'blackout';
 let isRedactionActive = true;
 let currentPageGeneration = 1;
 
-function buildCurrentWorldModel(): { worldModel: BrowserWorldModel; activeWorldModelRef: { pageGeneration: number; worldModelId: string }; summary: ReturnType<typeof createSanitizedWorldModelSummary> } {
+function buildCurrentWorldModel(privacyFindings?: PrivacyFinding[]): { worldModel: BrowserWorldModel; activeWorldModelRef: { pageGeneration: number; worldModelId: string }; summary: ReturnType<typeof createSanitizedWorldModelSummary> } {
   const pageGeneration = currentPageGeneration;
   const worldModel = buildBrowserWorldModel({
     root: document,
     pageGeneration,
+    privacyFindings,
   });
 
   assertWorldModelSafe(worldModel);
@@ -163,7 +165,10 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
   lastReport = safeExport as PrivacyScanReport;
 
   try {
-    const { worldModel, activeWorldModelRef } = buildCurrentWorldModel();
+    const fusion = fusePrivacyFindings(
+      allDetections.map((d) => candidateFromDOMPageDetection(d))
+    );
+    const { worldModel, activeWorldModelRef } = buildCurrentWorldModel(fusion.findings);
     currentPageGeneration += 1;
     lastWorldModel = worldModel;
     lastWorldModelRef = activeWorldModelRef;

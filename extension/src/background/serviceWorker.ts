@@ -1,7 +1,7 @@
 import { AgentLoop, TaskState } from '../agent/agentLoop';
 import { createAgentProvider } from '../agent/providerRegistry';
 import { ModelRouter } from '../agent/modelRouter';
-import { buildAgentPayload, PrivacyScanReport, AgentContextPayload } from '../privacy/types';
+import { buildAgentPayload, PrivacyScanReport, AgentContextPayload, VisualCaptureReport } from '../privacy/types';
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
 import { resolveTargetWebTab, isEligibleWebTab } from './targetResolver';
@@ -9,6 +9,7 @@ import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
+import { coordinateMultimodalPerception, enrichWorldModelWithMultimodalPerception } from '../visualPerception/multimodalCoordinator';
 
 // PrivAgent Background Service Worker (Manifest V3)
 let activeLoop: AgentLoop | null = null;
@@ -537,8 +538,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
               }
 
+              // Multimodal Perception Coordination (Stage 3)
+              let visualReport: VisualCaptureReport | null = null;
+              try {
+                const targetTab = await chrome.tabs.get(targetTabId);
+                const coordination = await coordinateMultimodalPerception({
+                  tabId: targetTabId,
+                  windowId: targetTab?.windowId,
+                  scanReport: scanRes.report,
+                  pageGeneration: worldModel?.page.pageGeneration ?? 1,
+                });
+                visualReport = coordination.visualReport;
+                if (worldModel) {
+                  enrichWorldModelWithMultimodalPerception(worldModel, coordination);
+                }
+                console.info('[AgentTrace] multimodal perception complete', {
+                  visualDetections: visualReport.visualDetections.length,
+                  screenshotWidth: visualReport.captureMetadata.screenshotWidth,
+                  screenshotHeight: visualReport.captureMetadata.screenshotHeight,
+                  ocrRegions: coordination.ocrRegions.length,
+                  privacyFindings: coordination.privacyFindings.length,
+                });
+              } catch (multiErr) {
+                console.warn('[PrivAgent SW] multimodal coordination skipped:', multiErr);
+              }
+
               console.info('[ServiceWorker] response forwarded');
-              const built = buildAgentPayload(scanRes.report, null, semanticContext);
+              const built = buildAgentPayload(scanRes.report, visualReport, semanticContext);
               if (!built) return null;
 
               const minimized = minimizeAgentContext(built, { task });

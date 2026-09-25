@@ -8,3 +8,4 @@ export * from './visualRegions';
 export * from './localImagePerception';
 export * from './canvasDetector';
 export * from './videoKeyFrameSampler';
+export * from './multimodalCoordinator';
