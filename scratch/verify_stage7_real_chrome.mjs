@@ -654,7 +654,7 @@ async function main() {
     const engineFinalUrl = await pageEval(engine.page, 'location.href');
     const engineScan = await perceive(engine.tabId, ENGINE_TASK, { applyPrivacyMinimization: false });
     const engineGoal = runtime.verifyTaskGoal(ENGINE_TASK, engineRun.state, { ...engineScan.context, url: engineFinalUrl });
-    const shotEngine = await pageShot(engine.page, path.join(EVIDENCE_DIR, 'stage7_06_bing_results.png'));
+    const shotEngine = await pageShot(engine.page, path.join(EVIDENCE_DIR, 'stage7_06_search_engine.png'));
     evidence.runs.realSearchEngineE2E = {
       task: ENGINE_TASK,
       page: ENGINE_URL,
