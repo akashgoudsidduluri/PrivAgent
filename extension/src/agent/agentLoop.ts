@@ -713,10 +713,23 @@ export class AgentLoop {
         const staleTargetId = (action as any).target;
         healingResult = recoverStaleTarget(staleTargetId, action, context);
         if (healingResult.recovered && healingResult.recoveredAction) {
-          const healedVal = validateAction(healingResult.recoveredAction, context);
+          // A healed target is UNTRUSTED until it passes the SAME gates as any
+          // other proposal: Target Grounding (generation + origin) then M5.
+          const healedGrounding = groundProposedTarget(healingResult.recoveredAction, context.detections, {
+            currentPageGeneration: this.state.currentPageGeneration ?? 0,
+            actionPageGeneration: this.state.currentPageGeneration ?? 0,
+            currentOrigin,
+          });
+          const healedVal: ReturnType<typeof validateAction> = healedGrounding.grounded
+            ? validateAction(healingResult.recoveredAction, context)
+            : { allowed: false, reason: `Healed target rejected by Target Grounding: ${healedGrounding.details}` };
           if (healedVal.allowed) {
             action = healingResult.recoveredAction;
             validation = healedVal;
+            console.info('[AgentTrace] self-healed target passed grounding + M5', {
+              originalTarget: healingResult.originalTargetId,
+              healedTarget: healingResult.recoveredTargetId,
+            });
           }
         }
       }
@@ -1078,19 +1091,20 @@ export class AgentLoop {
       }
 
       if (!execResult.success && 'target' in action && typeof (action as any).target === 'string' && !healingResult?.recovered) {
-        const staleTargetId = (action as any).target;
-        healingResult = recoverStaleTarget(staleTargetId, action, context);
-        if (healingResult.recovered && healingResult.recoveredAction) {
-          const healedVal = validateAction(healingResult.recoveredAction, context);
-          if (healedVal.allowed) {
-            const healedExec = await this.callbacks.executeAction(healingResult.recoveredAction);
-            if (healedExec.success) {
-              execResult = healedExec;
-              action = healingResult.recoveredAction;
-              this.state.lastAction = action;
-              this.state.lastActionResult = { success: true };
-            }
-          }
+        // SECURITY INVARIANT (Stage 6): self-healing may only PROPOSE an alternative
+        // target. The recovered action is NEVER dispatched directly from this branch.
+        // It must re-enter the loop and pass the complete Stage 5 pipeline again:
+        //   Target Grounding -> M5 Validator -> Privacy Policy -> Risk/Semantic ->
+        //   User Confirmation -> Browser Execution.
+        healingResult = recoverStaleTarget((action as any).target, action, context);
+        if (healingResult.recovered) {
+          console.info('[AgentTrace] self-healing proposal recorded (not dispatched)', {
+            originalTarget: healingResult.originalTargetId,
+            proposedTarget: healingResult.recoveredTargetId,
+            strategy: healingResult.strategy,
+            confidence: healingResult.confidence,
+            nextStep: 'RE_ENTER_SECURITY_PIPELINE',
+          });
         }
       }
 
