@@ -190,6 +190,8 @@ export interface AgentLoopOptions {
    */
   providerRetries?: number;
   providerRetryDelayMs?: number;
+  /** Authoritative target web tab ID for the task lifecycle. */
+  targetTabId?: number | null;
 }
 
 // Complete normalized forbidden key set that must never appear anywhere in TaskState
@@ -243,6 +245,7 @@ export class AgentLoop {
   private requireConfirmationForExternalNavigation: boolean;
   private providerRetries: number;
   private providerRetryDelayMs: number;
+  private targetTabId: number | null = null;
   private state: AgentTaskState;
   private isStopped = false;
   private hierarchicalGoal?: HighLevelGoal;
@@ -308,10 +311,12 @@ export class AgentLoop {
       options.requireConfirmationForExternalNavigation ?? true;
     this.providerRetries = options.providerRetries ?? 2;
     this.providerRetryDelayMs = options.providerRetryDelayMs ?? 250;
+    this.targetTabId = options.targetTabId ?? null;
 
     this.state = createAgentTaskState('', {
       maxSteps: this.maxSteps,
       maxRetries: this.maxRetries,
+      targetTabId: this.targetTabId,
     });
   }
 
@@ -347,6 +352,7 @@ export class AgentLoop {
     this.state.normalizedGoal = parsed.normalizedGoal;
     this.state.taskConstraints = parsed.constraints;
     this.state.pendingSubgoals = parsed.subgoals;
+    this.state.targetTabId = this.targetTabId;
     this.state.currentStep = 0;
     this.state.status = 'IN_PROGRESS';
     this.state.goalStatus = 'IN_PROGRESS';

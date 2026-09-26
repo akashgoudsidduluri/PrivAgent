@@ -202,7 +202,7 @@ async function provisionTargetTab(url: string): Promise<{ id: number; url: strin
   }
 
   try {
-    const created = await chrome.tabs.create({ url: parsed.toString(), active: false });
+    const created = await chrome.tabs.create({ url: parsed.toString(), active: true });
     const newTabId = created?.id;
     if (typeof newTabId !== 'number') {
       console.warn('[PrivAgent SW] provisionTargetTab: chrome.tabs.create returned no tab id');
@@ -422,7 +422,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       try {
         console.info('TARGET_RESOLUTION_STARTED');
         const allTabs = await chrome.tabs.query({});
-        const resolution = resolveTargetWebTab(allTabs, task, message.originUrl || 'http://localhost:5173');
+        const resolution = resolveTargetWebTab(
+          allTabs,
+          task,
+          message.originUrl || 'http://localhost:5173',
+          dashboardTabId ?? undefined
+        );
 
         // Safe diagnostics: strictly tab IDs & origins only
         console.info('TARGET_TAB_CANDIDATES', resolution.discoveredTabs.map((t) => ({ id: t.id, origin: t.origin })));
@@ -431,6 +436,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // extracted a deterministic destination from the task. An existing eligible
         // tab always wins (the resolver returns it above, so this never runs).
         let targetTab = resolution.selectedTab;
+        if (dashboardTabId && targetTab?.id === dashboardTabId) {
+          console.warn('[PrivAgent SW] Target tab resolved to dashboardTabId; rejecting', { dashboardTabId });
+          targetTab = null;
+        }
+
         if ((!targetTab || !targetTab.id) && resolution.provisioning) {
           const provisioned = await provisionTargetTab(resolution.provisioning.url);
           if (provisioned) {
@@ -438,6 +448,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           } else {
             console.info('TARGET_TAB_FAILED: provisioning did not yield a ready tab');
           }
+        }
+
+        if (dashboardTabId && targetTab?.id === dashboardTabId) {
+          targetTab = null;
         }
 
         if (!targetTab || !targetTab.id) {
@@ -481,6 +495,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           reason: targetTab === resolution.selectedTab ? resolution.reason : `Provisioned from task destination: ${resolution.provisioning?.url}`,
         });
         console.info('[AgentTrace] target resolved', { tabId: targetTabId });
+
+        // Ensure target tab is active in its window
+        try {
+          await chrome.tabs.update(targetTabId, { active: true });
+        } catch (actErr) {
+          console.warn('[PrivAgent SW] Failed to activate target tab at start:', actErr);
+        }
 
         // Ensure content script is active and responsive in the target tab
         const isReady = await ensureTargetTabReady(targetTabId);
@@ -536,6 +557,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             currentStep: 0,
             maxSteps: 10,
             task,
+            currentUrl: targetTab.url || '',
+            targetTabId,
             steps: [],
             reason: 'Target tab discovered and ready. Starting visual privacy perception...',
           },
@@ -626,6 +649,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               let visualReport: VisualCaptureReport | null = null;
               try {
                 const targetTab = await chrome.tabs.get(targetTabId);
+                // Ensure target tab is active before captureVisibleTab so the screenshot captures targetTab and not dashboard or background tab!
+                if (targetTab?.id && !targetTab.active) {
+                  try {
+                    await chrome.tabs.update(targetTab.id, { active: true });
+                    await new Promise((r) => setTimeout(r, 120));
+                  } catch (actErr) {
+                    console.warn('[PrivAgent SW] Target tab activation failed before capture:', actErr);
+                  }
+                }
                 const coordination = await coordinateMultimodalPerception({
                   tabId: targetTabId,
                   windowId: targetTab?.windowId,
@@ -755,6 +787,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           maxRetries: 2,
           delayBetweenStepsMs: 500,
           providerRetries: 0,
+          targetTabId,
         });
 
         console.info('[AgentTrace] agent loop started');

@@ -157,9 +157,17 @@ export function extractProvisioningDestination(
 /**
  * Checks if a tab is a valid web tab and NOT the dashboard.
  */
-export function isEligibleWebTab(tab: MinimalTab, dashboardOrigin = 'http://localhost:5173'): boolean {
+export function isEligibleWebTab(
+  tab: MinimalTab,
+  dashboardOrigin = 'http://localhost:5173',
+  dashboardTabId?: number
+): boolean {
+  if (!tab.id) return false;
+  if (typeof dashboardTabId === 'number' && tab.id === dashboardTabId) {
+    return false;
+  }
   const urlToTest = tab.url || (tab as any).pendingUrl;
-  if (!tab.id || !urlToTest) return false;
+  if (!urlToTest) return false;
 
   let parsed: URL;
   try {
@@ -196,13 +204,250 @@ export function isEligibleWebTab(tab: MinimalTab, dashboardOrigin = 'http://loca
   return true;
 }
 
+export interface TaskTargetReference {
+  rawTarget: string;
+  hostname?: string;
+  port?: string;
+  siteName?: string;
+  fullUrl?: string;
+  isOpenIntent: boolean;
+  isAlreadyOpenedIntent: boolean;
+}
+
+const COMMON_TLDS = new Set([
+  'com', 'org', 'net', 'in', 'io', 'co', 'ai', 'dev', 'app', 'edu', 'gov',
+  'uk', 'ca', 'de', 'jp', 'fr', 'au', 'ru', 'ch', 'it', 'nl', 'se', 'no', 'es', 'mil'
+]);
+
+/**
+ * Parses generic target references from task text locally and deterministically.
+ * Supports explicit URLs, domain names, localhost ports, and open/visit/already-opened intents.
+ * Zero hardcoding of specific websites.
+ */
+export function parseTaskTargetReference(task: string): TaskTargetReference | null {
+  if (!task) return null;
+  const text = task.trim();
+  const lower = text.toLowerCase();
+
+  const isAlreadyOpenedIntent = /\b(already\s+(?:opened|open)|have\s+opened|opened)\b/i.test(lower);
+  const isOpenIntent =
+    !isAlreadyOpenedIntent &&
+    /\b(open|opens|go\s+to|goto|visit|visits|navigate(?:\s+to)?|launch|launches|browse|browses)\b/i.test(lower);
+
+  // 1. Explicit http(s) URL
+  const urlMatch = text.match(/https?:\/\/[^\s"'`)\]]+/i);
+  if (urlMatch && urlMatch[0]) {
+    try {
+      const parsed = new URL(urlMatch[0]);
+      const hostParts = parsed.hostname.split('.');
+      const sitePart = hostParts[0] === 'www' && hostParts.length > 1 ? hostParts[1] : hostParts[0];
+      return {
+        rawTarget: urlMatch[0],
+        hostname: parsed.hostname,
+        port: parsed.port || undefined,
+        fullUrl: parsed.toString(),
+        siteName: sitePart,
+        isOpenIntent: true,
+        isAlreadyOpenedIntent,
+      };
+    } catch {
+      // fall through
+    }
+  }
+
+  // 2. Localhost / IP + port
+  const hostPortMatch = lower.match(/\b(localhost|127\.0\.0\.1):(\d+)\b/);
+  if (hostPortMatch) {
+    return {
+      rawTarget: hostPortMatch[0],
+      hostname: hostPortMatch[1],
+      port: hostPortMatch[2],
+      isOpenIntent: true,
+      isAlreadyOpenedIntent,
+    };
+  }
+
+  const spacePortMatch = lower.match(/\b(localhost|127\.0\.0\.1)(?:\s+(?:port\s+)?(\d+))\b/);
+  if (spacePortMatch) {
+    return {
+      rawTarget: spacePortMatch[0],
+      hostname: spacePortMatch[1],
+      port: spacePortMatch[2],
+      isOpenIntent: true,
+      isAlreadyOpenedIntent,
+    };
+  }
+
+  // 3. Domain reference (e.g. "flipkart.com", "google.com", "sub.domain.org")
+  const domainMatch = lower.match(/\b([a-zA-Z0-9-]+\.(?:[a-zA-Z]{2,}))(?::(\d+))?\b/);
+  if (domainMatch) {
+    const candidateHost = domainMatch[1];
+    const parts = candidateHost.split('.');
+    const tld = parts[parts.length - 1];
+    if (COMMON_TLDS.has(tld) || tld.length === 2 || parts.length >= 2) {
+      const sitePart = parts[0] === 'www' && parts.length > 1 ? parts[1] : parts[0];
+      return {
+        rawTarget: candidateHost,
+        hostname: candidateHost,
+        port: domainMatch[2] || undefined,
+        siteName: sitePart,
+        isOpenIntent,
+        isAlreadyOpenedIntent,
+      };
+    }
+  }
+
+  // 4. Open / visit verb followed by site name (e.g. "open google and search for cats", "go to flipkart")
+  const openVerbMatch = lower.match(
+    /\b(?:open|opens|go\s+to|goto|visit|visits|navigate(?:\s+to)?|launch|launches|browse|browses)\s+([a-zA-Z0-9-]+)(?:\.([a-zA-Z]{2,}))?\b/i
+  );
+  if (openVerbMatch && openVerbMatch[1]) {
+    const rawName = openVerbMatch[1];
+    const rawTld = openVerbMatch[2];
+    const STOP_WORDS = new Set(['tab', 'the', 'a', 'an', 'this', 'that', 'page', 'new', 'browser', 'link', 'url', 'window']);
+    if (!STOP_WORDS.has(rawName)) {
+      if (rawTld) {
+        return {
+          rawTarget: `${rawName}.${rawTld}`,
+          hostname: `${rawName}.${rawTld}`,
+          siteName: rawName,
+          isOpenIntent: true,
+          isAlreadyOpenedIntent: false,
+        };
+      }
+      return {
+        rawTarget: rawName,
+        siteName: rawName,
+        isOpenIntent: true,
+        isAlreadyOpenedIntent: false,
+      };
+    }
+  }
+
+  // 5. Preposition indicating site (e.g. "search for cats on google", "on flipkart find shirts")
+  const prepMatch = lower.match(/\b(?:on|in|at)\s+([a-zA-Z0-9-]+)(?:\.([a-zA-Z]{2,}))?\b/i);
+  if (prepMatch && prepMatch[1]) {
+    const rawName = prepMatch[1];
+    const rawTld = prepMatch[2];
+    const STOP_WORDS = new Set(['the', 'a', 'an', 'this', 'that', 'page', 'tab', 'window', 'top', 'bottom', 'left', 'right', 'screen']);
+    if (!STOP_WORDS.has(rawName)) {
+      if (rawTld) {
+        return {
+          rawTarget: `${rawName}.${rawTld}`,
+          hostname: `${rawName}.${rawTld}`,
+          siteName: rawName,
+          isOpenIntent: false,
+          isAlreadyOpenedIntent: false,
+        };
+      }
+      return {
+        rawTarget: rawName,
+        siteName: rawName,
+        isOpenIntent: false,
+        isAlreadyOpenedIntent: false,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Checks whether an open tab matches a parsed target reference.
+ */
+export function doesTabMatchTarget(tab: MinimalTab, ref: TaskTargetReference): boolean {
+  const urlStr = tab.url || (tab as any).pendingUrl;
+  if (!urlStr) return false;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(urlStr);
+  } catch {
+    return false;
+  }
+
+  // 1. Port match if port specified
+  if (ref.port) {
+    if (parsed.port !== ref.port) return false;
+    if (ref.hostname) {
+      const isLocalRef = ref.hostname === 'localhost' || ref.hostname === '127.0.0.1';
+      const isLocalTab = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+      if (isLocalRef && isLocalTab) return true;
+      return (
+        parsed.hostname.toLowerCase() === ref.hostname.toLowerCase() ||
+        parsed.hostname.toLowerCase().endsWith('.' + ref.hostname.toLowerCase())
+      );
+    }
+    return true;
+  }
+
+  // 2. Full URL match
+  if (ref.fullUrl) {
+    try {
+      const refParsed = new URL(ref.fullUrl);
+      if (
+        parsed.hostname.toLowerCase() === refParsed.hostname.toLowerCase() ||
+        parsed.hostname.toLowerCase().endsWith('.' + refParsed.hostname.toLowerCase()) ||
+        refParsed.hostname.toLowerCase().endsWith('.' + parsed.hostname.toLowerCase())
+      ) {
+        return true;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Hostname match
+  if (ref.hostname) {
+    const tabHost = parsed.hostname.toLowerCase();
+    const refHost = ref.hostname.toLowerCase();
+    if (
+      tabHost === refHost ||
+      tabHost.endsWith('.' + refHost) ||
+      refHost.endsWith('.' + tabHost)
+    ) {
+      return true;
+    }
+  }
+
+  // 4. SiteName match (domain name or page title)
+  if (ref.siteName) {
+    const site = ref.siteName.toLowerCase();
+    const tabHost = parsed.hostname.toLowerCase();
+    if (tabHost.includes(site)) {
+      return true;
+    }
+    if (tab.title && tab.title.toLowerCase().includes(site)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function buildProvisioningDestinationUrl(ref: TaskTargetReference): string {
+  if (ref.fullUrl) return ref.fullUrl;
+  if (ref.hostname) {
+    const protocol = (ref.hostname === 'localhost' || ref.hostname === '127.0.0.1') ? 'http:' : 'https:';
+    return `${protocol}//${ref.hostname}${ref.port ? `:${ref.port}` : ''}`;
+  }
+  if (ref.siteName) {
+    if (ref.siteName.toLowerCase() === 'google') {
+      return 'https://www.google.com';
+    }
+    return `https://www.${ref.siteName.toLowerCase()}.com`;
+  }
+  return '';
+}
+
 /**
  * Resolve the target web tab from a list of open tabs.
  */
 export function resolveTargetWebTab(
   tabs: MinimalTab[],
   task: string,
-  dashboardOrigin = 'http://localhost:5173'
+  dashboardOrigin = 'http://localhost:5173',
+  dashboardTabId?: number
 ): TargetResolutionResult {
   const discoveredTabs: Array<{ id?: number; origin?: string; url?: string }> = [];
   const eligibleTabs: MinimalTab[] = [];
@@ -224,22 +469,61 @@ export function resolveTargetWebTab(
       url: tabUrl.split('?')[0], // strip query params for safe diagnostics
     });
 
-    if (isEligibleWebTab(t, dashboardOrigin)) {
+    if (isEligibleWebTab(t, dashboardOrigin, dashboardTabId)) {
       eligibleTabs.push(t);
     }
   }
 
-  if (eligibleTabs.length === 0) {
-    const explicit = extractExplicitTargetFromTask(task);
-    if (explicit && explicit.port) {
+  const targetRef = parseTaskTargetReference(task);
+
+  // ── 1. Explicit target resolution from task ──────────────────────────────
+  if (targetRef) {
+    const matchingTabs = eligibleTabs.filter((t) => doesTabMatchTarget(t, targetRef));
+
+    if (matchingTabs.length > 0) {
+      // Active matching tab wins; otherwise first matching tab
+      const activeMatch = matchingTabs.find((t) => t.active);
+      const selected = activeMatch || matchingTabs[0];
       return {
-        selectedTab: null,
+        selectedTab: selected,
         discoveredTabs,
-        reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port}.`,
+        reason: `Matched explicit target in task: ${targetRef.rawTarget}`,
       };
     }
-    // No eligible tab: fall back to Target Tab Provisioning when — and only when —
-    // a deterministic destination can be extracted from the task itself.
+
+    // No matching tab among open tabs:
+    // If the task expresses OPEN / VISIT intent for a web target (not a local port) -> provision a dedicated new tab
+    if (targetRef.isOpenIntent && !targetRef.port) {
+      const destUrl = buildProvisioningDestinationUrl(targetRef);
+      if (destUrl && !isDashboardUrl(destUrl, dashboardOrigin)) {
+        return {
+          selectedTab: null,
+          discoveredTabs,
+          reason: `Target tab for "${targetRef.rawTarget}" not found. Provisioning a dedicated target tab at ${destUrl}.`,
+          provisioning: {
+            url: destUrl,
+            source: targetRef.fullUrl ? 'explicit-url' : 'google-intent',
+          },
+        };
+      }
+    }
+
+    // If user stated the site was already open, or port was not found: fail honestly.
+    // NEVER hijack or navigate an unrelated user tab!
+    const notFoundReason = targetRef.port
+      ? `No target web tab found. Please open http://${targetRef.hostname || 'localhost'}:${targetRef.port}.`
+      : `Target tab for "${targetRef.rawTarget}" was not found among open tabs. Please open ${targetRef.rawTarget} and try again.`;
+
+    return {
+      selectedTab: null,
+      discoveredTabs,
+      reason: notFoundReason,
+      failureCode: 'DESTINATION_REQUIRED',
+    };
+  }
+
+  // ── 2. Generic tasks without target site reference ───────────────────────
+  if (eligibleTabs.length === 0) {
     const provisioning = extractProvisioningDestination(task, dashboardOrigin);
     if (provisioning) {
       return {
@@ -257,66 +541,7 @@ export function resolveTargetWebTab(
     };
   }
 
-  // 1. Explicit target resolution from task
-  const explicit = extractExplicitTargetFromTask(task);
-  if (explicit) {
-    if (explicit.port) {
-      const matchedTab = eligibleTabs.find((t) => {
-        try {
-          const tabUrl = t.url || (t as any).pendingUrl;
-          if (!tabUrl) return false;
-          const u = new URL(tabUrl);
-          const isLocalMatch =
-            (explicit.hostname === 'localhost' || explicit.hostname === '127.0.0.1') &&
-            (u.hostname === 'localhost' || u.hostname === '127.0.0.1');
-          const isHostMatch = u.hostname.toLowerCase() === explicit.hostname?.toLowerCase();
-          return (isLocalMatch || isHostMatch) && u.port === explicit.port;
-        } catch {
-          return false;
-        }
-      });
-
-      if (matchedTab) {
-        return {
-          selectedTab: matchedTab,
-          discoveredTabs,
-          reason: `Matched explicit target in task: ${explicit.hostname || 'localhost'}:${explicit.port}`,
-        };
-      }
-
-      // If user explicitly asked for a specific port (e.g. 4173) and it wasn't found,
-      // fail honestly and tell the user to open that specific target.
-      return {
-        selectedTab: null,
-        discoveredTabs,
-        reason: `No target web tab found. Please open http://${explicit.hostname || 'localhost'}:${explicit.port}.`,
-      };
-    } else if (explicit.hostname && explicit.hostname !== 'localhost' && explicit.hostname !== '127.0.0.1') {
-      const matchedTab = eligibleTabs.find((t) => {
-        try {
-          const tabUrl = t.url || (t as any).pendingUrl;
-          if (!tabUrl) return false;
-          const u = new URL(tabUrl);
-          return (
-            u.hostname.toLowerCase() === explicit.hostname?.toLowerCase() ||
-            u.hostname.toLowerCase().endsWith('.' + explicit.hostname?.toLowerCase())
-          );
-        } catch {
-          return false;
-        }
-      });
-
-      if (matchedTab) {
-        return {
-          selectedTab: matchedTab,
-          discoveredTabs,
-          reason: `Matched explicit hostname in task: ${explicit.hostname}`,
-        };
-      }
-    }
-  }
-
-  // 2. Otherwise: Use active eligible web tab (dynamic resolution, never forced to localhost:4173)
+  // Use active eligible web tab (dynamic resolution, never forced to localhost:4173)
   const activeTab = eligibleTabs.find((t) => t.active);
   if (activeTab) {
     return {
@@ -326,7 +551,7 @@ export function resolveTargetWebTab(
     };
   }
 
-  // 3. Fallback: First eligible web tab (e.g. if focus was on extension or dashboard)
+  // Fallback: First eligible web tab
   return {
     selectedTab: eligibleTabs[0] || null,
     discoveredTabs,
@@ -355,4 +580,5 @@ export async function verifyTargetTabAlive(
     return { alive: false, reason: `Target tab ${targetTabId} inaccessible: ${err?.message || 'closed'}` };
   }
 }
+
 

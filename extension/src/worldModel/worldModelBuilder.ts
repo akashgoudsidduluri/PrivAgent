@@ -29,7 +29,8 @@ import { PrivacyFinding } from '../privacy/fusion';
 import { extractVisualRegions } from '../visualPerception/visualRegions';
 import { detectCanvasAndImageUI } from '../visualPerception/canvasDetector';
 import { computeSpatialRelationships } from './spatialEngine';
-import { extractAccessibilityTree } from './accessibilityTree';
+import { extractAccessibilityTree, sanitizeAccessibleName } from './accessibilityTree';
+import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 import { buildEntityGraph } from './entityGraph';
 import {
   classifyPage,
@@ -106,7 +107,9 @@ export function buildBrowserWorldModel(options: BuildWorldModelOptions = {}): Br
     isReady: doc.readyState === 'complete' || doc.readyState === 'interactive',
     hasActiveModal: Boolean(activeModal),
     activeModalSelector: activeModal?.selector,
-    activeModalLabel: activeModal?.label,
+    activeModalLabel: activeModal?.label
+      ? (scanForRawSensitiveValues(activeModal.label).length > 0 ? 'Protected Modal' : activeModal.label)
+      : undefined,
     totalDomElements: doc.querySelectorAll('*').length,
     isLargeDom: doc.querySelectorAll('*').length > 800,
     timestamp: Date.now(),
@@ -141,12 +144,20 @@ export function buildBrowserWorldModel(options: BuildWorldModelOptions = {}): Br
 
     const id = el.id || `wm-elem-${pageGeneration}-${index + 1}`;
     const placeholder = typeof (el as any).placeholder === 'string' ? (el as any).placeholder : '';
-    const label = (
+    let label = (
       el.getAttribute('aria-label') ||
       el.getAttribute('title') ||
       placeholder ||
       (el.innerText || el.textContent || '')
     ).trim().slice(0, 60);
+
+    const violations = scanForRawSensitiveValues(label);
+    if (violations.length > 0) {
+      label = sanitizeAccessibleName(label) || 'Protected Field';
+      if (scanForRawSensitiveValues(label).length > 0) {
+        label = 'Protected Field';
+      }
+    }
 
     const isEnabled = !el.hasAttribute('disabled') && el.getAttribute('aria-disabled') !== 'true';
 
@@ -191,13 +202,17 @@ export function buildBrowserWorldModel(options: BuildWorldModelOptions = {}): Br
   headingElements.slice(0, 30).forEach((el, idx) => {
     const text = (el.textContent || '').trim();
     if (text.length > 2 && isElementVisible(el)) {
+      let preview = text.slice(0, 40);
+      if (scanForRawSensitiveValues(preview).length > 0) {
+        preview = 'Protected Text';
+      }
       textRegions.push({
         id: el.id || `text-region-${idx + 1}`,
         bbox: getBbox(el),
         length: text.length,
         tag: el.tagName.toLowerCase(),
         isHeading: ['h1', 'h2', 'h3'].includes(el.tagName.toLowerCase()),
-        sanitizedPreview: text.slice(0, 40),
+        sanitizedPreview: preview,
       });
     }
   });

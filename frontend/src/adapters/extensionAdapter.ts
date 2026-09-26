@@ -254,30 +254,49 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       this.lastLifecycleStage = status;
     }
 
-    const steps: StepTelemetry[] = (data.steps || []).map((s: any, idx: number) => ({
-      step: s.step || idx + 1,
-      actionType: s.action?.action || 'unknown',
-      targetDescription: s.action?.target || s.action?.url || `Step ${idx + 1}`,
-      validationPassed: s.validationAllowed ?? true,
-      validationReason: s.validationReason,
-      executionSuccess: s.executionSuccess ?? true,
-      executionError: s.executionError,
-      sensitiveCategoryDetected: s.targetType,
-      timestamp: s.timestamp || Date.now(),
-      riskAssessment: s.riskAssessment,
-      semanticVerification: s.semanticVerification,
-      confidenceScore: s.confidenceEvaluation?.confidenceScore,
-      selfHealingRecovered: s.selfHealing?.recovered,
-      semanticContext: s.semanticContext,
-    }));
+    const steps: StepTelemetry[] = (data.steps || []).map((s: any, idx: number) => {
+      let targetDescription = s.action?.target || s.action?.url;
+      if (!targetDescription) {
+        if (s.action?.action === 'scroll') {
+          targetDescription = `Scroll ${s.action.direction || 'down'} (${s.action.amount || 250}px)`;
+        } else if (s.action?.action === 'wait') {
+          targetDescription = `Wait ${s.action.durationMs || 500}ms`;
+        } else {
+          targetDescription = `Step ${idx + 1}`;
+        }
+      }
+      return {
+        step: s.step || idx + 1,
+        actionType: s.action?.action || 'unknown',
+        targetDescription,
+        validationPassed: s.validationAllowed ?? true,
+        validationReason: s.validationReason,
+        executionSuccess: s.executionSuccess ?? true,
+        executionError: s.executionError,
+        sensitiveCategoryDetected: s.targetType,
+        timestamp: s.timestamp || Date.now(),
+        riskAssessment: s.riskAssessment,
+        semanticVerification: s.semanticVerification,
+        confidenceScore: s.confidenceEvaluation?.confidenceScore,
+        selfHealingRecovered: s.selfHealing?.recovered,
+        semanticContext: s.semanticContext,
+      };
+    });
 
     const latestStep = steps.length > 0 ? steps[steps.length - 1] : undefined;
+
+    const currentUrl =
+      data.currentUrl ||
+      latestStep?.semanticContext?.url ||
+      (data.steps && data.steps.length > 0 ? data.steps[data.steps.length - 1].url : undefined) ||
+      this.state.currentUrl;
 
     this.state = {
       ...this.state,
       status,
       currentStep: data.currentStep || steps.length,
       currentPipelineStage: stage,
+      currentUrl,
       reason: data.reason,
       pageType: data.pageType || latestStep?.semanticContext?.pageType,
       candidateEntities: data.candidateEntities || latestStep?.semanticContext?.entities,

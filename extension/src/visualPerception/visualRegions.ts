@@ -18,6 +18,7 @@
 
 import { VisualRegion, VisualRegionType } from './visualTypes';
 import { isElementVisible } from '../content/domInteractiveScanner';
+import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 
 function getBbox(el: HTMLElement): [number, number, number, number] {
   if (typeof el.getBoundingClientRect !== 'function') return [0, 0, 0, 0];
@@ -36,7 +37,7 @@ const SENSITIVE_PATTERN = /\b(password|passwd|secret|pin|cvv|cvc|token|card|pan|
 function sanitizeSemanticHint(hint: string): string {
   if (!hint) return '';
   const clean = hint.trim().replace(/\s+/g, ' ').slice(0, 50);
-  if (SENSITIVE_PATTERN.test(clean)) {
+  if (SENSITIVE_PATTERN.test(clean) || scanForRawSensitiveValues(clean).length > 0) {
     return 'Protected Credential Region';
   }
   return clean;

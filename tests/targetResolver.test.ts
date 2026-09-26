@@ -145,5 +145,82 @@ describe('targetResolver', () => {
       expect(tab99?.url).not.toContain('secret123');
       expect(tab99?.url).not.toContain('99998888');
     });
+
+    it('Case A: does NOT hijack unrelated user tab when task asks to open Google; provisions dedicated Google tab', () => {
+      const unrelatedGitHubTab: MinimalTab = {
+        id: 77,
+        url: 'https://github.com/my-org/private-repo',
+        title: 'private-repo: Pull Requests',
+        active: true,
+      };
+      const tabs = [dashboardTab, unrelatedGitHubTab];
+
+      const result = resolveTargetWebTab(tabs, 'open google and search for cats', 'http://localhost:5173', 10);
+
+      // Unrelated tab MUST NOT be selected
+      expect(result.selectedTab).toBeNull();
+      // Must provision dedicated Google tab
+      expect(result.provisioning).toBeDefined();
+      expect(result.provisioning?.url).toBe('https://www.google.com');
+      expect(result.reason).toContain('google');
+    });
+
+    it('Case B: reuses existing Flipkart tab without creating a new tab or touching unrelated user tab', () => {
+      const flipkartTab: MinimalTab = {
+        id: 88,
+        url: 'https://www.flipkart.com/account/orders',
+        title: 'Flipkart - Online Shopping',
+        active: false,
+      };
+      const unrelatedDocsTab: MinimalTab = {
+        id: 99,
+        url: 'https://docs.google.com/document/d/12345/edit',
+        title: 'Quarterly Report - Google Docs',
+        active: true,
+      };
+      const tabs = [dashboardTab, flipkartTab, unrelatedDocsTab];
+
+      const result = resolveTargetWebTab(tabs, 'I already opened flipkart.com, perform login', 'http://localhost:5173', 10);
+
+      // Flipkart tab MUST be selected
+      expect(result.selectedTab?.id).toBe(88);
+      expect(result.selectedTab?.url).toContain('flipkart.com');
+      // No provisioning should take place
+      expect(result.provisioning).toBeUndefined();
+    });
+
+    it('Case C: fails honestly with DESTINATION_REQUIRED when user claims site was already opened but no matching tab exists', () => {
+      const unrelatedTab: MinimalTab = {
+        id: 77,
+        url: 'https://news.ycombinator.com',
+        title: 'Hacker News',
+        active: true,
+      };
+      const tabs = [dashboardTab, unrelatedTab];
+
+      const result = resolveTargetWebTab(tabs, 'I already opened flipkart.com, perform login', 'http://localhost:5173', 10);
+
+      // Must NOT select unrelated tab
+      expect(result.selectedTab).toBeNull();
+      // Must NOT provision a tab when user asserted it was already open
+      expect(result.provisioning).toBeUndefined();
+      expect(result.failureCode).toBe('DESTINATION_REQUIRED');
+      expect(result.reason).toContain('flipkart.com');
+    });
+
+    it('strictly excludes dashboard tab by numeric dashboardTabId regardless of URL', () => {
+      const maskedDashboardTab: MinimalTab = {
+        id: 10,
+        url: 'https://custom-domain.internal/dashboard',
+        active: true,
+      };
+      const tabs = [maskedDashboardTab];
+
+      expect(isEligibleWebTab(maskedDashboardTab, 'http://localhost:5173', 10)).toBe(false);
+
+      const result = resolveTargetWebTab(tabs, 'click something', 'http://localhost:5173', 10);
+      expect(result.selectedTab).toBeNull();
+    });
   });
 });
+

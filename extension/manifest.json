@@ -22,7 +22,9 @@
     "tabs"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
@@ -30,7 +32,7 @@
   "web_accessible_resources": [
     {
       "resources": ["assets/ocr/*"],
-      "matches": ["<all_urls>"]
+      "matches": ["<all_urls>", "http://localhost/*", "http://127.0.0.1/*"]
     }
   ],
   "background": {
@@ -39,7 +41,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["<all_urls>", "http://localhost/*", "http://127.0.0.1/*"],
       "js": ["contentScript.js"],
       "css": ["contentStyles.css"],
       "run_at": "document_idle"
