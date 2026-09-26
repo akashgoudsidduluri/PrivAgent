@@ -114,7 +114,7 @@ describe('Fusion inside minimization', () => {
       }),
       { task: '' }
     );
-    expect(result.report.sources).toEqual({ dom: 1, ocr: 1, visual: 0 });
+    expect(result.report.sources).toEqual({ dom: 1, ocr: 1, visual: 0, nlp: 0 });
   });
 });
 

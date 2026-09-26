@@ -324,7 +324,7 @@ export function summarizeDecisions(records: PolicyDecisionRecord[]): PolicySumma
     minimized: 0,
     failClosed: 0,
     byCategory: {},
-    bySource: { dom: 0, ocr: 0, visual: 0 },
+    bySource: { dom: 0, ocr: 0, visual: 0, nlp: 0 },
     byDecision: { NEVER_TRANSMIT: 0, REDACT: 0, MINIMIZE: 0, FAIL_CLOSED: 0 },
   };
 

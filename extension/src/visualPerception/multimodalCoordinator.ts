@@ -30,12 +30,18 @@ import {
   isSensitiveEntityType,
 } from '../privacy/types';
 import {
+  candidateFromContextualDetection,
   candidateFromDOMPageDetection,
   candidateFromOCRDetection,
   candidateFromVisualDetection,
   fusePrivacyFindings,
   PrivacyFinding,
 } from '../privacy/fusion';
+import {
+  ContextualOcrFinding,
+  defaultContextualDetector,
+  detectContextualInOcr,
+} from '../privacy/contextualPii';
 import {
   convertToSafeOCRRegions,
   processSpatialOCRResult,
@@ -209,20 +215,33 @@ export async function coordinateMultimodalPerception(
   let ocrRegions: SafeOCRRegion[] = [];
   let rawOcrRegions: OCRRegion[] = [];
   let ocrLatencyMs = 0;
+  // Phase 15: contextual (NLP) findings derived from the SAME local OCR pass.
+  // They are metadata-only and re-enter the pipeline through fusion like any
+  // other perception source. They never bypass the policy layer.
+  let contextualFindings: ContextualOcrFinding[] = [];
 
   if (input.ocrEngine) {
     const ocrStart = Date.now();
     try {
       const ocrResult: InternalOCRResult = await input.ocrEngine.recognize(screenshotDataUrl!);
       ocrLatencyMs = Date.now() - ocrStart;
+      const imageDimensions = {
+        width: screenshotDimensions.screenshotWidth,
+        height: screenshotDimensions.screenshotHeight,
+      };
       rawOcrRegions = processSpatialOCRResult(ocrResult, {
         pageGeneration,
-        imageDimensions: {
-          width: screenshotDimensions.screenshotWidth,
-          height: screenshotDimensions.screenshotHeight,
-        },
+        imageDimensions,
       });
       ocrRegions = convertToSafeOCRRegions(rawOcrRegions);
+      // Runs HERE, while the raw OCR text is still local and in scope — the
+      // only place reading it is legitimate. Spans are mapped straight back to
+      // OCR word boxes; anything unmappable is kept so fusion fails closed on it.
+      contextualFindings = detectContextualInOcr(
+        ocrResult,
+        defaultContextualDetector,
+        imageDimensions
+      );
     } catch (ocrErr) {
       console.warn('[MultimodalCoordinator] OCR processing error:', ocrErr);
     }
@@ -245,10 +264,25 @@ export async function coordinateMultimodalPerception(
       })
     );
 
+  // Phase 15: contextual OCR hits become fusion candidates. A hit whose span
+  // could not be mapped to a region is STILL emitted (bbox null) so that the
+  // must-redact-but-unlocatable case escalates instead of disappearing.
+  const contextualCandidates = contextualFindings.map((f, i) =>
+    candidateFromContextualDetection({
+      id: `ctx-ocr-${i + 1}`,
+      type: f.type,
+      confidence: f.confidence,
+      bbox: f.bbox,
+      length: f.length,
+      evidence: f.evidence,
+    })
+  );
+
   const fusionResult = fusePrivacyFindings([
     ...domCandidates,
     ...visualCandidates,
     ...ocrCandidates,
+    ...contextualCandidates,
   ]);
 
   // Release local screenshot memory if acquired via provider

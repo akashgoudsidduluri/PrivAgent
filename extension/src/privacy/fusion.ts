@@ -33,11 +33,12 @@
 import { AgentBoundingBox, AgentDetection, DetectionResult, DetectionSource, InteractiveEntityType, isSensitiveEntityType, SensitiveEntityType, VisualDetectionResult } from './types';
 import { SafeOCRDetection } from '../ocr/types';
 import { decideTransmission, PolicyDecisionRecord, severityForCategory, severityRank } from './privacyDecision';
+import type { ContextualPrivacyCategory } from './contextualPii';
 
 // ── Normalized finding model ─────────────────────────────────────────────────
 
 /** Which local perception source contributed evidence. */
-export type FindingSource = 'dom' | 'ocr' | 'visual';
+export type FindingSource = 'dom' | 'ocr' | 'visual' | 'nlp';
 
 /** Privacy categories. A superset of M1's SensitiveEntityType. */
 export type PrivacyCategory = SensitiveEntityType | InteractiveEntityType | 'face' | 'unknown' | (string & {});
@@ -70,6 +71,14 @@ export interface PrivacyFinding {
   length: number | null;
   /** True when any contributing signal was clipped by the viewport. */
   isPartiallyVisible: boolean;
+  /**
+   * Phase 15: true when this finding MUST be redacted but cannot be safely
+   * located — no region and no selector, so nothing can be reliably masked.
+   * Such a finding is never reported as safely handled: `exportable` is forced
+   * false and `evidence` carries `fail_closed:unmappable`. Dropping it would
+   * under-report a real sensitive region, which is the worse failure.
+   */
+  unmappable: boolean;
   /** How many raw detections were merged into this finding. */
   fusedFrom: number;
   /** Multi-source fusion (i.e. more than one perception source agreed). */
@@ -165,6 +174,41 @@ export function candidateFromOCRDetection(det: SafeOCRDetection): FusionCandidat
   };
 }
 
+/**
+ * Phase 15: a contextual (NLP) finding from DOM text or OCR.
+ *
+ * This ADAPTS an already-computed contextual hit into the same candidate shape
+ * every other source uses. It duplicates no detector and defines no boundary:
+ * the policy verdict below is still `privacyDecision`, and the redaction engine
+ * is still the only thing that redacts.
+ *
+ * When `bbox` is null the candidate is deliberately still emitted. Fusion then
+ * raises it as `unmappable` and fails closed, rather than quietly discarding a
+ * high-confidence sensitive finding we simply could not locate.
+ */
+export function candidateFromContextualDetection(input: {
+  id: string;
+  type: ContextualPrivacyCategory;
+  confidence: number;
+  bbox: [number, number, number, number] | null;
+  selector?: string | null;
+  length?: number | null;
+  evidence?: string;
+}): FusionCandidate {
+  return {
+    evidenceId: input.id,
+    category: input.type as PrivacyCategory,
+    confidence: clampConfidence(input.confidence),
+    source: 'nlp',
+    detectionSource: 'text_pattern',
+    region: input.bbox,
+    selector: input.selector ?? null,
+    length: typeof input.length === 'number' ? input.length : null,
+    isPartiallyVisible: false,
+    evidence: [input.evidence ?? 'nlp:contextual'],
+  };
+}
+
 /** M4 sanitized payload detection (what reasoning providers may receive). */
 export function candidateFromAgentDetection(
   det: AgentDetection,
@@ -244,7 +288,7 @@ export function fusePrivacyFindings(
   const crossThreshold = options.crossCategoryOverlap ?? DEFAULT_CROSS_CATEGORY_OVERLAP;
 
   const groups: FusionCandidate[][] = [];
-  const sourceCounts: Record<FindingSource, number> = { dom: 0, ocr: 0, visual: 0 };
+  const sourceCounts: Record<FindingSource, number> = { dom: 0, ocr: 0, visual: 0, nlp: 0 };
   const categoryCounts: Record<string, number> = {};
 
   for (const candidate of candidates) {
@@ -346,6 +390,15 @@ function buildFinding(group: FusionCandidate[], index: number): PrivacyFinding {
 
   const decision = decideTransmission({ category, confidence, sources });
 
+  // Phase 15 fail-closed escalation. A finding that MUST be redacted but has no
+  // region and no selector cannot be masked reliably. Under-reporting it is the
+  // worse failure, so it is escalated rather than dropped: `unmappable` is set,
+  // `exportable` is forced false, and the audit trail records why.
+  const unmappable = decision.mustRedact && region === null && !selector;
+  if (unmappable) {
+    evidence.push('fail_closed:unmappable');
+  }
+
   const finding: PrivacyFinding = {
     id: `finding-${category}-${index + 1}`,
     category,
@@ -359,12 +412,13 @@ function buildFinding(group: FusionCandidate[], index: number): PrivacyFinding {
     selector,
     length,
     isPartiallyVisible,
+    unmappable,
     fusedFrom: group.length,
     multiSource: sources.length > 1,
     evidence,
     decision,
     mustRedact: decision.mustRedact,
-    exportable: decision.exportableMetadata,
+    exportable: unmappable ? false : decision.exportableMetadata,
   };
 
   return finding;
@@ -400,4 +454,15 @@ export function findingRegionToBoundingBox(
 ): AgentBoundingBox | null {
   if (!region) return null;
   return { x: region[0], y: region[1], width: region[2], height: region[3] };
+}
+
+/**
+ * Phase 15: the findings that must be redacted but cannot be located.
+ *
+ * A caller responsible for redaction should treat a non-empty result as
+ * "coverage is incomplete" rather than assuming every must-redact finding has a
+ * region to act on.
+ */
+export function unmappableMustRedactFindings(findings: PrivacyFinding[]): PrivacyFinding[] {
+  return findings.filter((f) => f.unmappable);
 }

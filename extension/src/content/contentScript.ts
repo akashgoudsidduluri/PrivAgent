@@ -10,7 +10,8 @@ import { assertWorldModelSafe, createSanitizedWorldModelSummary } from '../world
 import { worldModelStore } from '../worldModel/worldModelStore';
 import { BrowserWorldModel } from '../worldModel/types';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput } from '../semanticUnderstanding';
-import { fusePrivacyFindings, candidateFromDOMPageDetection, PrivacyFinding } from '../privacy/fusion';
+import { fusePrivacyFindings, candidateFromDOMPageDetection, candidateFromContextualDetection, PrivacyFinding } from '../privacy/fusion';
+import { detectContextualForDomDetections } from '../privacy/contextualPii';
 import { assessInteractability, isSafeKey, DuplicateClickGuard } from '../agent/humanInteraction';
 
 const currentUrl = window.location.href;
@@ -201,9 +202,33 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
   lastReport = safeExport as PrivacyScanReport;
 
   try {
-    const fusion = fusePrivacyFindings(
-      allDetections.map((d) => candidateFromDOMPageDetection(d))
+    // Phase 15: contextual (NLP) signal, anchored to detections the DOM engine
+    // ALREADY made. It reuses each anchor's own selector and geometry, so fusion
+    // folds these signals into the existing findings rather than duplicating
+    // them, and the redaction engine above is left completely untouched.
+    const contextualDomCandidates = detectContextualForDomDetections(
+      document,
+      detections.map((d) => ({
+        selector: d.selector || null,
+        hints: [d.type, d.source],
+        bbox: [d.bbox[0], d.bbox[1], d.bbox[2], d.bbox[3]] as [number, number, number, number],
+      }))
+    ).map((f, i) =>
+      candidateFromContextualDetection({
+        id: `ctx-dom-${i + 1}`,
+        type: f.type,
+        confidence: f.confidence,
+        bbox: f.bbox,
+        selector: f.selector,
+        length: f.length,
+        evidence: f.evidence,
+      })
     );
+
+    const fusion = fusePrivacyFindings([
+      ...allDetections.map((d) => candidateFromDOMPageDetection(d)),
+      ...contextualDomCandidates,
+    ]);
     const { worldModel, activeWorldModelRef } = buildCurrentWorldModel(fusion.findings);
     currentPageGeneration += 1;
     persistPageGeneration(currentPageGeneration);

@@ -282,7 +282,7 @@ describe('Findings carry metadata only', () => {
       candidate({ evidenceId: 'c', source: 'ocr', category: 'email', region: [400, 0, 100, 30], selector: '#mail' }),
     ]);
     expect(result.candidateCount).toBe(3);
-    expect(result.sourceCounts).toEqual({ dom: 1, ocr: 2, visual: 0 });
+    expect(result.sourceCounts).toEqual({ dom: 1, ocr: 2, visual: 0, nlp: 0 });
     expect(result.categoryCounts.credit_card).toBe(2);
     expect(result.categoryCounts.email).toBe(1);
   });
