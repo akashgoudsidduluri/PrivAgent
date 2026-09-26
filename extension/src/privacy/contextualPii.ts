@@ -242,6 +242,11 @@ interface CapitalizedRun {
   tokens: string[];
 }
 
+/** The single-space join of an OCR line's words — the invariant, not a hope. */
+function reconstructLineText(words: InternalOCRWord[]): string {
+  return words.map((w) => w.text).join(' ');
+}
+
 /**
  * Collect every run of consecutive name-shaped tokens, with the leading label
  * tokens ("Account Holder Jane Doe" → "Jane Doe") trimmed off.
@@ -458,6 +463,14 @@ const MAX_DOM_CONTEXT_ANCHORS = 60;
 const MAX_DOM_CONTEXT_CHARS = 400;
 const MAX_DOM_CONTEXT_HITS_PER_ANCHOR = 4;
 
+/**
+ * Bound the work per screenshot. Fusion grouping is O(candidates²), so an
+ * unbounded candidate list from a text-heavy capture would quietly turn the
+ * perception step into the slowest part of the loop.
+ */
+const MAX_OCR_CONTEXTUAL_LINES = 80;
+const MAX_OCR_CONTEXTUAL_FINDINGS = 60;
+
 function safeQuery(root: ParentNode, selector: string): Element | null {
   try {
     return root.querySelector(selector);
@@ -475,9 +488,10 @@ function boundedText(value: string | null | undefined, limit: number): string {
  *
  * The text is assembled from accessibility/label attributes, any associated
  * `<label>`, and the immediate container's text — capped at
- * `MAX_DOM_CONTEXT_CHARS`. It is consumed by the detector and dropped. Sources
- * that merely repeat an earlier one are dropped too, so a label that appears in
- * both `placeholder` and the container is analysed once, not twice.
+ * `MAX_DOM_CONTEXT_CHARS`. It is consumed by the detector and dropped. A source
+ * that merely repeats one already collected is stripped from it, so a label
+ * appearing in both `placeholder` and the container is analysed once instead of
+ * dragging the container's own text down with it.
  */
 function buildAnchorContextText(element: Element): string {
   const parts: string[] = [];
@@ -576,20 +590,34 @@ export function detectContextualForDomDetections(
 /**
  * Map a contextual hit back onto the bounding boxes of the OCR words it covers.
  *
- * OCR words are re-joined with single spaces so offsets are reconstructible
- * exactly, then every word overlapping the hit's span contributes its box, and
- * the union is returned.
+ * A hit's span is an offset into the LINE TEXT the detector analysed, but the
+ * boxes belong to WORDS. Those are only reconcilable if the line text really is
+ * the single-space join of its words — and it usually is not. The OCR engine
+ * keeps `line.text` verbatim from Tesseract while DROPPING any word that has no
+ * text or no bounding box, so the join is routinely shorter than the line text
+ * and every offset after the first dropped word is shifted. Trusting a shifted
+ * offset masks the wrong pixels: a name comes back half-covered, or a hit slides
+ * onto its neighbours.
  *
- * FAILS CLOSED: returns null when no word overlaps the span, or when any
- * contributing word has an unusable box. A null here means "this sensitive
- * finding cannot be safely mapped to a region", which the fusion layer escalates
- * rather than silently dropping or silently trusting.
+ * So the invariant is VERIFIED, not assumed. When `lineText` is supplied and the
+ * reconstruction does not match it exactly, this returns null and the finding is
+ * escalated as unmappable. A missed redaction is recoverable; a redaction
+ * applied to the wrong pixels is not.
+ *
+ * FAILS CLOSED in every other ambiguous case too: null when no word overlaps
+ * the span, and null when any contributing word has an unusable box.
+ *
+ * @param lineText the exact text the hit's offsets refer to. Always pass it on
+ *   the production path; omitting it is a pure-geometry call for a caller that
+ *   already knows the join is exact.
  */
 export function mapContextualHitToOcrRegion(
   hit: ContextualPiiHit,
-  words: InternalOCRWord[]
+  words: InternalOCRWord[],
+  lineText?: string
 ): [number, number, number, number] | null {
   if (!hit || !Array.isArray(words) || words.length === 0) return null;
+  if (typeof lineText === 'string' && reconstructLineText(words) !== lineText) return null;
 
   let offset = 0;
   const boxes: OCRWordBox[] = [];
@@ -658,12 +686,15 @@ export function detectContextualInOcr(
   if (!ocrResult || !Array.isArray(ocrResult.lines)) return [];
   const out: ContextualOcrFinding[] = [];
 
-  for (const line of ocrResult.lines) {
+  for (const line of ocrResult.lines.slice(0, MAX_OCR_CONTEXTUAL_LINES)) {
     if (!line || typeof line.text !== 'string' || !Array.isArray(line.words)) continue;
     const hits = detector.detect({ text: line.text, hints: [] });
     if (!Array.isArray(hits)) continue;
     for (const hit of hits) {
-      let bbox = mapContextualHitToOcrRegion(hit, line.words);
+      if (out.length >= MAX_OCR_CONTEXTUAL_FINDINGS) return out;
+      // The line text is always supplied, so the span→box offset reconciliation
+      // is verified rather than assumed.
+      let bbox = mapContextualHitToOcrRegion(hit, line.words, line.text);
       // Clamp into the captured bitmap when its size is known. A hit that
       // cannot be clamped is unmappable rather than silently kept.
       if (bbox && imageDimensions) {

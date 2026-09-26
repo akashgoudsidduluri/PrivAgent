@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-09-26T17:48:15.731Z",
+  "phase": "Phase 14 correction pass: dashboard interaction UI",
+  "goal": "Prove the real dashboard renders the structured Phase 14 interaction projection, and that the PING watchdog does not duplicate agent progress.",
+  "provenance": {
+    "kind": "REAL_CHROME_REAL_DASHBOARD",
+    "browser": "Chromium (headless=new) driven over CDP",
+    "dashboard": "The REAL built dashboard served from frontend/dist — not a hand-written stand-in.",
+    "extension": "REAL production extension loaded from dist/",
+    "messagePath": "real dashboard → real content script → real service worker → real AgentLoop → projectAgentOutput → screenAgentOutput → TASK_PROGRESS → extensionAdapter → DashboardAgentState → agentView.update() → #agent-interaction DOM",
+    "securityGatesTouched": false,
+    "synthetic": false,
+    "note": "The reasoner backend is intentionally not running, so the task ends at the reasoning step with REASONER_FAILED. The projection, the screening, the transport, the adapter and the real DOM render are all still fully exercised."
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "tabs": {
+    "dashTabId": 1832587594,
+    "targetTabId": 1832587595,
+    "distinct": true
+  },
+  "case1_payloadFields": {
+    "payloads": 4,
+    "payloadsWithInteraction": 4,
+    "everyPayloadHasInteraction": true,
+    "fieldChecks": {
+      "interaction": true,
+      "interaction.activity": true,
+      "interaction.activity.phase": true,
+      "interaction.activity.summary": true,
+      "interaction.result": true,
+      "interaction.outcome": true,
+      "interaction.terminal": true,
+      "interaction.terminal.headline": true
+    },
+    "sampleActivity": {
+      "phase": "TERMINAL",
+      "summary": "Finished.",
+      "step": 1,
+      "maxSteps": 10,
+      "cycle": 1
+    },
+    "sampleTerminal": {
+      "outcome": "FAILED",
+      "reason": "REASONER_FAILED",
+      "headline": "Failed: the reasoning model was unavailable."
+    },
+    "sampleResult": {
+      "kind": "NONE",
+      "summary": "No result yet.",
+      "count": 0,
+      "items": []
+    },
+    "legacyReasonOnWire": true,
+    "legacyReasonValue": "Agent reasoning failed: Backend unavailable. Start it with: python backend/run.py",
+    "note": "`reason` is a legacy TaskState field the agent loop no longer sets. Its absence on the wire is expected; the structured `interaction` is the authority."
+  },
+  "case2_renderedDomMatchesPayload": {
+    "renderedText": "FAILED\n        Finished.\n        Step 1 of 10 · harness cycle 1\n      \n      \n           FAILED\n           Failed: the reasoning model was unavailable.\n           REASONER_FAILED\n         \n      \n        Result\n        No result yet.\n        \n           HARNESS: 1 cycle(s), 0 halt(s)PERCEPTION: 2 cycle(s)",
+    "renderedStatusBadge": "FAILED",
+    "renderedStatusBarStage": "IDLE",
+    "expectedFragments": [
+      "Finished.",
+      "Failed: the reasoning model was unavailable.",
+      "No result yet."
+    ],
+    "matchedFragments": [
+      "Finished.",
+      "Failed: the reasoning model was unavailable.",
+      "No result yet."
+    ],
+    "allFragmentsRendered": true,
+    "stepCounterShown": true,
+    "harnessCycleShown": true,
+    "note": "This is the assertion that was impossible in the previous Phase 14 run: the real rendered DOM, read back out of the real built dashboard, must contain the strings the real payload carried."
+  },
+  "case3_pingInvestigation": {
+    "pingSentBefore": 0,
+    "pingSentAfter": 1,
+    "pongReceived": 1,
+    "taskStarts": 0,
+    "taskProgressPayloads": 4,
+    "distinctStatusStepPairs": 3,
+    "duplicateStatusStepPairs": 1,
+    "intervalMs": 15000,
+    "intervalsPerAdapter": 1,
+    "verdict": "NORMAL_HEALTH_POLLING",
+    "conclusion": "PING is a connectivity watchdog only. The dashboard adapter creates exactly one 15s interval plus one initial ping, and each PONG updates only the extension-connected flag — it never calls notify(), so it cannot create a TASK_PROGRESS payload, cannot duplicate agent progress, and cannot cause a duplicate UI update. Progress payloads arrive solely from the service worker. Repeated status/step pairs are the agent genuinely reporting the same step more than once (per-step progress), not ping duplication.",
+    "note": "PONG replies are handled by both the permanent message bridge and the per-ping handler, so one PING can log more than one PONG line. That is a logging artefact of two legitimate listeners, not a second poll."
+  },
+  "case4_privacyBoundary": {
+    "forbiddenKeysInInteraction": [],
+    "interactionKeys": [
+      "outcome",
+      "activity",
+      "terminal",
+      "result",
+      "artifacts",
+      "timeline",
+      "awaitingConfirmation"
+    ],
+    "renderedPanel": "FAILED\n        Finished.\n        Step 1 of 10 · harness cycle 1\n      \n      \n           FAILED\n           Failed: the reasoning model was unavailable.\n           REASONER_FAILED\n         \n      \n        Result\n        No result yet.\n        \n           HARNESS: 1 cycle(s), 0 halt(s)PERCEPTION: 2 cycle(s)",
+    "outputScreeningVerdictsObserved": [
+      "[AgentTrace] output screen Object",
+      "[AgentTrace] output screen Object",
+      "[AgentTrace] output screen Object",
+      "[AgentTrace] output screen Object"
+    ],
+    "serviceWorkerConsoleLines": 46,
+    "securityGateTraces": {
+      "perception": true,
+      "containmentEstablished": true,
+      "harnessConsulted": true,
+      "m5": false,
+      "securityCritic": false,
+      "privacyPolicy": false,
+      "note": "The reasoner backend is offline, so the run ends at the reasoning step and the per-action gates have nothing to evaluate. They remain unmodified."
+    }
+  },
+  "result": {
+    "terminalReached": true,
+    "everyPayloadCarriesInteraction": true,
+    "allStructuredFieldsPresent": true,
+    "renderedDomShowsPayloadState": true,
+    "stepCounterRendered": true,
+    "harnessCycleRendered": true,
+    "pingIsHealthPollingOnly": true,
+    "noForbiddenKeysOnTheWire": true,
+    "outputScreenedInServiceWorker": true
+  }
+}

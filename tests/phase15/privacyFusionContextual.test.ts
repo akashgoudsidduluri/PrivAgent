@@ -359,6 +359,37 @@ describe('Phase 15 · 6. Sensitive OCR text maps to the correct bbox', () => {
     expect(person.length).toBe(12);
   });
 
+  it('refuses to map when the line text is not the single-space join of its words', () => {
+    // The OCR engine keeps line.text verbatim but DROPS any word with no box.
+    // Every offset after the drop shifts, so a hit computed on the line text no
+    // longer points at the words it named. Mapping anyway would mask the wrong
+    // pixels: here the true name spans x 150..270 but "Kumar" was dropped, so a
+    // naive mapping returns only [150,100,55,16] and leaves half the name
+    // visible. The invariant is verified, and a violation fails closed.
+    const lineText = 'Cardholder Name Rajesh Kumar 4111';
+    const words: InternalOCRWord[] = [
+      ocrWord('Cardholder', 10, 100, 90, 116),
+      ocrWord('Name', 95, 100, 140, 116),
+      ocrWord('Rajesh', 150, 100, 205, 116),
+    ];
+    const hit = defaultContextualDetector
+      .detect({ text: lineText })
+      .find((h) => h.evidence === 'contextual:person_label_cue')!;
+
+    expect(mapContextualHitToOcrRegion(hit, words)).toEqual([150, 100, 55, 16]); // the WRONG answer
+    expect(mapContextualHitToOcrRegion(hit, words, lineText)).toBeNull(); // fail closed
+  });
+
+  it('still maps when the line text IS the exact single-space join', () => {
+    const words = WORDS.slice(0, 4);
+    const lineText = words.map((w) => w.text).join(' ');
+    const hit = defaultContextualDetector
+      .detect({ text: lineText })
+      .find((h) => h.evidence === 'contextual:person_label_cue')!;
+
+    expect(mapContextualHitToOcrRegion(hit, words, lineText)).toEqual([150, 100, 120, 16]);
+  });
+
   it('clamps a mapped region to the captured bitmap', () => {
     const hit = { id: 'h', type: 'person_name' as const, confidence: 0.8, start: 0, end: 5, length: 5, evidence: 'test' };
     const bbox = mapContextualHitToOcrRegion(hit, [ocrWord('Rajesh', -50, 100, 500, 116)]);
@@ -531,6 +562,86 @@ describe('Phase 15 · 9. Missing or invalid geometry fails closed', () => {
 
     expect(result.findings[0]!.unmappable).toBe(false);
     expect(unmappableMustRedactFindings(result.findings)).toEqual([]);
+  });
+
+  it('flows OCR → contextual → fusion through the real multimodal coordinator', async () => {
+    // The helpers are unit-tested above; this proves the WIRING inside
+    // `coordinateMultimodalPerception` actually feeds contextual OCR evidence
+    // into the SAME fusion call as the DOM, visual and OCR candidates.
+    const { coordinateMultimodalPerception } = await import(
+      '../../extension/src/visualPerception/multimodalCoordinator'
+    );
+    const { MockOCREngine } = await import('../../extension/src/ocr/ocrEngine');
+
+    const words = [
+      ocrWord('Cardholder', 10, 100, 90, 116),
+      ocrWord('Name', 95, 100, 140, 116),
+      ocrWord('Rajesh', 150, 100, 205, 116),
+      ocrWord('Kumar', 210, 100, 270, 116),
+    ];
+    const engine = new MockOCREngine({
+      lines: [ocrLine(words)],
+      words,
+      fullText: words.map((w) => w.text).join(' '),
+      latencyMs: 11,
+    });
+
+    const result = await coordinateMultimodalPerception({
+      scanReport: {
+        timestamp: 1,
+        url: 'https://shop.example/checkout',
+        scanLatencyMs: 1,
+        redactionLatencyMs: 0,
+        totalElementsScanned: 1,
+        sensitiveElementsDetected: 0,
+        elementsProtected: 0,
+        leakageCount: 0,
+        categories: {
+          password: 0, credit_card: 0, account_number: 0, email: 0, phone: 0,
+          person_name: 0, pan: 0, otp: 0, cvv: 0, address: 0,
+        } as never,
+        detections: [],
+        status: 'Sanitized Context — Local Privacy Check Passed',
+        redactionMode: 'blackout',
+      } as never,
+      pageGeneration: 1,
+      screenshotDataUrl:
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAYAAAByNR6YAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI/SURBVHhe7cExAQAAAMKg9U9tCF8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgIsBI0AAAc5d7iQAAAAASUVORK5CYII=',
+      ocrEngine: engine,
+    });
+
+    const nlp = result.privacyFindings.filter((f) => f.sources.includes('nlp'));
+    expect(nlp.length).toBeGreaterThan(0);
+    expect(nlp[0]!.category).toBe('person_name');
+    // Mapped to the words the name actually covers — the OCR path's whole point.
+    expect(nlp[0]!.region).toEqual([150, 100, 120, 16]);
+    expect(nlp[0]!.unmappable).toBe(false);
+    expect(nlp[0]!.evidence).toContain('contextual:person_label_cue');
+    // Metadata only, all the way through the coordinator's return value.
+    expect(JSON.stringify(result)).not.toContain('Rajesh');
+  });
+
+  it('bounds the number of contextual OCR findings a screenshot can produce', () => {
+    const lines: InternalOCRResult['lines'] = [];
+    for (let i = 0; i < 200; i++) {
+      const words: InternalOCRWord[] = [
+        ocrWord(`Cardholder${i}`, 10, 100, 90, 116),
+        ocrWord('Name', 95, 100, 140, 116),
+        ocrWord('Rajesh', 150, 100, 205, 116),
+        ocrWord(`Kumar${i}`, 210, 100, 270, 116),
+      ];
+      lines.push(ocrLine(words));
+    }
+
+    const findings = detectContextualInOcr(
+      { lines, words: [], fullText: '', latencyMs: 1 },
+      defaultContextualDetector,
+      { width: 1280, height: 800 }
+    );
+    // Bounded: fusion grouping is O(candidates²), so an unbounded candidate list
+    // would make the perception step the slowest part of the loop.
+    expect(findings.length).toBeLessThanOrEqual(60);
+    expect(findings.length).toBeGreaterThan(0);
   });
 
   it('maps an OCR hit with an unusable word box to unmappable, not to a guess', () => {

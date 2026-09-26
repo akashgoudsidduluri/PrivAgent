@@ -3,8 +3,11 @@
 **Phase:** 15 — Privacy Fusion & Contextual PII Detection
 **Repository:** PrivAgent
 **Branch:** `main` (synced with `origin/main` at `274c166 feat: add agent interaction and output layer`)
-**Status:** Implemented, tested, verified. **Not committed, not pushed.**
+**Status:** Implemented, tested, verified. Reviewed and corrected. **Not committed, not pushed.**
 **Date:** 2026-09-26
+
+> **Review pass (2026-09-26).** A post-implementation review found and fixed two
+> genuine defects. See §10. Focused suite 55 → **59**; full regression 1102 → **1107**.
 
 ---
 
@@ -92,7 +95,8 @@ Screenshot → local OCR → text + word bounding boxes
 The contextual pass runs *inside* the local OCR classification stage, while raw
 text is still in scope and before it is discarded — the only place reading OCR
 text is legitimate. Word offsets are reconstructed by re-joining words with
-single spaces, so a span maps to exactly the boxes of the words it covers.
+single spaces, so a span maps to exactly the boxes of the words it covers —
+**and that reconstruction is verified, not assumed** (see §10.1).
 
 **DOM + contextual (in `contentScript.ts`):**
 
@@ -178,7 +182,7 @@ contributor cannot pull a 0.98 `credit_card` finding down to `MINIMIZE`.
 ```
 npx vitest run tests/phase15/
  Test Files  1 passed (1)
-      Tests  55 passed (55)
+      Tests  59 passed (59)
 ```
 
 The 55 tests cover all twelve required areas:
@@ -190,23 +194,22 @@ The 55 tests cover all twelve required areas:
 | 3 | NLP / contextual-only finding | 3 |
 | 4 | Same PII from multiple sources → one fused finding | 2 |
 | 5 | Overlapping DOM + OCR bounding boxes | 3 |
-| 6 | Sensitive OCR text → correct bbox | 3 |
+| 6 | Sensitive OCR text → correct bbox | 6 |
 | 7 | Contextual name / address detection | 4 |
 | 8 | False-positive-sensitive cases | 20 (14 UI strings + 6 behaviour) |
-| 9 | Missing / invalid bbox → fail closed | 4 |
+| 9 | Missing / invalid bbox → fail closed | 6 |
 | 10 | No raw values in exported metadata | 5 |
 | 11 | Phase 14 output screening intact | 3 |
 | 12 | Security authorities unchanged | 5 |
-
 ### 4.2 Full regression suite
 
 ```
 npx vitest run
  Test Files  96 passed (96)
-      Tests  1102 passed (1102)
+      Tests  1107 passed (1107)
 ```
 
-Baseline before Phase 15 was **95 files / 1048 tests**. Delta: **+1 file, +54
+Baseline before Phase 15 was **95 files / 1048 tests**. Delta: **+1 file, +59
 tests**, and the pre-existing 1048 all still pass. No test was deleted or
 weakened; the only two edits to existing tests were `sourceCounts` expectations
 that gained the new `nlp: 0` key.
@@ -358,9 +361,15 @@ Phase 15 evidence directory is added.**
    character count of the name.
 8. **OCR was not exercised in the real-Chrome Phase 15 seam.** The fixture has no
    canvas or non-DOM visual region, and headless Tesseract adds minutes of
-   startup. The OCR span→bbox mapping, the clamping, and the fail-closed path
-   are all covered by unit tests against synthetic `InternalOCRResult` fixtures.
-   **This is stated rather than implied.**
+   startup. The OCR span→bbox mapping, the clamping, the fail-closed path, and
+   the coordinator-level wiring are covered by unit tests — the last of these
+   now runs the real `coordinateMultimodalPerception` with a mock OCR engine and
+   asserts an `nlp`-sourced finding with the correct region. **This is stated
+   rather than implied.**
+9. **The OCR → contextual path has no production caller yet.**
+   `coordinateMultimodalPerception` only runs OCR when the caller supplies an
+   `ocrEngine`, and the service worker does not. The wiring is therefore proven
+   and ready but dormant in the agent loop. See §11.
 
 ---
 
@@ -382,8 +391,8 @@ Phase 15 evidence directory is added.**
 
 | Gate | Status |
 |---|---|
-| Phase 15 focused suite | **55/55 pass** |
-| Full regression suite | **1102/1102 pass** (96 files; baseline 1048/95) |
+| Phase 15 focused suite | **59/59 pass** |
+| Full regression suite | **1107/1107 pass** (96 files; baseline 1048/95) |
 | `npx tsc -b --noEmit` | **5 errors, all pre-existing** `targetResolver.ts`; 0 new |
 | `npm run build:extension` | **exit 0** |
 | `npm run build:frontend` | **exit 0** |
@@ -394,3 +403,87 @@ Phase 15 evidence directory is added.**
 | Phase 14 production path (regression) | **8/8 pass** |
 
 **Not committed. Not pushed. Phase 16 not started.**
+
+---
+
+## 10. Review pass — defects found and fixed
+
+A post-implementation review re-read every Phase 15 file against this report
+rather than trusting the report. Two genuine defects were found. Neither was
+cosmetic.
+
+### 10.1 OCR span → bbox could silently mask the wrong pixels (correctness)
+
+**The defect.** A hit's span is an offset into the OCR **line text**, but the
+boxes belong to the OCR **words**. The mapper reconciled the two by assuming
+`line.text === words.map(w => w.text).join(' ')`.
+
+That assumption does not hold in the real engine. `ocrEngine.ts` keeps
+`line.text` verbatim from Tesseract, but **drops any word with no text or no
+bounding box** (`if (!lw.text || !lw.bbox) continue;`). Every offset after the
+first dropped word is therefore shifted, and the mapper happily returned a box
+for the wrong words.
+
+Measured, before the fix:
+
+| Case | Hit covers | Box returned | Correct box |
+|---|---|---|---|
+| `Kumar` dropped (no bbox) | `"Rajesh Kumar"` | `[150,100,55,16]` | `[150,100,120,16]` |
+| `To` dropped (middle of line) | `"To Rajesh Kumar"` | `[60,100,130,16]` — swallowed the neighbouring word | name only |
+
+The first case leaves **half a person's name visible** while reporting the region
+as redacted. That is precisely the failure class this phase exists to prevent,
+and the original tests missed it only because their fixture was perfectly
+self-consistent.
+
+**The fix.** The invariant is now **verified, not assumed**.
+`mapContextualHitToOcrRegion(hit, words, lineText)` reconstructs the join and
+returns `null` when it does not match `lineText` exactly. `detectContextualInOcr`
+always supplies `lineText`, so the production path fails closed: the finding is
+returned with `unmappable: true` and fusion escalates it rather than masking
+wrong pixels. The two-argument form remains available for callers that already
+know the join is exact, and is documented as a pure-geometry call.
+
+Two regression tests pin this: one asserts the old, wrong answer is what the
+geometry alone produces, and that supplying `lineText` turns it into `null`; the
+other asserts mapping still succeeds when the join does match.
+
+### 10.2 Unbounded contextual OCR candidates (robustness)
+
+`detectContextualInOcr` had no cap. A text-heavy capture produces one candidate
+per capitalised run per line, and fusion grouping is O(candidates²) — so the
+perception step could quietly become the slowest part of the agent loop on a
+dense page. Bounded now: 80 lines, 60 findings, via early return.
+
+### 10.3 Also corrected
+
+A stale docstring on `buildAnchorContextText` described dropping duplicate
+sources when the code strips them. Fixed while in the file. No behaviour change.
+
+### 10.4 Re-verified after the fixes
+
+Focused **59/59**, full regression **1107/1107**, TypeScript **5 pre-existing
+errors / 0 new**, both builds **exit 0**, Phase 15 real-Chrome **8/8**.
+
+---
+
+## 11. Open item: the OCR → contextual path has no production caller
+
+`coordinateMultimodalPerception` only enters its OCR branch when the caller
+passes an `ocrEngine`. The service worker calls it **without one**
+(`serviceWorker.ts:733`), so in the agent loop the OCR branch — and therefore
+the contextual OCR pass — never executes today. The only live OCR caller is the
+popup's manual capture flow, which does not use the coordinator.
+
+This was **not** introduced by Phase 15; the conditional predates it. The wiring
+is correct and now proven by a coordinator-level test.
+
+It was deliberately **not** changed here. Supplying a `LocalOCREngine` to the
+agent's per-cycle perception would add Tesseract WASM initialisation and
+recognition — seconds — to every agent cycle, inside an MV3 service worker that
+can be evicted. That is an architectural and latency decision, not a correctness
+fix, and the brief explicitly says not to modify unrelated agent behaviour or
+expand scope without evidence that it is required.
+
+**Recommended follow-up (not done here):** decide whether OCR belongs in the
+agent hot loop, and if so make it opt-in or budgeted rather than unconditional.

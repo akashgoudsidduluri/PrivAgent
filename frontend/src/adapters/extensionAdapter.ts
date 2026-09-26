@@ -9,6 +9,39 @@ import {
 } from '../types/dashboard';
 import { receiptsStore } from '../state/receiptsStore';
 
+/**
+ * Map a Phase 14 activity phase onto this dashboard's lifecycle vocabulary.
+ *
+ * The projection's phases are the authority on what the agent is doing; this
+ * mapping only renames them for the status bar and the watchdog message. It
+ * NEVER invents a stage the projection did not report — an absent or unknown
+ * phase falls back to BROWSER_EXECUTION, the same default the adapter used
+ * before Phase 14 existed.
+ */
+function phaseToPipelineStage(phase?: string): PipelineStage {
+  switch (phase) {
+    case 'PERCEPTION':
+      return 'PERCEPTION';
+    case 'PLANNING':
+      return 'LLM_REASONING';
+    case 'VALIDATION':
+      return 'ACTION_VALIDATION';
+    case 'EXECUTION':
+      return 'BROWSER_EXECUTION';
+    case 'VERIFICATION':
+      return 'VERIFICATION';
+    case 'RECOVERY':
+      return 'BROWSER_EXECUTION';
+    case 'AWAITING_CONFIRMATION':
+      return 'ACTION_VALIDATION';
+    case 'TERMINAL':
+    case 'IDLE':
+      return 'IDLE';
+    default:
+      return 'BROWSER_EXECUTION';
+  }
+}
+
 export class ExtensionAgentAdapter implements AgentAdapter {
   private state: DashboardAgentState;
   private listeners: Array<(state: DashboardAgentState) => void> = [];
@@ -218,15 +251,24 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   }
 
   private handleExtensionProgress(data: any): void {
+    // The structured Phase 14 projection is the source of truth for anything
+    // user-facing. It is parsed FIRST so the stage tracker and the fallback
+    // reason below read from it rather than from the legacy `reason` string,
+    // which the agent loop no longer populates.
+    const interaction = this.normalizeInteraction(data.interaction);
+
     console.info('[Adapter] response received', {
       status: data.status,
       currentStep: data.currentStep,
-      reason: data.reason,
+      hasInteraction: Boolean(interaction),
+      interactionPhase: interaction?.activity.phase ?? null,
+      interactionOutcome: interaction?.outcome ?? null,
     });
     console.info('[AgentTrace] dashboard received TASK_PROGRESS', {
       status: data.status,
       currentStep: data.currentStep,
-      reason: data.reason,
+      hasInteraction: Boolean(interaction),
+      interactionPhase: interaction?.activity.phase ?? null,
     });
 
     let status: UIAgentStatus = 'RUNNING';
@@ -243,17 +285,29 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
     let stage: PipelineStage = 'IDLE';
     if (status === 'RUNNING') {
-      stage = 'BROWSER_EXECUTION';
-      if (data.stage) {
-        this.lastLifecycleStage = data.stage;
-      } else if (data.reason && String(data.reason).toLowerCase().includes('perception')) {
-        this.lastLifecycleStage = 'PERCEPTION';
-      } else {
-        this.lastLifecycleStage = 'BROWSER_EXECUTION';
-      }
+      // The stage is derived from the STRUCTURED projection. Two bugs lived
+      // here. First, `currentPipelineStage` was hardcoded to
+      // BROWSER_EXECUTION, so the status bar showed "BROWSER_EXECUTION" for an
+      // entire run no matter what the agent was actually doing. Second, the
+      // watchdog's `lastLifecycleStage` fell back to sniffing the legacy
+      // `reason` string for the substring "perception", but `reason` is no
+      // longer populated by the agent loop, so that branch could never fire
+      // either. Both now read the one field that is actually authoritative.
+      stage = data.stage
+        ? (data.stage as PipelineStage)
+        : phaseToPipelineStage(interaction?.activity.phase);
+      this.lastLifecycleStage = stage;
     } else {
       this.lastLifecycleStage = status;
     }
+
+    // A legacy `reason` is only a fallback. Assigning `data.reason`
+    // unconditionally overwrote a real failure reason with `undefined` on every
+    // progress message, and the receipt written on a FAILED run recorded
+    // `error: undefined`. Prefer the structured terminal outcome, which always
+    // carries a screened, value-free headline.
+    const terminalReason = interaction?.terminal?.headline || interaction?.terminal?.reason || '';
+    const resolvedReason = data.reason || terminalReason || undefined;
 
     const steps: StepTelemetry[] = (data.steps || []).map((s: any, idx: number) => {
       let targetDescription = s.action?.target || s.action?.url;
@@ -307,7 +361,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       currentStep: data.currentStep || steps.length,
       currentPipelineStage: stage,
       currentUrl,
-      reason: data.reason,
+      reason: resolvedReason,
       pageType: data.pageType || latestStep?.semanticContext?.pageType,
       candidateEntities: data.candidateEntities || latestStep?.semanticContext?.entities,
       semanticContext: data.semanticContext || latestStep?.semanticContext,
@@ -335,7 +389,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       // frontend filter would be display-time cosmetics, not a privacy
       // boundary. An absent or malformed projection degrades to `undefined`
       // and the view falls back to its previous rendering.
-      interaction: this.normalizeInteraction(data.interaction),
+      interaction,
     };
 
     if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED') {
@@ -356,7 +410,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         llmRequestsCount: steps.length,
         browserActionsCount: steps.length,
         latencyMs: latency,
-        error: data.reason,
+        error: resolvedReason,
         steps: [...steps],
       });
     }
