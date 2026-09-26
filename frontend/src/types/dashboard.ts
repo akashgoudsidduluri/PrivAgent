@@ -135,6 +135,82 @@ export interface PrivacyReceipt {
   steps: StepTelemetry[];
 }
 
+/**
+ * Phase 14 — Agent Interaction & Output Layer (user-facing projection).
+ *
+ * Produced by `projectAgentOutput()` in extension/src/agent/agentOutput.ts and
+ * screened by `screenAgentOutput()` in the SERVICE WORKER before it crosses the
+ * SW → dashboard boundary. These types mirror that closed vocabulary so the UI
+ * never has to infer a phase from prose.
+ *
+ * Security invariant: the values here are operational status only. No model
+ * rationale, no gate prose, no internal `reason`, no decision trace, no raw
+ * values. Rendering them grants no authority whatsoever.
+ */
+export type AgentOutcome =
+  | 'IDLE' | 'RUNNING' | 'AWAITING_CONFIRMATION' | 'SUCCEEDED' | 'FAILED' | 'STOPPED';
+
+export type AgentActivityPhase =
+  | 'IDLE' | 'PERCEPTION' | 'PLANNING' | 'VALIDATION' | 'EXECUTION'
+  | 'VERIFICATION' | 'RECOVERY' | 'AWAITING_CONFIRMATION' | 'TERMINAL';
+
+export type AgentTerminalReason =
+  | 'GOAL_ACHIEVED' | 'STOPPED_BY_USER' | 'CONTAINMENT_DENIED' | 'HARNESS_HALTED'
+  | 'RECOVERY_EXHAUSTED' | 'STEP_BOUND_EXHAUSTED' | 'REASONER_FAILED'
+  | 'PERCEPTION_FAILED' | 'CONFIRMATION_DECLINED' | 'UNKNOWN';
+
+export interface AgentActivity {
+  phase: AgentActivityPhase;
+  summary: string;
+  step: number;
+  maxSteps: number;
+  cycle: number | null;
+}
+
+export interface AgentTerminal {
+  outcome: 'SUCCEEDED' | 'FAILED' | 'STOPPED';
+  reason: AgentTerminalReason;
+  headline: string;
+}
+
+export interface AgentResultItem {
+  id: string;
+  title: string;
+  detail: string;
+}
+
+export interface AgentResult {
+  kind: 'NONE' | 'FINDINGS' | 'CANDIDATES';
+  summary: string;
+  count: number;
+  items: AgentResultItem[];
+}
+
+export interface AgentArtifact {
+  kind: 'CONTAINMENT' | 'HARNESS' | 'RECOVERY' | 'FAILURE' | 'PERCEPTION';
+  label: string;
+}
+
+export interface AgentTimelineEntry {
+  step: number;
+  action: string;
+  outcome: 'EXECUTED' | 'BLOCKED' | 'FAILED' | 'CONFIRMED';
+}
+
+export interface AgentInteractionState {
+  outcome: AgentOutcome;
+  activity: AgentActivity;
+  terminal: AgentTerminal | null;
+  result: AgentResult;
+  artifacts: AgentArtifact[];
+  timeline: AgentTimelineEntry[];
+  awaitingConfirmation: {
+    action: string;
+    description: string;
+    riskLevel: string;
+  } | null;
+}
+
 export interface DashboardAgentState {
   status: UIAgentStatus;
   task: string;
@@ -161,6 +237,12 @@ export interface DashboardAgentState {
   latestRisk?: ActionRiskAssessment;
   latestSemantic?: SemanticVerificationResult;
   decisionTraceSummary?: DecisionTraceSummary;
+  /**
+   * Phase 14 user-facing interaction projection. Absent on a task that has not
+   * yet emitted one (or from an older service worker); the UI degrades to the
+   * previous behaviour rather than failing.
+   */
+  interaction?: AgentInteractionState;
 }
 
 export interface BackendHealthState {

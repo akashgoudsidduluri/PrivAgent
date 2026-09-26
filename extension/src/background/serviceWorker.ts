@@ -1,4 +1,5 @@
 import { AgentLoop, TaskState } from '../agent/agentLoop';
+import type { AgentTaskState } from '../agent/agentState';
 import { createAgentProvider } from '../agent/providerRegistry';
 import { ModelRouter } from '../agent/modelRouter';
 import { buildAgentPayload, PrivacyScanReport, AgentContextPayload, VisualCaptureReport } from '../privacy/types';
@@ -11,6 +12,7 @@ import {
   verifyNavigationContainment,
 } from '../agent/containment';
 import { AgentHarness } from '../agent/harness';
+import { projectAgentOutput, screenAgentOutput, describeOutputScreen } from '../agent/agentOutput';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
@@ -42,6 +44,29 @@ const withTimeout = <T>(promise: Promise<T>, ms: number, timeoutMsg: string): Pr
   });
 
 async function sendToDashboard(payload: any, preferredTabId?: number | null): Promise<boolean> {
+  // ── Phase 14 — the SINGLE output-privacy enforcement point ───────────────
+  // Everything the user can ever receive from this worker passes through here:
+  // per-step progress, the final task state, and every hand-built early-failure
+  // payload. Screening here rather than at each call site is deliberate — it
+  // makes "screened before crossing the SW → dashboard boundary" true by
+  // construction instead of by remembering to add it at every future call site.
+  //
+  // `projectAgentOutput` is a narrowing, read-only translation with no write
+  // path back into the loop, the Harness, containment or any security gate, and
+  // `screenAgentOutput` fails closed. Neither can change what the agent does;
+  // they only shape and filter what the user is shown.
+  const rawPayload = payload && typeof payload === 'object' ? payload : {};
+  const screened = screenAgentOutput(projectAgentOutput(rawPayload as AgentTaskState));
+  const outbound = { ...rawPayload, interaction: screened.output };
+  console.info('[AgentTrace] output screen', {
+    verdict: screened.verdict,
+    audit: describeOutputScreen(screened),
+    outcome: screened.output.outcome,
+    phase: screened.output.activity.phase,
+    resultKind: screened.output.result.kind,
+  });
+  payload = outbound;
+
   console.info('[ServiceWorker] response forwarded', {
     status: payload?.status,
     currentStep: payload?.currentStep,
@@ -864,6 +889,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           },
 
           onStepProgress: (state: TaskState) => {
+            // Phase 14 projection + output screening happen inside
+            // sendToDashboard, which is the single boundary every outbound
+            // payload crosses. The transport is otherwise unchanged.
             sendToDashboard(state, dashboardTabId);
           },
         };

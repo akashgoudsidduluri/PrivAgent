@@ -24,6 +24,16 @@ import { SemanticPageType } from '../semanticUnderstanding/semanticTypes';
 
 export interface TaskDecompositionOptions {
   worldModel?: BrowserWorldModel;
+  /**
+   * The URL the agent is currently on, when the caller already knows it.
+   *
+   * Used ONLY to avoid planning a NAVIGATE subgoal the agent does not need —
+   * e.g. an INFORMATION_RETRIEVAL task that starts on the search provider it
+   * was asked to use. It grants nothing, authorizes nothing, and is never
+   * compared against a containment scope; a stale or absent value simply
+   * produces the more conservative plan.
+   */
+  currentUrl?: string;
   maxSubgoals?: number;
   knownPageCategory?: SemanticPageType | string;
 }
@@ -161,7 +171,9 @@ export function decomposeTask(
 ): DecompositionResult {
   const maxSubgoals = options?.maxSubgoals ?? DEFAULT_PLANNING_BOUNDS.maxSubgoals;
   const worldModel = options?.worldModel;
-  const currentUrl = worldModel?.page?.url || '';
+  // Prefer the URL the caller already knows (e.g. the pinned target tab's
+  // seeded initialUrl) over deriving it from a world model we may not have.
+  const currentUrl = options?.currentUrl || worldModel?.page?.url || '';
   const currentCategory = options?.knownPageCategory || worldModel?.page?.pageType;
 
   const taskCategory = classifyTaskCategory(userPrompt);

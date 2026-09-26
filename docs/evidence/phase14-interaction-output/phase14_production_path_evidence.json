@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-09-26T16:54:49.912Z",
+  "phase": "Phase 14: Agent Interaction & Output Layer",
+  "goal": "Prove the user-facing interaction projection and the output-privacy seam work in the shipped product.",
+  "provenance": {
+    "kind": "REAL_CHROME_PRODUCTION_PATH",
+    "browser": "Chromium (headless=new) driven over CDP",
+    "serviceWorker": "REAL production service worker loaded from dist/",
+    "messagePath": "dashboard page → real content script → real service worker → real AgentLoop → projectAgentOutput → screenAgentOutput → sendToDashboard",
+    "securityGatesTouched": false,
+    "synthetic": false,
+    "note": "The reasoner backend is intentionally not running, so the task ends at the reasoning step. The interaction projection, output screening and the SW→dashboard boundary are all still fully exercised."
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "tabs": {
+    "dashboardTabId": 1493958299,
+    "targetTabId": 1493958300,
+    "distinct": true
+  },
+  "case1_interactionProjection": {
+    "payloadCount": 4,
+    "payloadsWithInteraction": 4,
+    "everyPayloadHasInteraction": true,
+    "outcomes": [
+      "RUNNING",
+      "RUNNING",
+      "FAILED",
+      "FAILED"
+    ]
+  },
+  "case2_liveActivity": {
+    "distinctPhases": [
+      "PERCEPTION",
+      "TERMINAL"
+    ],
+    "distinctSummaries": [
+      "Reading the page.",
+      "Finished."
+    ],
+    "phaseProgression": [
+      "PERCEPTION",
+      "PERCEPTION",
+      "TERMINAL",
+      "TERMINAL"
+    ],
+    "summaryProgression": [
+      "Reading the page.",
+      "Finished."
+    ]
+  },
+  "case3_terminalOutcome": {
+    "finalStatus": "FAILED",
+    "terminal": {
+      "outcome": "FAILED",
+      "reason": "REASONER_FAILED",
+      "headline": "Failed: the reasoning model was unavailable."
+    },
+    "resultKind": "NONE",
+    "resultSummary": "No result yet.",
+    "artifacts": [
+      {
+        "kind": "HARNESS",
+        "label": "1 cycle(s), 0 halt(s)"
+      },
+      {
+        "kind": "PERCEPTION",
+        "label": "2 cycle(s)"
+      }
+    ]
+  },
+  "case4_outputScreeningInvoked": {
+    "screenLogLines": 4,
+    "sample": [
+      "[AgentTrace] output screen Object",
+      "[AgentTrace] output screen Object",
+      "[AgentTrace] output screen Object"
+    ],
+    "invokedInServiceWorker": true,
+    "runsBeforeDashboard": true,
+    "note": "screenAgentOutput() is called inside onStepProgress, before sendToDashboard — i.e. before the payload crosses the SW → dashboard boundary."
+  },
+  "case5_noChainOfThought": {
+    "interactionKeys": [
+      "outcome",
+      "activity",
+      "terminal",
+      "result",
+      "artifacts",
+      "timeline",
+      "awaitingConfirmation"
+    ],
+    "leaks": [],
+    "leakCount": 0
+  },
+  "case6_confirmationChain": {
+    "posted": "CONFIRM_ACTION from the real dashboard content script",
+    "swHandledIt": true,
+    "swLogSample": [
+      "[PrivAgent SW] resume confirmation error: Error: Cannot resume: Task is not waiting for user confirmation.\n    at dr.resumeWithConfirmation (chrome-extension://ihbbhmifbgfcibhjhcafakdkcppkccaf/assets/ocrDetector-Bi7uT41L.js:4:168878)\n    at chrome-extension://ihbbhmifbgfcibhjhcafakdkcppkccaf/serviceWorker.js:1:43753"
+    ],
+    "note": "Proves the dashboard → content script → service worker → resumeWithConfirmation chain is intact. A positive authorize→resume completion cannot be exercised here because the reasoner backend is not running, so the run never reaches NEEDS_USER_CONFIRMATION."
+  },
+  "case7_containmentAndGates": {
+    "liveUrl": "http://localhost:4196/",
+    "neverLeftOrigin": true,
+    "containmentDecision": null,
+    "harnessRun": {
+      "cycles": 1,
+      "continueCount": 1,
+      "haltCount": 0
+    },
+    "gateTraces": {
+      "containmentEstablished": true,
+      "harnessConsulted": true,
+      "perception": true,
+      "m5": false,
+      "critic": false,
+      "privacy": false
+    },
+    "actionGatesExercised": false,
+    "note": "No action was proposed (the reasoner backend is offline), so the per-action gates had nothing to evaluate. They remain unmodified and are covered by the regression suite."
+  },
+  "result": {
+    "interactionProjectionReachesDashboard": true,
+    "liveActivityPresent": true,
+    "structuredTerminalOutcome": true,
+    "outputScreeningInvokedInServiceWorker": true,
+    "noChainOfThought": true,
+    "confirmationChainIntact": true,
+    "containmentHeld": true,
+    "harnessStillRunning": true
+  }
+}

@@ -15,8 +15,114 @@ export class AgentView {
   update(state: DashboardAgentState): void {
     this.latestState = state;
     this.renderTaskControl(state);
+    this.renderInteraction(state);
     this.renderBrowserState(state);
     this.renderDecisionTrace(state);
+  }
+
+  /**
+   * Phase 14 — Agent Interaction & Output Layer.
+   *
+   * Renders the interaction projection VERBATIM. It performs no filtering of
+   * its own: the payload was already projected and screened in the service
+   * worker, before it crossed the SW → dashboard boundary. Anything shown here
+   * has already been through that boundary.
+   *
+   * When no projection is present (an older service worker, or a task that has
+   * not emitted one yet) the panel degrades to a neutral placeholder rather
+   * than inferring a phase from prose.
+   */
+  private renderInteraction(state: DashboardAgentState): void {
+    const host = this.container.querySelector('#agent-interaction') as HTMLElement | null;
+    if (!host) return;
+    const ix = state.interaction;
+
+    if (!ix) {
+      host.innerHTML = `
+        <div style="font-size: 11px; color: var(--text-muted);">
+          Agent status appears here once the run reports.
+        </div>`;
+      return;
+    }
+
+    const escape = (s: string) =>
+      String(s).replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string)
+      );
+
+    const phaseColor: Record<string, string> = {
+      IDLE: 'var(--text-muted)',
+      PERCEPTION: 'var(--status-blue-bright, #60a5fa)',
+      PLANNING: 'var(--status-blue-bright, #60a5fa)',
+      VALIDATION: 'var(--status-amber-bright)',
+      EXECUTION: 'var(--status-green-bright, #34d399)',
+      VERIFICATION: 'var(--status-green-bright, #34d399)',
+      RECOVERY: 'var(--status-amber-bright)',
+      AWAITING_CONFIRMATION: 'var(--status-amber-bright)',
+      TERMINAL: 'var(--text-primary)',
+    };
+    const outcomeColor: Record<string, string> = {
+      SUCCEEDED: 'var(--status-green-bright, #34d399)',
+      FAILED: 'var(--status-red-bright, #f87171)',
+      STOPPED: 'var(--text-muted)',
+      AWAITING_CONFIRMATION: 'var(--status-amber-bright)',
+      RUNNING: 'var(--status-blue-bright, #60a5fa)',
+      IDLE: 'var(--text-muted)',
+    };
+
+    const stepText =
+      ix.activity.maxSteps > 0
+        ? `Step ${ix.activity.step} of ${ix.activity.maxSteps}`
+        : 'Step 0';
+    const cycleText = ix.activity.cycle !== null ? ` · harness cycle ${ix.activity.cycle}` : '';
+
+    // Result
+    const resultHtml =
+      ix.result.kind === 'NONE'
+        ? `<div style="font-size: 11px; color: var(--text-muted);">${escape(ix.result.summary)}</div>`
+        : `<div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">${escape(ix.result.summary)}</div>
+           <ul style="margin: 0; padding-left: 16px; font-size: 11px; color: var(--text-primary); line-height: 1.5;">
+             ${ix.result.items
+               .map(
+                 (it) =>
+                   `<li><span style="color: var(--text-bright);">${escape(it.title)}</span> <span style="color: var(--text-muted);">— ${escape(it.detail)}</span></li>`
+               )
+               .join('')}
+           </ul>`;
+
+    // Structured terminal outcome
+    const terminalHtml = ix.terminal
+      ? `<div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-xs); background: var(--bg-input); border: 1px solid var(--border-subtle);">
+           <span class="badge mono" style="background: transparent; color: ${outcomeColor[ix.terminal.outcome] ?? 'var(--text-primary)'}; border: 1px solid currentColor;">${escape(ix.terminal.outcome)}</span>
+           <span style="font-size: 11px; color: var(--text-primary);">${escape(ix.terminal.headline)}</span>
+           <span style="margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">${escape(ix.terminal.reason)}</span>
+         </div>`
+      : '';
+
+    // Artifacts: the Phase 12/13 observability the UI previously dropped
+    const artifactsHtml = ix.artifacts.length
+      ? `<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+           ${ix.artifacts
+             .map(
+               (a) =>
+                 `<span class="badge mono" style="background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border-subtle);">${escape(a.kind)}: ${escape(a.label)}</span>`
+             )
+             .join('')}
+         </div>`
+      : '';
+
+    host.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span class="badge mono" style="background: transparent; color: ${outcomeColor[ix.outcome] ?? 'var(--text-primary)'}; border: 1px solid currentColor;">${escape(ix.outcome)}</span>
+        <span style="font-size: 11px; color: ${phaseColor[ix.activity.phase] ?? 'var(--text-primary)'};">${escape(ix.activity.summary)}</span>
+        <span style="margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">${escape(stepText)}${escape(cycleText)}</span>
+      </div>
+      ${terminalHtml}
+      <div style="margin-top: 10px; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-panel); border-radius: var(--radius-xs);">
+        <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Result</div>
+        ${resultHtml}
+        ${artifactsHtml}
+      </div>`;
   }
 
   private render(): void {
@@ -118,6 +224,13 @@ export class AgentView {
               <div style="display: flex; gap: 6px;">
                 <span class="badge badge-gray mono" id="agent-element-count">0 candidates</span>
                 <span class="badge badge-green mono" id="agent-privacy-protected">0 protected</span>
+              </div>
+            </div>
+
+            <!-- Phase 14: Agent Activity, Result & Terminal Outcome -->
+            <div id="agent-interaction" style="padding: 12px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-panel-subtle);">
+              <div style="font-size: 11px; color: var(--text-muted);">
+                Agent status appears here once the run reports.
               </div>
             </div>
 

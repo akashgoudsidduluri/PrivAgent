@@ -5,6 +5,7 @@ import {
   PipelineStage,
   UIAgentStatus,
   StepTelemetry,
+  AgentInteractionState,
 } from '../types/dashboard';
 import { receiptsStore } from '../state/receiptsStore';
 
@@ -328,6 +329,13 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       latestRisk: latestStep?.riskAssessment,
       latestSemantic: latestStep?.semanticVerification,
       decisionTraceSummary: data.decisionTraceSummary,
+      // Phase 14: the interaction projection is built and SCREENED in the
+      // service worker, immediately before it crosses the SW → dashboard
+      // boundary. The UI consumes it verbatim and re-filters nothing — a
+      // frontend filter would be display-time cosmetics, not a privacy
+      // boundary. An absent or malformed projection degrades to `undefined`
+      // and the view falls back to its previous rendering.
+      interaction: this.normalizeInteraction(data.interaction),
     };
 
     if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED') {
@@ -354,6 +362,70 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     }
 
     this.notify();
+  }
+
+  /**
+   * Validate the shape of the Phase 14 interaction projection.
+   *
+   * This is DEFENSIVE PARSING, not privacy screening: screening already
+   * happened in the service worker. Its only job is to keep a malformed
+   * payload from reaching the render path.
+   */
+  private normalizeInteraction(raw: any): AgentInteractionState | undefined {
+    if (!raw || typeof raw !== 'object') return undefined;
+    if (typeof raw.outcome !== 'string' || typeof raw.activity !== 'object' || !raw.activity) {
+      return undefined;
+    }
+    if (typeof raw.activity.phase !== 'string' || typeof raw.activity.summary !== 'string') {
+      return undefined;
+    }
+    const result = raw.result && typeof raw.result === 'object' ? raw.result : { kind: 'NONE', summary: 'No result yet.', count: 0, items: [] };
+    return {
+      outcome: raw.outcome,
+      activity: {
+        phase: raw.activity.phase,
+        summary: raw.activity.summary,
+        step: Number(raw.activity.step) || 0,
+        maxSteps: Number(raw.activity.maxSteps) || 0,
+        cycle: typeof raw.activity.cycle === 'number' ? raw.activity.cycle : null,
+      },
+      terminal: raw.terminal && typeof raw.terminal === 'object'
+        ? {
+            outcome: raw.terminal.outcome,
+            reason: raw.terminal.reason,
+            headline: String(raw.terminal.headline ?? ''),
+          }
+        : null,
+      result: {
+        kind: result.kind ?? 'NONE',
+        summary: String(result.summary ?? ''),
+        count: Number(result.count) || 0,
+        items: Array.isArray(result.items)
+          ? result.items.slice(0, 20).map((it: any) => ({
+              id: String(it?.id ?? ''),
+              title: String(it?.title ?? ''),
+              detail: String(it?.detail ?? ''),
+            }))
+          : [],
+      },
+      artifacts: Array.isArray(raw.artifacts)
+        ? raw.artifacts.slice(0, 20).map((a: any) => ({ kind: a?.kind, label: String(a?.label ?? '') }))
+        : [],
+      timeline: Array.isArray(raw.timeline)
+        ? raw.timeline.slice(0, 40).map((t: any) => ({
+            step: Number(t?.step) || 0,
+            action: String(t?.action ?? 'unknown'),
+            outcome: t?.outcome ?? 'EXECUTED',
+          }))
+        : [],
+      awaitingConfirmation: raw.awaitingConfirmation && typeof raw.awaitingConfirmation === 'object'
+        ? {
+            action: String(raw.awaitingConfirmation.action ?? ''),
+            description: String(raw.awaitingConfirmation.description ?? ''),
+            riskLevel: String(raw.awaitingConfirmation.riskLevel ?? 'HIGH'),
+          }
+        : null,
+    } as AgentInteractionState;
   }
 
   private handlePrivacyUpdate(report: any): void {
