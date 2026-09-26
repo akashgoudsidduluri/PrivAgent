@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-09-26T16:16:51.300Z",
+  "phase": "Phase 13: Harness — PRODUCTION service-worker path",
+  "goal": "Prove the shipped service worker actually arms the Harness, with every gate unchanged.",
+  "provenance": {
+    "kind": "REAL_CHROME_PRODUCTION_PATH",
+    "browser": "Chromium (headless=new) driven over CDP",
+    "serviceWorker": "REAL production service worker loaded from dist/",
+    "messagePath": "dashboard page → real content script → real service worker → real AgentLoop → real content-script perception",
+    "agentLoop": "REAL AgentLoop constructed by the production service worker with harness: new AgentHarness()",
+    "gatesTouched": false,
+    "synthetic": false,
+    "note": "The reasoner backend is intentionally not running; the task ends at the reasoning step, which is AFTER the harness is constructed and consulted."
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "loadedFrom": "dist (the built production extension)",
+  "tabs": {
+    "dashboardTabId": 535338905,
+    "targetTabId": 535338906,
+    "distinct": true
+  },
+  "productionServiceWorker": {
+    "taskReachedRealAgentLoop": true,
+    "progressMessageCount": 4,
+    "finalStatus": "FAILED",
+    "finalReason": "Agent reasoning failed: Backend unavailable. Start it with: python backend/run.py",
+    "harnessRun": {
+      "runId": "harness-run-v8qa7k",
+      "cycles": 1,
+      "continueCount": 1,
+      "haltCount": 0,
+      "lastVerdict": "CONTINUE",
+      "lastHaltCode": null,
+      "history": [
+        {
+          "cycle": 1,
+          "verdict": "CONTINUE",
+          "haltCode": null,
+          "environment": {
+            "scopeEstablished": true,
+            "liveUrlKnown": false,
+            "withinScope": null,
+            "tabMatchesScope": true,
+            "code": null,
+            "reason": "The environment is not yet a determinable web origin; no claim is made."
+          },
+          "budget": {
+            "step": 0,
+            "maxSteps": 10,
+            "retryCount": 0,
+            "maxRetries": 2,
+            "recoveryAttempts": 0,
+            "maxTotalRecoveries": 6
+          },
+          "containmentScopeSummary": "contained:localhost",
+          "perceptionGeneration": 0
+        }
+      ],
+      "historyTruncated": false
+    },
+    "harnessCycleConsoleLines": 1,
+    "harnessCycleTraces": [
+      "[AgentTrace] harness cycle Object"
+    ]
+  },
+  "gatesStillRunning": {
+    "perception": true,
+    "containmentEstablished": true,
+    "m5": false,
+    "securityCritic": false,
+    "privacy": false,
+    "containmentDecision": false,
+    "recovery": false,
+    "actionGatesExercised": false,
+    "note": "No action was ever proposed because the reasoner backend is not running in this environment, so the per-action gates had nothing to evaluate. The reasoner failure is upstream of them. These gates are verified by tests/phase13/harness.test.ts and scratch/verify_phase13_harness.mjs."
+  },
+  "liveEnvironment": {
+    "liveUrl": "http://localhost:4195/",
+    "neverLeftOrigin": true,
+    "markerText": "untouched",
+    "containmentScopeInState": null
+  },
+  "harnessStateIsValueFree": {
+    "containsTargetHost": false,
+    "containsFullUrl": false,
+    "serialized": "{\"runId\":\"harness-run-v8qa7k\",\"cycles\":1,\"continueCount\":1,\"haltCount\":0,\"lastVerdict\":\"CONTINUE\",\"lastHaltCode\":null,\"history\":[{\"cycle\":1,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"environment\":{\"scopeEstablished\":true,\"liveUrlKnown\":false,\"withinScope\":null,\"tabMatchesScope\":true,\"code\":null,\"reason\":\"The environment is not yet a determinable web origin; no claim is made.\"},\"budget\":{\"step\":0,\"maxSteps\":10,\"retryCount\":0,\"maxRetries\":2,\"recoveryAttempts\":0,\"maxTotalRecoveries\":6},\"containmentScopeSummary\":\"contained:localhost\",\"perceptionGeneration\":0}],\"historyTruncated\":false}"
+  },
+  "result": {
+    "harnessArmedInProduction": true,
+    "harnessConsultedByRealLoop": true,
+    "harnessStateReachedRealDashboard": true,
+    "containmentStillEstablished": true,
+    "perceptionStillRan": true,
+    "harnessStateCarriesNoUrl": true,
+    "environmentHeldThroughout": true
+  }
+}

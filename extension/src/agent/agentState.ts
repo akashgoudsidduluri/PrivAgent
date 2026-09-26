@@ -260,6 +260,16 @@ export interface AgentTaskState extends TaskState {
   recoveryStrategy?: import('./recoveryEngine').RecoveryStrategy;
 
   /**
+   * Phase 13 Harness: the cycle-coordination record for this task.
+   *
+   * Verdicts, codes and counters only — never a URL, page text, or any model
+   * output. The Harness is NOT a security authority: a CONTINUE verdict is not
+   * permission to dispatch, and the full authoritative pipeline still runs,
+   * unchanged and in the same order, on every cycle the Harness allows.
+   */
+  harnessRun?: import('./harness').HarnessRunSummary;
+
+  /**
    * Phase 12 Containment: the most recent environmental boundary decision.
    * Codes and reasons only — never a URL, page text, or any model output.
    */

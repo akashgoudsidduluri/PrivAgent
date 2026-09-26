@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-09-26T16:17:08.370Z",
+  "phase": "Phase 13: Harness (cycle coordination & runtime-state observation)",
+  "goal": "Coordinate agent cycles and observe runtime state without becoming a security authority.",
+  "provenance": {
+    "kind": "REAL_CHROME_HARNESS",
+    "browser": "Chromium (headless=new) driven over CDP",
+    "execution": "REAL PrivAgent AgentLoop + real harness, real content-script action dispatch in the live page",
+    "harnessModule": "REAL PrivAgent harness module bundled from extension/src",
+    "securityPipeline": "REAL PrivAgent local source bundled from extension/src",
+    "harnessDispatchesActions": false,
+    "harnessDecidesGates": false,
+    "harnessAuthorizesAnything": false,
+    "synthetic": false
+  },
+  "screenshots": [
+    "docs/evidence/phase13-harness/phase13_final_state.png"
+  ],
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "dashboardIsolation": {
+    "dashboardTabId": 629227703
+  },
+  "targetTabId": 629227704,
+  "targetTabDiffersFromDashboard": true,
+  "contentScriptAttached": true,
+  "detections": [
+    {
+      "id": "in-scope-button",
+      "type": "button",
+      "selector": "#in-scope-button"
+    }
+  ],
+  "case1_realLoopWithHarness": {
+    "status": "FAILED",
+    "cycles": 3,
+    "continueCount": 3,
+    "haltCount": 0,
+    "runId": "harness-run-g220l4",
+    "scopeSummary": "contained:localhost",
+    "dispatchedActions": [
+      "click",
+      "click",
+      "click"
+    ],
+    "pageChanged": true,
+    "clicksObserved": 1
+  },
+  "case2_harnessStateIsValueFree": {
+    "assertNoSensitiveDataInState": true,
+    "rawValueFindings": 0,
+    "serializedContainsFixtureHost": false
+  },
+  "case3_environmentDrift": {
+    "verdict": "HALT_ENVIRONMENT",
+    "haltCode": "SCOPE_DRIFT_DETECTED",
+    "auditLine": "HARNESS_HALT_ENVIRONMENT_SCOPE_DRIFT_DETECTED"
+  },
+  "case4_tabScope": {
+    "verdict": "HALT_ENVIRONMENT",
+    "haltCode": "TAB_SCOPE_VIOLATION"
+  },
+  "case5_boundsObserved": {
+    "stepBound": {
+      "verdict": "BUDGET_EXHAUSTED",
+      "haltCode": "MAX_STEPS_EXHAUSTED"
+    },
+    "retryBound": {
+      "verdict": "BUDGET_EXHAUSTED",
+      "haltCode": "RETRY_BUDGET_EXHAUSTED"
+    },
+    "recoveryBound": {
+      "verdict": "BUDGET_EXHAUSTED",
+      "haltCode": "RECOVERY_BUDGET_EXHAUSTED"
+    },
+    "boundsSuppliedByCaller": {
+      "maxSteps": 10,
+      "maxRetries": 2,
+      "maxTotalRecoveries": 6
+    }
+  },
+  "case6_noAuthorizationVocabulary": {
+    "verdict": "CONTINUE",
+    "containsAllow": false,
+    "containsDeny": false,
+    "containsAuthorize": false,
+    "containsPermit": false
+  },
+  "case7_continueIsNotPermission": {
+    "harnessVerdict": "CONTINUE",
+    "criticVerdict": "BLOCK",
+    "criticCode": "SUSPICIOUS_NAVIGATION",
+    "dispatchedAnythingAfterwards": false,
+    "note": "The harness allowed the cycle. The Critic still refused, so nothing was dispatched."
+  },
+  "case8_environmentHeld": {
+    "finalUrl": "http://localhost:4194/",
+    "environmentHeld": true,
+    "harnessStillContinues": "CONTINUE"
+  },
+  "result": {
+    "harnessRunEstablished": true,
+    "allowedCycleReallyDispatched": true,
+    "harnessStateIsValueFree": true,
+    "environmentDriftHaltsCycle": true,
+    "wrongTabHaltsCycle": true,
+    "boundsObservedFromLoop": true,
+    "noAuthorizationVocabulary": true,
+    "continueIsNotPermission": true,
+    "environmentHeldThroughout": true
+  }
+}

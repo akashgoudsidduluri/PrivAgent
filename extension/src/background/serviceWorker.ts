@@ -10,6 +10,7 @@ import {
   evaluateContainment,
   verifyNavigationContainment,
 } from '../agent/containment';
+import { AgentHarness } from '../agent/harness';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
@@ -870,6 +871,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Real provider: backend Gemma (or fallback to configured provider)
         const provider = new ModelRouter(createAgentProvider({ provider: 'backend' }));
 
+        // Phase 13: arm the Harness. It is the AgentLoop's CYCLE COORDINATION
+        // and runtime-state observation layer only — it holds no security
+        // authority, grants nothing, and authorizes no action. Arming it here
+        // changes no gate: Grounding, M5, the Security Critic, the Privacy
+        // Firewall, Risk/Confirmation, Phase 12 Containment, Effect
+        // Verification, Goal Verification and the Recovery Engine all remain
+        // authoritative and unreordered. The live dispatch-time containment
+        // check in executeAction below is likewise untouched.
         activeLoop = new AgentLoop(provider, loopCallbacks, {
           maxSteps: 10,
           maxRetries: 2,
@@ -877,6 +886,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           providerRetries: 0,
           targetTabId,
           containmentScope,
+          harness: new AgentHarness(),
         });
 
         console.info('[AgentTrace] agent loop started');

@@ -90,6 +90,7 @@ import {
   type RecoveryDecision,
   type RecoveryHistoryEntry,
 } from './recoveryEngine';
+import { AgentHarness, type HarnessDecision } from './harness';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import {
   buildSemanticUnderstanding,
@@ -206,6 +207,21 @@ export interface AgentLoopOptions {
    * claims no environmental boundary.
    */
   containmentScope?: ContainmentScope | null;
+  /**
+   * Phase 13 Harness: cycle coordination and runtime-state observation.
+   *
+   * OPTIONAL and NON-AUTHORITATIVE. The Harness decides whether another
+   * perception cycle MAY RUN; it never decides whether an action may execute.
+   * A `CONTINUE` verdict is NOT permission to dispatch: on every cycle the
+   * Harness allows, Target Grounding → M5 → Security Critic → Privacy Firewall
+   * → Risk/Confirmation → Containment → Dispatch → Effect Verification →
+   * Goal Verification all run, unchanged, in exactly the same order with
+   * exactly the same authority they had before the Harness existed.
+   *
+   * Omitting it (the default) leaves the loop behaving exactly as before: no
+   * environmental claim is made and no boundary is asserted.
+   */
+  harness?: AgentHarness | null;
 }
 
 // Complete normalized forbidden key set that must never appear anywhere in TaskState
@@ -283,6 +299,7 @@ export class AgentLoop {
    * UNINITIALIZED and therefore denies — the fail-closed default.
    */
   private readonly containmentScope: ContainmentScope | null;
+  private readonly harness: AgentHarness | null;
   private memoryHints?: MemoryHints;
 
   private extractOrigin(url?: string): string {
@@ -332,6 +349,7 @@ export class AgentLoop {
     this.providerRetryDelayMs = options.providerRetryDelayMs ?? 250;
     this.targetTabId = options.targetTabId ?? null;
     this.containmentScope = options.containmentScope ?? null;
+    this.harness = options.harness ?? null;
 
     this.state = createAgentTaskState('', {
       maxSteps: this.maxSteps,
@@ -440,6 +458,14 @@ export class AgentLoop {
     this.state.recoveryHistory = [];
     this.state.totalRecoveryAttempts = 0;
 
+    // Phase 13: a fresh task starts with a fresh harness run. The Harness
+    // coordinates cycles and observes runtime state; it holds no security
+    // authority, grants nothing, and authorizes no action.
+    if (this.harness) {
+      this.harness.initialize(task);
+      this.state.harnessRun = this.harness.summary();
+    }
+
     // Initialize Working Memory for the task
     try {
       WorkingMemoryManager.write({
@@ -477,6 +503,77 @@ export class AgentLoop {
         this.state.reason = `Task exceeded maximum step limit of ${this.maxSteps}.`;
         this.notifyProgress();
         break;
+      }
+
+      // ── PHASE 13 HARNESS ─────────────────────────────────────────────────
+      // CYCLE COORDINATION AND RUNTIME-STATE OBSERVATION ONLY.
+      //
+      // This is the first and only point at which the loop is asked "may
+      // another perception cycle run?", which until now it could only answer
+      // by simply running one. The Harness observes the environment the agent
+      // is actually in — the Phase 12 containment scope, the pinned tab, the
+      // last known URL — and the loop's OWN bounds, and returns a verdict.
+      //
+      // IT IS NOT AN ARBITER OF SECURITY. Its vocabulary is deliberately
+      // CONTINUE / HALT_ENVIRONMENT / BUDGET_EXHAUSTED / TERMINAL — never
+      // ALLOW, DENY or AUTHORIZE. A CONTINUE verdict means only "the next
+      // cycle may run the pipeline"; it is NOT permission to dispatch. Every
+      // gate below still runs, unchanged and in the same order, on every cycle
+      // the Harness allows:
+      //
+      //   HARNESS=CONTINUE → M5=REFUSED          → NO DISPATCH
+      //   HARNESS=CONTINUE → CRITIC=BLOCK        → NO DISPATCH
+      //   HARNESS=CONTINUE → CONTAINMENT=DENIED  → NO DISPATCH
+      //
+      // The Harness holds no bounds of its own: the ones checked here are the
+      // loop's own values with the loop's own operators, so the two can never
+      // drift into competing limits. The stop check and max-steps check above
+      // remain authoritative; this mirrors them as a backstop.
+      //
+      // Containment remains Phase 12's: the Harness consumes that scope and
+      // never creates, widens, narrows or reinterprets it.
+      if (this.harness) {
+        const harnessDecision: HarnessDecision = this.harness.runCycle({
+          status: this.state.status,
+          stopRequested: this.isStopped,
+          containmentScope: this.containmentScope,
+          targetTabId: this.targetTabId,
+          liveUrl: this.state.currentUrl || null,
+          bounds: {
+            maxSteps: this.maxSteps,
+            maxRetries: this.maxRetries,
+            maxTotalRecoveries: DEFAULT_RECOVERY_BOUNDS.maxTotalRecoveries,
+          },
+          step: this.state.currentStep,
+          retryCount: this.state.retryCount,
+          recoveryAttempts: this.state.totalRecoveryAttempts ?? 0,
+          perceptionGeneration: this.state.perceptionGeneration,
+        });
+        this.state.harnessRun = this.harness.summary();
+        console.info('[AgentTrace] harness cycle', {
+          cycle: harnessDecision.record.cycle,
+          verdict: harnessDecision.verdict,
+          haltCode: harnessDecision.haltCode,
+          scope: harnessDecision.record.containmentScopeSummary,
+          withinScope: harnessDecision.record.environment.withinScope,
+        });
+
+        if (harnessDecision.verdict !== 'CONTINUE') {
+          // An environment halt is TERMINAL in the same sense a containment
+          // denial is: the harness does not hand a refused environment to the
+          // Recovery Engine, because retrying into it is the drift this phase
+          // exists to stop.
+          this.state.status = harnessDecision.verdict === 'TERMINAL' ? 'STOPPED' : 'FAILED';
+          this.state.goalStatus = this.state.status;
+          this.state.reason = harnessDecision.reason;
+          console.warn('[AgentTrace] HARNESS_CYCLE_HALTED', {
+            verdict: harnessDecision.verdict,
+            haltCode: harnessDecision.haltCode,
+            cycle: harnessDecision.record.cycle,
+          });
+          this.notifyProgress();
+          break;
+        }
       }
 
       // 2. Fresh perception cycle: obtain current sanitized context
