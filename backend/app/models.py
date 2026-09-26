@@ -217,6 +217,7 @@ class BrowserActionType(str, Enum):
     type = "type"
     select = "select"
     navigate = "navigate"
+    pressKey = "pressKey"
 
 
 class BrowserActionModel(StrictModel):
@@ -246,6 +247,7 @@ class BrowserActionModel(StrictModel):
     text: Optional[Annotated[str, Field(max_length=500)]] = None
     option: Optional[Annotated[str, Field(max_length=200)]] = None
     url: Optional[str] = None
+    key: Optional[str] = None
     reason: Optional[Annotated[str, Field(max_length=300)]] = None
 
     # Which optional fields are ALLOWED for each action type.
@@ -255,6 +257,7 @@ class BrowserActionModel(StrictModel):
         BrowserActionType.type: frozenset({"target", "text"}),
         BrowserActionType.select: frozenset({"target", "option"}),
         BrowserActionType.navigate: frozenset({"url"}),
+        BrowserActionType.pressKey: frozenset({"key", "target"}),
     }
 
     # Which optional fields are REQUIRED for each action type.
@@ -264,6 +267,7 @@ class BrowserActionModel(StrictModel):
         BrowserActionType.type: frozenset({"target", "text"}),
         BrowserActionType.select: frozenset({"target", "option"}),
         BrowserActionType.navigate: frozenset({"url"}),
+        BrowserActionType.pressKey: frozenset({"key"}),
     }
 
     MIN_SCROLL_AMOUNT: ClassVar[int] = 1
@@ -281,6 +285,7 @@ class BrowserActionModel(StrictModel):
             "text": self.text,
             "option": self.option,
             "url": self.url,
+            "key": self.key,
         }
 
         # 1. Reject fields that do not belong to this action type.
@@ -300,6 +305,21 @@ class BrowserActionModel(StrictModel):
                 )
 
         # 3. Per-field constraints.
+        if self.action is BrowserActionType.pressKey:
+            safe_keys = {
+                "Enter", "Tab", "Escape", "ArrowDown", "ArrowUp",
+                "ArrowLeft", "ArrowRight", "Backspace", "Delete"
+            }
+            if self.key not in safe_keys:
+                # Case-tolerant matching for standard keys
+                matched = next((k for k in safe_keys if k.lower() == (self.key or "").lower()), None)
+                if matched:
+                    self.key = matched
+                else:
+                    raise ValueError(
+                        f"[PrivAgent Security] Key '{self.key}' is not in the safe key allowlist."
+                    )
+
         if self.action is BrowserActionType.scroll:
             if self.direction not in ("up", "down"):
                 raise ValueError(

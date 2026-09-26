@@ -93,3 +93,23 @@ class TestActionShapeValidation:
     def test_empty_target_rejected(self):
         with pytest.raises(ValidationError):
             BrowserActionModel(action="click", target="   ")
+
+    def test_press_key_valid(self):
+        ok = BrowserActionModel(action="pressKey", key="Enter", target="det_acc_1")
+        assert ok.action is BrowserActionType.pressKey
+        assert ok.key == "Enter"
+        assert ok.target == "det_acc_1"
+
+    def test_press_key_case_insensitive_matching(self):
+        ok = BrowserActionModel(action="pressKey", key="enter")
+        assert ok.key == "Enter"
+
+    def test_press_key_unsafe_rejected(self):
+        with pytest.raises(ValidationError):
+            BrowserActionModel(action="pressKey", key="Control")
+        with pytest.raises(ValidationError):
+            BrowserActionModel(action="pressKey", key="F12")
+
+    def test_press_key_requires_key(self):
+        with pytest.raises(ValidationError):
+            BrowserActionModel(action="pressKey")

@@ -184,3 +184,80 @@ def test_agent_action_rejects_invalid_sanitized_status():
     }
     resp = _post_agent(req_body)
     assert resp.status_code == 422
+
+
+def test_agent_action_normalizes_navigate_down_to_scroll(monkeypatch):
+    """When LLM emits navigate with url='down' to view more results, normalize to scroll."""
+    from app.reasoner import MockReasoner, ReasoningResult
+    
+    def fake_request(*args, **kwargs):
+        return ReasoningResult(
+            raw_action={"action": "navigate", "url": "down", "reason": "Navigate down the homepage."},
+            model="mock",
+            latency_ms=10.0,
+            attempts=1,
+        )
+
+    monkeypatch.setattr(MockReasoner, "request_action", fake_request)
+    req_body = {
+        "task": "open Google and search for cats",
+        "context": VALID_CONTEXT,
+    }
+    resp = _post_agent(req_body)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["success"] is True
+    assert data["action"]["action"] == "scroll"
+    assert data["action"]["direction"] == "down"
+    assert data["action"]["amount"] == 500
+
+
+def test_agent_action_normalizes_navigate_direction_to_scroll(monkeypatch):
+    """When LLM emits navigate with direction='down', amount=500, normalize to scroll."""
+    from app.reasoner import MockReasoner, ReasoningResult
+
+    def fake_request(*args, **kwargs):
+        return ReasoningResult(
+            raw_action={"action": "navigate", "direction": "down", "amount": 500, "reason": "Navigate down"},
+            model="mock",
+            latency_ms=10.0,
+            attempts=1,
+        )
+
+    monkeypatch.setattr(MockReasoner, "request_action", fake_request)
+    req_body = {
+        "task": "open Google and search for cats",
+        "context": VALID_CONTEXT,
+    }
+    resp = _post_agent(req_body)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["success"] is True
+    assert data["action"]["action"] == "scroll"
+    assert data["action"]["direction"] == "down"
+    assert data["action"]["amount"] == 500
+
+
+def test_agent_action_supports_press_key(monkeypatch):
+    """When LLM emits pressKey with key='enter', normalize and validate."""
+    from app.reasoner import MockReasoner, ReasoningResult
+
+    def fake_request(*args, **kwargs):
+        return ReasoningResult(
+            raw_action={"action": "pressKey", "key": "enter", "target": "det_acc_1", "reason": "Press enter"},
+            model="mock",
+            latency_ms=10.0,
+            attempts=1,
+        )
+
+    monkeypatch.setattr(MockReasoner, "request_action", fake_request)
+    req_body = {
+        "task": "Submit the search",
+        "context": VALID_CONTEXT,
+    }
+    resp = _post_agent(req_body)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["success"] is True
+    assert data["action"]["action"] == "pressKey"
+    assert data["action"]["key"] == "Enter"

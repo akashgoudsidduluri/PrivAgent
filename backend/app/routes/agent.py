@@ -194,25 +194,88 @@ async def generate_action(
                 },
             )
 
-    # 2. LLM output is UNTRUSTED: strict schema validation + re-validation.
+    # 2. LLM output is UNTRUSTED: defensive normalization + strict schema validation.
     try:
         raw_dict = dict(result.raw_action) if isinstance(result.raw_action, dict) else result.raw_action
         if isinstance(raw_dict, dict):
+            act_type = str(raw_dict.get("action", "")).strip()
+
+            # Normalize direction and url heuristics
+            raw_dir = str(raw_dict.get("direction", "")).strip().lower()
+            raw_url = str(raw_dict.get("url", "")).strip().lower()
+
+            # Did the model say "navigate" when it actually meant "scroll"?
+            # (e.g. {"action": "navigate", "url": "down"} or {"action": "navigate", "direction": "down"})
+            if act_type == "navigate":
+                is_scroll_intent = (
+                    raw_url in ("down", "up", "downwards", "upwards", "bottom", "top")
+                    or raw_dir in ("down", "up", "downwards", "upwards", "bottom", "top")
+                    or "direction" in raw_dict
+                    or ("amount" in raw_dict and not raw_url.startswith(("http://", "https://")))
+                )
+                if is_scroll_intent:
+                    raw_dict["action"] = "scroll"
+                    raw_dict["direction"] = "up" if ("up" in raw_dir or "up" in raw_url or "top" in raw_url) else "down"
+                    amount_val = raw_dict.get("amount")
+                    try:
+                        raw_dict["amount"] = int(amount_val) if amount_val is not None else 500
+                    except (ValueError, TypeError):
+                        raw_dict["amount"] = 500
+                    raw_dict.pop("url", None)
+                    raw_dict.pop("text", None)
+                    raw_dict.pop("target", None)
+                elif raw_dict.get("target") and (not raw_dict.get("url") or not str(raw_dict.get("url")).startswith(("http://", "https://"))):
+                    # Model targeted an element with action "navigate"
+                    if raw_dict.get("text"):
+                        raw_dict["action"] = "type"
+                        raw_dict.pop("url", None)
+                    else:
+                        raw_dict["action"] = "click"
+                        raw_dict.pop("url", None)
+
+            # Re-read normalized act_type
             act_type = raw_dict.get("action")
+
             if act_type == "scroll":
-                for k in ["target", "text", "option", "url"]:
+                # Ensure direction is valid ('up' | 'down')
+                d = str(raw_dict.get("direction", "down")).strip().lower()
+                raw_dict["direction"] = "up" if ("up" in d or "top" in d) else "down"
+
+                # Ensure amount is valid bounded int
+                amt = raw_dict.get("amount")
+                try:
+                    raw_dict["amount"] = max(1, min(5000, int(amt))) if amt is not None else 500
+                except (ValueError, TypeError):
+                    raw_dict["amount"] = 500
+
+                for k in ["target", "text", "option", "url", "key"]:
                     raw_dict.pop(k, None)
             elif act_type == "click":
-                for k in ["direction", "amount", "text", "option", "url"]:
+                for k in ["direction", "amount", "text", "option", "url", "key"]:
                     raw_dict.pop(k, None)
             elif act_type == "type":
-                for k in ["direction", "amount", "option", "url"]:
+                for k in ["direction", "amount", "option", "url", "key"]:
                     raw_dict.pop(k, None)
             elif act_type == "select":
-                for k in ["direction", "amount", "text", "url"]:
+                for k in ["direction", "amount", "text", "url", "key"]:
                     raw_dict.pop(k, None)
             elif act_type == "navigate":
-                for k in ["target", "direction", "amount", "text", "option"]:
+                for k in ["target", "direction", "amount", "text", "option", "key"]:
+                    raw_dict.pop(k, None)
+            elif act_type == "pressKey":
+                raw_key = str(raw_dict.get("key", "")).strip()
+                key_map = {
+                    "enter": "Enter", "return": "Enter",
+                    "tab": "Tab", "escape": "Escape", "esc": "Escape",
+                    "arrowdown": "ArrowDown", "down": "ArrowDown",
+                    "arrowup": "ArrowUp", "up": "ArrowUp",
+                    "arrowleft": "ArrowLeft", "left": "ArrowLeft",
+                    "arrowright": "ArrowRight", "right": "ArrowRight",
+                    "backspace": "Backspace", "delete": "Delete",
+                }
+                if raw_key.lower() in key_map:
+                    raw_dict["key"] = key_map[raw_key.lower()]
+                for k in ["direction", "amount", "text", "option", "url"]:
                     raw_dict.pop(k, None)
         action = BrowserActionModel.model_validate(raw_dict)
     except PydanticValidationError as err:
