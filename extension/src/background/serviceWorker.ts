@@ -887,6 +887,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           targetTabId,
           containmentScope,
           harness: new AgentHarness(),
+          initialUrl: targetTab.url || (targetTab as any).pendingUrl || undefined,
         });
 
         console.info('[AgentTrace] agent loop started');

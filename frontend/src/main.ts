@@ -212,7 +212,7 @@ class App {
 
     const statusbarTarget = document.getElementById('statusbar-target');
     if (statusbarTarget) {
-      statusbarTarget.textContent = state.currentUrl ? 'http://localhost:4174' : 'http://localhost:4174';
+      statusbarTarget.textContent = state.currentUrl || 'No Target';
     }
 
     // Topbar Stop Button state

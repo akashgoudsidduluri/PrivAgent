@@ -28,7 +28,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       currentStep: 0,
       maxSteps: 10,
       currentPipelineStage: 'IDLE',
-      currentUrl: window.location.href,
+      currentUrl: '',
       steps: [],
       sensitiveItemsCount: 0,
       categories: {
@@ -285,11 +285,20 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
     const latestStep = steps.length > 0 ? steps[steps.length - 1] : undefined;
 
-    const currentUrl =
+    const rawCandidateUrl =
       data.currentUrl ||
+      data.targetUrl ||
       latestStep?.semanticContext?.url ||
-      (data.steps && data.steps.length > 0 ? data.steps[data.steps.length - 1].url : undefined) ||
-      this.state.currentUrl;
+      (data.steps && data.steps.length > 0 ? data.steps[data.steps.length - 1].url : undefined);
+
+    const isDashboardHost = (url?: string) => Boolean(url && window?.location?.host && url.includes(window.location.host));
+
+    let currentUrl = this.state.currentUrl;
+    if (rawCandidateUrl && !isDashboardHost(rawCandidateUrl)) {
+      currentUrl = rawCandidateUrl;
+    } else if (isDashboardHost(currentUrl)) {
+      currentUrl = '';
+    }
 
     this.state = {
       ...this.state,
@@ -472,6 +481,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         task,
         status: 'RUNNING',
         currentStep: 0,
+        currentUrl: '',
         steps: [],
         reason: undefined,
         requiresUserConfirmationAction: undefined,

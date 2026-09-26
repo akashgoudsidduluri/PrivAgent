@@ -198,6 +198,8 @@ export interface AgentLoopOptions {
   providerRetryDelayMs?: number;
   /** Authoritative target web tab ID for the task lifecycle. */
   targetTabId?: number | null;
+  /** Initial known URL of the target web tab. */
+  initialUrl?: string;
   /**
    * Phase 12 Containment: the environmental boundary for this task.
    *
@@ -356,6 +358,9 @@ export class AgentLoop {
       maxRetries: this.maxRetries,
       targetTabId: this.targetTabId,
     });
+    if (options.initialUrl) {
+      this.state.currentUrl = options.initialUrl;
+    }
   }
 
   /**
@@ -427,7 +432,7 @@ export class AgentLoop {
     this.state.plan = plan;
 
     // Phase 4: Hierarchical Task Planning & Subgoal DAG Initialization
-    const decompResult = decomposeTask(task);
+    const decompResult = decomposeTask(task, { currentUrl: this.state.currentUrl });
     this.hierarchicalGoal = decompResult.goal;
     this.subgoalGraph = new SubgoalGraph(decompResult.goal.goalId, decompResult.subgoals);
     this.planStateMachine = new PlanStateMachine();

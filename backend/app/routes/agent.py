@@ -207,11 +207,15 @@ async def generate_action(
             # Did the model say "navigate" when it actually meant "scroll"?
             # (e.g. {"action": "navigate", "url": "down"} or {"action": "navigate", "direction": "down"})
             if act_type == "navigate":
+                has_valid_http_url = raw_url.startswith(("http://", "https://"))
                 is_scroll_intent = (
-                    raw_url in ("down", "up", "downwards", "upwards", "bottom", "top")
-                    or raw_dir in ("down", "up", "downwards", "upwards", "bottom", "top")
-                    or "direction" in raw_dict
-                    or ("amount" in raw_dict and not raw_url.startswith(("http://", "https://")))
+                    not has_valid_http_url
+                    and (
+                        raw_url in ("down", "up", "downwards", "upwards", "bottom", "top")
+                        or raw_dir in ("down", "up", "downwards", "upwards", "bottom", "top")
+                        or (raw_dict.get("direction") is not None and str(raw_dict.get("direction")).strip().lower() in ("down", "up"))
+                        or (raw_dict.get("amount") is not None and not raw_dict.get("url"))
+                    )
                 )
                 if is_scroll_intent:
                     raw_dict["action"] = "scroll"
@@ -224,7 +228,7 @@ async def generate_action(
                     raw_dict.pop("url", None)
                     raw_dict.pop("text", None)
                     raw_dict.pop("target", None)
-                elif raw_dict.get("target") and (not raw_dict.get("url") or not str(raw_dict.get("url")).startswith(("http://", "https://"))):
+                elif raw_dict.get("target") and not has_valid_http_url:
                     # Model targeted an element with action "navigate"
                     if raw_dict.get("text"):
                         raw_dict["action"] = "type"
