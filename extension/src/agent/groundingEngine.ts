@@ -110,6 +110,13 @@ function isActionCompatibleWithType(actionType: ActionType, detectionType: strin
     case 'scroll':
     case 'navigate':
       return true;
+    case 'pressKey':
+      // Phase 11: a keyboard action targets a FOCUSED CONTROL, so the same
+      // structural form-control set applies. Without this case a targeted
+      // pressKey could never be grounded and GATE 1 rejected it before M5,
+      // making focus verification at execution unreachable. The safe-key
+      // allowlist (M5) and FOCUS_MISMATCH (execution) remain authoritative.
+      return formControlLike;
     default:
       return false;
   }

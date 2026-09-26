@@ -1,0 +1,617 @@
+{
+  "timestamp": "2026-09-26T13:51:01.494Z",
+  "phase": "Phase 11: Human-Like Browser Interaction",
+  "safeKeyAllowlist": [
+    "Enter",
+    "Escape",
+    "Tab",
+    "ArrowUp",
+    "ArrowDown"
+  ],
+  "viewportBounds": {
+    "maxAutoScrollPx": 2400,
+    "scrollStepPx": 600,
+    "maxScrollWalks": 4
+  },
+  "provenance": {
+    "kind": "REAL_CHROME_HUMAN_INTERACTION",
+    "browser": "Chromium (headless=new) driven over CDP",
+    "perception": "REAL PrivAgent content script in a REAL tab",
+    "execution": "REAL PrivAgent content-script action dispatch in the live page",
+    "securityPipeline": "REAL PrivAgent local source bundled from extension/src",
+    "targetTabProvisioning": "REAL PrivAgent service worker (PRIVAGENT_DASHBOARD_START_TASK)",
+    "reasoner": "DETERMINISTIC GOAL-DRIVEN LOCAL POLICY — proposes only; all authority is local.",
+    "harnessExecutesActions": false,
+    "harnessPerformsRecovery": false,
+    "harnessDecidesSuccess": false,
+    "synthetic": false
+  },
+  "screenshots": [
+    "docs/evidence/phase11-human-interaction/phase11_scenarioA_google.png",
+    "docs/evidence/phase11-human-interaction/phase11_scenarioC_fixture_task_success.png",
+    "docs/evidence/phase11-human-interaction/phase11_scenarioB_fixture.png"
+  ],
+  "scenarios": {
+    "A1_provisioning": {
+      "task": "open google and search for black cats",
+      "realServiceWorkerMessage": "PRIVAGENT_DASHBOARD_START_TASK",
+      "resolverDestination": {
+        "url": "https://www.google.com",
+        "source": "google-intent"
+      },
+      "serviceWorkerResponse": {
+        "started": true,
+        "success": true,
+        "status": "RUNNING",
+        "stage": "PERCEPTION",
+        "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+      }
+    },
+    "A2_dashboardIsolation": {
+      "dashboardTabId": 195889955,
+      "dashboardUrlBefore": "chrome-extension://ihbbhmifbgfcibhjhcafakdkcppkccaf/popup.html",
+      "dashboardUrlAfter": "chrome-extension://ihbbhmifbgfcibhjhcafakdkcppkccaf/popup.html",
+      "dashboardUrlUnchanged": true,
+      "provisionedTargetTabId": 195889956,
+      "provisionedTargetUrl": "https://www.google.com/",
+      "targetTabIdDiffersFromDashboard": true,
+      "targetCdpTargetId": "553A1CB1B018298ACE717EBC39F4873A"
+    },
+    "A3_perception": {
+      "contentScriptAttached": true,
+      "sanitizedStatus": "sanitized_only",
+      "detections": [
+        {
+          "id": "inter-link-1",
+          "type": "link",
+          "selector": "a.w5hRs",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-link-2",
+          "type": "link",
+          "selector": "a[aria-label=\"Gmail\\ \"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-link-3",
+          "type": "link",
+          "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-button-4",
+          "type": "button",
+          "selector": "a[role=\"button\"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-link-5",
+          "type": "link",
+          "selector": "a[aria-label=\"Sign\\ in\"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "ti6dpd",
+          "type": "input",
+          "selector": "#ti6dpd",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-button-7",
+          "type": "button",
+          "selector": "div[role=\"button\"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-button-8",
+          "type": "button",
+          "selector": "span[role=\"button\"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-button-9",
+          "type": "button",
+          "selector": "input[name=\"btnK\"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-button-10",
+          "type": "button",
+          "selector": "input[name=\"btnI\"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "gbqfbb",
+          "type": "button",
+          "selector": "#gbqfbb",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-link-12",
+          "type": "link",
+          "selector": "a.eQtdDf",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-link-13",
+          "type": "link",
+          "selector": "a[role=\"menuitem\"]",
+          "confidence": 0.95
+        },
+        {
+          "id": "inter-link-14",
+          "type": "link",
+          "selector": "div[role=\"link\"]",
+          "confidence": 0.95
+        }
+      ],
+      "totalElementsScanned": 206,
+      "rawValuesPresent": false
+    },
+    "A4_agentLoop": {
+      "task": "open google and search for black cats",
+      "finalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "goalReason": "Recovery limit exceeded (3 retries). Action produced no observable effect: Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+      "finalUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dblack%2Bcats%26sca_esv%3D81be1d65d23458ac%26sxsrf%3DAPpeQnt_fNwJAOSYTbxzqGDAJTilxuuJwg%253A1790430663177%26source%3Dhp%26ei%3Dx823auS6Ce2o0PEP8fab4Qo%26iflsig%3DABILxe8AAAAAarfb1_IvIGZPSFSM5bF0r8LVcVTIt-MG%26sei%3Dys23aujCJrqPm9cPvfyG4AM&q=EgQiNWWjGMub39UGIjC9SaVZQLShi-yECL-QHPq6_VzHnQr1Fzq5PPCgsOEYPatvaOO6LCEmoUH8F_SKJc8yAVJaAUM",
+      "stepsTaken": 6,
+      "steps": [
+        {
+          "step": 1,
+          "action": "type",
+          "key": null,
+          "target": "ti6dpd",
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 10)."
+        },
+        {
+          "step": 2,
+          "action": "pressKey",
+          "key": "Enter",
+          "target": "ti6dpd",
+          "validationAllowed": true,
+          "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' triggered page navigation to 'https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dblack%2Bcats%26sca_esv%3D81be1d65d23458ac%26sxsrf%3DAPpeQnt_fNwJAOSYTbxzqGDAJTilxuuJwg%253A1790430663177%26source%3Dhp%26ei%3Dx823auS6Ce2o0PEP8fab4Qo%26iflsig%3DABILxe8AAAAAarfb1_IvIGZPSFSM5bF0r8LVcVTIt-MG%26sei%3Dys23aujCJrqPm9cPvfyG4AM&q=EgQiNWWjGMub39UGIjC9SaVZQLShi-yECL-QHPq6_VzHnQr1Fzq5PPCgsOEYPatvaOO6LCEmoUH8F_SKJc8yAVJaAUM'."
+        },
+        {
+          "step": 3,
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "executionSuccess": false,
+          "effectVerified": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        {
+          "step": 4,
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "executionSuccess": false,
+          "effectVerified": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        {
+          "step": 5,
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "executionSuccess": false,
+          "effectVerified": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        {
+          "step": 6,
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "executionSuccess": false,
+          "effectVerified": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        }
+      ],
+      "proposals": [
+        {
+          "decision": "type-query",
+          "target": "ti6dpd"
+        },
+        {
+          "decision": "press-enter",
+          "target": "ti6dpd",
+          "key": "Enter"
+        },
+        {
+          "decision": "bounded-scroll"
+        },
+        {
+          "decision": "bounded-scroll"
+        },
+        {
+          "decision": "bounded-scroll"
+        },
+        {
+          "decision": "bounded-scroll"
+        }
+      ],
+      "executionTrace": [
+        {
+          "action": "type",
+          "key": null,
+          "target": "ti6dpd",
+          "success": true,
+          "error": null,
+          "message": "Typed 10 chars into 'ti6dpd'."
+        },
+        {
+          "action": "pressKey",
+          "key": "Enter",
+          "target": "ti6dpd",
+          "success": true,
+          "error": null,
+          "message": "Delivered 'Enter' to the focused control."
+        },
+        {
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "success": true,
+          "error": null,
+          "message": "Scroll produced no viewport movement (boundary reached)."
+        },
+        {
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "success": true,
+          "error": null,
+          "message": "Scroll produced no viewport movement (boundary reached)."
+        },
+        {
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "success": true,
+          "error": null,
+          "message": "Scroll produced no viewport movement (boundary reached)."
+        },
+        {
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "success": true,
+          "error": null,
+          "message": "Scroll produced no viewport movement (boundary reached)."
+        }
+      ],
+      "gateTrace": [
+        {
+          "action": "type",
+          "key": null,
+          "target": "ti6dpd",
+          "grounded": true,
+          "groundingFailure": null,
+          "m5Allowed": true,
+          "m5Reason": "Validated type action on known element 'ti6dpd'.",
+          "criticVerdict": "ALLOW",
+          "criticCode": "NO_OBJECTION",
+          "privacyGranted": true,
+          "riskLevel": "MEDIUM"
+        },
+        {
+          "action": "pressKey",
+          "key": "Enter",
+          "target": "ti6dpd",
+          "grounded": true,
+          "groundingFailure": null,
+          "m5Allowed": true,
+          "m5Reason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+          "criticVerdict": "ALLOW",
+          "criticCode": "NO_OBJECTION",
+          "privacyGranted": true,
+          "riskLevel": "MEDIUM"
+        },
+        {
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "grounded": true,
+          "groundingFailure": null,
+          "m5Allowed": true,
+          "m5Reason": "Validated scroll down by 300px.",
+          "criticVerdict": "ALLOW",
+          "criticCode": "NO_OBJECTION",
+          "privacyGranted": true,
+          "riskLevel": "LOW"
+        },
+        {
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "grounded": true,
+          "groundingFailure": null,
+          "m5Allowed": true,
+          "m5Reason": "Validated scroll down by 300px.",
+          "criticVerdict": "ALLOW",
+          "criticCode": "NO_OBJECTION",
+          "privacyGranted": true,
+          "riskLevel": "LOW"
+        },
+        {
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "grounded": true,
+          "groundingFailure": null,
+          "m5Allowed": true,
+          "m5Reason": "Validated scroll down by 300px.",
+          "criticVerdict": "ALLOW",
+          "criticCode": "NO_OBJECTION",
+          "privacyGranted": true,
+          "riskLevel": "LOW"
+        },
+        {
+          "action": "scroll",
+          "key": null,
+          "target": null,
+          "grounded": true,
+          "groundingFailure": null,
+          "m5Allowed": true,
+          "m5Reason": "Validated scroll down by 300px.",
+          "criticVerdict": "ALLOW",
+          "criticCode": "NO_OBJECTION",
+          "privacyGranted": true,
+          "riskLevel": "LOW"
+        }
+      ],
+      "recovery": {
+        "totalRecoveryAttempts": 3,
+        "history": [
+          {
+            "failureCode": "ACTION_NO_EFFECT",
+            "strategy": "REPERCEIVE",
+            "attempt": 1,
+            "pageGeneration": 3,
+            "subgoalId": "goal-muig6ukd-j6rzo-sg3",
+            "reason": "Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 3.",
+            "outcome": "OPEN",
+            "timestamp": 1790430669636
+          },
+          {
+            "failureCode": "ACTION_NO_EFFECT",
+            "strategy": "REPERCEIVE",
+            "attempt": 1,
+            "pageGeneration": 6,
+            "reason": "Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 6.",
+            "outcome": "OPEN",
+            "timestamp": 1790430671390
+          },
+          {
+            "failureCode": "ACTION_NO_EFFECT",
+            "strategy": "REPLAN_SUBGOAL",
+            "attempt": 2,
+            "pageGeneration": 9,
+            "reason": "Strategy 'REPERCEIVE' repeated 2 times (limit 2); escalating to REPLAN_SUBGOAL.",
+            "outcome": "OPEN",
+            "timestamp": 1790430673183
+          }
+        ]
+      },
+      "e2eLatencyMs": 10206.54
+    },
+    "A5_safeKeyboard": {
+      "allowlist": [
+        "Enter",
+        "Escape",
+        "Tab",
+        "ArrowUp",
+        "ArrowDown"
+      ],
+      "pressKeySteps": [
+        {
+          "step": 2,
+          "action": "pressKey",
+          "key": "Enter",
+          "target": "ti6dpd",
+          "validationAllowed": true,
+          "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' triggered page navigation to 'https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dblack%2Bcats%26sca_esv%3D81be1d65d23458ac%26sxsrf%3DAPpeQnt_fNwJAOSYTbxzqGDAJTilxuuJwg%253A1790430663177%26source%3Dhp%26ei%3Dx823auS6Ce2o0PEP8fab4Qo%26iflsig%3DABILxe8AAAAAarfb1_IvIGZPSFSM5bF0r8LVcVTIt-MG%26sei%3Dys23aujCJrqPm9cPvfyG4AM&q=EgQiNWWjGMub39UGIjC9SaVZQLShi-yECL-QHPq6_VzHnQr1Fzq5PPCgsOEYPatvaOO6LCEmoUH8F_SKJc8yAVJaAUM'."
+        }
+      ],
+      "onlyAllowlistedKeysUsed": true,
+      "focusVerifiedBeforeDelivery": true,
+      "effectVerified": true
+    },
+    "C_deterministicEndToEnd": {
+      "note": "Identical real PrivAgent stack driven against a deterministic local page, because Google serves an automated-browser interstitial (/sorry/index).",
+      "fixtureUrl": "http://localhost:4191/",
+      "finalStatus": "SUCCESS",
+      "goalStatus": "SUCCESS",
+      "goalReason": "Search goal verified against observed results URL: query 'black cats' present at 'localhost'.",
+      "finalUrl": "http://localhost:4191/results?q=black+cats",
+      "steps": [
+        {
+          "step": 1,
+          "action": "type",
+          "key": null,
+          "target": "q",
+          "validationAllowed": true,
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'q' (length: 10)."
+        },
+        {
+          "step": 2,
+          "action": "pressKey",
+          "key": "Enter",
+          "target": "q",
+          "validationAllowed": true,
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "PressKey key 'Enter' on target 'q' triggered page navigation to 'http://localhost:4191/results?q=black+cats'."
+        },
+        {
+          "step": 2,
+          "action": "pressKey",
+          "key": "Enter",
+          "target": "q",
+          "validationAllowed": true,
+          "executionSuccess": true,
+          "effectVerified": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "PressKey key 'Enter' on target 'q' triggered page navigation to 'http://localhost:4191/results?q=black+cats'."
+        }
+      ],
+      "executionTrace": [
+        {
+          "action": "type",
+          "key": null,
+          "target": "q",
+          "success": true,
+          "message": "Typed 10 chars into 'q'.",
+          "error": null
+        },
+        {
+          "action": "pressKey",
+          "key": "Enter",
+          "target": "q",
+          "success": true,
+          "message": "Delivered 'Enter' to the focused control.",
+          "error": null
+        }
+      ],
+      "pressKeyUsedOnlySafeKeys": true,
+      "goalVerified": true
+    },
+    "B_deterministicFixture": {
+      "fixtureUrl": "http://localhost:4191/",
+      "detections": [
+        {
+          "id": "q",
+          "type": "search",
+          "selector": "#q"
+        },
+        {
+          "id": "go",
+          "type": "button",
+          "selector": "#go"
+        },
+        {
+          "id": "offscreen-cta",
+          "type": "button",
+          "selector": "#offscreen-cta"
+        },
+        {
+          "id": "behind-modal",
+          "type": "button",
+          "selector": "#behind-modal"
+        }
+      ],
+      "B1_offScreenTarget": {
+        "targetGeometryBefore": {
+          "top": 1722.875,
+          "viewportHeight": 757,
+          "scrollY": 0
+        },
+        "scrollActionProposed": {
+          "action": "scroll",
+          "direction": "down",
+          "amount": 600,
+          "reason": "Reach the off-screen control"
+        },
+        "m5Allowed": true,
+        "scrollExecuted": true,
+        "scrollMessage": "Scrolled down by 600px.",
+        "scrollYBefore": 0,
+        "scrollYAfter": 600,
+        "scrollDeltaPx": 600,
+        "boundedByValidator": true,
+        "viewportBounds": {
+          "maxAutoScrollPx": 2400,
+          "scrollStepPx": 600,
+          "maxScrollWalks": 4
+        },
+        "targetStillOffScreen": true
+      },
+      "B2_duplicateClick": {
+        "target": "behind-modal",
+        "firstClick": {
+          "success": true,
+          "message": "Clicked element 'behind-modal'."
+        },
+        "secondClick": {
+          "success": false,
+          "error": "DUPLICATE_CLICK_SUPPRESSED: identical target clicked within the duplicate window; use recovery."
+        },
+        "suppressedByDuplicateGuard": true
+      },
+      "B3_modalOverlay": {
+        "modalOpenedBy": {
+          "action": "click",
+          "target": "offscreen-cta",
+          "success": true
+        },
+        "openModalsInPage": 1,
+        "clickThroughBlocked": true,
+        "error": "INTERACTABILITY_BLOCKED: An active modal overlay does not contain the target."
+      },
+      "B4_offAllowlistKey": {
+        "proposed": {
+          "action": "pressKey",
+          "key": "Delete",
+          "target": "q",
+          "reason": "Remove a character"
+        },
+        "m5Allowed": false,
+        "m5Reason": "Action 'pressKey' key 'Delete' is not on the safe-key allowlist.",
+        "executorAlsoRefused": true,
+        "executorError": "UNSAFE_KEY: 'Delete' is not on the safe-key allowlist."
+      },
+      "B5_focusMismatch": {
+        "success": false,
+        "error": "FOCUS_MISMATCH: expected focus on 'behind-modal' but focus is elsewhere.",
+        "blocked": true
+      }
+    }
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "result": {
+    "dashboardIsolated": true,
+    "targetTabProvisioned": true,
+    "contentScriptAttached": true,
+    "pagePerceivedAndGrounded": true,
+    "m5AndSecurityGatesRan": true,
+    "multipleHumanLikeInteractions": true,
+    "safeKeysOnly": true,
+    "effectVerificationRan": true,
+    "recoveryInvoked": true,
+    "goalVerified": false,
+    "googleServedInterstitial": true,
+    "deterministicEndToEndGoalVerified": true,
+    "scenarioBAllBehavioursConfirmed": true
+  }
+}

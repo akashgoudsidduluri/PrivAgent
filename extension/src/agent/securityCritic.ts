@@ -507,6 +507,15 @@ function detectGoalMismatch(
     case 'select': {
       return false;
     }
+    case 'pressKey': {
+      // Phase 11: the key comes from a fixed non-destructive allowlist (M5 is
+      // authoritative for it) and the target, when present, must be a grounded
+      // form control. The destructive/consequential cross-check above runs
+      // BEFORE this switch, so a keyboard step is never exempt from goal
+      // alignment on those grounds; it is only exempt from the verb-heuristics
+      // above, which cannot be reasoned about for a key with no own semantics.
+      return false;
+    }
     case 'scroll': {
       return false;
     }

@@ -213,6 +213,67 @@ export function verifyActionEffect(
       };
     }
 
+    case 'pressKey': {
+      // Phase 11: a keyboard action is verified like any other meaningful
+      // action. It is NOT assumed to have taken effect: an inert or
+      // unhandled key must surface as ACTION_NO_EFFECT so the Phase 10
+      // recovery engine gets a chance to re-perceive.
+      const keyRef = `key '${action.key}'${action.target ? ` on target '${action.target}'` : ''}`;
+      if (urlChanged) {
+        return {
+          hasEffect: true,
+          status: 'URL_NAVIGATION_OBSERVED',
+          details: `PressKey ${keyRef} triggered page navigation to '${post.url}'.`,
+          diagnostics,
+          shouldRecover: false,
+        };
+      }
+      if (modalsChanged) {
+        return {
+          hasEffect: true,
+          status: 'MODAL_STATE_CHANGED',
+          details: `PressKey ${keyRef} opened or closed a modal dialog.`,
+          diagnostics,
+          shouldRecover: false,
+        };
+      }
+      if (valueLengthChanged) {
+        return {
+          hasEffect: true,
+          status: 'VALUE_STATE_CHANGED',
+          details: `PressKey ${keyRef} changed the target's value state (length: ${post.targetValueLength}).`,
+          diagnostics,
+          shouldRecover: false,
+        };
+      }
+      if (domMutated) {
+        return {
+          hasEffect: true,
+          status: 'DOM_MUTATION_OBSERVED',
+          details: `PressKey ${keyRef} mutated DOM contents (${pre.domElementCount} -> ${post.domElementCount} elements).`,
+          diagnostics,
+          shouldRecover: false,
+        };
+      }
+      if (focusChanged) {
+        return {
+          hasEffect: true,
+          status: 'FOCUS_SHIFT_OBSERVED',
+          details: `PressKey ${keyRef} shifted focus to '${post.activeElementSelector}'.`,
+          diagnostics,
+          shouldRecover: false,
+        };
+      }
+      return {
+        hasEffect: false,
+        status: 'ACTION_NO_EFFECT',
+        details: `PressKey ${keyRef} produced no observable URL change, value change, modal, focus shift, or DOM mutation.`,
+        diagnostics,
+        shouldRecover: true,
+        suggestedRecovery: 'Focused control may not handle this key. Re-perceive and re-focus the intended control.',
+      };
+    }
+
     default:
       return {
         hasEffect: true,

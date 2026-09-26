@@ -669,7 +669,7 @@ const duplicateClickGuard = new DuplicateClickGuard();
  * against the LIVE element, blocking dispatch on hidden/disabled/occluded
  * targets BEFORE any interaction occurs. Deterministic and value-free.
  */
-function assessLiveInteractability(el: HTMLElement): {
+export function assessLiveInteractability(el: HTMLElement): {
   interactable: boolean;
   report: ReturnType<typeof assessInteractability>;
 } {
@@ -729,7 +729,7 @@ function assessLiveInteractability(el: HTMLElement): {
  *  - duplicate-click suppression within a small window
  *  - pressKey: safe-key dispatch to the FOCUSED element only
  */
-function executeBrowserAction(action: import('../agent/actionTypes').BrowserAction): import('../agent/actionTypes').ActionExecutionResult {
+export function executeBrowserAction(action: import('../agent/actionTypes').BrowserAction): import('../agent/actionTypes').ActionExecutionResult {
   try {
     switch (action.action) {
       case 'click': {
@@ -883,11 +883,19 @@ function executeBrowserAction(action: import('../agent/actionTypes').BrowserActi
         active.dispatchEvent(
           new KeyboardEvent('keyup', { key: action.key, bubbles: true, cancelable: true })
         );
-        if (action.key === 'Enter' && typeof (active as HTMLFormElement).requestSubmit === 'function') {
-          // Native activation semantics for the focused control.
-          const form = (active as HTMLInputElement).form;
-          if (form && typeof form.requestSubmit === 'function') {
-            form.requestSubmit();
+        if (action.key === 'Enter') {
+          // Native activation semantics for the focused control: a form
+          // control inside a form submits THAT form. `requestSubmit` lives on
+          // the form, not on the control, so resolve the owning form from the
+          // already-focus-verified control. The control was checked for focus
+          // above, so this can only ever submit the form the user is in.
+          const control = active as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+          const owningForm: HTMLFormElement | null =
+            'form' in control && control.form instanceof HTMLFormElement
+              ? control.form
+              : (active.closest('form') as HTMLFormElement | null);
+          if (owningForm && typeof owningForm.requestSubmit === 'function') {
+            owningForm.requestSubmit();
           }
         }
         return {

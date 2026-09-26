@@ -116,6 +116,21 @@ export class OneActionPlanner {
         };
       }
 
+      case 'pressKey': {
+        // Phase 11 shape validation only. The SAFE-KEY allowlist is enforced by
+        // the authoritative M5 validator, which runs after the planner.
+        if (!proposal.key || typeof proposal.key !== 'string') {
+          return { valid: false, error: 'PressKey action requires a valid key string.' };
+        }
+        if (proposal.target !== undefined && typeof proposal.target !== 'string') {
+          return { valid: false, error: 'PressKey target must be a string element ID when provided.' };
+        }
+        return {
+          valid: true,
+          action: proposal as unknown as BrowserAction,
+        };
+      }
+
       default:
         return { valid: false, error: `Unrecognized action type: ${String(actionType)}` };
     }

@@ -83,6 +83,14 @@ export function assessActionRisk(
       score += 0.25;
       reasons.push("Type inputs text into an interactive element.");
       break;
+    case 'pressKey':
+      // Phase 11: an allowlisted key delivered to a focused control can still
+      // submit a form or activate a control, so it is scored like a form-level
+      // interaction rather than being left at the base observation risk.
+      actionTypeRisk = 'MEDIUM';
+      score += 0.20;
+      reasons.push('PressKey delivers an allowlisted key to a focused control and may submit a form.');
+      break;
     case 'click':
       actionTypeRisk = 'LOW'; // May escalate based on target
       score += 0.15;
