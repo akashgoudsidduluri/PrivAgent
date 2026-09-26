@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-09-26T15:22:03.358Z",
+  "phase": "Phase 12: Containment / Sandbox",
+  "goal": "Limit the blast radius of autonomous browser actions.",
+  "provenance": {
+    "kind": "REAL_CHROME_CONTAINMENT",
+    "browser": "Chromium (headless=new) driven over CDP",
+    "execution": "REAL PrivAgent content-script action dispatch in the live page",
+    "containment": "REAL PrivAgent containment module bundled from extension/src",
+    "securityPipeline": "REAL PrivAgent local source bundled from extension/src",
+    "harnessDispatchesActions": false,
+    "harnessDecidesContainment": false,
+    "synthetic": false
+  },
+  "screenshots": [
+    "docs/evidence/phase12-containment/phase12_final_state.png"
+  ],
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "dashboardIsolation": {
+    "dashboardTabId": 1857268374
+  },
+  "targetTabId": 1857268375,
+  "targetTabDiffersFromDashboard": true,
+  "contentScriptAttached": true,
+  "detections": [
+    {
+      "id": "in-scope-button",
+      "type": "button",
+      "selector": "#in-scope-button"
+    }
+  ],
+  "scopeEstablishment": {
+    "liveUrl": "http://localhost:4193/",
+    "established": true,
+    "rootHost": "localhost",
+    "summary": "contained:localhost"
+  },
+  "case1_inScopeAction": {
+    "code": "WITHIN_SCOPE",
+    "contained": true,
+    "executed": true,
+    "pageChanged": true,
+    "clicksObserved": 1
+  },
+  "case2_crossOriginNavigation": {
+    "code": "CROSS_ORIGIN_NAVIGATION_DENIED",
+    "contained": false,
+    "terminal": true,
+    "dispatchedByHarness": false
+  },
+  "case3_scopeDrift": {
+    "code": "SCOPE_DRIFT_DETECTED",
+    "contained": false,
+    "terminal": true
+  },
+  "case4_uncontainableScheme": {
+    "code": "UNSUPPORTED_SCHEME_DENIED",
+    "contained": false,
+    "terminal": true
+  },
+  "case5_gateOrdering": {
+    "criticVerdict": "BLOCK",
+    "criticCode": "SUSPICIOUS_NAVIGATION",
+    "containmentWouldAllow": false,
+    "note": "Containment is the last gate; the pipeline refuses off-site navigation before containment is consulted."
+  },
+  "case6_environmentHeld": {
+    "finalUrl": "http://localhost:4193/",
+    "landingContained": true,
+    "landingCode": "WITHIN_SCOPE",
+    "pageNeverLeftScope": true
+  },
+  "result": {
+    "scopeEstablished": true,
+    "inScopeActionContainedAndExecuted": true,
+    "crossOriginNavigationContained": true,
+    "scopeDriftContained": true,
+    "uncontainableSchemeContained": true,
+    "containmentIsLastGate": true,
+    "environmentHeldThroughout": true
+  }
+}

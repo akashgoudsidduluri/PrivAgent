@@ -5,6 +5,11 @@ import { buildAgentPayload, PrivacyScanReport, AgentContextPayload, VisualCaptur
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
 import { resolveTargetWebTab, isEligibleWebTab, isDashboardUrl } from './targetResolver';
+import {
+  establishContainmentScope,
+  evaluateContainment,
+  verifyNavigationContainment,
+} from '../agent/containment';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
@@ -489,6 +494,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         // Stable target: pinned here and never re-resolved for the life of the task.
         const targetTabId = targetTab.id;
+
+        // ── Phase 12 Containment ────────────────────────────────────────────
+        // Establish the ENVIRONMENTAL boundary for this task from the origin
+        // the task actually resolved. This bounds WHERE the agent may act; it
+        // does not decide whether an action is allowed (M5 and the rest of the
+        // pipeline still do). A null scope is the FAIL-CLOSED state: the loop
+        // then refuses every action with CONTAINMENT_UNINITIALIZED rather than
+        // running unbounded.
+        const containmentScope = establishContainmentScope({
+          targetUrl: targetTab.url || null,
+          targetTabId,
+          dashboardOrigin: 'http://localhost:5173',
+        });
+        console.info('[AgentTrace] containment scope established', {
+          established: containmentScope !== null,
+          rootHost: containmentScope?.rootHost ?? null,
+          tabId: containmentScope ? containmentScope.tabId : null,
+        });
+
+        // FAIL CLOSED: the agent is never run without an environmental
+        // boundary. A target whose origin cannot be contained (a non-web URL,
+        // or the dashboard itself) must not produce a task at all.
+        if (!containmentScope) {
+          const reason =
+            'Refusing to start the task: the resolved target has no containable environment ' +
+            '(Phase 12 containment). The agent is never run unbounded.';
+          console.error('[PrivAgent SW] containment scope could not be established', {
+            failureCode: 'CONTAINMENT_UNINITIALIZED',
+          });
+          console.info('[AgentTrace] terminal progress emitted', { status: 'FAILED' });
+          try {
+            sendResponse({ started: false, success: false, status: 'FAILED', reason });
+          } catch {
+            /* port closed */
+          }
+          await sendToDashboard(
+            { status: 'FAILED', currentStep: 0, maxSteps: 10, task, steps: [], reason },
+            dashboardTabId
+          );
+          return;
+        }
         console.info('TARGET_TAB_SELECTED', {
           tabId: targetTabId,
           origin: targetTab.url ? new URL(targetTab.url).origin : null,
@@ -699,6 +745,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
           executeAction: async (action: BrowserAction) => {
             try {
+              // ── Phase 12 Containment at the DISPATCH boundary ──────────────
+              // Defence in depth: the AgentLoop already evaluated containment
+              // before dispatch, but the dispatcher is the last place the agent
+              // could touch a real tab, so the boundary is re-checked here
+              // against the LIVE tab state. This can only refuse.
+              let liveTabUrl: string | null = null;
+              try {
+                const liveTab = await chrome.tabs.get(targetTabId);
+                liveTabUrl = liveTab?.url || (liveTab as any)?.pendingUrl || null;
+              } catch {
+                liveTabUrl = null;
+              }
+              const dispatchCheck = evaluateContainment({
+                action,
+                scope: containmentScope,
+                targetTabId,
+                liveUrl: liveTabUrl,
+              });
+              if (!dispatchCheck.contained) {
+                console.warn('[PrivAgent SW] ACTION_BLOCKED_BY_CONTAINMENT', {
+                  code: dispatchCheck.code,
+                  actionType: action.action,
+                });
+                return {
+                  success: false,
+                  error: `CONTAINMENT_DENIED: ${dispatchCheck.reason}`,
+                  containmentDenied: true,
+                  containmentCode: dispatchCheck.code,
+                };
+              }
+
               const execRes = (await withTimeout(
                 chrome.tabs.sendMessage(targetTabId, { type: 'PRIVAGENT_EXECUTE_ACTION', action }),
                 10000,
@@ -740,6 +817,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               const actualUrl = tab.url || (tab as any).pendingUrl || '';
               const destOrigin = (() => { try { return new URL(destination).hostname; } catch { return destination; } })();
               const actualOrigin = (() => { try { return new URL(actualUrl).hostname; } catch { return actualUrl; } })();
+
+              // ── Phase 12 Containment holds ACROSS the navigation ────────────
+              // A site that redirects the agent to another origin has moved the
+              // environment. Containment refuses to let the task continue there.
+              const landing = verifyNavigationContainment(containmentScope, actualUrl);
+              if (!landing.contained) {
+                console.error('[PrivAgent SW] onNavigationComplete: landing left containment scope', {
+                  code: landing.code,
+                });
+                return false;
+              }
 
               // Allow for www. prefix differences and subdomains of the same domain.
               // e.g. google.com and www.google.com are the same destination.
@@ -788,6 +876,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           delayBetweenStepsMs: 500,
           providerRetries: 0,
           targetTabId,
+          containmentScope,
         });
 
         console.info('[AgentTrace] agent loop started');

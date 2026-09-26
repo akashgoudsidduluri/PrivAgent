@@ -80,6 +80,11 @@ import {
 } from './longHorizon';
 import { verifyTaskGoal } from './goalVerifier';
 import {
+  evaluateContainment,
+  containmentSummary,
+  type ContainmentScope,
+} from './containment';
+import {
   RecoveryEngine,
   DEFAULT_RECOVERY_BOUNDS,
   type RecoveryDecision,
@@ -192,6 +197,15 @@ export interface AgentLoopOptions {
   providerRetryDelayMs?: number;
   /** Authoritative target web tab ID for the task lifecycle. */
   targetTabId?: number | null;
+  /**
+   * Phase 12 Containment: the environmental boundary for this task.
+   *
+   * Owned by the host that owns the target tab. The service worker always
+   * establishes one and refuses to start a task when it cannot, so the real
+   * browser path is fail-closed. A host with no tab of its own omits it and
+   * claims no environmental boundary.
+   */
+  containmentScope?: ContainmentScope | null;
 }
 
 // Complete normalized forbidden key set that must never appear anywhere in TaskState
@@ -264,6 +278,11 @@ export class AgentLoop {
    * Security Critic → Privacy → Risk/Confirmation → Execution → Verification).
    */
   private readonly recoveryEngine = new RecoveryEngine(DEFAULT_RECOVERY_BOUNDS);
+  /**
+   * Phase 12 Containment scope. Defaults to null, which containment treats as
+   * UNINITIALIZED and therefore denies — the fail-closed default.
+   */
+  private readonly containmentScope: ContainmentScope | null;
   private memoryHints?: MemoryHints;
 
   private extractOrigin(url?: string): string {
@@ -312,6 +331,7 @@ export class AgentLoop {
     this.providerRetries = options.providerRetries ?? 2;
     this.providerRetryDelayMs = options.providerRetryDelayMs ?? 250;
     this.targetTabId = options.targetTabId ?? null;
+    this.containmentScope = options.containmentScope ?? null;
 
     this.state = createAgentTaskState('', {
       maxSteps: this.maxSteps,
@@ -1302,6 +1322,78 @@ export class AgentLoop {
           : undefined,
         timestamp: Date.now(),
       };
+
+      // 5.5 PHASE 12 CONTAINMENT — final ENVIRONMENTAL check, immediately
+      // before dispatch and AFTER every security gate has already run.
+      //
+      // This deliberately sits at the dispatch boundary and nowhere else. It
+      // does not authorize anything: Grounding, M5, the Security Critic, the
+      // Privacy Firewall and Risk/Confirmation have all already approved this
+      // action by this point. Containment can only ever REFUSE MORE. It bounds
+      // WHERE the agent acts (the origin scope of the resolved target), not
+      // WHETHER the action is well-formed or safe.
+      //
+      // A containment denial is TERMINAL: retrying the same environment is the
+      // blast radius this phase exists to remove, so the task fails closed here
+      // instead of handing a refused action to the Recovery Engine.
+      //
+      // The scope is owned by the HOST that owns the tab. The service worker
+      // (the real browser host) always establishes one and refuses to start a
+      // task when it cannot — so the product path is fail-closed. A host that
+      // drives the loop without a tab of its own (an in-process harness, a
+      // non-browser embedding) has no environment to contain, so no scope is
+      // configured and no environmental boundary is claimed.
+      if (this.containmentScope) {
+        const containment = evaluateContainment({
+          action,
+          scope: this.containmentScope,
+          targetTabId: this.targetTabId,
+          liveUrl: preSnapshot.url || this.state.currentUrl || null,
+        });
+        this.state.containmentDecision = {
+          code: containment.code,
+          contained: containment.contained,
+          reason: containment.reason,
+          scope: containmentSummary(this.containmentScope),
+        };
+        console.info('[AgentTrace] containment decision', {
+          code: containment.code,
+          contained: containment.contained,
+          scope: containmentSummary(this.containmentScope),
+        });
+
+        if (!containment.contained) {
+          const denialRecord: FailureRecord = {
+            category: 'CONTAINMENT_DENIED',
+            reason: `Containment refused the action: ${containment.reason}`,
+            pageGeneration: this.state.currentPageGeneration,
+            attemptedAction: action,
+            recoveryAttempted: false,
+            finalState: 'FAILED',
+            timestamp: Date.now(),
+          };
+          if (!this.state.failureHistory) this.state.failureHistory = [];
+          this.state.failureHistory.push(denialRecord);
+          this.state.lastFailure = denialRecord;
+          this.state.lastAction = action;
+          this.state.lastActionResult = { success: false, error: denialRecord.reason };
+          this.state.retryCount++;
+          this.state.failureCount++;
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = denialRecord.reason;
+          console.warn('[AgentTrace] ACTION_EXECUTED_BLOCKED_BY_CONTAINMENT', {
+            code: containment.code,
+            actionType: action.action,
+          });
+          this.notifyProgress();
+          break;
+        }
+      } else {
+        // No scope is not an open sandbox claim; it is simply no configured
+        // environment. Recorded so the absence is visible in task state.
+        this.state.containmentDecision = null;
+      }
 
       // 6. Execute
       this.provider.resetEscalation?.();

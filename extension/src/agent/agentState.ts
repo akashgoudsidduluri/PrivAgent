@@ -56,7 +56,13 @@ export type FailureCategory =
   | 'INVALID_MODEL_RESPONSE'
   | 'CONFIRMATION_REQUIRED'
   | 'GOAL_NOT_SATISFIED'
-  | 'RECOVERY_EXHAUSTED';
+  | 'RECOVERY_EXHAUSTED'
+  /**
+   * Phase 12 Containment: the action was refused by the ENVIRONMENTAL
+   * boundary, not by an action-authorization gate. Terminal — the task does
+   * not retry into an environment containment has refused.
+   */
+  | 'CONTAINMENT_DENIED';
 
 export interface FailureRecord {
   category: FailureCategory;
@@ -252,6 +258,18 @@ export interface AgentTaskState extends TaskState {
 
   /** Phase 10: strategy chosen for the most recent recovery decision. */
   recoveryStrategy?: import('./recoveryEngine').RecoveryStrategy;
+
+  /**
+   * Phase 12 Containment: the most recent environmental boundary decision.
+   * Codes and reasons only — never a URL, page text, or any model output.
+   */
+  containmentDecision?: {
+    code: import('./containment').ContainmentCode;
+    contained: boolean;
+    reason: string;
+    /** Short scope summary, e.g. `contained:example.com`. */
+    scope: string;
+  } | null;
 }
 
 /**
