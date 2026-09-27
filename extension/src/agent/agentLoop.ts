@@ -68,6 +68,16 @@ import {
 } from './effectVerifier';
 import { parseUserGoal } from './goalParser';
 import { reviewProposedAction, SecurityCriticResult } from './securityCritic';
+// PHASE 17.4 D5. Reliability-state persistence. A RELIABILITY mechanism
+// only: it holds no gate, restores no authority, and every restored value feeds
+// loop/stall/bound checks whose only terminal output is a replan or FAILED.
+import {
+  clearTracker,
+  createNoopStore,
+  loadTrackerForTask,
+  saveTracker,
+  type LongHorizonStore,
+} from './longHorizonPersistence';
 import {
   LongHorizonTracker,
   DEFAULT_LONG_HORIZON_BOUNDS,
@@ -194,6 +204,14 @@ export interface AgentLoopCallbacks {
 
 export interface AgentLoopOptions {
   maxSteps?: number;
+  /**
+   * PHASE 17.4 D5. Where long-horizon RELIABILITY state is persisted so a
+   * service-worker restart cannot silently reset the bounds. Defaults to an
+   * in-memory store (persistence AVAILABLE = false) so every existing caller,
+   * fixture and test is unchanged; the service worker opts into
+   * `chrome.storage.session`.
+   */
+  longHorizonStore?: LongHorizonStore;
   maxRetries?: number;
   delayBetweenStepsMs?: number;
   requireConfirmationForExternalNavigation?: boolean;
@@ -297,7 +315,17 @@ export class AgentLoop {
    * subgoal lifecycle, hard bounds and state-aware replanning. Read-only with
    * respect to authority: it can stop or de-scope work, never authorize it.
    */
-  private readonly longHorizon = new LongHorizonTracker(DEFAULT_LONG_HORIZON_BOUNDS);
+  private longHorizon = new LongHorizonTracker(DEFAULT_LONG_HORIZON_BOUNDS);
+  /**
+   * PHASE 17.4 D5. Identity of THIS run, minted in runTask. Deliberately NOT
+   * derived from the task text: two runs of the same task must not share a
+   * reliability record. This is an identity token, not a credential — it grants
+   * nothing and authorizes nothing.
+   */
+  private runId: string = '';
+  private readonly longHorizonStore: LongHorizonStore;
+  /** PHASE 17.4 D5. Why the tracker looks the way it does. Diagnostics only. */
+  public longHorizonRestoreStatus: string = 'FRESH_NO_RECORD';
   /**
    * Phase 10: bounded deterministic Recovery Engine. It CLASSIFIES failures and
    * SELECTS a strategy; it never executes anything. Every recovered action is
@@ -359,6 +387,9 @@ export class AgentLoop {
     this.providerRetries = options.providerRetries ?? 2;
     this.providerRetryDelayMs = options.providerRetryDelayMs ?? 250;
     this.targetTabId = options.targetTabId ?? null;
+    // PHASE 17.4 D5. Default is an in-memory store: persistence is opt-in and
+    // degrades explicitly rather than silently.
+    this.longHorizonStore = options.longHorizonStore ?? createNoopStore();
     this.containmentScope = options.containmentScope ?? null;
     this.harness = options.harness ?? null;
 
@@ -457,6 +488,26 @@ export class AgentLoop {
     // bounds the task, and refuses to repeat finished or failed work. M5, the
     // Security Critic, privacy/risk/confirmation and goal verification remain
     // the authoritative gates and are untouched.
+    // ── PHASE 17.4 D5: establish run identity, then restore if this is the
+    // SAME task after a service-worker restart. A different runId, a malformed
+    // record, or a schema mismatch all yield a FRESH, FULLY BOUNDED tracker.
+    this.runId = `run-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    const d5Load = await loadTrackerForTask(
+      this.longHorizonStore,
+      this.runId,
+      task,
+      DEFAULT_LONG_HORIZON_BOUNDS
+    );
+    this.longHorizon = d5Load.tracker;
+    this.longHorizonRestoreStatus = d5Load.persistenceAvailable ? d5Load.status : 'UNAVAILABLE';
+    console.info('[AgentTrace] long-horizon state', {
+      restoreStatus: this.longHorizonRestoreStatus,
+      detail: d5Load.detail ?? null,
+      actionCount: this.longHorizon.actionCount,
+      recoveryCount: this.longHorizon.recoveryCount,
+      consecutiveNoProgress: this.longHorizon.consecutiveNoProgress,
+      totalNoProgress: this.longHorizon.totalNoProgress,
+    });
     this.longHorizon.initialize(
       task,
       Object.entries(parsed.constraints as Record<string, unknown>)
@@ -838,6 +889,20 @@ export class AgentLoop {
       const lhLoop = this.longHorizon.detectLoop();
       const lhStall = this.longHorizon.detectStall();
       this.state.longHorizon = this.longHorizon.snapshot();
+      //
+      // PHASE 17.4 D5. Persist the reliability state EVERY cycle, not only at
+      // task end: the task may never reach task end, and a service worker can be
+      // evicted between any two cycles. This is what stops a restart from
+      // handing the agent a second full budget.
+      //
+      // Best-effort and non-blocking: persistence failure must never abort a run.
+      void saveTracker(
+        this.longHorizonStore,
+        this.longHorizon,
+        this.runId,
+        task,
+        DEFAULT_LONG_HORIZON_BOUNDS
+      );
 
       console.info('[AgentTrace] long-horizon update', {
         meaningfulProgress: lhProgress.meaningful,
@@ -2252,6 +2317,14 @@ export class AgentLoop {
         break;
       }
     }
+
+    //
+    // PHASE 17.4 D5. Every terminal outcome — SUCCESS, FAILED and STOPPED —
+    // clears the reliability record. A finished task must not donate its
+    // counters or its fingerprint ring to the next run, even if a runId were
+    // somehow reused. The record is only ever meaningful for a task that is
+    // still in progress.
+    await clearTracker(this.longHorizonStore);
 
     if (this.state.status === 'SUCCESS') {
       console.info('[AgentTrace] M6 completed');

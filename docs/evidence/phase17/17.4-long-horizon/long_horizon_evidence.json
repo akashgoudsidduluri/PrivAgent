@@ -691,6 +691,67 @@
     },
     "allPass": true
   },
+  "d5Remediation": {
+    "recordedAfterThisRun": true,
+    "thisFileIsUnchangedByD5": "The 7/7 journey result above (12 cycles, 7 distinct real pages, 6 negative cases) is the D1-D4 result exactly as recorded. The D5 change set does not restate, alter or inflate it.",
+    "separateEvidenceFile": "d5_sw_restart_evidence.json",
+    "designAudit": "LONG_HORIZON_AUDIT_D5.md",
+    "acceptanceSection": "LONG_HORIZON_ACCEPTANCE_REPORT.md section 13",
+    "verdict": "PARTIAL",
+    "rootCause": "longHorizon was a private readonly AgentLoop instance field created in the field initialiser; MV3 evicts the whole JS context, so on revival initialize() reset actionCount, recoveryCount, consecutiveNoProgress, totalNoProgress, the fingerprint ring, the last observation and the subgoal lifecycle to zero mid-task.",
+    "chosenDesign": {
+      "store": "chrome.storage.session, never chrome.storage.local",
+      "fallback": "in-memory store with persistenceAvailable:false surfaced in state (explicit, never silent)",
+      "taskIdentity": "per-run runId minted once in runTask(); goalId is derived from task text and is NOT a run identity",
+      "goalBinding": "stableHash goalDigest, so originalGoal is never persisted",
+      "writePoint": "every cycle, after the long-horizon block",
+      "clearPoint": "every terminal exit (SUCCESS, FAILED, STOPPED)",
+      "versioning": "schemaVersion + runId + goalDigest + updatedAt",
+      "failClosed": "malformed, incompatible, over-long, negative, identity-mismatched records are REFUSED and DELETED, never repaired; a refused record yields a fresh fully bounded tracker plus a surfaced restore status",
+      "privacy": "metadata only; every write is gated through the existing scanForRawSensitiveValues; no new outbound data path"
+    },
+    "manifestPermissionChange": {
+      "added": "storage",
+      "why": "chrome.storage is gated behind the storage permission and the extension declared none. Proven empirically inside the real service worker: hasStorage:false local:false session:false before; hasStorage:true local:true session:true roundTrip:true after. Without it D5 persistence is dead code in the shipped build, and memory/memoryStore.ts has been silently inert for the same reason.",
+      "classification": "authority-surface change, flagged"
+    },
+    "focusedTests": {
+      "file": "tests/phase17/longHorizonPersistence.test.ts",
+      "count": 21,
+      "allPass": true,
+      "covers": "A round-trip, B repetition, C stagnation, D recovery, E budget, F wrong-task refusal+deletion, G reset/terminal clear, H 11 malformed cases, I old schema, J no record, K two tasks isolated, L metadata-only/no sensitive values, M no SUCCESS from tracker state, N no SUCCESS from recovery, O no SUCCESS from budget exhaustion"
+    },
+    "mutations": {
+      "harness": "scratch/mut17_4_d5.mjs",
+      "caught": 5,
+      "total": 5,
+      "detail": {
+        "M1_disable_restore": "CAUGHT (7 tests failed)",
+        "M2_accept_wrong_taskId": "CAUGHT (2 tests failed)",
+        "M3_treat_malformed_as_valid": "CAUGHT (1 test failed)",
+        "M4_drop_counters_and_ring": "CAUGHT (6 tests failed)",
+        "M5_leak_old_state_into_new_task": "CAUGHT (3 tests failed)"
+      }
+    },
+    "realChrome": {
+      "verdict": "PARTIAL",
+      "real": "real headless Chrome, real built MV3 extension, real service worker, real chrome.storage.session; production-serialized record (actionCount=4, fingerprints=4, schemaVersion=1) round-tripped, survived debugger detach/reattach, and was recovered by the production validator + restore",
+      "control": "a fresh tracker would have had actionCount=0 and loopDetected=false",
+      "notProven": "That an MV3 service-worker EVICTION preserves the record. ServiceWorker.stopWorker could not be issued: the ServiceWorker CDP domain is unavailable on the browser-level target in this Chromium build ({\"code\":-32601,\"message\":\"'ServiceWorker.enable' wasn't found\"}). The worker context was never destroyed; durability across a true eviction rests on Chrome's documented contract, not on this run.",
+      "serviceWorkerGenuinelyTerminated": false
+    },
+    "regression": {
+      "testFiles": 110,
+      "testsPassing": "1406/1406",
+      "tscErrors": 0,
+      "buildExtension": "pass",
+      "buildFrontend": "pass",
+      "gitDiffCheck": "clean",
+      "securityPrivacyAuthoritySuite": "148/148 across 9 files",
+      "authorityTreesVs89817c6": "extension/src/privacy/, extension/src/security/, extension/src/content/ byte-identical"
+    },
+    "d6Assessment": "No scope change. resumeWithConfirmation redispatches an already-authorized action; it does not bypass an authoritative gate (the action already passed Grounding, M5, Privacy Firewall, Security Critic and Risk/Confirmation) and still goes through effect and goal verification afterwards."
+  },
   "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
   "serviceWorkerAttached": true
 }

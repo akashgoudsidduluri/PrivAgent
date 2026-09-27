@@ -12,6 +12,15 @@ import {
   verifyNavigationContainment,
 } from '../agent/containment';
 import { AgentHarness } from '../agent/harness';
+// PHASE 17.4 D5. Long-horizon RELIABILITY state, persisted so an MV3 service-
+// worker eviction cannot reset the task bounds. `chrome.storage.session` is
+// browser-memory only and is never written to disk. The `storage` permission
+// was added to the manifest for this (see LONG_HORIZON_AUDIT_D5.md); without
+// it the API is absent in the shipped build. Availability is still probed, and
+// a genuinely unavailable store degrades explicitly (persistenceAvailable:
+// false) rather than silently. Never falls back to chrome.storage.local, which
+// would put task state on disk.
+import { createSessionStore } from '../agent/longHorizonPersistence';
 import { projectAgentOutput, screenAgentOutput, describeOutputScreen } from '../agent/agentOutput';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
@@ -1193,6 +1202,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           targetTabId,
           containmentScope,
           harness: new AgentHarness(),
+          // PHASE 17.4 D5: reliability state survives service-worker eviction.
+          longHorizonStore: createSessionStore(),
           initialUrl: targetTab.url || (targetTab as any).pendingUrl || undefined,
         });
 

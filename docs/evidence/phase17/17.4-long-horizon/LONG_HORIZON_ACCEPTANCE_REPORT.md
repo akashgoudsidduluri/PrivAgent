@@ -1,9 +1,14 @@
 # PHASE 17.4 — LONG-HORIZON RELIABILITY ACCEPTANCE REPORT
 
 **HEAD at start:** `1bf0fcb` (Phase 17.3)
+**HEAD now:** `89817c6` — D1–D4 were committed there. **D5 remediation is a later, uncommitted change set on top and is not part of that commit.**
 **Phase 17.4 work:** uncommitted, awaiting review
-**Audit:** [`LONG_HORIZON_AUDIT.md`](./LONG_HORIZON_AUDIT.md)
-**Machine evidence:** [`long_horizon_evidence.json`](./long_horizon_evidence.json), [`real_reasoner_evidence.json`](./real_reasoner_evidence.json)
+**Audit:** [`LONG_HORIZON_AUDIT.md`](./LONG_HORIZON_AUDIT.md) · **D5 audit:** [`LONG_HORIZON_AUDIT_D5.md`](./LONG_HORIZON_AUDIT_D5.md)
+**Machine evidence:** [`long_horizon_evidence.json`](./long_horizon_evidence.json), [`real_reasoner_evidence.json`](./real_reasoner_evidence.json), [`d5_sw_restart_evidence.json`](./d5_sw_restart_evidence.json)
+
+> This report covers two change sets: D1–D4 (§§1–12) and the later **D5
+> remediation (§13)**. They are kept separate on purpose, so the earlier
+> result is not restated or inflated by the later one.
 
 ---
 
@@ -12,8 +17,11 @@
 | Measure | Before 17.4 | After 17.4 |
 |---|---|---|
 | Test files | 108 | **109** |
-| Tests | 1355 | **1385** (all passing) |
+| Tests | 1355 | **1385** (all passing) — and **1406** after the D5 change set (§13) |
 | `tsc -b --noEmit` | **0 errors** | **0 errors** |
+
+D5 baseline (at `89817c6`, before the D5 change set): **109 files / 1385 tests**,
+`tsc` 0 errors, both builds green.
 | `build:extension` | pass | **pass** |
 | `build:frontend` | pass | **pass** |
 | `git diff --check` | clean | **clean** |
@@ -36,7 +44,7 @@ limitation; two are deliberately out of scope.
 | **D2** MEDIUM | The fingerprint's action component was dead — the call site passed `undefined`, so it was permanently `'observe'`. | The attempted action is now passed in. | **FIXED** |
 | **D3** MEDIUM | `(context as any).typed_value_length` read a field `AgentContextPayload` does not declare; the cast hid it and the value was permanently `0`, making a progress signal unreachable. | Cast and phantom field removed; the signal is declared unavailable rather than faked. | **FIXED** |
 | **D4** MEDIUM | The long-horizon layer consumed **no** observation provenance, while 17.1 and 17.3 had both established exactly those gates for other consumers. | Reused `isSameDocumentIdentity` (17.3) and the 17.1 `viewportObservable` flag. No new contract invented. | **FIXED** |
-| **D5** MEDIUM | Long-horizon state is per-`AgentLoop`-instance and is lost across an MV3 service-worker restart, resetting every bound mid-task. | Documented, **not implemented** — persistence needs a storage and restore contract, which is a design question. | **KNOWN LIMITATION** |
+| **D5** MEDIUM | Long-horizon state is per-`AgentLoop`-instance and is lost across an MV3 service-worker restart, resetting every bound mid-task. | Deferred at the time; **remediated later** — see §13 and [`LONG_HORIZON_AUDIT_D5.md`](./LONG_HORIZON_AUDIT_D5.md). | **FIXED (D5 change set)** |
 | **D6** LOW | `resumeWithConfirmation` re-dispatches a grounded action without re-validating against the current page generation. | Not changed — that alters authorization semantics, which this phase must not touch. | **OUT OF SCOPE** |
 | **D7** LOW | `SUBGOAL_BUDGET_EXHAUSTED` accounting was not verified end-to-end. | Not claimed either way. | **OPEN QUESTION** |
 
@@ -251,15 +259,16 @@ Security/privacy regression set: **148 / 148 passing** across 9 files.
 | Terminal state cannot restart | **PROVEN_REAL** + PROVEN_TEST |
 | Target-tab drift is handled | **PROVEN_REAL** (case 4) |
 | 12-cycle real journey reaching a verifier-decided SUCCESS | **PROVEN_REAL** (fixture-paged) |
-| Long-horizon state across a service-worker restart | **KNOWN_LIMITATION** |
+| Long-horizon state across a service-worker restart | **PROVEN_TEST** + **PARTIAL** real Chrome — see §13 |
 | Real-reasoner long-horizon behaviour | **NOT_PROVEN** (model never invoked) |
 | Open-web long-horizon reliability | **NOT_PROVEN** — every real run here is a controlled local fixture |
 | `SUBGOAL_BUDGET_EXHAUSTED` accounting under replanning | **NOT_PROVEN** (D7, open) |
 
 ## 11. Known limitations
 
-1. **D5** — long-horizon counters, fingerprints, completed subgoals and discoveries are
-   lost if the MV3 service worker is terminated mid-task, resetting every bound.
+1. **D5** — *remediated in the D5 change set, see §13.* The residual limitation is
+   now only that MV3 eviction durability rests on Chrome's documented
+   `chrome.storage.session` contract rather than on an induced eviction in this run.
 2. **Real reasoner** — not exercised; see §7.
 3. **Controlled fixture only** — every real-browser run used the local fixture. Nothing
    here is a claim about open-web long-horizon behaviour.
@@ -277,3 +286,211 @@ Security/privacy regression set: **148 / 148 passing** across 9 files.
 Not attempted, by instruction: Phase 17.5, Phase 17.6, new goal types, the three-state
 goal contract, OCR changes, visual-perception redesign, and any change to a security or
 privacy authority.
+
+---
+
+## 13. D5 remediation — separate change set, on top of `89817c6`
+
+Full design audit: [`LONG_HORIZON_AUDIT_D5.md`](./LONG_HORIZON_AUDIT_D5.md).
+Machine evidence: [`d5_sw_restart_evidence.json`](./d5_sw_restart_evidence.json).
+Sections 1–12 above are **not restated** by this section.
+
+### 13.1 Root cause
+
+`agentLoop.ts:300` held the tracker as a `private readonly` instance field created in
+the field initialiser. The service worker keeps the `AgentLoop` in a module-level
+`activeLoop`, and MV3 evicts the whole JS context when idle. On revival a fresh
+`AgentLoop` is constructed and `longHorizon.initialize()` runs again, so
+`actionCount`, `recoveryCount`, `consecutiveNoProgress`, `totalNoProgress`, the
+fingerprint ring, the last observation and the subgoal lifecycle all return to zero
+**mid-task**. The bounds are the only thing preventing an unbounded run, so this is
+the one D-class defect that could turn a bounded failure into an unbounded one.
+
+### 13.2 Task identity
+
+`hierarchicalGoal.goalId` is derived from the task *text*, so two runs of
+"search for cats" share it — it is **not** a run identity and cannot be used as one.
+A per-run `runId` is therefore minted once inside `runTask()`, which is the single
+point at which a task begins, initialises the tracker, and terminates. It is an
+identity token for reliability state, **not** a credential; it grants nothing.
+
+### 13.3 Chosen persistence design
+
+| Decision | Choice | Why |
+|---|---|---|
+| Store | `chrome.storage.session` (never `.local`) | MV3's in-memory session area, held by the browser process, survives worker eviction, **never written to disk** |
+| Fallback | in-memory store, `persistenceAvailable: false` surfaced in state | degradation is explicit, never silent |
+| Write point | **every cycle**, immediately after the long-horizon block | the task may never reach a terminal exit |
+| Clear point | **every terminal exit** — `SUCCESS`, `FAILED`, `STOPPED` | secondary guard behind `runId` |
+| Persisted | `actionCount`, `recoveryCount`, `consecutiveNoProgress`, `totalNoProgress`, bounded `fingerprints`, `lastObservation`, subgoal `{id,status,attempts}`, `lastLoop`, `lastStallReason` | exactly the fields that decide a bound, nothing else |
+| Not persisted | `originalGoal` (only a `stableHash` digest), subgoal `description`, discovery `label` | free text and model-authored text may contain PII |
+| Identity/versioning | `runId`, `goalDigest`, `schemaVersion`, `updatedAt` | rejects stale, foreign and incompatible records |
+| Final gate | full serialized record passed through the existing `scanForRawSensitiveValues` before every write | same input-boundary defence `addDiscovery()` already uses |
+
+Bounds themselves (`maxTotalActions`, `maxConsecutiveNoProgress`, `maxRepeatedStates`,
+`maxStallActions`, `maxReplans`) are **construction parameters, not accumulated
+state** — so a refused record cannot hand the agent unlimited budget.
+
+### 13.4 Lifecycle and fail-closed behaviour
+
+| Scenario | Behaviour |
+|---|---|
+| NEW TASK | no record, or a different `runId` → fresh tracker |
+| SAME TASK + SW RESTART | `runId` matches → counters, fingerprints, last observation, subgoals restored |
+| TASK COMPLETES | record cleared; terminal verdict never overwritten by restore |
+| TASK EXPLICITLY RESET | record cleared; next task cannot inherit counters |
+| NEW TASK AFTER OLD TASK | cleared on terminal exit **and** `runId` differs — double-guarded |
+| PERSISTENCE FAILURE | record **refused and deleted**, fresh *fully bounded* tracker, `restoreStatus` surfaced |
+
+Rejection rules on load: wrong `schemaVersion`; `runId` mismatch; `goalDigest`
+mismatch; missing or non-numeric counter; negative counter; over-long array; subgoal
+without an `id`. **All are refusals, never repairs.** Rejecting rather than failing
+the task is deliberate: a corrupt blob would otherwise brick the agent, and the
+existing semantics for "no usable state" are already "fresh bounded task". The
+refusal is **never silent** — the status is carried on the loop and surfaced.
+
+### 13.5 Privacy and authority
+
+Persisted state is **metadata only**. The two exclusions are structural (the fields
+are never written at all), not filtered after the fact. No raw page text, PII,
+DOM, screenshots, passwords, OCR text, or model prompts/responses are inputs to this
+record, and **no new outbound data path is created** — it is local extension state
+consumed by one reliability class.
+
+`LongHorizonTracker` remains a reliability mechanism only: it holds no gates, and
+restoring a record can only make the agent **stop sooner**, never proceed. Verified
+by test that goal `SUCCESS` cannot be created from tracker state, from recovery, or
+from budget exhaustion (tests M, N, O below). `extension/src/privacy/`,
+`extension/src/security/` and `extension/src/content/` are **byte-identical to
+`89817c6`**; the security/privacy authority suite is **148/148 across 9 files**.
+
+### 13.6 Manifest permission change — authority surface, flagged
+
+`"storage"` was **added to `extension/manifest.json` permissions.** This is a
+change to the extension's authority surface and is called out here rather than
+buried.
+
+It was not assumed to be needed — it was proven, by probing inside the **real**
+service worker of the **real built extension**:
+
+```
+before manifest change:  hasStorage:false  local:false  session:false
+after  manifest change:  hasStorage:true   local:true   session:true  roundTrip:true
+```
+
+Without it, D5 persistence is **dead code in the shipped build**. The same defect
+has been silently affecting `memory/memoryStore.ts`, which guards on
+`chrome.storage?.local` rather than on a permission — an object-existence check
+that passes while the API throws.
+
+Rejected alternative: degrade to memory. That would leave D5 unimplemented in
+production. `storage` is the minimum permission that makes the required capability
+exist; it exposes no API beyond `storage.local`/`session`/`sync` and adds no
+warning that reveals user data. The availability probe and the explicit
+`persistenceAvailable: false` degradation are **retained** regardless, so a build
+or browser without the API fails loudly instead of silently losing bounds.
+
+### 13.7 Focused tests
+
+`tests/phase17/longHorizonPersistence.test.ts` — **21 tests, all passing.**
+
+| Req | Coverage |
+|---|---|
+| A | state round-trips across a simulated SW restart |
+| B | repetition count survives |
+| C | stagnation counts survive |
+| D | recovery / repeated-strategy state survives |
+| E | budget-relevant counts survive; **no SUCCESS** is derived from them |
+| F | a persisted tracker **cannot** be restored into a different task (refused **and** deleted) |
+| G | explicit reset / terminal clear removes old state |
+| H | **11 malformed-input cases**, each refused |
+| I | old `schemaVersion` refused |
+| J | no persisted record → fresh task |
+| K | two independent tasks stay isolated |
+| L | metadata only — asserts no `value`, `textContent`, `innerText`, `password`, OCR raw text, screenshot or PII |
+| M | goal SUCCESS still cannot be created from tracker state |
+| N | recovery still cannot create SUCCESS |
+| O | budget exhaustion still cannot create SUCCESS |
+
+Plus two end-to-end cases through the real `AgentLoop`: a write-then-clear over a
+full run, and an unchanged run with no store configured.
+
+**No existing test was weakened or deleted.** 0 assertions removed, 0 `it()` blocks
+removed, 1 file added.
+
+### 13.8 Mutation results — 5 / 5 caught
+
+Harness `scratch/mut17_4_d5.mjs`, per-file backups, assert-once anchors, tree
+verified clean afterwards (no stray `.mutbak`).
+
+| # | Mutation | Result |
+|---|---|---|
+| **M1** | disable restore | **CAUGHT** (7 tests failed) |
+| **M2** | accept state for the wrong `taskId` | **CAUGHT** (2 tests failed) |
+| **M3** | treat malformed / old-schema state as valid | **CAUGHT** (1 test failed) |
+| **M4** | stop persisting counters and the fingerprint ring | **CAUGHT** (6 tests failed) |
+| **M5** | allow old tracker state to leak into a new task | **CAUGHT** (3 tests failed) |
+
+Each was reported only after the test actually failed under the mutant.
+
+### 13.9 Real Chrome — **PARTIAL**, deliberately downgraded
+
+`scratch/verify_phase17_4_d5_sw_restart.mjs` → `d5_sw_restart_evidence.json`.
+Recorded **separately** from the existing journey result; that 7/7 result is not
+restated or altered here.
+
+**What is real:** real headless Chrome, the real built MV3 extension, the real
+service worker, real `chrome.storage.session`. A production-serialized record was
+written and read back (`actionCount=4`, `fingerprints=4`, `schemaVersion=1`), it
+survived detaching the service-worker debugger and attaching a fresh CDP context,
+and the **production** validator + restore recovered the counts and the loop
+detection. A control shows a fresh tracker would have had `actionCount=0` and
+`loopDetected=false`.
+
+**What is not proven:** the eviction itself. `ServiceWorker.stopWorker` could not
+be issued — the `ServiceWorker` CDP domain is unavailable on the browser-level
+target in this Chromium build:
+
+```
+{"code":-32601,"message":"'ServiceWorker.enable' wasn't found"}
+```
+
+So the worker context was never destroyed, and the durability of
+`chrome.storage.session` across a **true** eviction rests on Chrome's documented
+contract, **not** on this run. The verdict is recorded as `PARTIAL` with
+`serviceWorkerGenuinelyTerminated: false` rather than taking a false green.
+
+### 13.10 D6 assessment — no scope change
+
+`resumeWithConfirmation` re-dispatches an already-authorized action without
+re-validating against the current page generation. **It does not bypass an
+authoritative gate**: the action reached that point only because it had already
+passed Grounding, M5, the Privacy Firewall, the Security Critic and
+Risk/Confirmation — that is precisely why the loop paused. The redispatch is
+continuation, not a new proposal, and afterwards the action still goes through
+effect verification and goal verification. **Not changed.**
+
+### 13.11 D5 regression totals
+
+| Measure | Value |
+|---|---|
+| Test files | 110 (was 109) |
+| Tests | **1406 / 1406 passing** (was 1385) |
+| `tsc -b --noEmit` | **0 errors** |
+| `build:extension` / `build:frontend` | both exit 0 |
+| `git diff --check` | clean |
+| Security/privacy authority suite | **148 / 148 across 9 files** |
+| `privacy/`, `security/`, `content/` vs `89817c6` | byte-identical |
+| 17.4 focused suites re-run | `longHorizonReliability` 30/30, `longHorizonPersistence` 21/21 |
+| Mutation suite | **5 / 5** |
+
+### 13.12 Residual limitations for D5
+
+1. MV3 eviction durability is proven by Chrome's **documented contract**, not by an
+   induced eviction in this run (§13.9).
+2. The record is bounded to one active run by design; there is deliberately **no**
+   cross-task or cross-session reliability memory.
+3. Discoveries are not persisted (their labels are model-authored text); a resumed
+   task rediscovers them.
+4. `D5` persistence covers the long-horizon tracker only. The other
+   per-instance loop state was not in scope.

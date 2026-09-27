@@ -170,12 +170,17 @@ subgoals are forgotten.
 
 **Direction of failure:** this *weakens* a bound (extends the run) rather than
 creating a false success. Classified as a defect because the brief explicitly asks
-for correct behaviour across long runs.
+for correct behaviour across long runs.**Originally deferred from 17.4, then remediated.** This audit first recorded D5
+as a known limitation, reasoning that persistence needs a storage decision, a
+restore contract, and an answer to "what does a resumed task's budget mean".
+Review required the fix, so D5 was remediated as a separate, later change set
+after `89817c6`.
 
-**Not proposed for 17.4.** Persisting this correctly needs storage, a restore
-contract, and a decision about what a resumed task's budget even means. That is a
-design question, not a reliability primitive, and inventing it here would be
-overengineering. Recorded as a known limitation in §5.
+**See [`LONG_HORIZON_AUDIT_D5.md`](./LONG_HORIZON_AUDIT_D5.md)** for the full
+design audit, the storage decision (including the added `storage` manifest
+permission), task identity, lifecycle semantics, fail-closed restore and the
+privacy argument. The body of this audit is left exactly as written, so the
+original reasoning stands on the record.
 
 ---
 
@@ -233,6 +238,8 @@ verified end-to-end** and is recorded as an open question rather than a defect.
 ## 4. Intended limitations (not defects)
 
 - No cross-task or cross-session memory by design; `initialize()` clears everything.
+  (D5 remediation adds persistence *within* a single active run only; it does
+  not add cross-task memory.)
 - `UNVERIFIABLE` is still absent from `GoalVerificationResult` (17.2 documented gap).
 - Local reliability controls are deliberately deterministic and model-free; that is
   a design invariant, not a gap.
@@ -254,9 +261,13 @@ no change to any security authority; no change to any goal-verification rule.**
 | **P4** | Gate the long-horizon observation on real provenance by **reusing** the 17.1/17.3 primitives — no new contract invented. | D4 | small adapter |
 | **P5** | Document D5 (SW restart) as a known limitation. No code change. | D5 | docs only |
 
-Explicitly **not** proposed: service-worker state persistence (D5, design question),
-`resumeWithConfirmation` re-validation (D6, authorization semantics), any new goal
+Explicitly **not** proposed: `resumeWithConfirmation` re-validation (D6, authorization semantics), any new goal
 type, any change to bounds defaults, any change to the gate chain.
+
+> **Superseded for D5 only.** P5's "no code change" is no longer the position:
+> service-worker state persistence was built in a later change set on the same
+> branch and is specified in [`LONG_HORIZON_AUDIT_D5.md`](./LONG_HORIZON_AUDIT_D5.md).
+> Everything else in this table stands unchanged.
 
 ---
 
@@ -279,7 +290,7 @@ type, any change to bounds defaults, any change to the gate chain.
 | M Step/retry/recovery budgets | protected |
 | N Terminal-state handling | protected — `while (IN_PROGRESS)`, guarded resume |
 | O Reset/restart | `initialize()` is total and idempotent — protected |
-| P Long-horizon persistence | **D5** — lost across a service-worker restart |
+| P Long-horizon persistence | **D5 — remediated after `89817c6`**; see `LONG_HORIZON_AUDIT_D5.md`. No cross-task memory is introduced. |
 | Q Accidental success from bookkeeping | **no defect found** — see below |
 | R Duplicated/contradictory state machines | **D2** — module contract vs. production wiring |
 

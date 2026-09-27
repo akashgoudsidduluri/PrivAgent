@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-09-27T11:57:36.749Z",
+  "work": "Phase 17.4 D5 \u2014 real-Chrome service-worker restart",
+  "substrate": "REAL headless Chrome + REAL built MV3 extension + REAL chrome.storage.session + REAL ServiceWorker.stopWorker eviction",
+  "recordedSeparatelyFrom": "long_horizon_evidence.json (the existing 7/17.4 journey result is unchanged and not restated here)",
+  "steps": [
+    {
+      "step": 1,
+      "action": "load unpacked MV3 extension in real Chrome",
+      "ok": true,
+      "detail": "ihbbhmifbgfcibhjhcafakdkcppkccaf"
+    },
+    {
+      "step": 2,
+      "action": "probe real chrome.storage.session availability inside the real service worker",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "step": 3,
+      "action": "write the production-serialized record into real chrome.storage.session and read it back",
+      "ok": true,
+      "skipped": null,
+      "detail": "actionCount=4 fingerprints=4 schemaVersion=1"
+    },
+    {
+      "step": 4,
+      "action": "genuinely terminate the MV3 service worker (ServiceWorker.stopWorker)",
+      "ok": false,
+      "detail": "stopWorker did not fire: {\"code\":-32601,\"message\":\"'ServiceWorker.enable' wasn't found\"}"
+    },
+    {
+      "step": 5,
+      "action": "attach to the service worker after the restart and read the record back",
+      "ok": true,
+      "detail": "survived restart: actionCount=4",
+      "attachedFreshContext": true
+    },
+    {
+      "step": 6,
+      "action": "validate + restore the surviving record through the production code path",
+      "ok": true,
+      "detail": {
+        "ok": true
+      }
+    }
+  ],
+  "summary": {
+    "storageSessionAvailable": true,
+    "recordRoundTripsInRealChrome": true,
+    "recordSurvivedDebuggerDetach": true,
+    "boundsPreserved": true,
+    "loopStillDetectedAfterReload": true,
+    "controlFreshTrackerWouldHaveLostIt": true,
+    "serviceWorkerGenuinelyTerminated": false,
+    "verdict": "PARTIAL",
+    "PROVEN_REAL": [
+      "chrome.storage.session is available to the built extension and round-trips a production-serialized record",
+      "the record survives detaching the service-worker debugger and attaching a fresh CDP session",
+      "the production validator accepts it and the production restore recovers actionCount, the fingerprint ring and loop detection"
+    ],
+    "NOT_PROVEN": [
+      "That an MV3 service-worker EVICTION preserves the record. The ServiceWorker CDP domain is not available on the browser-level target in this Chromium build, so ServiceWorker.stopWorker could not be issued and the worker context was never destroyed. The durability of chrome.storage.session across a true worker eviction is therefore demonstrated only by Chrome's documented contract, not by this run."
+    ],
+    "limitation": "The eviction half of the scenario is CONTROLLED at best, not demonstrated. It is recorded as PARTIAL rather than as a real-Chrome restart proof. The focused suite covers the restore/validate/refuse logic against a working store, and M1-M5 prove that logic is load-bearing.",
+    "notInflated": "This does not restate or alter the existing 7/7 long-horizon journey result in long_horizon_evidence.json."
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "swUrlSeen": "chrome-extension://ihbbhmifbgfcibhjhcafakdkcppkccaf/serviceWorker.js",
+  "sessionProbeError": null,
+  "beforeRestart": {
+    "actionCount": 4,
+    "recoveryCount": 0,
+    "consecutiveNoProgress": 1,
+    "totalNoProgress": 1,
+    "loopDetected": true,
+    "fingerprints": 4
+  },
+  "afterRestart": {
+    "actionCount": 4,
+    "recoveryCount": 0,
+    "consecutiveNoProgress": 1,
+    "totalNoProgress": 1,
+    "loopDetectedAfterRestore": true
+  },
+  "control": {
+    "freshTrackerActionCount": 0,
+    "freshTrackerLoopDetected": false,
+    "restoredActionCount": 4,
+    "restoredLoopDetected": true
+  },
+  "chromeLifecycleTest": "PARTIAL \u2014 real Chrome, real extension, real chrome.storage.session; the worker EVICTION was not induced (ServiceWorker CDP domain unavailable on the browser target), so only detach/reattach durability is demonstrated."
+}

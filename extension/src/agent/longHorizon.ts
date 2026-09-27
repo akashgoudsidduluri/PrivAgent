@@ -643,6 +643,63 @@ export class LongHorizonTracker {
     return [...this.fingerprints];
   }
 
+  /** PHASE 17.4 D5. The last observation, for persistence. Read-only. */
+  getLastObservation(): TaskObservation | null {
+    return this.lastObservation ? { ...this.lastObservation } : null;
+  }
+
+  /**
+   * PHASE 17.4 D5. Subgoal LIFECYCLE state only — id, status and attempts.
+   * The `description` is deliberately not exposed here: it is model-authored
+   * free text and must never reach a persisted record.
+   */
+  getSubgoalStates(): ReadonlyArray<{ id: string; status: LongHorizonSubgoalStatus; attempts: number }> {
+    return [...this.subgoals.values()].map((s) => ({ id: s.id, status: s.status, attempts: s.attempts }));
+  }
+
+  /**
+   * PHASE 17.4 D5. Rebuild the reliability state of an INTERRUPTED task.
+   *
+   * Only call with a record that has already passed `validatePersisted`. This is
+   * a restore of BOUNDS — counters, the fingerprint ring, the last observation
+   * and the subgoal lifecycle — and it deliberately does NOT touch the goal text
+   * or the discovery list, neither of which is persisted.
+   *
+   * It cannot create a success: every restored value feeds only loop, stall and
+   * bound checks, whose sole terminal output is a replan or `FAILED`.
+   */
+  restoreFrom(state: {
+    actionCount: number;
+    recoveryCount: number;
+    consecutiveNoProgress: number;
+    totalNoProgress: number;
+    fingerprints: string[];
+    lastObservation: TaskObservation | null;
+    subgoals: ReadonlyArray<{ id: string; status: LongHorizonSubgoalStatus; attempts: number }>;
+    lastLoop?: { kind: LoopKind | string; reason: string };
+    lastStallReason?: string;
+  }): void {
+    this.actionCount = state.actionCount;
+    this.recoveryCount = state.recoveryCount;
+    this.consecutiveNoProgress = state.consecutiveNoProgress;
+    this.totalNoProgress = state.totalNoProgress;
+    this.fingerprints = [...state.fingerprints].slice(-this.bounds.fingerprintWindow);
+    this.lastObservation = state.lastObservation ? { ...state.lastObservation } : null;
+    for (const s of state.subgoals) {
+      // A COMPLETED subgoal stays COMPLETED: the lifecycle makes it terminal, so
+      // a restart cannot silently reopen finished work.
+      this.subgoals.set(s.id, {
+        id: s.id,
+        description: '',
+        category: '',
+        status: s.status,
+        attempts: s.attempts,
+      });
+    }
+    this.lastLoop = state.lastLoop as { kind: LoopKind; reason: string } | undefined;
+    this.lastStallReason = state.lastStallReason;
+  }
+
   detectLoop(): LoopDetection {
     const d = detectLoop(this.fingerprints, this.bounds);
     if (d.loop) this.lastLoop = { kind: d.kind!, reason: d.reason };
