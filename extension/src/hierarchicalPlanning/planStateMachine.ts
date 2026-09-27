@@ -242,10 +242,18 @@ export class PlanStateMachine {
     if (this.getState() !== 'GOAL_VERIFICATION') {
       this.transitionTo('GOAL_VERIFICATION', 'Effect verified or goal satisfied; evaluating goal');
     }
-    if (goalSatisfied || allSubgoalsDone) {
-      this.transitionTo('COMPLETED', 'Goal verified and satisfied');
+    //
+    // PHASE 17.2A. The single 'Goal verified and satisfied' reason was emitted
+    // for BOTH `goalSatisfied` and the dispatch-derived `allSubgoalsDone`. The
+    // second is a record that planned actions were dispatched, which is not a
+    // goal claim; announcing one here manufactured a success no observation had
+    // established. The two cases are now stated separately.
+    if (goalSatisfied) {
+      this.transitionTo('COMPLETED', 'Goal verified from observed state and satisfied');
+    } else if (allSubgoalsDone) {
+      this.transitionTo('COMPLETED', 'All subgoals dispatched; goal NOT verified by observation');
     } else {
-      this.transitionTo('SUBGOAL_SELECTION', 'Subgoal verified; advancing to next subgoal');
+      this.transitionTo('SUBGOAL_SELECTION', 'Subgoal dispatched; advancing to next subgoal');
     }
   }
 

@@ -57,7 +57,15 @@ const CONTEXT: AgentContextPayload = {
   ocr_metrics: null,
 };
 
-const TASK = 'Find and click the account number field';
+// PHASE 17.2A. This was 'Find and click the account number field'. That goal's
+// only success path was the click-counter removed by 17.2A, so it could no
+// longer be satisfied by observation and every provider 'failed closed'.
+//
+// A SEARCH task is used instead: the observed results URL proves it from real
+// browser state, which is exactly what this test needs - the same task and the
+// same context must produce the same outcome on every provider. The
+// provider-agnosticism assertions below are unchanged.
+const TASK = 'search for cats';
 
 function backendCompletion(url?: string): Response {
   if (url && url.endsWith('/review')) {
@@ -187,9 +195,15 @@ describe('M6 is provider-agnostic (one loop, swappable provider)', () => {
 
     for (const provider of providers) {
       const executed: BrowserAction[] = [];
+      // The search query is observed only after the first action lands, so the
+      // goal is satisfied from browser state at the same point it was before.
+      let perceived = 0;
       const loop = new AgentLoop(provider, {
         getEffectSnapshot: observingHost(observedPage),
-        perceivePage: async () => CONTEXT,
+        perceivePage: async () => ({
+          ...CONTEXT,
+          url: perceived++ >= 1 ? 'https://bank.example.com/portal?q=cats' : CONTEXT.url,
+        }),
         executeAction: async (action) => {
           executed.push(action);
           // PHASE 17.1: the simulated page follows the click. This test is about

@@ -218,10 +218,24 @@ describe('P0.6 existing non-scroll goal behaviour is preserved', () => {
     expect(r.satisfied).toBe(true);
   });
 
-  it('a "details" goal is unchanged — still click-based', () => {
-    const s = state({ previousActions: [{ action: 'click' }] });
-    const r = verifyTaskGoal('open the details section', s, ctx(0));
-    expect(r.satisfied).toBe(true);
+  it('a "details" goal is no longer click-based (PHASE 17.2A)', () => {
+    // PHASE 17.2A — this assertion previously read "still click-based" and
+    // asserted `satisfied === true` from a single dispatched click. That is
+    // DISPATCH SUCCESS != GOAL SUCCESS, one of the fabrication paths the
+    // Phase 17.2 audit found at goalVerifier.ts ("Account details view opened."
+    // with nothing observed about the view). The intended invariant is now the
+    // opposite one, so the test is changed rather than the production code.
+    //
+    // This is the ONLY assertion in this file invalidated by 17.2A; the two
+    // search assertions above are unrelated and are preserved verbatim.
+    const dispatchedOnly = state({ previousActions: [{ action: 'click' }] });
+    expect(verifyTaskGoal('open the details section', dispatchedOnly, ctx(0)).satisfied).toBe(false);
+
+    // The observed details surface is what establishes it.
+    const observed = state({});
+    (observed as unknown as { currentUrl?: string }).currentUrl = 'http://localhost:4200/transactions';
+    const observedCtx = { ...ctx(0), url: 'http://localhost:4200/transactions' } as AgentContextPayload;
+    expect(verifyTaskGoal('open the details section', observed, observedCtx).satisfied).toBe(true);
   });
 });
 

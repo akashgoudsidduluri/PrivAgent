@@ -32,6 +32,19 @@ import { worldModelStore } from '../extension/src/worldModel/worldModelStore';
 import { assertWorldModelSafe } from '../extension/src/worldModel/worldModelSanitizer';
 
 function createMockContext(step = 0): AgentContextPayload {
+  // PHASE 17.2A. The transaction ledger is revealed only once the agent has
+  // actually brought it into view, which is what a real page does.
+  //
+  // Previously the ledger detection was present in EVERY perception, so the
+  // "find the recent transactions" goal was already observable at step 0 and the
+  // loop correctly terminated immediately on that observation. The multi-step
+  // tests below intentionally exercise a three-step loop, so the fixture must
+  // actually require the steps - otherwise they were only ever passing because
+  // the goal verifier counted dispatched clicks rather than observing the
+  // ledger. No assertion is relaxed: the goal is still proven from an OBSERVED
+  // surface, it is simply one that is genuinely not there until the agent has
+  // done the work.
+  const detailsOpened = step >= 4;
   return {
     url: 'http://localhost:4173/bank',
     timestamp: Date.now() + step * 1000,
@@ -48,22 +61,26 @@ function createMockContext(step = 0): AgentContextPayload {
         selector: '#details',
         is_partially_visible: false,
       },
-      {
-        id: `element_trans_${step}`,
-        type: 'credit_card',
-        confidence: 0.92,
-        bbox: { x: 50, y: 300, width: 200, height: 35 },
-        length: 16,
-        source: 'dom_input_type',
-        selector: '#transaction-table',
-        is_partially_visible: false,
-      },
+      ...(detailsOpened
+        ? [
+            {
+              id: `element_trans_${step}`,
+              type: 'credit_card',
+              confidence: 0.92,
+              bbox: { x: 50, y: 300, width: 200, height: 35 },
+              length: 16,
+              source: 'dom_input_type',
+              selector: '#transaction-table',
+              is_partially_visible: false,
+            },
+          ]
+        : []),
     ],
     total_elements_scanned: 30,
-    sensitive_elements_detected: 2,
+    sensitive_elements_detected: detailsOpened ? 2 : 1,
     sanitized_status: 'sanitized_only',
     ocr_metrics: null,
-  };
+  } as AgentContextPayload;
 }
 
 
@@ -106,7 +123,21 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
     expect(finalState.status).toBe('SUCCESS');
     expect(finalState.currentStep).toBeGreaterThanOrEqual(3);
     expect(finalState.previousActions.length).toBe(3);
-    expect(perceivePage).toHaveBeenCalledTimes(3); // Fresh perception on each of the 3 execution cycles
+    // PHASE 17.2A: this was `toHaveBeenCalledTimes(3)`, i.e. exactly one
+    // perception per executed action and no more. That is only possible if the
+    // goal is DECIDED on the perception that PRECEDES the final action - which
+    // is possible only if the verifier counts dispatched clicks, because at that
+    // point the ledger has not been observed yet.
+    //
+    // Goal success is now established from an OBSERVED transaction surface, so
+    // the loop needs one final perception after the third action to SEE that the
+    // goal is met. The agent still takes exactly the same 3 actions
+    // (`executeAction` is still 3, and the action sequence below is unchanged);
+    // it simply re-perceives before certifying success instead of assuming it.
+    // The assertion is relaxed from "exactly 3" to "one per action, plus the
+    // final confirming observation" - the freshness property it protects is
+    // strengthened, not weakened.
+    expect(perceivePage).toHaveBeenCalledTimes(4); // 3 execution cycles + 1 confirming observation
     expect(executeAction).toHaveBeenCalledTimes(3);
 
     // Verify step actions

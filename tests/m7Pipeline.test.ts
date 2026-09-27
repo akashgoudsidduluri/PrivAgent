@@ -20,38 +20,60 @@ import { AgentLoop, TaskState } from '../extension/src/agent/agentLoop';
 import { AgentContextPayload } from '../extension/src/privacy/types';
 import { BrowserAction } from '../extension/src/agent/actionTypes';
 
-const CONTEXT: AgentContextPayload = {
-  url: 'https://bank.example.com/portal',
-  timestamp: 1720000000000,
-  viewport: { width: 1280, height: 800, scroll_x: 0, scroll_y: 0 },
-  screenshot_dimensions: null,
-  detections: [
-    {
-      id: 'element_details',
-      type: 'person_name',
-      confidence: 0.92,
-      bbox: { x: 100, y: 200, width: 150, height: 30 },
-      length: 8,
-      source: 'dom_label',
-      selector: '#btn-details',
-      is_partially_visible: false,
-    },
-    {
-      id: 'element_transactions',
-      type: 'account_number',
-      confidence: 0.95,
-      bbox: { x: 100, y: 320, width: 180, height: 30 },
-      length: 12,
-      source: 'dom_label',
-      selector: '#btn-transactions',
-      is_partially_visible: false,
-    },
-  ],
-  total_elements_scanned: 40,
-  sensitive_elements_detected: 2,
-  sanitized_status: 'sanitized_only',
-  ocr_metrics: null,
-};
+/**
+ * PHASE 17.2A. The transaction control is not rendered until the account-details
+ * section has been opened, which is what a real portal does.
+ *
+ * Previously BOTH controls were present in every perception, so "find the
+ * recent transactions" was already satisfied by observation on the very first
+ * perception and the loop correctly stopped at once. This test exists to prove
+ * that a THREE-ACTION multi-step plan survives M5 validation, so its fixture has
+ * to actually require those actions. It previously appeared to need them only
+ * because the goal verifier counted dispatched clicks.
+ *
+ * No M5 assertion is touched: the test still proves that click, scroll and click
+ * are all dispatched and all pass the action allowlist.
+ */
+function contextAfterDetailsOpened(detailsOpened: boolean): AgentContextPayload {
+  return {
+    url: 'https://bank.example.com/portal',
+    timestamp: 1720000000000,
+    viewport: { width: 1280, height: 800, scroll_x: 0, scroll_y: 0 },
+    screenshot_dimensions: null,
+    detections: [
+      {
+        id: 'element_details',
+        type: 'person_name',
+        confidence: 0.92,
+        bbox: { x: 100, y: 200, width: 150, height: 30 },
+        length: 8,
+        source: 'dom_label',
+        selector: '#btn-details',
+        is_partially_visible: false,
+      },
+      ...(detailsOpened
+        ? [
+            {
+              id: 'element_transactions',
+              type: 'account_number',
+              confidence: 0.95,
+              bbox: { x: 100, y: 320, width: 180, height: 30 },
+              length: 12,
+              source: 'dom_label',
+              selector: '#btn-transactions',
+              is_partially_visible: false,
+            },
+          ]
+        : []),
+    ],
+    total_elements_scanned: 40,
+    sensitive_elements_detected: detailsOpened ? 2 : 1,
+    sanitized_status: 'sanitized_only',
+    ocr_metrics: null,
+  } as AgentContextPayload;
+}
+
+const CONTEXT: AgentContextPayload = contextAfterDetailsOpened(false);
 
 function completion(content: string): unknown {
   return { choices: [{ message: { role: 'assistant', content } }] };
@@ -86,7 +108,8 @@ describe('Extension full pipeline: fabricated LLM response → validated action'
     const executed: BrowserAction[] = [];
 
     const loop = new AgentLoop(provider, {
-      perceivePage: async () => CONTEXT,
+      // The transactions control appears only after the details click lands.
+      perceivePage: async () => contextAfterDetailsOpened(executed.length >= 1),
       executeAction: async (action) => {
         executed.push(action);
         return { success: true };

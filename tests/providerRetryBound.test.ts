@@ -48,9 +48,19 @@ function makeLoop(
   provider: AgentProvider,
   opts: { maxSteps?: number; providerRetries?: number } = {}
 ): AgentLoop {
+  let perceived = 0;
   return new AgentLoop(provider, {
     getEffectSnapshot: observingHost(observedPage),
-    perceivePage: async () => CONTEXT,
+    // PHASE 17.2A: the search results query only appears once the agent has
+    // taken its first action, so the search goal below is satisfiable from real
+    // browser state at the same point in the loop it was satisfiable at before.
+    // The page's detections are unchanged.
+    perceivePage: async () => {
+      const url = perceived++ >= 1
+        ? 'https://bank.example.com/portal?q=cats'
+        : 'https://bank.example.com/portal';
+      return { ...CONTEXT, url };
+    },
     executeAction: async (action) => simulatedBrowser(observedPage)(action),
   }, {
     maxSteps: opts.maxSteps ?? 10,
@@ -198,7 +208,17 @@ describe('Provider retry bound proof (Phase 4)', () => {
     };
 
     const loop = makeLoop(flakyThenSuccess, { providerRetries: 2 });
-    const state = await loop.runTask('Find the account number field');
+    // PHASE 17.2A. This used to be `runTask('Find the account number field')`.
+    // That goal's only success path was the removed click-counter, so once the
+    // fabrication was deleted the goal could never be satisfied and the loop ran
+    // its full step budget - which made the `calls` count (the actual subject of
+    // this test) meaningless.
+    //
+    // A SEARCH task is used instead: the observed results URL proves it from real
+    // browser state, so the loop terminates after the first successful step and
+    // `calls` measures exactly the retry bound under test. No retry, provider or
+    // bounding assertion is changed.
+    const state = await loop.runTask('search for cats');
 
     expect(calls).toBe(3); // 2 failed + 1 success — bounded by 1 + providerRetries
     expect(state.providerAttempts).toBe(3);

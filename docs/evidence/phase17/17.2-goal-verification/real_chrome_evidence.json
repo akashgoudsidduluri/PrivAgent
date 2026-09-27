@@ -1,0 +1,142 @@
+{
+  "timestamp": "2026-09-27T10:16:57.839Z",
+  "work": "Phase 17.2A — goal evidence fabrication remediation, real-Chrome evidence",
+  "substrate": "REAL headless Chrome + REAL built MV3 extension + REAL service worker + REAL content script",
+  "substitution": {
+    "observation": "REAL — read back from the live tab through the extension",
+    "decision": "NOT RUN IN BROWSER — production verifyTaskGoal is bundled and not exported to the service worker; the identical production module is imported in Node and fed those real observations. This is a hybrid, labelled as such."
+  },
+  "cases": {
+    "case1_action_request_alone": {
+      "question": "Does a long, successful-looking action history establish a goal?",
+      "realObservation": {
+        "url": "http://localhost:4220/",
+        "title": "Fixture Search",
+        "markers": [],
+        "domElementCount": 25
+      },
+      "fabricatedSignals": {
+        "previousActions": [
+          {
+            "action": "click",
+            "target": "search-box"
+          },
+          {
+            "action": "click",
+            "target": "search-submit"
+          },
+          {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 1200
+          }
+        ],
+        "steps": [
+          {
+            "step": 1,
+            "action": {
+              "action": "click"
+            },
+            "executionSuccess": true,
+            "url": "http://localhost:4220/",
+            "navigationDestination": "/transactions"
+          },
+          {
+            "step": 2,
+            "action": {
+              "action": "scroll"
+            },
+            "executionSuccess": true,
+            "url": "http://localhost:4220/",
+            "navigationDestination": "/transactions"
+          },
+          {
+            "step": 3,
+            "action": {
+              "action": "click"
+            },
+            "executionSuccess": true,
+            "url": "http://localhost:4220/",
+            "navigationDestination": "/transactions"
+          }
+        ],
+        "visitedElementIds": [
+          "acct-1",
+          "search-box"
+        ],
+        "reason": "Clicked the details button; the account details view is now open."
+      },
+      "task": "open the account details and find the recent transactions",
+      "verdict": {
+        "satisfied": false,
+        "status": "IN_PROGRESS",
+        "reason": null
+      },
+      "expectation": "satisfied === false (no transaction surface is OBSERVED on the real page)",
+      "pass": true
+    },
+    "case2_failed_navigation": {
+      "question": "Does a requested URL that never committed establish a search goal?",
+      "requestedUrl": "http://localhost:9/results?q=cats",
+      "realObservationAfterRequest": {
+        "url": "chrome-error://chromewebdata/",
+        "title": "localhost",
+        "markers": [],
+        "domElementCount": 34
+      },
+      "note": "The requested origin refused the connection; the tab did not navigate there.",
+      "fabricatedSignals": {
+        "steps": [
+          {
+            "step": 1,
+            "action": {
+              "action": "navigate",
+              "url": "http://localhost:9/results?q=cats"
+            },
+            "executionSuccess": true,
+            "url": "chrome-error://chromewebdata/",
+            "navigationDestination": "http://localhost:9/results?q=cats"
+          }
+        ],
+        "currentUrl": "chrome-error://chromewebdata/"
+      },
+      "task": "search for cats",
+      "verdict": {
+        "satisfied": false,
+        "status": "IN_PROGRESS",
+        "reason": null
+      },
+      "expectation": "satisfied === false (the requested q= is an INTENT, never an observation)",
+      "pass": true
+    },
+    "case3_observed_success": {
+      "question": "Does a real observation still produce the existing valid success?",
+      "realObservation": {
+        "url": "http://localhost:4220/results?q=cats",
+        "title": "Fixture Results",
+        "markers": [
+          "[data-marker]"
+        ],
+        "domElementCount": 23
+      },
+      "task": "search for cats",
+      "verdict": {
+        "satisfied": true,
+        "status": "SUCCESS",
+        "reason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'."
+      },
+      "expectation": "satisfied === true, from the OBSERVED q= in the live tab URL",
+      "pass": true
+    }
+  },
+  "summary": {
+    "allPass": true,
+    "cases": {
+      "case1_action_request_alone": true,
+      "case2_failed_navigation": true,
+      "case3_observed_success": true
+    }
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "serviceWorkerAttached": true
+}

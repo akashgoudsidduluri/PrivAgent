@@ -8,6 +8,20 @@
  *  - Deterministic and local; the remote LLM NEVER declares its own success.
  *  - Candidates carry strictly non-sensitive product metadata (no raw PII, credentials, or card details).
  *  - Unknown constraint attributes do NOT count as a match: UNKNOWN !== MATCH.
+ *
+ * PHASE 17.2A — GOAL EVIDENCE FABRICATION REMEDIATION.
+ *
+ *     ACTION REQUEST   != OBSERVED RESULT
+ *     DISPATCH SUCCESS != GOAL SUCCESS
+ *
+ * Only AUTHORITATIVE OBSERVATION may establish SUCCESS. These are NOT evidence
+ * and are no longer read by any success path below:
+ *   state.previousActions        - what the agent ATTEMPTED
+ *   state.steps[].executionSuccess - that dispatch returned without error
+ *   state.steps[].navigationDestination - the URL the model REQUESTED
+ *   state.visitedElementIds      - populated from action.target, a REQUEST
+ * They describe transport/execution state, not the browser.
+ * Goal verification remains a VERIFIER: it authorizes nothing.
  */
 
 import { AgentContextPayload, AgentDetection } from '../privacy/types';
@@ -504,15 +518,9 @@ export function verifyTaskGoal(
       // URL parsing fallback
     }
 
-    const hasTyped = state.previousActions.some((a) => a.action === 'type');
-    const hasSubmitted = state.previousActions.some((a) => a.action === 'click' || a.action === 'navigate');
-    if (hasTyped && hasSubmitted) {
-      return {
-        satisfied: true,
-        status: 'SUCCESS',
-        reason: 'Google search submission actions verified; search request dispatched.',
-      };
-    }
+    // PHASE 17.2A. A dispatched `type` + `click`/`navigate` is TRANSPORT
+    // state: it says the agent ASKED, not that a result page exists. Removed.
+    // The observed `q=` above is the only thing that can establish a search.
     return { satisfied: false, status: 'IN_PROGRESS' };
   }
 
@@ -521,10 +529,13 @@ export function verifyTaskGoal(
     // Verified when URL transitions away from login page to dashboard/portal/home
     const wasOnLoginPage = state.steps.some((s) => s.url.includes('login'));
     const isNowAwayFromLogin = !currentUrl.includes('login') && currentUrl.length > 0;
-    const hasTyped = state.previousActions.some((a) => a.action === 'type');
-    const hasClickedSubmit = state.previousActions.some((a) => a.action === 'click');
-
-    if (wasOnLoginPage && isNowAwayFromLogin && hasTyped && hasClickedSubmit) {
+    //
+    // PHASE 17.2A. `hasTyped`/`hasClickedSubmit` were ACTION-HISTORY evidence:
+    // typing a credential and clicking submit says the agent ATTEMPTED a login.
+    // The observed URL transition is the proof; the attempts are not. Removing
+    // them is correct AND strictly less brittle - a login whose actions were
+    // not recorded still verifies on its observed outcome.
+    if (wasOnLoginPage && isNowAwayFromLogin) {
       return {
         satisfied: true,
         status: 'SUCCESS',
@@ -554,9 +565,13 @@ export function verifyTaskGoal(
     const observedUrls = new Set<string>();
     if (currentUrl) observedUrls.add(currentUrl);
     for (const step of state.steps) {
-      if (!step.executionSuccess) continue;
+      // PHASE 17.2A. `executionSuccess` is DISPATCH state, and
+      // `navigationDestination` is the URL the model REQUESTED (set from
+      // `action.url`). A navigation dispatched, returned without error, and
+      // never committed could still contribute its REQUESTED url and certify a
+      // research goal from a page the browser was never on. `step.url` alone
+      // is the observed tab URL as of that step.
       if (step.url) observedUrls.add(step.url);
-      if (step.navigationDestination) observedUrls.add(step.navigationDestination);
     }
 
     const observedLower = Array.from(observedUrls).map((u) => u.toLowerCase());
@@ -617,11 +632,16 @@ export function verifyTaskGoal(
     }
 
     // Check if on product detail view of qualifying item
-    if (currentUrl.includes('product') && state.previousActions.some((a) => a.action === 'click')) {
+    // PHASE 17.2A. The `previousActions` click conjunct is removed: a dispatched
+    // click is not evidence a product page opened. What is required is the
+    // observed detail URL together with a qualifying candidate OBSERVED in the
+    // current perception (rebuilt from `context.detections` above, never from
+    // history).
+    if (currentUrl.includes('product') && qualifying.length > 0) {
       return {
         satisfied: true,
         status: 'SUCCESS',
-        reason: 'Navigated to verified product detail page for qualifying item.',
+        reason: 'Observed product detail page with a qualifying item in the current perception.',
         verifiedCandidates: qualifying,
       };
     }
@@ -634,13 +654,26 @@ export function verifyTaskGoal(
     (lower.includes('account details') || lower.includes('details')) &&
     (lower.includes('transaction') || lower.includes('transactions'))
   ) {
-    const hasClicked = state.previousActions.some((a) => a.action === 'click');
-    const hasScrolled = state.previousActions.some((a) => a.action === 'scroll');
-    if (state.previousActions.length >= 3 && hasClicked && hasScrolled) {
+    //
+    // PHASE 17.2A. This branch previously returned SUCCESS with NO OBSERVATION
+    // WHATSOEVER: three dispatched actions including a click and a scroll were
+    // reported as a verification of transaction history, with a reason string
+    // describing evidence that did not exist.
+    //
+    // The replacement is the OBSERVED transaction surface: a detection naming a
+    // ledger/statement, read from the CURRENT perception. Note it is weaker
+    // than proving rows are loaded - the sanitized context carries no row
+    // content. Phase 17.2 proper adds the text/content goal type for that; what
+    // matters here is that the evidence is observational, not a dispatch record.
+    const observedLedger = (context.detections ?? []).some((d) => {
+      const surface = `${d.id ?? ''} ${d.selector ?? ''} ${d.label ?? ''} ${d.type ?? ''}`.toLowerCase();
+      return surface.includes('transaction') || surface.includes('ledger') || surface.includes('statement');
+    });
+    if (observedLedger) {
       return {
         satisfied: true,
         status: 'SUCCESS',
-        reason: 'Navigated to and verified recent account transaction history.',
+        reason: 'Transaction history surface observed in the current perception.',
       };
     }
     return { satisfied: false, status: 'IN_PROGRESS' };
@@ -648,25 +681,24 @@ export function verifyTaskGoal(
 
   // ── 5. Single-step demo tasks ──────────────────────────────────────────────
   if (lower.includes('account number') || lower.includes('account_number')) {
-    const found =
-      state.steps.some(
-        (s) => s.executionSuccess && s.action.action === 'click' && s.targetType === 'account_number'
-      ) ||
-      state.previousActions.some(
-        (a) =>
-          a.action === 'click' &&
-          state.visitedElementIds.some((id) => {
-            const det = context.detections.find((d) => d.id === id);
-            return det && det.type === 'account_number';
-          })
-      );
-    if (found) {
-      return {
-        satisfied: true,
-        status: 'SUCCESS',
-        reason: 'Account number field identified and opened locally.',
-      };
-    }
+    //
+    // PHASE 17.2A. Both previous conjuncts were REQUEST/EXECUTION evidence:
+    // `executionSuccess && click` is dispatch state, and `visitedElementIds`
+    // is populated from `action.target`, recording what the agent ASKED to
+    // click rather than what the browser showed.
+    //
+    // The goal text is "find and CLICK the account number field", so the
+    // authoritative evidence is the FIELD BEING OPENED. A detection on its own
+    // proves only that the field EXISTS, which is true before the agent has
+    // done anything - treating that as completion would let the goal verify
+    // before the first action was even requested, short-circuiting the loop.
+    //
+    // The sanitized context has no focus/opened signal today (`AgentDetection`
+    // carries no such field), so there is currently NO authoritative
+    // observation that can establish this goal. It therefore fails closed.
+    // Phase 17.2 proper adds the DOM/text goal type that can read whether the
+    // field is actually open; inventing a focus flag here would fabricate the
+    // evidence this remediation exists to remove.
     return { satisfied: false, status: 'IN_PROGRESS' };
   }
 
@@ -675,11 +707,21 @@ export function verifyTaskGoal(
   }
 
   if (lower.includes('account details') || lower.includes('details')) {
-    if (state.previousActions.some((a) => a.action === 'click')) {
+    //
+    // PHASE 17.2A. This was a pure click counter: any dispatched click reported
+    // "Account details view opened." with nothing observed about the view.
+    //
+    // `state.pageType === 'banking'` is deliberately NOT accepted: that
+    // classifies the SITE, not the VIEW, so being anywhere on a banking portal
+    // would claim the details pane is open. Page classification is an inference
+    // about a page's purpose, not an observation that a view is displayed. The
+    // observed URL must name the details surface.
+    const observedUrl = currentUrl.toLowerCase();
+    if (observedUrl.includes('detail') || observedUrl.includes('transaction')) {
       return {
         satisfied: true,
         status: 'SUCCESS',
-        reason: 'Account details view opened.',
+        reason: 'Account details surface observed in the current browser state.',
       };
     }
     return { satisfied: false, status: 'IN_PROGRESS' };

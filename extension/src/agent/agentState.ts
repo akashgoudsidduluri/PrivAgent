@@ -131,7 +131,16 @@ export interface StepRecord {
   semanticVerification?: SemanticVerificationResult;
   confidenceEvaluation?: ConfidenceEvaluation;
   selfHealing?: SelfHealingResult;
-  /** Populated for navigate actions — the destination URL. */
+  /**
+   * Populated for navigate actions — the REQUESTED destination URL.
+   *
+   * PHASE 17.2A: this is an INTENT, not an OBSERVATION. It is set from
+   * `action.url` BEFORE dispatch and is populated whether or not the
+   * navigation ever committed. It is retained for diagnostics/telemetry and
+   * MUST NOT be read as evidence that the browser reached that URL, that the
+   * page loaded, or that any goal was met. Goal verification reads the
+   * OBSERVED tab URL (`step.url` / `context.url`) instead.
+   */
   navigationDestination?: string;
   /** True if post-navigation page setup (load + re-inject) succeeded. */
   postNavigationSettled?: boolean;

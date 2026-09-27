@@ -2082,8 +2082,26 @@ export class AgentLoop {
       // Transition state machine to SUBGOAL_SELECTION for next iteration if not in terminal state
       if (this.planStateMachine && (this.planStateMachine.getState() === 'GOAL_VERIFICATION' || this.planStateMachine.getState() === 'DYNAMIC_REPLANNING')) {
         const allDone = this.subgoalGraph?.isAllCompleted() ?? false;
-        if (allDone || this.isTaskGoalSatisfied(task, this.state, context)) {
+        //
+        // PHASE 17.2A. `allDone` was OR'd in as an ALTERNATIVE to goal
+        // verification. A subgoal is marked complete by
+        // `subgoalGraph.completeSubgoal` on `execResult.success` - DISPATCH
+        // state - so "every planned subgoal was dispatched" was enough to drive
+        // the plan state machine to COMPLETED with the reason 'Goal verified
+        // and satisfied'. No observation ever established that, and the claim
+        // was published as `state.planningEngineState`. This is the
+        // DISPATCH SUCCESS != GOAL SUCCESS invariant, in a second location the
+        // goalVerifier audit did not reach.
+        //
+        // Only the goal verifier may assert goal satisfaction. Subgoal dispatch
+        // completion is still recorded, as planning progress
+        // (`allSubgoalsDone`), never as `goalSatisfied`.
+        const goalVerified = this.isTaskGoalSatisfied(task, this.state, context);
+        if (goalVerified) {
           this.planStateMachine.registerGoalVerification(true, true);
+          this.state.planningEngineState = this.planStateMachine.getState();
+        } else if (allDone) {
+          this.planStateMachine.registerGoalVerification(false, true);
           this.state.planningEngineState = this.planStateMachine.getState();
         } else {
           this.planStateMachine.transitionTo('SUBGOAL_SELECTION', 'Preparing next subgoal selection');
@@ -2167,7 +2185,18 @@ export class AgentLoop {
           postNavigationSettled: settled,
         });
         if (settled) {
-          advancePageGeneration(this.state, action.url);
+          //
+          // PHASE 17.2A. This used to pass `action.url`, which made
+          // advancePageGeneration write the REQUESTED destination straight into
+          // `state.currentUrl` - a field goal verification reads as the OBSERVED
+          // tab URL (`context.url || state.currentUrl`). A navigation that was
+          // dispatched and settled but never committed to that URL therefore
+          // supplied goal evidence for a page the browser was never on.
+          //
+          // `onNavigationComplete` settling proves the injection/load handshake
+          // completed - transport state, not the tab's location. The observed
+          // URL is picked up from the next real perception cycle instead.
+          advancePageGeneration(this.state);
         }
       }
 
