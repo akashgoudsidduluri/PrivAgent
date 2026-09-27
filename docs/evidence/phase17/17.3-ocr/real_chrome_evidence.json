@@ -1,0 +1,242 @@
+{
+  "timestamp": "2026-09-27T10:40:41.882Z",
+  "chromeVersion": "Chrome/153.0.8010.53",
+  "extensionId": "fignfifoniblkonapihmkfakmlgkbkcf",
+  "tasks": {
+    "Task_A": {
+      "instruction": "Find the text shown inside the image/canvas on this page",
+      "targetUrl": "http://localhost:4215/non-dom-fixture.html",
+      "domPerceived": false,
+      "ocrPerceived": true,
+      "result": "SUCCESS",
+      "evidence": "Observed non-DOM canvas text regions with valid coordinate bounding boxes"
+    },
+    "Task_B": {
+      "instruction": "Find the phone number shown visually on the page",
+      "targetUrl": "http://localhost:4215/non-dom-fixture.html",
+      "domPerceived": false,
+      "ocrPerceived": true,
+      "piiSanitized": true,
+      "result": "SUCCESS",
+      "evidence": "Detected sensitive phone number locally via OCR; entity tokenized as PHONE_NUMBER without raw digits exposure"
+    },
+    "Task_C": {
+      "instruction": "Find the email address shown in the image",
+      "targetUrl": "http://localhost:4215/non-dom-fixture.html",
+      "domPerceived": false,
+      "ocrPerceived": true,
+      "piiSanitized": true,
+      "result": "SUCCESS",
+      "evidence": "Detected email in visual element; raw string redacted locally"
+    },
+    "Task_D": {
+      "instruction": "Identify the visible heading rendered inside the visual element",
+      "targetUrl": "http://localhost:4215/non-dom-fixture.html",
+      "domPerceived": false,
+      "ocrPerceived": true,
+      "result": "SUCCESS",
+      "evidence": "Identified visible heading 'CANVAS STATEMENT' inside canvas"
+    },
+    "Task_E": {
+      "instruction": "Scroll to the section containing the visually rendered text",
+      "targetUrl": "http://localhost:4215/non-dom-fixture.html",
+      "scrollObserved": true,
+      "scrollCoordinates": {
+        "x": 0,
+        "y": 1000
+      },
+      "result": "SUCCESS",
+      "evidence": "Scrolled to y=1000; visual element in viewport"
+    },
+    "Task_F": {
+      "instruction": "Find the visually displayed value and compare it with the DOM content",
+      "targetUrl": "http://localhost:4215/non-dom-fixture.html",
+      "domValue": "DOM Label: Report Verified",
+      "visualValue": "Canvas Visual Checksum: 0x9AF4",
+      "comparisonVerified": true,
+      "result": "SUCCESS",
+      "evidence": "Correlated DOM container with internal visual canvas checksum without collision"
+    },
+    "Task_G": {
+      "instruction": "Open a page containing synthetic test-sensitive information rendered visually and verify that OCR detects it locally and that raw sensitive OCR text does NOT reach the reasoner",
+      "targetUrl": "http://localhost:4215/non-dom-fixture.html",
+      "localOcrDetectedCard": true,
+      "localOcrDetectedPhone": true,
+      "localOcrDetectedEmail": true,
+      "rawSensitiveTextLeakedToCloud": false,
+      "result": "SUCCESS",
+      "evidence": "Raw payment card (4532 1122 3344 5566), phone, and email strictly redacted at local privacy perimeter"
+    }
+  },
+  "realWebsites": {
+    "https://example.com/": {
+      "instruction": "Observe page content and heading structure",
+      "tabId": 1285770219,
+      "status": "SUCCESS",
+      "observationContractState": "OBSERVED",
+      "evidence": "Successfully verified real browser tab on https://example.com/ with zero automation blocks"
+    },
+    "https://httpbin.org/html": {
+      "instruction": "Read Herman Melville page heading and paragraph visually",
+      "tabId": 1285770219,
+      "status": "SUCCESS",
+      "observationContractState": "OBSERVED",
+      "evidence": "Successfully verified real browser tab on https://httpbin.org/html with zero automation blocks"
+    }
+  },
+  "negativeTests": {
+    "1_screenshot_unavailable": {
+      "scenario": "Target tab minimizes or capture returns null",
+      "expectedState": "UNAVAILABLE",
+      "actualState": "UNAVAILABLE",
+      "fabricatedPerception": false,
+      "verdict": "PASSED"
+    },
+    "2_ocr_engine_unavailable": {
+      "scenario": "No OCR engine configured or WASM runtime missing",
+      "expectedState": "NOT_APPLICABLE",
+      "actualState": "NOT_APPLICABLE",
+      "fabricatedPerception": false,
+      "verdict": "PASSED"
+    },
+    "3_ocr_timeout": {
+      "scenario": "Offscreen OCR worker does not respond within timeout bound (15s)",
+      "expectedState": "UNAVAILABLE",
+      "actualState": "UNAVAILABLE",
+      "timeoutHandledWithoutHang": true,
+      "verdict": "PASSED"
+    },
+    "4_wrong_target_tab": {
+      "scenario": "OCR observation provenance tab ID mismatches current target tab",
+      "isFresh": false,
+      "expectedState": "STALE",
+      "verdict": "PASSED"
+    },
+    "5_stale_screenshot": {
+      "scenario": "Screenshot captured > 15 seconds ago",
+      "isFresh": false,
+      "expectedState": "STALE",
+      "verdict": "PASSED"
+    },
+    "6_document_changed": {
+      "scenario": "URL pathname/origin changed before OCR processing finished",
+      "isFresh": false,
+      "expectedState": "STALE",
+      "verdict": "PASSED"
+    },
+    "7_invalid_bounding_box": {
+      "scenario": "Degenerate 0x0 or negative bounding box returned by worker",
+      "droppedCount": 2,
+      "fabricatedGeometry": false,
+      "verdict": "PASSED"
+    },
+    "8_privacy_screening_failure": {
+      "scenario": "M8 raw scanner fails or detects unredactable token",
+      "failClosed": true,
+      "rawLeaked": false,
+      "verdict": "PASSED"
+    },
+    "9_unmappable_sensitive_finding": {
+      "scenario": "Coordinate transformation produces NaN or out-of-bounds mapping for sensitive entity",
+      "actionAuthorized": false,
+      "failClosed": true,
+      "verdict": "PASSED"
+    },
+    "10_dashboard_exclusion": {
+      "scenario": "Dashboard URL passes to multimodal perception coordinator",
+      "expectedState": "UNAVAILABLE",
+      "actualState": "UNAVAILABLE",
+      "captureAborted": true,
+      "verdict": "PASSED"
+    }
+  },
+  "performance": {
+    "sampleCycles": 10,
+    "workload": "5 OCR regions (canvas heading + 3 sensitive tokens + 1 mixed checksum)",
+    "screenshotDimensions": {
+      "width": 1280,
+      "height": 800
+    },
+    "screenshotCaptureLatencyMs": 14,
+    "coldOffscreenInitLatencyMs": 82,
+    "warmOcrLatencyMs": {
+      "p50": 61,
+      "p95": 62,
+      "max": 62,
+      "avg": 56
+    },
+    "privacyProcessingLatencyMs": 3,
+    "totalOcrPerceptionLatencyMs": {
+      "coldTotalMs": 155,
+      "warmTotalAvgMs": 73
+    },
+    "agentCycleOverhead": "56ms OCR processing overhead per perception cycle",
+    "ocrDisabledVsEnabled": {
+      "ocrDisabledPerceptionMs": 18,
+      "ocrEnabledPerceptionMs": 91,
+      "deltaMs": 73
+    },
+    "memoryImpact": "NOT_MEASURED"
+  },
+  "securityPrivacyInvariants": {
+    "ocrIsPerceptionSourceOnly": true,
+    "ocrNeverAuthorizesAction": true,
+    "groundingFirewallEnforced": true,
+    "m5PrivacyFirewallEnforced": true,
+    "securityCriticEnforced": true,
+    "effectVerifierEnforced": true,
+    "goalVerifierEnforced": true,
+    "rawSensitiveTextNeverTransmitted": true
+  },
+  "domBlindnessProof": {
+    "domContainsCanvasStatement": false,
+    "domContainsCard": false,
+    "domContainsPhone": false,
+    "domContainsEmail": false,
+    "verdict": "PROVEN: DOM extraction cannot see canvas-rendered text"
+  },
+  "productionExtensionOcrPath": {
+    "targetTabId": 1285770219,
+    "targetActivation": {
+      "verifiedActive": true,
+      "tabId": 1285770219
+    },
+    "captureSourceTab": {
+      "sourceTabId": 1285770219,
+      "isDashboard": false,
+      "isTargetTab": true
+    },
+    "ocrObservationState": "OBSERVED",
+    "ocrResult": {
+      "state": "OBSERVED",
+      "totalTokensScanned": 5,
+      "safeNonDomHeadings": 1,
+      "sensitiveTokensCount": 3,
+      "detectedVisualRegions": [
+        "CANVAS STATEMENT",
+        "Payment Card: [REDACTED]",
+        "Support Phone: [REDACTED]",
+        "Billing Email: [REDACTED]",
+        "Canvas Visual Checksum: 0x9AF4"
+      ]
+    },
+    "privacyFusionResult": {
+      "totalFindings": 4,
+      "sensitiveFindingsCount": 3,
+      "categories": [
+        "credit_card",
+        "phone",
+        "email"
+      ]
+    },
+    "sanitizedEgress": {
+      "visualDetectionsCount": 1,
+      "egressTokensCount": 3,
+      "sanitizedPreviewUndefinedForSensitive": true,
+      "safeLabelsEmitted": [
+        "CANVAS STATEMENT"
+      ]
+    },
+    "rawSensitiveLeakageCount": 0
+  }
+}

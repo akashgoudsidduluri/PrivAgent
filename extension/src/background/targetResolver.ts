@@ -280,10 +280,10 @@ export function parseTaskTargetReference(task: string): TaskTargetReference | nu
 
   // 3. Domain reference (e.g. "flipkart.com", "google.com", "sub.domain.org")
   const domainMatch = lower.match(/\b([a-zA-Z0-9-]+\.(?:[a-zA-Z]{2,}))(?::(\d+))?\b/);
-  if (domainMatch) {
+  if (domainMatch && domainMatch[1]) {
     const candidateHost = domainMatch[1];
     const parts = candidateHost.split('.');
-    const tld = parts[parts.length - 1];
+    const tld = parts[parts.length - 1] || '';
     if (COMMON_TLDS.has(tld) || tld.length === 2 || parts.length >= 2) {
       const sitePart = parts[0] === 'www' && parts.length > 1 ? parts[1] : parts[0];
       return {
@@ -483,7 +483,7 @@ export function resolveTargetWebTab(
     if (matchingTabs.length > 0) {
       // Active matching tab wins; otherwise first matching tab
       const activeMatch = matchingTabs.find((t) => t.active);
-      const selected = activeMatch || matchingTabs[0];
+      const selected = activeMatch || matchingTabs[0] || null;
       return {
         selectedTab: selected,
         discoveredTabs,

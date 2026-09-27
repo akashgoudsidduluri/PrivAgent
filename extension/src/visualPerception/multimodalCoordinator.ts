@@ -49,17 +49,70 @@ import {
 } from '../ocr/spatialOcrLayer';
 import { SafeOCRRegion, BrowserWorldModel } from '../worldModel/types';
 import { OCREngine, InternalOCRResult } from '../ocr/types';
+import {
+  OCRObservation,
+  createUnavailableOCRObservation,
+  validateScreenshotGeometry,
+} from '../ocr/ocrObservationContract';
 import { getScreenshotProvider } from './screenshotCapture';
 import { LocalScreenshot } from './visualTypes';
 
 export interface MultimodalPerceptionInput {
   tabId?: number;
   windowId?: number;
+  documentUrl?: string;
+  taskDescription?: string;
+  requireOCR?: boolean;
   scanReport: PrivacyScanReport;
   pageGeneration: number;
   geometry?: ViewportGeometry;
   ocrEngine?: OCREngine;
   screenshotDataUrl?: string;
+  isDashboardUrl?: (url: string) => boolean;
+}
+
+/**
+ * Determines whether a perception cycle requires non-DOM visual / OCR perception.
+ * Invariant: OCR must NOT become mandatory on every agent cycle.
+ * Normal DOM-only cycles skip OCR execution to eliminate unnecessary latency.
+ */
+export function isNonDOMPerceptionRequired(input: MultimodalPerceptionInput): boolean {
+  if (input.requireOCR === true) return true;
+  if (input.requireOCR === false) return false;
+
+  // 1. Task instruction checks: does the task ask to read visual / canvas / image text?
+  const task = (input.taskDescription || '').toLowerCase();
+  if (
+    task.includes('canvas') ||
+    task.includes('image') ||
+    task.includes('visually') ||
+    task.includes('visual') ||
+    task.includes('rendered text') ||
+    task.includes('receipt') ||
+    task.includes('invoice') ||
+    task.includes('statement') ||
+    task.includes('screenshot') ||
+    task.includes('chart')
+  ) {
+    return true;
+  }
+
+  // 2. DOM evidence checks: pure canvas or non-DOM page (0 DOM elements scanned)
+  const totalDom = input.scanReport?.totalElementsScanned ?? 0;
+  if (totalDom === 0) {
+    return true;
+  }
+
+  // 3. Canvas elements or non-text visual containers detected on the page
+  const detections = input.scanReport?.detections || [];
+  const hasCanvasElement = detections.some(
+    (d) => d.selector?.includes('canvas') || (d as any).tagName === 'CANVAS'
+  );
+  if (hasCanvasElement) {
+    return true;
+  }
+
+  return false;
 }
 
 export interface MultimodalCoordinationResult {
@@ -68,6 +121,7 @@ export interface MultimodalCoordinationResult {
   privacyFindings: PrivacyFinding[];
   screenshotDimensions: ActualScreenshotDimensions;
   scaleFactors: { scaleX: number; scaleY: number };
+  ocrObservation: OCRObservation;
 }
 
 /**
@@ -130,11 +184,53 @@ export async function coordinateMultimodalPerception(
     devicePixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1,
   };
 
+  // Check target tab provenance: NEVER capture or OCR the dashboard
+  if (input.documentUrl && input.isDashboardUrl?.(input.documentUrl)) {
+    const reason = 'Screenshot capture rejected: target tab is the dashboard';
+    console.warn(`[MultimodalCoordinator] ${reason}`);
+    const emptyDimensions = { screenshotWidth: geometry.viewportWidth, screenshotHeight: geometry.viewportHeight };
+    const visualReport: VisualCaptureReport = {
+      captureMetadata: {
+        viewportWidth: geometry.viewportWidth,
+        viewportHeight: geometry.viewportHeight,
+        screenshotWidth: emptyDimensions.screenshotWidth,
+        screenshotHeight: emptyDimensions.screenshotHeight,
+        devicePixelRatio: geometry.devicePixelRatio,
+        scaleX: 1,
+        scaleY: 1,
+        scrollX: geometry.scrollX,
+        scrollY: geometry.scrollY,
+        capturedAt: startTime,
+      },
+      visualDetections: [],
+      totalDetected: 0,
+      totalPartiallyVisible: 0,
+      totalOffscreenFiltered: 0,
+      ocrRegionsScanned: 0,
+      sensitiveOCRDetected: 0,
+      ocrLatencyMs: 0,
+      domSensitiveDetected: scanReport.sensitiveElementsDetected,
+      status: 'Local Visual Context Prepared',
+    };
+    return {
+      visualReport,
+      ocrRegions: [],
+      privacyFindings: [],
+      screenshotDimensions: emptyDimensions,
+      scaleFactors: { scaleX: 1, scaleY: 1 },
+      ocrObservation: createUnavailableOCRObservation(reason, input.tabId, input.documentUrl),
+    };
+  }
+
   // 2. Obtain Visual Screenshot (Local Isolated Memory)
+  const isRequired = isNonDOMPerceptionRequired(input);
+  // If screenshotDataUrl was explicitly provided by caller (e.g. direct test or manual capture), honor it; otherwise strictly gate on non-DOM necessity
+  const needsOCR = isRequired || Boolean(input.screenshotDataUrl);
   let screenshotDataUrl = input.screenshotDataUrl || null;
   let localScreenshot: LocalScreenshot | null = null;
 
-  if (!screenshotDataUrl) {
+  // On DOM-only cycles where non-DOM perception is not required, skip screenshot capture
+  if (!screenshotDataUrl && needsOCR) {
     if (
       typeof chrome !== 'undefined' &&
       chrome.tabs &&
@@ -168,24 +264,25 @@ export async function coordinateMultimodalPerception(
         });
         screenshotDataUrl = localScreenshot.getRawDataUrl();
       } catch {
-        // Fallback synthetic screenshot
-        screenshotDataUrl =
-          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAYAAAByNR6YAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI/SURBVHhe7cExAQAAAMKg9U9tCF8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgIsBI0AAAc5d7iQAAAAASUVORK5CYII=';
+        // Screenshot capture failed: leave null (do NOT fabricate a fake blank image)
+        screenshotDataUrl = null;
       }
     }
   }
 
   // 3. Resolve Authoritative Dimensions
   const screenshotDimensions = resolveScreenshotDimensions(screenshotDataUrl, geometry);
-  const scaleX = screenshotDimensions.screenshotWidth / geometry.viewportWidth;
-  const scaleY = screenshotDimensions.screenshotHeight / geometry.viewportHeight;
+  const geoValidation = validateScreenshotGeometry(screenshotDimensions, geometry);
+  const scaleX = geoValidation ? geoValidation.scaleX : 1;
+  const scaleY = geoValidation ? geoValidation.scaleY : 1;
 
   // 4. Map DOM Detections to Visual Coordinates
   const visualDetections: VisualDetectionResult[] = [];
   let totalPartiallyVisible = 0;
   let totalOffscreenFiltered = 0;
 
-  for (const det of scanReport.detections) {
+  const rawDetections = scanReport?.detections || [];
+  for (const det of rawDetections) {
     if (!isSensitiveEntityType(det.type)) {
       continue;
     }
@@ -215,15 +312,47 @@ export async function coordinateMultimodalPerception(
   let ocrRegions: SafeOCRRegion[] = [];
   let rawOcrRegions: OCRRegion[] = [];
   let ocrLatencyMs = 0;
-  // Phase 15: contextual (NLP) findings derived from the SAME local OCR pass.
-  // They are metadata-only and re-enter the pipeline through fusion like any
-  // other perception source. They never bypass the policy layer.
   let contextualFindings: ContextualOcrFinding[] = [];
+  let ocrObservation: OCRObservation;
 
-  if (input.ocrEngine) {
+  if (!needsOCR) {
+    ocrObservation = {
+      state: 'NOT_APPLICABLE',
+      provenance: null,
+      completedAt: null,
+      totalTokensScanned: 0,
+      sensitiveRegionsCount: 0,
+      safeRegionsCount: 0,
+      ocrLatencyMs: 0,
+      failureReason: 'DOM extraction sufficient; OCR not required for DOM-only cycle',
+    };
+  } else if (!screenshotDataUrl) {
+    ocrObservation = createUnavailableOCRObservation(
+      'Screenshot acquisition failed or unavailable',
+      input.tabId,
+      input.documentUrl
+    );
+  } else if (!geoValidation) {
+    ocrObservation = createUnavailableOCRObservation(
+      'Invalid or degenerate viewport/screenshot geometry',
+      input.tabId,
+      input.documentUrl
+    );
+  } else if (!input.ocrEngine) {
+    ocrObservation = {
+      state: 'NOT_APPLICABLE',
+      provenance: null,
+      completedAt: null,
+      totalTokensScanned: 0,
+      sensitiveRegionsCount: 0,
+      safeRegionsCount: 0,
+      ocrLatencyMs: 0,
+      failureReason: 'No OCREngine configured for this perception pass',
+    };
+  } else {
     const ocrStart = Date.now();
     try {
-      const ocrResult: InternalOCRResult = await input.ocrEngine.recognize(screenshotDataUrl!);
+      const ocrResult: InternalOCRResult = await input.ocrEngine.recognize(screenshotDataUrl);
       ocrLatencyMs = Date.now() - ocrStart;
       const imageDimensions = {
         width: screenshotDimensions.screenshotWidth,
@@ -233,22 +362,88 @@ export async function coordinateMultimodalPerception(
         pageGeneration,
         imageDimensions,
       });
-      ocrRegions = convertToSafeOCRRegions(rawOcrRegions);
-      // Runs HERE, while the raw OCR text is still local and in scope — the
-      // only place reading it is legitimate. Spans are mapped straight back to
-      // OCR word boxes; anything unmappable is kept so fusion fails closed on it.
       contextualFindings = detectContextualInOcr(
         ocrResult,
         defaultContextualDetector,
         imageDimensions
       );
-    } catch (ocrErr) {
-      console.warn('[MultimodalCoordinator] OCR processing error:', ocrErr);
+
+      // Privacy fusion at perception boundary: if contextual NLP detector identifies a cued sensitive entity,
+      // mark corresponding raw OCR regions as sensitive so raw tokens never leak into safe previews
+      const cuedFindings = contextualFindings.filter((f) => f.evidence?.includes('cue'));
+      if (cuedFindings.length > 0) {
+        ocrResult.lines.forEach((line, idx) => {
+          if (idx < rawOcrRegions.length && line?.text) {
+            const hits = defaultContextualDetector.detect({ text: line.text, hints: [] });
+            if (hits.some((h) => h.evidence?.includes('cue'))) {
+              const reg = rawOcrRegions[idx];
+              if (reg) {
+                reg.sensitivity = 'sensitive';
+                reg.sensitiveType = 'person_name';
+                reg.safeText = undefined;
+              }
+            }
+          }
+        });
+      }
+
+      ocrRegions = convertToSafeOCRRegions(rawOcrRegions);
+
+      const sensitiveCount = rawOcrRegions.filter((r) => r.sensitivity === 'sensitive').length;
+      const safeCount = rawOcrRegions.filter((r) => r.sensitivity === 'safe').length;
+
+      ocrObservation = {
+        state: 'OBSERVED',
+        provenance: {
+          tabId: input.tabId ?? 0,
+          documentUrl: input.documentUrl ?? scanReport.url ?? '',
+          pageGeneration,
+          capturedAt: startTime,
+          screenshotDimensions: {
+            width: screenshotDimensions.screenshotWidth,
+            height: screenshotDimensions.screenshotHeight,
+          },
+          viewportGeometry: geometry,
+          scaleFactors: { scaleX, scaleY },
+        },
+        completedAt: Date.now(),
+        totalTokensScanned: rawOcrRegions.length,
+        sensitiveRegionsCount: sensitiveCount,
+        safeRegionsCount: safeCount,
+        ocrLatencyMs,
+      };
+
+      // Map verified safe non-DOM OCR regions into visualDetections so they are perceptible by agent
+      for (const safeReg of ocrRegions) {
+        if (!safeReg.isSensitive && safeReg.sanitizedPreview) {
+          const [sx, sy, sw, sh] = safeReg.bbox;
+          visualDetections.push({
+            id: safeReg.id,
+            type: safeReg.isHeading ? 'heading' : 'element',
+            confidence: safeReg.confidence,
+            selector: 'canvas:visual-text',
+            viewportBBox: [Math.round(sx / scaleX), Math.round(sy / scaleY), Math.round(sw / scaleX), Math.round(sh / scaleY)],
+            screenshotBBox: [sx, sy, sw, sh],
+            isPartiallyVisible: false,
+            source: 'ocr',
+            label: safeReg.sanitizedPreview,
+          });
+        }
+      }
+    } catch (ocrErr: any) {
+      ocrLatencyMs = Date.now() - ocrStart;
+      const errMsg = ocrErr instanceof Error ? ocrErr.message : String(ocrErr);
+      console.warn('[MultimodalCoordinator] OCR processing error:', errMsg);
+      ocrObservation = createUnavailableOCRObservation(
+        `OCR recognition failed: ${errMsg}`,
+        input.tabId,
+        input.documentUrl
+      );
     }
   }
 
   // 6. Privacy Fusion across DOM, Visual, and OCR Signals
-  const domCandidates = scanReport.detections.map((d) => candidateFromDOMPageDetection(d));
+  const domCandidates = (scanReport?.detections || []).map((d) => candidateFromDOMPageDetection(d));
   const visualCandidates = visualDetections.map((v) => candidateFromVisualDetection(v));
   const ocrCandidates = rawOcrRegions
     .filter((r) => r.sensitivity === 'sensitive' && r.sensitiveType)
@@ -264,9 +459,6 @@ export async function coordinateMultimodalPerception(
       })
     );
 
-  // Phase 15: contextual OCR hits become fusion candidates. A hit whose span
-  // could not be mapped to a region is STILL emitted (bbox null) so that the
-  // must-redact-but-unlocatable case escalates instead of disappearing.
   const contextualCandidates = contextualFindings.map((f, i) =>
     candidateFromContextualDetection({
       id: `ctx-ocr-${i + 1}`,
@@ -323,6 +515,7 @@ export async function coordinateMultimodalPerception(
     privacyFindings: fusionResult.findings,
     screenshotDimensions,
     scaleFactors: { scaleX, scaleY },
+    ocrObservation,
   };
 }
 
@@ -335,6 +528,7 @@ export function enrichWorldModelWithMultimodalPerception(
 ): BrowserWorldModel {
   worldModel.ocrRegions = coordination.ocrRegions;
   worldModel.privacyFindings = coordination.privacyFindings;
+  worldModel.ocrObservation = coordination.ocrObservation;
   worldModel.viewport = {
     width: coordination.visualReport.captureMetadata.viewportWidth,
     height: coordination.visualReport.captureMetadata.viewportHeight,

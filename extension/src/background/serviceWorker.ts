@@ -18,6 +18,8 @@ import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 import { coordinateMultimodalPerception, enrichWorldModelWithMultimodalPerception } from '../visualPerception/multimodalCoordinator';
+import { OffscreenOCREngine } from '../ocr/offscreenOcrClient';
+import type { OCRObservation } from '../ocr/ocrObservationContract';
 import { observedSnapshotFields, tabOnlySnapshotFields } from '../agent/effectVerifier';
 import type { ObservationState } from '../agent/effectVerifier';
 import type { ViewportGeometry } from '../capture/coordinateMapper';
@@ -25,6 +27,7 @@ import type { ViewportGeometry } from '../capture/coordinateMapper';
 // PrivAgent Background Service Worker (Manifest V3)
 let activeLoop: AgentLoop | null = null;
 let currentDashboardTabId: number | null = null;
+const sharedOffscreenOcrEngine = new OffscreenOCREngine({ timeoutMs: 15_000 });
 
 chrome.runtime.onInstalled.addListener(() => {
   console.info('[PrivAgent] Background Service Worker installed successfully.');
@@ -788,6 +791,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
               // Multimodal Perception Coordination (Stage 3)
               let visualReport: VisualCaptureReport | null = null;
+              let latestOcrObservation: OCRObservation | undefined = undefined;
               try {
                 const targetTab = await chrome.tabs.get(targetTabId);
                 // Ensure target tab is active before captureVisibleTab so the screenshot captures targetTab and not dashboard or background tab!
@@ -802,14 +806,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const coordination = await coordinateMultimodalPerception({
                   tabId: targetTabId,
                   windowId: targetTab?.windowId,
+                  documentUrl: targetTab?.url,
+                  taskDescription: task,
                   scanReport: scanRes.report,
                   pageGeneration: worldModel?.page.pageGeneration ?? 1,
                   // Phase 16 P0 remediation: the real, observed viewport
                   // position. Undefined keeps the coordinator's previous
                   // behaviour, so a page that cannot be read is unchanged.
                   geometry: (await readLiveViewportGeometry(targetTabId)) ?? undefined,
+                  ocrEngine: sharedOffscreenOcrEngine,
+                  isDashboardUrl: (url) => isDashboardUrl(url, dashboardOrigin),
                 });
                 visualReport = coordination.visualReport;
+                latestOcrObservation = coordination.ocrObservation;
                 if (worldModel) {
                   enrichWorldModelWithMultimodalPerception(worldModel, coordination);
                 }
@@ -819,6 +828,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   screenshotHeight: visualReport.captureMetadata.screenshotHeight,
                   ocrRegions: coordination.ocrRegions.length,
                   privacyFindings: coordination.privacyFindings.length,
+                  ocrObservationState: coordination.ocrObservation?.state,
                 });
               } catch (multiErr) {
                 console.warn('[PrivAgent SW] multimodal coordination skipped:', multiErr);
@@ -840,6 +850,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 visualReport !== null;
               (minimized.payload as { viewportSource?: string }).viewportSource =
                 visualReport !== null ? 'MULTIMODAL_REPORT' : 'UNAVAILABLE';
+              (minimized.payload as { ocr_observation?: OCRObservation }).ocr_observation =
+                latestOcrObservation;
               return {
                 context: minimized.payload,
                 worldModel,

@@ -26,6 +26,7 @@
 
 import { AgentContextPayload, AgentDetection } from '../privacy/types';
 import { AgentTaskState, CandidateProductItem, StructuredConstraints, TaskStatus } from './agentState';
+import { isSameDocumentIdentity, MAX_OCR_OBSERVATION_AGE_MS, OCRObservation } from '../ocr/ocrObservationContract';
 
 export interface GoalVerificationResult {
   satisfied: boolean;
@@ -593,21 +594,21 @@ export function verifyTaskGoal(
 
   // ── 3. Shopping / Product Search & Constraint Verification ─────────────────
   const isShoppingTask =
-    state.taskConstraints.maxPrice !== undefined ||
-    state.taskConstraints.size !== undefined ||
-    state.taskConstraints.color !== undefined ||
+    state.taskConstraints?.maxPrice !== undefined ||
+    state.taskConstraints?.size !== undefined ||
+    state.taskConstraints?.color !== undefined ||
     lower.includes('shopping') ||
     lower.includes('bag') ||
     lower.includes('product');
 
   if (isShoppingTask) {
     // Extract candidates from current perception
-    const candidates = extractCandidatesFromContext(context, state.taskConstraints);
+    const candidates = extractCandidatesFromContext(context, state.taskConstraints || {});
     if (candidates.length > 0) {
       state.candidateItems = candidates;
     }
 
-    const qualifying = state.candidateItems.filter((c) => c.matchesConstraints);
+    const qualifying = (state.candidateItems || []).filter((c) => c.matchesConstraints);
 
     // Goal is satisfied when:
     // 1. Result/product page reached (e.g. url contains results/product/cart/search)
@@ -725,6 +726,113 @@ export function verifyTaskGoal(
       };
     }
     return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
+  // ── 6. Visual / Non-DOM OCR Perception Goals (Phase 17.3) ───────────────────
+  // Evaluates tasks requiring perception of text, headings, or sensitive fields
+  // rendered inside canvas, images, or non-DOM visual regions.
+  //
+  // Strict Invariant (Phase 17.3 Review):
+  //  1. OCR presence ALONE never implies success.
+  //  2. OCR evidence must carry verified provenance: state === 'OBSERVED',
+  //     matching target tab, matching authoritative document identity, and
+  //     fresh within MAX_OCR_OBSERVATION_AGE_MS.
+  //  3. An explicit goal target condition must be matched against observed
+  //     detections (never assumed from action requests or previous actions).
+  const isVisualOcrTask =
+    lower.includes('canvas') ||
+    lower.includes('image') ||
+    lower.includes('visually') ||
+    lower.includes('visual element') ||
+    lower.includes('rendered text');
+
+  if (isVisualOcrTask) {
+    // Provenance & Freshness Gate: OCR must be OBSERVED and verified fresh
+    const ocrObs = (context as any).ocr_observation as OCRObservation | undefined;
+    if (!ocrObs || ocrObs.state !== 'OBSERVED' || !ocrObs.provenance) {
+      return { satisfied: false, status: 'IN_PROGRESS' };
+    }
+
+    const prov = ocrObs.provenance;
+    if (state.targetTabId && prov.tabId !== state.targetTabId) {
+      return { satisfied: false, status: 'IN_PROGRESS' };
+    }
+    if (!isSameDocumentIdentity(prov.documentUrl, currentUrl)) {
+      return { satisfied: false, status: 'IN_PROGRESS' };
+    }
+    if (Date.now() - prov.capturedAt > MAX_OCR_OBSERVATION_AGE_MS) {
+      return { satisfied: false, status: 'IN_PROGRESS' };
+    }
+
+    // A. Sensitive entity search in visual element (e.g. phone number or email)
+    if (lower.includes('phone') || lower.includes('mobile')) {
+      const match = context.detections.find((d) => d.type === 'phone' && d.source === 'ocr');
+      if (match) {
+        return {
+          satisfied: true,
+          status: 'SUCCESS',
+          reason: `Visual OCR goal verified: sensitive phone entity identified in visual region without raw value exposure (ID: ${match.id}).`,
+        };
+      }
+    }
+
+    if (lower.includes('email')) {
+      const match = context.detections.find((d) => d.type === 'email' && d.source === 'ocr');
+      if (match) {
+        return {
+          satisfied: true,
+          status: 'SUCCESS',
+          reason: `Visual OCR goal verified: sensitive email entity identified in visual region without raw value exposure (ID: ${match.id}).`,
+        };
+      }
+    }
+
+    // B. Heading / title inside visual element
+    if (lower.includes('heading') || lower.includes('title')) {
+      const match = context.detections.find((d) => (d.type === 'heading' || d.label) && d.source === 'ocr');
+      if (match && match.label) {
+        const quoted = task.match(/["']([^"']+)["']/);
+        if (!quoted || match.label.toLowerCase().includes(quoted[1]!.toLowerCase())) {
+          return {
+            satisfied: true,
+            status: 'SUCCESS',
+            reason: `Visual OCR goal verified: visible heading '${match.label}' identified inside visual element.`,
+          };
+        }
+      }
+    }
+
+    // C. Explicit targeted text inside canvas / image
+    // Invariant: Mere presence of OCR regions does NOT satisfy the goal.
+    // The specific required target text must match observed OCR labels.
+    const quoted = task.match(/["']([^"']+)["']/);
+    if (quoted) {
+      const term = quoted[1]!.toLowerCase();
+      const match = context.detections.find(
+        (d) => d.source === 'ocr' && d.label && d.label.toLowerCase().includes(term)
+      );
+      if (match) {
+        return {
+          satisfied: true,
+          status: 'SUCCESS',
+          reason: `Visual OCR goal verified: text matching '${quoted[1]}' perceived inside visual element ('${match.label}').`,
+        };
+      }
+    }
+
+    // Specific non-DOM canvas statement / overview check
+    if (lower.includes('canvas statement') || lower.includes('financial statement') || (lower.includes('statement') && lower.includes('canvas'))) {
+      const match = context.detections.find(
+        (d) => d.source === 'ocr' && d.label && /statement/i.test(d.label)
+      );
+      if (match) {
+        return {
+          satisfied: true,
+          status: 'SUCCESS',
+          reason: `Visual OCR goal verified: observed statement inside visual element ('${match.label}').`,
+        };
+      }
+    }
   }
 
   return { satisfied: false, status: 'IN_PROGRESS' };

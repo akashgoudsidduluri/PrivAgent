@@ -29,6 +29,14 @@ function copyExtensionAssets() {
         fs.writeFileSync(resolve(outDir, 'popup.html'), htmlContent, 'utf-8');
       }
 
+      // Copy offscreen.html to root of dist if Vite placed it in src/offscreen/
+      const nestedOffscreen = resolve(outDir, 'src/offscreen/offscreen.html');
+      if (fs.existsSync(nestedOffscreen)) {
+        let htmlContent = fs.readFileSync(nestedOffscreen, 'utf-8');
+        htmlContent = htmlContent.replace(/\.\.\/\.\.\/assets\//g, './assets/');
+        fs.writeFileSync(resolve(outDir, 'offscreen.html'), htmlContent, 'utf-8');
+      }
+
       // Copy icons directory
       const iconsSrc = resolve(__dirname, 'public/icons');
       const iconsDest = resolve(outDir, 'icons');
@@ -127,6 +135,7 @@ export default defineConfig(({ mode }) => {
         input: {
           popup: resolve(__dirname, 'src/popup/popup.html'),
           serviceWorker: resolve(__dirname, 'src/background/serviceWorker.ts'),
+          offscreen: resolve(__dirname, 'src/offscreen/offscreen.html'),
         },
         output: {
           entryFileNames: (chunkInfo) => {
@@ -136,6 +145,7 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: (assetInfo) => {
             if (assetInfo.name === 'popup.html') return 'popup.html';
+            if (assetInfo.name === 'offscreen.html') return 'offscreen.html';
             return 'assets/[name]-[hash][extname]';
           },
         },

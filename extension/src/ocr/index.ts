@@ -7,3 +7,5 @@ export * from './ocrEngine';
 export * from './ocrDetector';
 export * from './ocrSecurityBoundary';
 export * from './spatialOcrLayer';
+export * from './ocrObservationContract';
+export * from './offscreenOcrClient';

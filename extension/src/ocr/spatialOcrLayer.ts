@@ -232,13 +232,35 @@ export function processSpatialOCRResult(
  * Guarantees zero sensitive raw text crosses the boundary.
  */
 export function convertToSafeOCRRegions(regions: OCRRegion[]): SafeOCRRegion[] {
-  return regions.map(r => ({
-    id: r.id,
-    bbox: r.bbox,
-    confidence: r.confidence,
-    isSensitive: r.sensitivity === 'sensitive',
-    sensitiveType: r.sensitiveType,
-  }));
+  return regions.map(r => {
+    const isSensitive = r.sensitivity === 'sensitive';
+    let sanitizedPreview: string | undefined = undefined;
+
+    // Strict privacy invariant: Only text classified as 'safe' and passing raw value scan
+    if (!isSensitive && r.sensitivity === 'safe' && r.safeText) {
+      const violations = scanForRawSensitiveValues(r.safeText);
+      if (violations.length === 0) {
+        sanitizedPreview = r.safeText;
+      }
+    }
+
+    const isHeading = Boolean(
+      sanitizedPreview && (
+        r.bbox[3] >= 22 ||
+        /^(heading|title|statement|summary|overview|account|vault|apex|total|report|results)/i.test(sanitizedPreview)
+      )
+    );
+
+    return {
+      id: r.id,
+      bbox: r.bbox,
+      confidence: r.confidence,
+      isSensitive,
+      sensitiveType: r.sensitiveType,
+      ...(sanitizedPreview ? { sanitizedPreview } : {}),
+      ...(isHeading ? { isHeading: true } : {}),
+    };
+  });
 }
 
 /**

@@ -187,7 +187,7 @@ export function detectSensitiveOCRRegions(
       const phoneCandidate = phoneMatch[0].trim();
       const phoneDigits = phoneCandidate.replace(/\D/g, '');
       if (phoneDigits.length >= 10 && phoneDigits.length <= 13) {
-        const matchingWords = line.words.filter(w => phoneCandidate.includes(w.text));
+        const matchingWords = (line.words || []).filter(w => phoneCandidate.includes(w.text));
         const box = matchingWords.length > 0 ? mergeBoxes(matchingWords.map(w => w.bbox)) : line.bbox;
         addDetection('phone', Math.max(0.90, line.confidence), box, phoneCandidate.length);
       }
@@ -195,7 +195,7 @@ export function detectSensitiveOCRRegions(
 
     // 2.3 Bank Account Number with Context
     if (matchesKeyword(lineText, KEYWORDS.ACCOUNT_NUMBER)) {
-      for (const w of line.words) {
+      for (const w of (line.words || [])) {
         if (isPotentialAccountNumber(w.text, lineText)) {
           addDetection('account_number', Math.max(0.90, w.confidence), w.bbox, w.text.length);
         }
@@ -204,7 +204,7 @@ export function detectSensitiveOCRRegions(
 
     // 2.4 CVV with Context (e.g. "CVV: 893")
     if (matchesKeyword(lineText, KEYWORDS.CVV)) {
-      for (const w of line.words) {
+      for (const w of (line.words || [])) {
         if (isPotentialCVV(w.text, lineText)) {
           addDetection('cvv', Math.max(0.92, w.confidence), w.bbox, w.text.length);
         }
@@ -213,7 +213,7 @@ export function detectSensitiveOCRRegions(
 
     // 2.5 OTP with Context (e.g. "OTP is 492019")
     if (matchesKeyword(lineText, KEYWORDS.OTP)) {
-      for (const w of line.words) {
+      for (const w of (line.words || [])) {
         if (isPotentialOTP(w.text, lineText)) {
           addDetection('otp', Math.max(0.92, w.confidence), w.bbox, w.text.length);
         }

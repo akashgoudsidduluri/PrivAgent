@@ -54,6 +54,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
 
   private pingInterval: ReturnType<typeof setInterval> | null = null;
+  private initialPingTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.state = {
@@ -79,19 +80,25 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
     this.setupMessageBridge();
     // Initial ping with slight delay so the page and content script settle
-    setTimeout(() => this.checkExtensionConnected(), 200);
+    this.initialPingTimeout = setTimeout(() => this.checkExtensionConnected(), 200);
     // Periodic re-check every 15s so status recovers if extension loads late
     this.pingInterval = setInterval(() => this.checkExtensionConnected(), 15000);
   }
 
   destroy(): void {
     this.clearWatchdog();
+    if (this.initialPingTimeout) {
+      clearTimeout(this.initialPingTimeout);
+      this.initialPingTimeout = null;
+    }
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
       this.pingInterval = null;
     }
     if (this.messageBridgeHandler) {
-      window.removeEventListener('message', this.messageBridgeHandler);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('message', this.messageBridgeHandler);
+      }
       this.messageBridgeHandler = null;
     }
     this.listeners = [];
@@ -142,10 +149,14 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   }
 
   async checkExtensionConnected(): Promise<boolean> {
+    if (typeof window === 'undefined') {
+      return false;
+    }
     return new Promise((resolve) => {
       let resolved = false;
       const pingId = `adapter-${Date.now()}`;
-      console.info('[Adapter][PING] PING_SENT', { pingId, origin: window.location.origin });
+      const origin = typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
+      console.info('[Adapter][PING] PING_SENT', { pingId, origin });
 
       const handler = (event: MessageEvent) => {
         if (

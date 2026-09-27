@@ -239,6 +239,7 @@ describe('Phase 14 · 4. PING does not touch agent state or progress', () => {
 
   it('pings on exactly one 15s interval, and destroy() clears it', async () => {
     // A second interval would double every ping cycle for the page's lifetime.
+    adapter.destroy();
     vi.useFakeTimers();
     const spy = vi
       .spyOn(ExtensionAgentAdapter.prototype, 'checkExtensionConnected')

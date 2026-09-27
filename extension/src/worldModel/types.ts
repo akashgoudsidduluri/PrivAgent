@@ -133,6 +133,8 @@ export interface SafeOCRRegion {
   confidence: number;
   isSensitive: boolean;
   sensitiveType?: SensitiveEntityType;
+  sanitizedPreview?: string;
+  isHeading?: boolean;
 }
 
 import {
@@ -143,6 +145,7 @@ import {
   VisualInteractiveCandidate,
 } from '../visualPerception/visualTypes';
 import { PrivacyFinding } from '../privacy/fusion';
+import type { OCRObservation } from '../ocr/ocrObservationContract';
 
 export interface ActiveWorldModelRef {
   pageGeneration: number;
@@ -160,6 +163,7 @@ export interface BrowserWorldModel {
   semanticRelationships: SemanticRelationship[];
   textRegions: SafeTextRegion[];
   ocrRegions: SafeOCRRegion[];
+  ocrObservation?: OCRObservation;
   // Phase 2 Multimodal Extensions
   visualRegions: VisualRegion[];
   imageFindings: ImageFinding[];

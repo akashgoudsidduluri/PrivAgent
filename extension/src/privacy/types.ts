@@ -104,13 +104,14 @@ export interface CaptureMetadata {
 
 export interface VisualDetectionResult {
   id: string;
-  type: SensitiveEntityType;
+  type: SensitiveEntityType | InteractiveEntityType;
   confidence: number;
   selector: string;
   viewportBBox: [number, number, number, number]; // [clientX, clientY, w, h]
   screenshotBBox: [number, number, number, number]; // [sx, sy, sw, sh]
   isPartiallyVisible: boolean;
   source: DetectionSource;
+  label?: string;
 }
 
 export interface VisualCaptureReport {
@@ -315,10 +316,11 @@ export function buildAgentPayload(
         type: det.type,
         confidence: det.confidence,
         bbox: { x: sx, y: sy, width: sw, height: sh },
-        length: 0,  // not available at visual pipeline level
+        length: det.label ? det.label.length : 0,
         source: det.source,
         selector: det.selector,
         is_partially_visible: det.isPartiallyVisible,
+        ...(det.label ? { label: det.label } : {}),
       });
     }
   } else {
