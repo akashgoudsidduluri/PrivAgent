@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-09-27T05:06:34.845Z",
+  "work": "Phase 16 diagnostic — effect verification vs. navigation",
+  "fixtureClass": "DETERMINISTIC FIXTURE TEST",
+  "question": "Can the production post-action snapshot observe an effect that is a navigation?",
+  "cases": [
+    {
+      "key": "IN_PAGE_CLICK",
+      "clickSelector": "#reveal",
+      "clickResult": "clicked",
+      "urlBefore": "http://localhost:4200/details",
+      "urlAfter": "http://localhost:4200/details",
+      "navigationObserved": false,
+      "pre": {
+        "label": "pre",
+        "tabFound": true,
+        "chromeTabUrl": "http://localhost:4200/details",
+        "contentScript": "ok",
+        "snapshot": {
+          "url": "http://localhost:4200/details",
+          "scrollY": 0,
+          "dom": 23
+        }
+      },
+      "postImmediate": {
+        "label": "post-immediate",
+        "tabFound": true,
+        "chromeTabUrl": "http://localhost:4200/details",
+        "contentScript": "ok",
+        "snapshot": {
+          "url": "http://localhost:4200/details",
+          "scrollY": 0,
+          "dom": 23
+        }
+      },
+      "postSettled": {
+        "label": "post-settled-1.5s",
+        "tabFound": true,
+        "chromeTabUrl": "http://localhost:4200/details",
+        "contentScript": "ok",
+        "snapshot": {
+          "url": "http://localhost:4200/details",
+          "scrollY": 0,
+          "dom": 23
+        }
+      },
+      "productionSnapshotWouldBeNull": false
+    },
+    {
+      "key": "NAVIGATION_CLICK",
+      "clickSelector": "#go",
+      "clickResult": "clicked",
+      "urlBefore": "http://localhost:4200/",
+      "urlAfter": "http://localhost:4200/results?q=",
+      "navigationObserved": true,
+      "pre": {
+        "label": "pre",
+        "tabFound": true,
+        "chromeTabUrl": "http://localhost:4200/",
+        "contentScript": "ok",
+        "snapshot": {
+          "url": "http://localhost:4200/",
+          "scrollY": 0,
+          "dom": 25
+        }
+      },
+      "postImmediate": {
+        "label": "post-immediate",
+        "tabFound": true,
+        "chromeTabUrl": "http://localhost:4200/",
+        "contentScript": "UNAVAILABLE: The page keeping the extension port is moved into back/forward cache, so the mes",
+        "snapshot": null
+      },
+      "postSettled": {
+        "label": "post-settled-1.5s",
+        "tabFound": true,
+        "chromeTabUrl": "http://localhost:4200/results?q=",
+        "contentScript": "ok",
+        "snapshot": {
+          "url": "http://localhost:4200/results?q=",
+          "scrollY": 0,
+          "dom": 23
+        }
+      },
+      "productionSnapshotWouldBeNull": false
+    }
+  ]
+}

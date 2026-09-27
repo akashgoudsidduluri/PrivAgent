@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-09-27T05:34:03.005Z",
+  "work": "Phase 16.1 categories 8/9/10 — fail-safe behaviour in real Chrome",
+  "fixtureClass": "DETERMINISTIC FIXTURE TEST (no reasoner; production seams exercised directly)",
+  "synthetic": false,
+  "cases": [
+    {
+      "key": "8_NO_OP",
+      "expected": "ACTION_NO_EFFECT",
+      "requested": "scroll down 600px",
+      "dispatchSucceeded": true,
+      "preScrollY": 5599,
+      "postScrollY": 5599,
+      "observedDelta": 0,
+      "pass": true
+    },
+    {
+      "key": "9_INVALID_TARGET",
+      "expected": "safe failure, no fabricated success",
+      "ghostButtonPresentInDom": false,
+      "dispatchResult": {
+        "type": "PRIVAGENT_EXECUTE_ACTION_RESPONSE",
+        "result": {
+          "success": false,
+          "error": "Target element 'ghost-button' not found in DOM."
+        }
+      },
+      "pass": true
+    },
+    {
+      "key": "10_CONTAINMENT",
+      "expected": "out-of-origin navigation refused",
+      "liveTabUrl": "http://localhost:4200/",
+      "urlBefore": "http://localhost:4200/",
+      "scope": {
+        "rootHost": "localhost",
+        "origin": "http://localhost:4200",
+        "tabId": 1610724461,
+        "dashboardOrigin": "http://localhost:5175"
+      },
+      "verdicts": {
+        "inScope": {
+          "contained": true,
+          "code": "WITHIN_SCOPE"
+        },
+        "outOfHost": {
+          "contained": false,
+          "code": "CROSS_ORIGIN_NAVIGATION_DENIED"
+        },
+        "fileScheme": {
+          "contained": false,
+          "code": "UNSUPPORTED_SCHEME_DENIED"
+        },
+        "driftedLiveUrl": {
+          "contained": false,
+          "code": "SCOPE_DRIFT_DETECTED"
+        },
+        "noScopeEstablished": {
+          "contained": false,
+          "code": "CONTAINMENT_UNINITIALIZED"
+        }
+      },
+      "pass": true
+    }
+  ],
+  "result": {
+    "passed": 3,
+    "failed": 0,
+    "verdict": "ALL_FAIL_SAFE_BEHAVIOUR_OBSERVED"
+  }
+}

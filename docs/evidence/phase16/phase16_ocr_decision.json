@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-09-27T05:14:20.044Z",
+  "work": "Phase 16.7 — OCR activation decision",
+  "question": "Does the evidence justify activating OCR in the autonomous agent loop?",
+  "substrate": "REAL Chrome + the REAL built OCR stack (bundled from extension/src, unmodified)",
+  "productionChanged": false,
+  "measurements": {
+    "status": "NOT_MEASURED",
+    "reason": "The shipped Tesseract worker is browser-only (calls self.addEventListener) and cannot be initialised outside a browser context. No latency figure is reported rather than an estimated one.",
+    "errorClass": "TypeError: r.g.addEventListener is not a function",
+    "initLatencyMs": "NOT_MEASURED",
+    "processingLatencyMs": "NOT_MEASURED",
+    "memoryCost": "NOT_MEASURED"
+  },
+  "canvasState": {
+    "canvasPresent": true,
+    "darkPixelCount": 1442,
+    "domTextContent": "Canvas Page The button below is drawn on a canvas and is NOT a DOM element. DOM hint text present. PrivAgent Boundary Sanitized 1. Original 2. Detected 3. Sanitized ×",
+    "submitTextInDom": false
+  },
+  "screenshotBytes": 3889,
+  "quality": {
+    "status": "NOT_MEASURED",
+    "reason": "Requires a running OCR worker, i.e. the extension popup capture flow. Out of scope for this phase.",
+    "fixtureIsImageOnly": true,
+    "darkPixelCount": 1442
+  },
+  "reachability": {
+    "serviceWorkerPassesOcrEngine": false,
+    "evidence": "serviceWorker.ts:733 calls coordinateMultimodalPerception({tabId, windowId, scanReport, pageGeneration}) with no ocrEngine; multimodalCoordinator.ts:223 gates the whole branch on `if (input.ocrEngine)`.",
+    "ocrRegionsObservedInRealRun": 0,
+    "ocrRegionsEvidence": "The Phase 16 task suite observed ocr_metrics.regions_scanned = 0 on every real run."
+  },
+  "decision": {
+    "verdict": "KEEP OCR DORMANT",
+    "reasoning": [
+      "The decisive evidence is REACHABILITY, not quality: the autonomous loop never passes an ocrEngine, so the branch is unreachable today regardless of how good OCR is.",
+      "Task completion across all seven Phase 16 categories was decided by DOM affordances. No task required canvas or image-only text.",
+      "There is NO measured evidence that activating OCR improves any task outcome.",
+      "Cost could not be quantified from this harness (browser-only worker), and paying an unquantified per-cycle cost without a demonstrated benefit is not justified.",
+      "The only canvas fixture is synthetic, so any quality number obtained from it would not be representative of real sites."
+    ],
+    "productionChanged": false,
+    "recommendation": "Do not activate OCR in the autonomous loop. Revisit only with a corpus of real pages whose goals are unreachable from the DOM alone, and with the cost measured in-browser first."
+  }
+}

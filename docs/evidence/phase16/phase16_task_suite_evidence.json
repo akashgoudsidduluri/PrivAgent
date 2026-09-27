@@ -1,0 +1,3599 @@
+{
+  "timestamp": "2026-09-27T05:15:40.958Z",
+  "work": "Phase 16 real-reasoner task suite",
+  "substrate": "REAL BROWSER + REAL BACKEND + REAL GROQ + PRODUCTION GATES",
+  "fixtureClass": "DETERMINISTIC FIXTURE (local, stable pages) — generalisation to the open web is NOT demonstrated by this run",
+  "substitutionsUsed": "NONE — no scripted proposer, no injected action, no asserted verdict",
+  "tasks": [
+    {
+      "key": "SEARCH",
+      "category": "SEARCH",
+      "task": "open http://localhost:4200 and search cats",
+      "reasoner": "REAL (groq)",
+      "fixture": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T05:15:43.446Z",
+      "startUrl": "http://localhost:4200/",
+      "dashboardReady": true,
+      "wallClockMs": 4120,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "type",
+            "target": "q",
+            "text": "cats",
+            "reason": "Enter the search keyword 'cats' into the search input field"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'q'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'q' (length: 4).",
+          "targetType": "search",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "step": 2,
+          "proposedAction": {
+            "action": "click",
+            "target": "go",
+            "reason": "Submit the search query by clicking the 'Go' button"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated click action on known element 'go'.",
+          "executionSuccess": true,
+          "effectStatus": "FOCUS_SHIFT_OBSERVED",
+          "effectDetails": "Click on 'go' shifted focus to 'button:nth-child(3)'.",
+          "targetType": "button",
+          "url": "http://localhost:4200/"
+        }
+      ],
+      "cycleCount": 3,
+      "terminalStatus": "SUCCESS",
+      "goalStatus": "SUCCESS",
+      "terminalReason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'.",
+      "targetTabId": 1359104041,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "SUCCESS",
+          "goalStatus": "SUCCESS",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "SUCCESS",
+          "goalStatus": "SUCCESS",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/results?q=cats"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/",
+          "detectionCount": 2,
+          "detectionIds": [
+            "q",
+            "go"
+          ],
+          "historyLength": 0,
+          "contextBytes": 2212,
+          "reasonerLatencyMs": 584,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/",
+          "detectionCount": 2,
+          "detectionIds": [
+            "q",
+            "go"
+          ],
+          "historyLength": 1,
+          "contextBytes": 2654,
+          "reasonerLatencyMs": 494,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        584,
+        494
+      ],
+      "reasonerProposedActions": [
+        "type",
+        "click"
+      ],
+      "observedUrl": "http://localhost:4200/results?q=cats",
+      "observedTitle": "Fixture Results",
+      "observedScrollY": 0,
+      "observedMarker": "Search results for cats",
+      "expectedMarker": "Search results for cats",
+      "markerMatched": true,
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "SUCCESS",
+        "agentReportedGoalStatus": "SUCCESS",
+        "agentReason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'.",
+        "observedMarkerMatched": true,
+        "success": true
+      }
+    },
+    {
+      "key": "FORM_FILL",
+      "category": "FORM_FILL",
+      "task": "open http://localhost:4200/form and enter Alice into the name field",
+      "reasoner": "REAL (groq)",
+      "fixture": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T05:15:53.300Z",
+      "startUrl": "http://localhost:4200/form",
+      "dashboardReady": true,
+      "wallClockMs": 3099,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "type",
+            "target": "name",
+            "text": "Alice",
+            "reason": "Enter 'Alice' into the name field as requested"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'name'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'name' (length: 5).",
+          "targetType": "input",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "step": 2,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 100,
+            "reason": "Verify the text was entered correctly and check for any validation messages or additional form fields"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 100px.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+          "url": "http://localhost:4200/form"
+        }
+      ],
+      "cycleCount": 3,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Perception failed: Unable to obtain sanitized page context.",
+      "targetTabId": 1359104043,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "RECOVERY",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "RECOVERY",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/form"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/form"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/form",
+          "detectionCount": 2,
+          "detectionIds": [
+            "name",
+            "submit-name"
+          ],
+          "historyLength": 0,
+          "contextBytes": 1992,
+          "reasonerLatencyMs": 430,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/form",
+          "detectionCount": 2,
+          "detectionIds": [
+            "name",
+            "submit-name"
+          ],
+          "historyLength": 1,
+          "contextBytes": 2422,
+          "reasonerLatencyMs": 392,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        430,
+        392
+      ],
+      "reasonerProposedActions": [
+        "type",
+        "scroll"
+      ],
+      "observedUrl": "http://localhost:4200/form",
+      "observedTitle": "Fixture Form",
+      "observedScrollY": 0,
+      "observedMarker": "EMPTY",
+      "expectedMarker": "EMPTY",
+      "markerMatched": true,
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Perception failed: Unable to obtain sanitized page context.",
+        "observedMarkerMatched": true,
+        "success": false
+      }
+    },
+    {
+      "key": "MULTI_FIELD_FORM",
+      "category": "MULTI_FIELD_FORM",
+      "task": "open http://localhost:4200/multi, enter Pune into the city field and India into the country field, then submit the form",
+      "reasoner": "REAL (groq)",
+      "fixture": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T05:16:02.058Z",
+      "startUrl": "http://localhost:4200/multi",
+      "dashboardReady": true,
+      "wallClockMs": 8068,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "type",
+            "target": "city",
+            "text": "Pune",
+            "reason": "The city field is visible and needs to be filled with 'Pune' as per the task."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'city'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'city' (length: 4).",
+          "targetType": "input",
+          "url": "http://localhost:4200/multi"
+        }
+      ],
+      "cycleCount": 3,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (invalid_json) failed.",
+      "targetTabId": 1359104045,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/multi"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/multi"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/multi",
+          "detectionCount": 3,
+          "detectionIds": [
+            "submit-multi",
+            "city",
+            "plan"
+          ],
+          "historyLength": 0,
+          "contextBytes": 2598,
+          "reasonerLatencyMs": 448,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/multi",
+          "detectionCount": 3,
+          "detectionIds": [
+            "city",
+            "submit-multi",
+            "plan"
+          ],
+          "historyLength": 1,
+          "contextBytes": 3058,
+          "reasonerLatencyMs": 5616,
+          "status": 503
+        }
+      ],
+      "reasonerLatency": [
+        448,
+        5616
+      ],
+      "reasonerProposedActions": [
+        "type"
+      ],
+      "observedUrl": "http://localhost:4200/multi",
+      "observedTitle": "Fixture Multi Form",
+      "observedScrollY": 0,
+      "observedMarker": null,
+      "expectedMarker": "MULTI SUBMITTED",
+      "markerMatched": false,
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (invalid_json) failed.",
+        "observedMarkerMatched": false,
+        "success": false
+      }
+    },
+    {
+      "key": "NAVIGATION",
+      "category": "NAVIGATION",
+      "task": "open http://localhost:4200 and navigate to the products page",
+      "reasoner": "REAL (groq)",
+      "fixture": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T05:16:15.849Z",
+      "startUrl": "http://localhost:4200/",
+      "dashboardReady": true,
+      "wallClockMs": 2060,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "navigate",
+            "url": "http://localhost:4200/products",
+            "reason": "Navigate directly to the products page URL"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated navigation to 'http://localhost:4200/products'.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Post-action browser state could not be observed after 'navigate'; effect treated as unverified.",
+          "url": "http://localhost:4200/"
+        }
+      ],
+      "cycleCount": 3,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted 'reason' exceeds the 300-character limit.",
+      "targetTabId": 1359104047,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/products"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/products"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/",
+          "detectionCount": 2,
+          "detectionIds": [
+            "go",
+            "q"
+          ],
+          "historyLength": 0,
+          "contextBytes": 2248,
+          "reasonerLatencyMs": 463,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/products",
+          "detectionCount": 3,
+          "detectionIds": [
+            "details-link",
+            "nav-home",
+            "nav-pricing"
+          ],
+          "historyLength": 0,
+          "contextBytes": 2092,
+          "reasonerLatencyMs": 554,
+          "status": 503
+        }
+      ],
+      "reasonerLatency": [
+        463,
+        554
+      ],
+      "reasonerProposedActions": [
+        "navigate"
+      ],
+      "observedUrl": "http://localhost:4200/products",
+      "observedTitle": "Fixture Products",
+      "observedScrollY": 0,
+      "observedMarker": null,
+      "expectedMarker": "Product detail for Widget Basic",
+      "markerMatched": false,
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted 'reason' exceeds the 300-character limit.",
+        "observedMarkerMatched": false,
+        "success": false
+      }
+    },
+    {
+      "key": "SCROLL",
+      "category": "SCROLL",
+      "task": "open http://localhost:4200/long and scroll down to the pricing section",
+      "reasoner": "REAL (groq)",
+      "fixture": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T05:16:23.831Z",
+      "startUrl": "http://localhost:4200/long",
+      "dashboardReady": true,
+      "wallClockMs": 3020,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 500,
+            "reason": "No elements are visible and the task requires scrolling down to find the pricing section."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 500px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 500px shifted viewport by 500px.",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "cycleCount": 2,
+      "terminalStatus": "SUCCESS",
+      "goalStatus": "SUCCESS",
+      "terminalReason": "Scroll observation action completed.",
+      "targetTabId": 1359104049,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "SUCCESS",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "SUCCESS",
+          "goalStatus": "SUCCESS",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "SUCCESS",
+          "goalStatus": "SUCCESS",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "detectionIds": [],
+          "historyLength": 0,
+          "contextBytes": 1093,
+          "reasonerLatencyMs": 2286,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        2286
+      ],
+      "reasonerProposedActions": [
+        "scroll"
+      ],
+      "observedUrl": "http://localhost:4200/long",
+      "observedTitle": "Fixture Long Page",
+      "observedScrollY": 500,
+      "observedMarker": "PRICING SECTION",
+      "expectedMarker": "PRICING SECTION",
+      "markerMatched": true,
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "SUCCESS",
+        "agentReportedGoalStatus": "SUCCESS",
+        "agentReason": "Scroll observation action completed.",
+        "observedMarkerMatched": true,
+        "success": true
+      }
+    },
+    {
+      "key": "CLICK",
+      "category": "CLICK",
+      "task": "open http://localhost:4200/details and open the details section",
+      "reasoner": "REAL (groq)",
+      "fixture": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T05:16:32.524Z",
+      "startUrl": "http://localhost:4200/details",
+      "dashboardReady": true,
+      "wallClockMs": 1018,
+      "confirmationPromptsAnswered": 0,
+      "actions": [],
+      "cycleCount": 2,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 422: Target 'details' does not exist in the current sanitized context. A fresh perception is required.",
+      "targetTabId": 1359104051,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/details"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/details",
+          "detectionCount": 1,
+          "detectionIds": [
+            "reveal"
+          ],
+          "historyLength": 0,
+          "contextBytes": 1265,
+          "reasonerLatencyMs": 482,
+          "status": 422
+        }
+      ],
+      "reasonerLatency": [
+        482
+      ],
+      "reasonerProposedActions": [],
+      "observedUrl": "http://localhost:4200/details",
+      "observedTitle": "Fixture Details",
+      "observedScrollY": 0,
+      "observedMarker": "DETAILS OPENED",
+      "expectedMarker": "DETAILS OPENED",
+      "markerMatched": true,
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 422: Target 'details' does not exist in the current sanitized context. A fresh perception is required.",
+        "observedMarkerMatched": true,
+        "success": false
+      }
+    },
+    {
+      "key": "MULTI_STEP",
+      "category": "MULTI_STEP",
+      "task": "open http://localhost:4200, search cats, and open the first result",
+      "reasoner": "REAL (groq)",
+      "fixture": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T05:16:39.181Z",
+      "startUrl": "http://localhost:4200/",
+      "dashboardReady": true,
+      "wallClockMs": 65279,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "type",
+            "target": "q",
+            "text": "cats",
+            "reason": "Enter the requested search keyword into the visible search field before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'q'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'q' (length: 4).",
+          "targetType": "search",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "step": 2,
+          "proposedAction": {
+            "action": "click",
+            "target": "go",
+            "reason": "Submit the search query to load the results page."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated click action on known element 'go'.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Post-action browser state could not be observed after 'click'; effect treated as unverified.",
+          "targetType": "button",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "step": 3,
+          "proposedAction": {
+            "action": "click",
+            "target": "open-result",
+            "reason": "The task requires opening the first result, and the detected link 'open-result' is the first result candidate."
+          },
+          "validationAllowed": false,
+          "validationReason": "Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.",
+          "executionSuccess": false,
+          "effectDetails": null,
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "step": 4,
+          "proposedAction": {
+            "action": "click",
+            "target": "open-result",
+            "reason": "The search results page is loaded and the first result link is visible; clicking it opens the first result as requested."
+          },
+          "validationAllowed": false,
+          "validationReason": "Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.",
+          "executionSuccess": false,
+          "effectDetails": null,
+          "url": "http://localhost:4200/results?q=cats"
+        }
+      ],
+      "cycleCount": 5,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Security critic blocked actions repeatedly: Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.",
+      "targetTabId": 1359104053,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "VERIFICATION",
+          "url": "http://localhost:4200/results?q=cats"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/results?q=cats"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/",
+          "detectionCount": 2,
+          "detectionIds": [
+            "q",
+            "go"
+          ],
+          "historyLength": 0,
+          "contextBytes": 2260,
+          "reasonerLatencyMs": 4673,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/",
+          "detectionCount": 2,
+          "detectionIds": [
+            "q",
+            "go"
+          ],
+          "historyLength": 1,
+          "contextBytes": 2726,
+          "reasonerLatencyMs": 364,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/results?q=cats",
+          "detectionCount": 1,
+          "detectionIds": [
+            "open-result"
+          ],
+          "historyLength": 1,
+          "contextBytes": 1939,
+          "reasonerLatencyMs": 4081,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/results?q=cats",
+          "detectionCount": 1,
+          "detectionIds": [
+            "open-result"
+          ],
+          "historyLength": 1,
+          "contextBytes": 1939,
+          "reasonerLatencyMs": 53331,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        4673,
+        364,
+        4081,
+        53331
+      ],
+      "reasonerProposedActions": [
+        "type",
+        "click",
+        "click",
+        "click"
+      ],
+      "observedUrl": "http://localhost:4200/results?q=cats",
+      "observedTitle": "Fixture Results",
+      "observedScrollY": 0,
+      "observedMarker": null,
+      "expectedMarker": "Product detail for Widget Basic",
+      "markerMatched": false,
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Security critic blocked actions repeatedly: Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.",
+        "observedMarkerMatched": false,
+        "success": false
+      }
+    }
+  ],
+  "reasonerConfig": {
+    "mode": "groq",
+    "apiKeyConfigured": true,
+    "model": "openai/gpt-oss-20b",
+    "configuredFallback": "openrouter",
+    "reasonerClass": "GroqReasoner",
+    "keyValueNeverPrinted": true
+  },
+  "backendReachable": true,
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "serviceWorkerAttached": true,
+  "reasonerRequestsTotal": 14
+}
