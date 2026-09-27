@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-09-27T06:29:30.952Z",
+  "work": "DEFECT 2 — scroll goal verification, baseline vs remediated",
+  "defect": "A scroll goal could return SUCCESS from previousActions alone, with a byte-identical verdict at scrollY=0 and scrollY=500.",
+  "baselineCommit": "b6b8b73",
+  "method": "Both implementations are bundled from source and driven with the SAME synthetic observed state. The pricing section is modelled at document y=3000 with a 900px viewport, matching the real /long fixture geometry. No browser, no agent loop.",
+  "fixtureGeometry": {
+    "sectionTopDocumentPx": 3000,
+    "sectionHeightPx": 120,
+    "viewportHeightPx": 900,
+    "sectionInViewForScrollYRange": "(2100, 3120]",
+    "satisfiedScrollYUsed": 2900
+  },
+  "states": [
+    {
+      "label": "scrollY=0 (page never moved)",
+      "requestedGoal": "scroll down to the pricing section",
+      "pricingActuallyInView": false,
+      "baseline_with_previousActions": {
+        "status": "SUCCESS",
+        "satisfied": true,
+        "reason": "Scroll observation action completed."
+      },
+      "baseline_without_previousActions": {
+        "status": "IN_PROGRESS",
+        "satisfied": false,
+        "reason": ""
+      },
+      "remediated_with_previousActions": {
+        "status": "IN_PROGRESS",
+        "satisfied": false,
+        "reason": ""
+      }
+    },
+    {
+      "label": "scrollY=500 (partial scroll)",
+      "requestedGoal": "scroll down to the pricing section",
+      "pricingActuallyInView": false,
+      "baseline_with_previousActions": {
+        "status": "SUCCESS",
+        "satisfied": true,
+        "reason": "Scroll observation action completed."
+      },
+      "baseline_without_previousActions": {
+        "status": "IN_PROGRESS",
+        "satisfied": false,
+        "reason": ""
+      },
+      "remediated_with_previousActions": {
+        "status": "IN_PROGRESS",
+        "satisfied": false,
+        "reason": ""
+      }
+    }
+  ],
+  "baselineVerdictByteIdenticalAcrossScrollPositions": true,
+  "genuinelySatisfied": {
+    "label": "scrollY=2900 — the section really is in view",
+    "pricingActuallyInView": true,
+    "baseline": {
+      "status": "SUCCESS",
+      "satisfied": true,
+      "reason": "Scroll observation action completed."
+    },
+    "remediated": {
+      "status": "SUCCESS",
+      "satisfied": true,
+      "reason": "Scroll goal verified from observed state: target 'pricing' is inside the observed viewport at 2900px."
+    },
+    "conclusion": "The remediated verifier still returns SUCCESS when observed state supports it. The fix did not make scroll goals unsatisfiable."
+  },
+  "regressionProperties": {
+    "scrollY=0 cannot satisfy a goal requiring a later position": true,
+    "scrollY=500 cannot satisfy a goal requiring ~3000px": true,
+    "a genuinely satisfied scroll goal can still return SUCCESS": true,
+    "previousActions alone cannot cause SUCCESS": true,
+    "unavailable/unobservable state fails closed": true,
+    "unobservableStateResult": {
+      "status": "IN_PROGRESS",
+      "satisfied": false,
+      "reason": ""
+    }
+  }
+}

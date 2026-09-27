@@ -1,0 +1,185 @@
+{
+  "timestamp": "2026-09-27T06:53:50.073Z",
+  "work": "DEFECT 3 — authoritative chrome.tabs URL vs. an unavailable content script",
+  "substrate": "REAL headless Chrome + REAL built extension + REAL content script + REAL service worker",
+  "question": "During a real navigation, is the content script genuinely unavailable while Chrome's tab record already knows the destination?",
+  "scope": "Observation only. The end-to-end production record (a real agent navigation, the real getEffectSnapshot, the real effect verifier and goal verifier) is Test D in this directory.",
+  "samples": [
+    {
+      "case": "CONTROL — page settled, content script present",
+      "label": "settled",
+      "tabFound": true,
+      "tabId": 569212452,
+      "tabStatus": "complete",
+      "chromeTabsUrl": "http://localhost:4200/products",
+      "chromeTabsPendingUrl": null,
+      "contentScript": "OK",
+      "contentScriptUrl": "http://localhost:4200/products"
+    },
+    {
+      "case": "NAVIGATION — probed immediately (teardown window)",
+      "label": "mid-navigation",
+      "tabFound": true,
+      "tabId": 569212452,
+      "tabStatus": "loading",
+      "chromeTabsUrl": "http://localhost:4200/details",
+      "chromeTabsPendingUrl": null,
+      "contentScript": "UNAVAILABLE: Could not establish connection. Receiving end does not exist.",
+      "contentScriptUrl": null
+    },
+    {
+      "case": "NAVIGATION — probed after settle",
+      "label": "post-navigation-settled",
+      "tabFound": true,
+      "tabId": 569212452,
+      "tabStatus": "complete",
+      "chromeTabsUrl": "http://localhost:4200/details",
+      "chromeTabsPendingUrl": null,
+      "contentScript": "OK",
+      "contentScriptUrl": "http://localhost:4200/details"
+    },
+    {
+      "case": "BACK/FORWARD — after returning to the first document",
+      "label": "after-return",
+      "tabFound": true,
+      "tabId": 569212452,
+      "tabStatus": "complete",
+      "chromeTabsUrl": "http://localhost:4200/products",
+      "chromeTabsPendingUrl": null,
+      "contentScript": "OK",
+      "contentScriptUrl": "http://localhost:4200/products"
+    },
+    {
+      "case": "BACK/FORWARD — probed immediately after goBack",
+      "label": "mid-back",
+      "tabFound": true,
+      "tabId": 569212452,
+      "tabStatus": "complete",
+      "chromeTabsUrl": "http://localhost:4200/products",
+      "chromeTabsPendingUrl": null,
+      "contentScript": "OK",
+      "contentScriptUrl": "http://localhost:4200/products"
+    },
+    {
+      "case": "BACK/FORWARD — probed after settle",
+      "label": "post-back-settled",
+      "tabFound": true,
+      "tabId": 569212452,
+      "tabStatus": "complete",
+      "chromeTabsUrl": "http://localhost:4200/products",
+      "chromeTabsPendingUrl": null,
+      "contentScript": "OK",
+      "contentScriptUrl": "http://localhost:4200/products"
+    }
+  ],
+  "extensionLoaded": true,
+  "observedContentScriptUnavailableAtAnyPoint": true,
+  "observedChromeTabsUrlDisagreeingWithPage": false,
+  "productionContract": {
+    "rule": "chrome.tabs is authoritative for the tab URL. A content script that is unavailable mid-navigation is not evidence that the action failed.",
+    "source": "extension/src/background/serviceWorker.ts — getEffectSnapshot",
+    "failClosed": "If NEITHER chrome.tabs NOR the page yields a URL, the snapshot is null and the loop fails closed. It never guesses.",
+    "notSuccess": "The snapshot establishes an OBSERVED EFFECT only. Goal Verification still decides whether the user's goal was met."
+  },
+  "endToEndProductionRecord": {
+    "test": "D — a real agent navigation through the production path",
+    "task": "open http://localhost:4200/products",
+    "startUrl": "http://localhost:4200/details",
+    "fixtureClass": "DETERMINISTIC LOCAL FIXTURE",
+    "terminalStatus": "FAILED",
+    "goalStatus": "FAILED",
+    "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+    "reasoner": "REAL (groq)",
+    "steps": [
+      {
+        "step": 1,
+        "proposedAction": {
+          "action": "navigate",
+          "url": "http://localhost:4200/products",
+          "reason": "The user explicitly requested to open the URL http://localhost:4200/products, which requires a full page navigation."
+        },
+        "validationAllowed": true,
+        "validationReason": "Validated navigation to 'http://localhost:4200/products'.",
+        "executionSuccess": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED",
+        "effectDetails": "URL navigated from 'http://localhost:4200/details' to 'http://localhost:4200/products'.",
+        "url": "http://localhost:4200/details"
+      }
+    ],
+    "tabUrlBefore": "http://localhost:4200/details",
+    "tabUrlAfter": "http://localhost:4200/products",
+    "observedPageBodyAfter": "Products\nHomePricing\nWidget Basic\n\nPrice: 10\n\nWidget Basic Details\nGadget Pro\n\nPrice: 40\n\nGadget Pro\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×",
+    "effectVerification": {
+      "verdictSuccess": false,
+      "rule": "A navigation that really happened must not be ACTION_NO_EFFECT; a URL change alone must not mean task SUCCESS.",
+      "tabUrlBefore": "http://localhost:4200/details",
+      "tabUrlAfter": "http://localhost:4200/products",
+      "navigationObserved": true,
+      "navigationRelatedSteps": [
+        {
+          "action": "navigate",
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "URL navigated from 'http://localhost:4200/details' to 'http://localhost:4200/products'."
+        }
+      ],
+      "actionNoEffectReported": false,
+      "passes": true,
+      "interpretation": "The navigation was observed through the production snapshot path without a spurious ACTION_NO_EFFECT.",
+      "urlChangeAloneDidNotImplySuccess": true
+    },
+    "goalVerification": {
+      "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+      "agentReportedStatus": "FAILED",
+      "agentReportedGoalStatus": "FAILED",
+      "agentReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+      "observedAfter": {
+        "href": "http://localhost:4200/products",
+        "title": "Fixture Products",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "Products\nHomePricing\nWidget Basic\n\nPrice: 10\n\nWidget Basic Details\nGadget Pro\n\nPrice: 40\n\nGadget Pro\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": false,
+        "rule": "A navigation that really happened must not be ACTION_NO_EFFECT; a URL change alone must not mean task SUCCESS.",
+        "tabUrlBefore": "http://localhost:4200/details",
+        "tabUrlAfter": "http://localhost:4200/products",
+        "navigationObserved": true,
+        "navigationRelatedSteps": [
+          {
+            "action": "navigate",
+            "effectStatus": "URL_NAVIGATION_OBSERVED",
+            "effectDetails": "URL navigated from 'http://localhost:4200/details' to 'http://localhost:4200/products'."
+          }
+        ],
+        "actionNoEffectReported": false,
+        "passes": true,
+        "interpretation": "The navigation was observed through the production snapshot path without a spurious ACTION_NO_EFFECT.",
+        "urlChangeAloneDidNotImplySuccess": true
+      }
+    },
+    "note": "The navigate action crossed a real document swap. The content script was torn down for that window; the post-action snapshot was still produced, from chrome.tabs, and the effect verifier reported URL_NAVIGATION_OBSERVED with the real URL transition instead of ACTION_NO_EFFECT. The run did NOT claim SUCCESS from the URL change — goal verification still refused to call the task done, and the run ended on an unrelated reasoner outage."
+  },
+  "unitScenarios": {
+    "suite": "tests/phase16-remediation/navigationObservation.test.ts",
+    "note": "These drive the production effect verifier and the production snapshot contract over simulated chrome.tabs / content-script states. They are listed with the behaviour they pin, not as a substitute for the real-Chrome record above.",
+    "scenarios": [
+      "normal navigation",
+      "navigation where the content script is unavailable during the transition",
+      "bfcache-like lifecycle",
+      "authoritative chrome.tabs URL differs from a stale content-script URL",
+      "genuine navigation failure",
+      "cross-origin navigation",
+      "containment remains enforced",
+      "ACTION_NO_EFFECT is still emitted when navigation genuinely did not happen"
+    ]
+  },
+  "securityInvariants": [
+    "A URL change establishes an OBSERVED EFFECT only. It never establishes task SUCCESS — goal verification still decides.",
+    "When neither chrome.tabs nor the page yields a URL, the snapshot is null and the loop fails closed. No value is invented.",
+    "Page-side geometry (scroll, DOM counts, modal counts) is NOT fabricated when the page cannot be read; pageStateObservable: false marks the reading as tab-only, and the effect verifier refuses to derive a DOM effect from it.",
+    "No second target-state system was introduced. chrome.tabs plus the content script remain the only two sources, exactly as before.",
+    "Cross-origin navigation and containment are untouched: containment still evaluates at the dispatch boundary and still refuses off-scope targets."
+  ]
+}

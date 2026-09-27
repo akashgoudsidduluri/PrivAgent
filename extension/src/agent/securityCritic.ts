@@ -31,7 +31,7 @@
 import { BrowserAction } from './actionTypes';
 import { AgentContextPayload, AgentDetection } from '../privacy/types';
 import { ActionRiskAssessment } from './riskEngine';
-import { classifyWebContent } from '../security/injectionFirewall';
+import { classifyWebContent, classifyModelOutput } from '../security/injectionFirewall';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 
 // ── Verdict ──────────────────────────────────────────────────────────────────
@@ -223,6 +223,16 @@ export function reviewProposedAction(input: SecurityCriticInput): SecurityCritic
   const currentUrl = input.currentUrl || context.url || '';
   const current = parseUrlSafely(currentUrl);
   const goal = `${task} ${input.subgoal?.description ?? ''} ${input.subgoal?.id ?? ''}`.toLowerCase();
+  // Phase 16 P1 remediation, follow-on. `goal` above deliberately blends the
+  // USER's task with the planner's MODEL-AUTHORED subgoal narration, because
+  // goal-ALIGNMENT is a usefulness question. It must not be reused for the
+  // cross-origin navigation rule, which is a SAFETY question: a subgoal the
+  // model itself wrote ("Navigate to search engine or knowledge portal") is
+  // not the user asking to be sent off-origin, and must not vouch for a
+  // destination the user never named. Before the injection fix, this defect
+  // was masked by INJECTION_INFLUENCE firing on the model's own reason text;
+  // with that false positive gone, the distinction has to be explicit.
+  const userGoal = task.toLowerCase();
   const goalAnchored = (() => {
     const pageTokens = new Set(goalTokens(pageSurface));
     for (const t of goalTokens(goal)) {
@@ -257,9 +267,9 @@ export function reviewProposedAction(input: SecurityCriticInput): SecurityCritic
         // Cross-origin: legitimate, but always worth a second look unless the
         // goal actually names the destination.
         const goalNamesHost =
-          goal.includes(parsed.hostname.toLowerCase()) ||
-          goalTokens(goal).some((t) => t.length >= 4 && parsed.hostname.toLowerCase().includes(t));
-        if (!goalNamesHost && !hasAnyTerm(goal, NAVIGATE_TERMS)) {
+          userGoal.includes(parsed.hostname.toLowerCase()) ||
+          goalTokens(userGoal).some((t) => t.length >= 4 && parsed.hostname.toLowerCase().includes(t));
+        if (!goalNamesHost && !hasAnyTerm(userGoal, NAVIGATE_TERMS)) {
           findings.push('SUSPICIOUS_NAVIGATION');
         }
       }
@@ -282,8 +292,27 @@ export function reviewProposedAction(input: SecurityCriticInput): SecurityCritic
   }
 
   // ── 3. Prompt-injection influence (webpage + model output are untrusted) ──
-  const injectionSources = [
-    descriptor,
+  //
+  // Phase 16 P1 remediation: the two provenances are classified SEPARATELY.
+  //
+  // `descriptor` used to be handed to the page-injection classifier as one
+  // blob. But it mixes PAGE-DERIVED text (the target's selector, id and label
+  // come from the page) with MODEL-AUTHORED text (the action's own `reason`).
+  // Running the page-hijack signature list over the model's own narration
+  // flagged ordinary plans — "Navigate to the products page." — as
+  // INJECTION_INFLUENCE and blocked them.
+  //
+  // The fix is provenance, not a weaker scanner:
+  //   • page-derived strings → classifyWebContent  (full page-hijack set)
+  //   • the model's reason  → classifyModelOutput   (relay/steering set only)
+  // Nothing is whitelisted: no domain, no phrase, no task. A page that injects
+  // is still caught, and a model that RELAYS an injection is still caught.
+  const pageDerivedSources = [
+    // Only the page-derived half of the descriptor. The model's `reason` is
+    // deliberately excluded and handled below.
+    resolvedTarget
+      ? `${resolvedTarget.selector || ''} ${resolvedTarget.label || ''} ${resolvedTarget.id || ''}`
+      : '',
     (context.semantic_context?.entities ?? [])
       .map((e) => (e as { label?: string; description?: string }).label ?? '')
       .join(' '),
@@ -291,10 +320,14 @@ export function reviewProposedAction(input: SecurityCriticInput): SecurityCritic
       .map((a) => (a.description ?? ''))
       .join(' '),
   ]
-    .filter((s) => typeof s === 'string' && s.length > 0)
+    .filter((s) => typeof s === 'string' && s.trim().length > 0)
     .map((s) => classifyWebContent(s).trustLevel);
 
-  if (injectionSources.some((t) => t === 'HOSTILE')) {
+  const modelAuthoredSources = [action.reason ?? '']
+    .filter((s) => typeof s === 'string' && s.trim().length > 0)
+    .map((s) => classifyModelOutput(s).trustLevel);
+
+  if ([...pageDerivedSources, ...modelAuthoredSources].some((t) => t === 'HOSTILE')) {
     findings.push('INJECTION_INFLUENCE');
   }
   if (context.semantic_context?.promptInjectionDetected === true) {

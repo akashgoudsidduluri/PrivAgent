@@ -621,6 +621,19 @@ export class AgentLoop {
       assertSanitizedContextSafe(context);
       this.state.currentUrl = context.url || worldModel?.page.url || this.state.currentUrl;
 
+      // Phase 16 P0 remediation: record where the viewport OBSERVABLY is, so
+      // that a scroll goal is decided from live browser state rather than from
+      // the fact that a scroll was once requested. The baseline is captured
+      // once, on the first perception of the task.
+      const observedScrollY =
+        typeof context.viewport?.scroll_y === 'number' ? context.viewport.scroll_y : null;
+      if (observedScrollY !== null) {
+        if (this.state.initialScrollY === undefined || this.state.initialScrollY === null) {
+          this.state.initialScrollY = observedScrollY;
+        }
+        this.state.observedScrollY = observedScrollY;
+      }
+
       if (worldModel) {
         this.state.currentPageGeneration = worldModel.page.pageGeneration;
         this.state.perceptionGeneration = worldModel.page.pageGeneration;

@@ -120,6 +120,30 @@ Live run: 6 synthetic values on the page, all confirmed present in the DOM, **1 
 - **Isolated proof:** `docs/evidence/phase16/phase16_effect_navigation_diagnostic.json` — in-page click → content script `ok`, snapshot returned. Navigation click → content script `UNAVAILABLE: … back/forward cache`, snapshot `null`, while the tab URL had moved.
 - **Not fixed in Phase 16.** It changes what counts as an observation, which is an architectural decision.
 
+### Remediation status — added after the fact
+
+> The three findings above are left exactly as Phase 16 wrote them. This block
+> only records what later became true, and where. Full evidence:
+> `docs/evidence/phase16-remediation/`.
+
+| Defect | Status | Evidence |
+|---|---|---|
+| DEFECT 1 | **FIXED** — signature lists split by provenance; the model's own narration is no longer page content. A page saying "navigate to" and a model relaying an injection are both still `HOSTILE`. A *separate*, pre-existing rule that the DEFECT 1 false positive had been masking (the cross-origin navigation rule reading a model-authored subgoal as user intent) was **restored**, so the critic is net tighter. | `security_critic_boundary_evidence.json`; `tests/phase16-remediation/securityCriticBoundary.test.ts` (25 tests) |
+| DEFECT 2 | **FIXED** — scroll goals are decided from observed scroll position, viewport height and detection geometry. `previousActions` is never consulted for proof. | `scroll_goal_verification_evidence.json`; `tests/phase16-remediation/scrollGoalVerification.test.ts` (23 tests) |
+| DEFECT 3 | **FIXED** — `chrome.tabs` is authoritative (`pendingUrl` is now actually consulted), a torn-down content script no longer aborts the snapshot, and page-side geometry is *not* fabricated when the page cannot be read. | `bfcache_navigation_evidence.json`; `tests/phase16-remediation/navigationObservation.test.ts` (15 tests) |
+| — | **Supporting fix:** the perception layer reported `scroll_y: 0` for every page because the service worker has no `window`. The geometry the content script already reports is now passed into perception. Without this, the DEFECT 2 fix is inert. | `PHASE16_DEFECT_REMEDIATION_REPORT.md` §4 |
+
+**Re-verified on real Chrome, all consistent:** scroll goals reached `SUCCESS`
+twice with genuinely observed movement and produced **zero** false successes;
+a real navigation reported `URL_NAVIGATION_OBSERVED` rather than
+`ACTION_NO_EFFECT`; a page-borne injection was blocked on every proposed action
+and the page-supplied destination was never reached.
+
+**Still open (out of scope, not weakened):** a legitimate GitHub navigation is
+refused by `GOAL_MISMATCH`, a separate pre-existing rule. A bottom-of-page
+scroll goal remains unprovable because the sanitized context carries no
+document height. Google's anti-bot interstitial was not bypassed.
+
 ---
 
 ## 5. Honest statement of scope

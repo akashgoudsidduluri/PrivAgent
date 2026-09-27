@@ -50,6 +50,30 @@ A gate cannot be demonstrated by hoping a model misbehaves, so the deterministic
 | **Verdict** | **The control is authoritative — it over-blocks, it never under-blocks.** No bypass was found. |
 | **Limitation** | See DEFECT 1 in the generalization matrix. Not fixed in Phase 16. |
 
+> **Remediation addendum (added after the fact).** DEFECT 1 has since been
+> fixed by splitting the injection signature list by **provenance**: page-derived
+> text is still judged by the full page-hijack set (including `/navigate to/i`),
+> while the model's own narration is judged by the relay set, which omits that
+> one entry. No domain, phrase, task or signature was whitelisted, and injection
+> detection was not disabled.
+>
+> Two consequences worth recording here, because both concern this control's
+> authority:
+>
+> 1. The critic is **net tighter** than in Phase 16. The cross-origin
+>    navigation rule had been reading the planner's *model-authored* subgoal as
+>    if it were user intent, which silently disabled it. The DEFECT 1 fix
+>    removed the false positive that had been covering for that, so the rule was
+>    restored to read the user's task alone.
+> 2. Genuine page injection is still blocked. On a synthetic page carrying real
+>    injection text, every proposed action was `BLOCK / INJECTION_INFLUENCE` and
+>    a page-supplied navigation directive was never followed.
+>
+> Three pre-existing tests that pinned this control's behaviour were **not
+> modified**; they pass against the remediated code. A separate,
+> pre-existing `GOAL_MISMATCH` over-block remains open and was deliberately not
+> weakened. Evidence: `docs/evidence/phase16-remediation/`.
+
 ## 4. Privacy Policy
 
 | Field | Value |

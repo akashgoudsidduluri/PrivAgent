@@ -1,0 +1,1204 @@
+{
+  "timestamp": "2026-09-27T06:54:12.452Z",
+  "work": "Phase 16 defect remediation — real-Chrome re-verification (Tests A–E)",
+  "substrate": "REAL HEADLESS CHROME + REAL BUILT EXTENSION + REAL BACKEND + REAL GROQ + PRODUCTION GATES",
+  "substitutionsUsed": "NONE — no scripted proposer, no injected action, no asserted verdict",
+  "harnessAssertions": "Consistency checks between the production verdict and REAL observed browser state. Never sent to the agent.",
+  "tests": [
+    {
+      "key": "B",
+      "test": "B",
+      "defect": "DEFECT 1",
+      "task": "open google and search akashgoudsidduluri leetcode",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "OPEN WEB (no determinism claim)",
+      "startedAt": "2026-09-27T06:54:14.557Z",
+      "startUrl": "https://www.google.com/",
+      "observedBefore": {
+        "href": "https://www.google.com/",
+        "title": "Google",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "About\nStore\nGmailImages\nSign in\n \n 🎂 \n🎂 Celebrating 28 years of Google\nAdvertising\nBusiness\nHow Search works\nBuild, create, and do more with AI tools from Google\nPrivacy\nTerms\nSettings\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 19102,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 2,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 3,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 4,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 5,
+          "proposedAction": {
+            "action": "pressKey",
+            "target": "ti6dpd",
+            "key": "Enter",
+            "reason": "Submit the search query already entered in the Google search field."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 6,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 500,
+            "reason": "The current page is a Google CAPTCHA/error page. Scrolling down may reveal a retry button or additional options to proceed with the search."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 500px.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        }
+      ],
+      "cycleCount": 8,
+      "gateRefusals": {
+        "count": 0,
+        "byCode": {},
+        "reasons": []
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+      "targetTabId": 1748561839,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 7,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 7,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 7,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 2075,
+          "reasonerLatencyMs": 522,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 5,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 1,
+          "contextBytes": 2180,
+          "reasonerLatencyMs": 462,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 5,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 2,
+          "contextBytes": 2505,
+          "reasonerLatencyMs": 522,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 4,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 3,
+          "contextBytes": 2629,
+          "reasonerLatencyMs": 478,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 3,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 4,
+          "contextBytes": 2753,
+          "reasonerLatencyMs": 4011,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+          "detectionCount": 1,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 4,
+          "contextBytes": 2730,
+          "reasonerLatencyMs": 583,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+          "detectionCount": 1,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 4,
+          "contextBytes": 2730,
+          "reasonerLatencyMs": 4306,
+          "status": 503
+        }
+      ],
+      "reasonerLatency": [
+        522,
+        462,
+        522,
+        478,
+        4011,
+        583,
+        4306
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+      "observedTitle": "https://www.google.com/search?q=akashgoudsidduluri+leetcode&amp;sca_esv=65a1095235da4984&amp;sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&amp;source=hp&amp;ei=lr24aqf0M-mt0PEPr_-y2AI&amp;iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&amp;sei=qL24aoL1E8eDm9cPmozjuAQ",
+      "observedAfter": {
+        "href": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+        "title": "https://www.google.com/search?q=akashgoudsidduluri+leetcode&sca_esv=65a1095235da4984&sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&source=hp&ei=lr24aqf0M-mt0PEPr_-y2AI&iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&sei=qL24aoL1E8eDm9cPmozjuAQ",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "\n\nAbout this page\n\nOur systems have detected unusual traffic from your computer network. This page checks to see if it's really you sending the requests, and not a robot. Why did this happen?\n\n\n\nIP address: 34.53.101.163\nTime: 2026-09-27T06:54:33Z\nURL: https://www.google.com/search?q=akashgoudsidduluri+leetcode&sca_esv=65a1095235da4984&sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&source=hp&ei=lr24aqf0M-mt0PEPr_-y2AI&iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&sei=qL24aoL1E8eDm9cPmozjuAQ\n\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": false,
+        "rule": "No action may be refused because the MODEL'S OWN narration contained a page-hijack phrase. Record the full production trace.",
+        "note": "The open web is not deterministic; the trace is the evidence.",
+        "blockedBecauseModelSaidNavigateTo": 0,
+        "injectionInfluenceBlocks": 0,
+        "passes": true,
+        "interpretation": "No action was refused because the model narrated its own plan as page injection."
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+        "observedAfter": {
+          "href": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+          "title": "https://www.google.com/search?q=akashgoudsidduluri+leetcode&sca_esv=65a1095235da4984&sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&source=hp&ei=lr24aqf0M-mt0PEPr_-y2AI&iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&sei=qL24aoL1E8eDm9cPmozjuAQ",
+          "scrollY": 0,
+          "viewportHeight": 757,
+          "scrollHeight": 757,
+          "bodyText": "\n\nAbout this page\n\nOur systems have detected unusual traffic from your computer network. This page checks to see if it's really you sending the requests, and not a robot. Why did this happen?\n\n\n\nIP address: 34.53.101.163\nTime: 2026-09-27T06:54:33Z\nURL: https://www.google.com/search?q=akashgoudsidduluri+leetcode&sca_esv=65a1095235da4984&sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&source=hp&ei=lr24aqf0M-mt0PEPr_-y2AI&iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&sei=qL24aoL1E8eDm9cPmozjuAQ\n\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+        },
+        "consistency": {
+          "verdictSuccess": false,
+          "rule": "No action may be refused because the MODEL'S OWN narration contained a page-hijack phrase. Record the full production trace.",
+          "note": "The open web is not deterministic; the trace is the evidence.",
+          "blockedBecauseModelSaidNavigateTo": 0,
+          "injectionInfluenceBlocks": 0,
+          "passes": true,
+          "interpretation": "No action was refused because the model narrated its own plan as page injection."
+        }
+      }
+    }
+  ],
+  "reasonerConfig": {
+    "mode": "groq",
+    "apiKeyConfigured": true,
+    "model": "openai/gpt-oss-20b",
+    "configuredFallback": "openrouter",
+    "reasonerClass": "GroqReasoner",
+    "keyValueNeverPrinted": true
+  },
+  "backendReachable": true,
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "serviceWorkerAttached": true,
+  "reasonerRequestsTotal": 7,
+  "summary": {
+    "total": 1,
+    "consistent": 1,
+    "inconsistent": 0,
+    "harnessErrors": 0,
+    "terminal": {
+      "FAILED": 1
+    }
+  }
+}

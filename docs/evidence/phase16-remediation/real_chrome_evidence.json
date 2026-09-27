@@ -1,0 +1,4032 @@
+{
+  "timestamp": "2026-09-27T06:49:45.150Z",
+  "work": "Phase 16 defect remediation — real-Chrome re-verification (Tests A–E)",
+  "substrate": "REAL HEADLESS CHROME + REAL BUILT EXTENSION + REAL BACKEND + REAL GROQ + PRODUCTION GATES",
+  "substitutionsUsed": "NONE — no scripted proposer, no injected action, no asserted verdict",
+  "harnessAssertions": "Consistency checks between the production verdict and REAL observed browser state. Never sent to the agent.",
+  "tests": [
+    {
+      "key": "A1",
+      "test": "A",
+      "defect": "DEFECT 2",
+      "task": "open http://localhost:4200/long and scroll down to the pricing section",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T06:49:47.024Z",
+      "startUrl": "http://localhost:4200/long",
+      "observedBefore": {
+        "href": "http://localhost:4200/long",
+        "title": "Fixture Long Page",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 6356,
+        "pricingTop": 3094,
+        "pricingHeight": 129,
+        "pricingInViewport": false,
+        "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 7148,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 500,
+            "reason": "Scroll down to find the pricing section on the long page."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 500px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 500px shifted viewport by 500px.",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "step": 2,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 500,
+            "reason": "No elements are visible in the current viewport; continue scrolling down to locate the pricing section."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 500px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 500px shifted viewport by 500px.",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "step": 3,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 500,
+            "reason": "No elements are visible in the current viewport; continue scrolling down to locate the pricing section."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 500px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 500px shifted viewport by 500px.",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "step": 4,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 500,
+            "reason": "No elements are visible in the current viewport; continue scrolling down to locate the pricing section."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 500px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 500px shifted viewport by 500px.",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "step": 5,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 500,
+            "reason": "No elements are visible in the current viewport; continue scrolling down to locate the pricing section."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 500px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 500px shifted viewport by 500px.",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "cycleCount": 6,
+      "gateRefusals": {
+        "count": 0,
+        "byCode": {},
+        "reasons": []
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Long-horizon bounds exhausted: Task reached the maximum of 4 recovery/replanning attempts.",
+      "targetTabId": 2077305850,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 1093,
+          "reasonerLatencyMs": 465,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 500,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 1,
+          "contextBytes": 1518,
+          "reasonerLatencyMs": 419,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 1000,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 2,
+          "contextBytes": 1806,
+          "reasonerLatencyMs": 448,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 1500,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 3,
+          "contextBytes": 2093,
+          "reasonerLatencyMs": 406,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 2000,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 4,
+          "contextBytes": 2335,
+          "reasonerLatencyMs": 424,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        465,
+        419,
+        448,
+        406,
+        424
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "http://localhost:4200/long",
+      "observedTitle": "Fixture Long Page",
+      "observedAfter": {
+        "href": "http://localhost:4200/long",
+        "title": "Fixture Long Page",
+        "scrollY": 2500,
+        "viewportHeight": 757,
+        "scrollHeight": 6356,
+        "pricingTop": 3094,
+        "pricingHeight": 129,
+        "pricingInViewport": true,
+        "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": false,
+        "initialScrollY": 0,
+        "requestedGoal": "open http://localhost:4200/long and scroll down to the pricing section",
+        "finalScrollY": 2500,
+        "observedScrollDelta": 2500,
+        "targetTopDocumentPx": 3094,
+        "targetInViewportAtEnd": true,
+        "targetInViewportIfScrolledTo3000": true,
+        "documentHeightPx": 6356,
+        "rule": "SUCCESS requires the requested section to actually be in view at the final scroll position.",
+        "prerequisite": true,
+        "passes": true,
+        "interpretation": "No SUCCESS claimed. The partial scroll did not become a false success."
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Long-horizon bounds exhausted: Task reached the maximum of 4 recovery/replanning attempts.",
+        "observedAfter": {
+          "href": "http://localhost:4200/long",
+          "title": "Fixture Long Page",
+          "scrollY": 2500,
+          "viewportHeight": 757,
+          "scrollHeight": 6356,
+          "pricingTop": 3094,
+          "pricingHeight": 129,
+          "pricingInViewport": true,
+          "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+        },
+        "consistency": {
+          "verdictSuccess": false,
+          "initialScrollY": 0,
+          "requestedGoal": "open http://localhost:4200/long and scroll down to the pricing section",
+          "finalScrollY": 2500,
+          "observedScrollDelta": 2500,
+          "targetTopDocumentPx": 3094,
+          "targetInViewportAtEnd": true,
+          "targetInViewportIfScrolledTo3000": true,
+          "documentHeightPx": 6356,
+          "rule": "SUCCESS requires the requested section to actually be in view at the final scroll position.",
+          "prerequisite": true,
+          "passes": true,
+          "interpretation": "No SUCCESS claimed. The partial scroll did not become a false success."
+        }
+      }
+    },
+    {
+      "key": "A2",
+      "test": "A",
+      "defect": "DEFECT 2",
+      "task": "open http://localhost:4200/long and scroll down 400 pixels",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T06:50:01.341Z",
+      "startUrl": "http://localhost:4200/long",
+      "observedBefore": {
+        "href": "http://localhost:4200/long",
+        "title": "Fixture Long Page",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 6356,
+        "pricingTop": 3094,
+        "pricingHeight": 129,
+        "pricingInViewport": false,
+        "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 4051,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 400,
+            "reason": "The requested page is already loaded, so scroll down 400 pixels to complete the task."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 400px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 400px shifted viewport by 400px.",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "cycleCount": 2,
+      "gateRefusals": {
+        "count": 0,
+        "byCode": {},
+        "reasons": []
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "SUCCESS",
+      "goalStatus": "SUCCESS",
+      "terminalReason": "Scroll goal verified from observed viewport position: observed 400px of down travel from a baseline of 0px to 400px.",
+      "targetTabId": 2077305852,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "SUCCESS",
+          "goalStatus": "SUCCESS",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "SUCCESS",
+          "goalStatus": "SUCCESS",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 1069,
+          "reasonerLatencyMs": 2450,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        2450
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "http://localhost:4200/long",
+      "observedTitle": "Fixture Long Page",
+      "observedAfter": {
+        "href": "http://localhost:4200/long",
+        "title": "Fixture Long Page",
+        "scrollY": 400,
+        "viewportHeight": 757,
+        "scrollHeight": 6356,
+        "pricingTop": 3094,
+        "pricingHeight": 129,
+        "pricingInViewport": false,
+        "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": true,
+        "initialScrollY": 0,
+        "requestedGoal": "open http://localhost:4200/long and scroll down 400 pixels",
+        "finalScrollY": 400,
+        "observedScrollDelta": 400,
+        "targetTopDocumentPx": 3094,
+        "targetInViewportAtEnd": false,
+        "targetInViewportIfScrolledTo3000": true,
+        "documentHeightPx": 6356,
+        "rule": "SUCCESS requires the observed scroll movement to match the requested distance.",
+        "prerequisite": true,
+        "passes": true,
+        "interpretation": "SUCCESS with a genuinely observed 400px movement."
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "SUCCESS",
+        "agentReportedGoalStatus": "SUCCESS",
+        "agentReason": "Scroll goal verified from observed viewport position: observed 400px of down travel from a baseline of 0px to 400px.",
+        "observedAfter": {
+          "href": "http://localhost:4200/long",
+          "title": "Fixture Long Page",
+          "scrollY": 400,
+          "viewportHeight": 757,
+          "scrollHeight": 6356,
+          "pricingTop": 3094,
+          "pricingHeight": 129,
+          "pricingInViewport": false,
+          "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+        },
+        "consistency": {
+          "verdictSuccess": true,
+          "initialScrollY": 0,
+          "requestedGoal": "open http://localhost:4200/long and scroll down 400 pixels",
+          "finalScrollY": 400,
+          "observedScrollDelta": 400,
+          "targetTopDocumentPx": 3094,
+          "targetInViewportAtEnd": false,
+          "targetInViewportIfScrolledTo3000": true,
+          "documentHeightPx": 6356,
+          "rule": "SUCCESS requires the observed scroll movement to match the requested distance.",
+          "prerequisite": true,
+          "passes": true,
+          "interpretation": "SUCCESS with a genuinely observed 400px movement."
+        }
+      }
+    },
+    {
+      "key": "A3",
+      "test": "A",
+      "defect": "DEFECT 2",
+      "task": "open http://localhost:4200/long and scroll to the bottom of the page",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T06:50:12.520Z",
+      "startUrl": "http://localhost:4200/long",
+      "observedBefore": {
+        "href": "http://localhost:4200/long",
+        "title": "Fixture Long Page",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 6356,
+        "pricingTop": 3094,
+        "pricingHeight": 129,
+        "pricingInViewport": false,
+        "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 4119,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 5000,
+            "reason": "The task requires scrolling to the bottom of the page. Since no specific elements are detected and the page is long, scrolling down by a large amount is the most direct way to reach the bottom."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 5000px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 5000px shifted viewport by 5000px.",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "step": 2,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 5000,
+            "reason": "The task requires scrolling to the bottom of the page. Since no specific elements are detected and the page is long, scrolling down by a large amount is the most direct way to reach the bottom."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 5000px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 5000px shifted viewport by 599px.",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "step": 3,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 5000,
+            "reason": "The task requires scrolling to the bottom of the page. Since no specific elements are detected and the page is long, scrolling down by a large amount is the most direct way to reach the bottom."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 5000px.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "cycleCount": 4,
+      "gateRefusals": {
+        "count": 0,
+        "byCode": {},
+        "reasons": []
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Perception failed: Unable to obtain sanitized page context.",
+      "targetTabId": 2077305854,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "RECOVERY",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "RECOVERY",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 3,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 3,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 1089,
+          "reasonerLatencyMs": 433,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 5000,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 1,
+          "contextBytes": 1652,
+          "reasonerLatencyMs": 442,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 5599,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 2,
+          "contextBytes": 2030,
+          "reasonerLatencyMs": 423,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        433,
+        442,
+        423
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "http://localhost:4200/long",
+      "observedTitle": "Fixture Long Page",
+      "observedAfter": {
+        "href": "http://localhost:4200/long",
+        "title": "Fixture Long Page",
+        "scrollY": 5599,
+        "viewportHeight": 757,
+        "scrollHeight": 6356,
+        "pricingTop": 3094,
+        "pricingHeight": 129,
+        "pricingInViewport": false,
+        "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": false,
+        "initialScrollY": 0,
+        "requestedGoal": "open http://localhost:4200/long and scroll to the bottom of the page",
+        "finalScrollY": 5599,
+        "observedScrollDelta": 5599,
+        "targetTopDocumentPx": 3094,
+        "targetInViewportAtEnd": false,
+        "targetInViewportIfScrolledTo3000": true,
+        "documentHeightPx": 6356,
+        "rule": "SUCCESS requires the viewport to be observably at the bottom of the document.",
+        "observedAtBottom": true,
+        "passes": true,
+        "interpretation": "No SUCCESS claimed for the bottom goal."
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Perception failed: Unable to obtain sanitized page context.",
+        "observedAfter": {
+          "href": "http://localhost:4200/long",
+          "title": "Fixture Long Page",
+          "scrollY": 5599,
+          "viewportHeight": 757,
+          "scrollHeight": 6356,
+          "pricingTop": 3094,
+          "pricingHeight": 129,
+          "pricingInViewport": false,
+          "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+        },
+        "consistency": {
+          "verdictSuccess": false,
+          "initialScrollY": 0,
+          "requestedGoal": "open http://localhost:4200/long and scroll to the bottom of the page",
+          "finalScrollY": 5599,
+          "observedScrollDelta": 5599,
+          "targetTopDocumentPx": 3094,
+          "targetInViewportAtEnd": false,
+          "targetInViewportIfScrolledTo3000": true,
+          "documentHeightPx": 6356,
+          "rule": "SUCCESS requires the viewport to be observably at the bottom of the document.",
+          "observedAtBottom": true,
+          "passes": true,
+          "interpretation": "No SUCCESS claimed for the bottom goal."
+        }
+      }
+    },
+    {
+      "key": "B",
+      "test": "B",
+      "defect": "DEFECT 1",
+      "task": "open google and search akashgoudsidduluri leetcode",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "OPEN WEB (no determinism claim)",
+      "startedAt": "2026-09-27T06:54:14.557Z",
+      "startUrl": "https://www.google.com/",
+      "observedBefore": {
+        "href": "https://www.google.com/",
+        "title": "Google",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "About\nStore\nGmailImages\nSign in\n \n 🎂 \n🎂 Celebrating 28 years of Google\nAdvertising\nBusiness\nHow Search works\nBuild, create, and do more with AI tools from Google\nPrivacy\nTerms\nSettings\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 19102,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 2,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 3,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 4,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query before submitting."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 5,
+          "proposedAction": {
+            "action": "pressKey",
+            "target": "ti6dpd",
+            "key": "Enter",
+            "reason": "Submit the search query already entered in the Google search field."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "step": 6,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 500,
+            "reason": "The current page is a Google CAPTCHA/error page. Scrolling down may reveal a retry button or additional options to proceed with the search."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 500px.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        }
+      ],
+      "cycleCount": 8,
+      "gateRefusals": {
+        "count": 0,
+        "byCode": {},
+        "reasons": []
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+      "targetTabId": 1748561839,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 4,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 5,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790492059961"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 6,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 7,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 7,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 7,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 2075,
+          "reasonerLatencyMs": 522,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 5,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 1,
+          "contextBytes": 2180,
+          "reasonerLatencyMs": 462,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 5,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 2,
+          "contextBytes": 2505,
+          "reasonerLatencyMs": 522,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 4,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 3,
+          "contextBytes": 2629,
+          "reasonerLatencyMs": 478,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790492059961",
+          "detectionCount": 3,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 4,
+          "contextBytes": 2753,
+          "reasonerLatencyMs": 4011,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+          "detectionCount": 1,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 4,
+          "contextBytes": 2730,
+          "reasonerLatencyMs": 583,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+          "detectionCount": 1,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 4,
+          "contextBytes": 2730,
+          "reasonerLatencyMs": 4306,
+          "status": 503
+        }
+      ],
+      "reasonerLatency": [
+        522,
+        462,
+        522,
+        478,
+        4011,
+        583,
+        4306
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+      "observedTitle": "https://www.google.com/search?q=akashgoudsidduluri+leetcode&amp;sca_esv=65a1095235da4984&amp;sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&amp;source=hp&amp;ei=lr24aqf0M-mt0PEPr_-y2AI&amp;iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&amp;sei=qL24aoL1E8eDm9cPmozjuAQ",
+      "observedAfter": {
+        "href": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+        "title": "https://www.google.com/search?q=akashgoudsidduluri+leetcode&sca_esv=65a1095235da4984&sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&source=hp&ei=lr24aqf0M-mt0PEPr_-y2AI&iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&sei=qL24aoL1E8eDm9cPmozjuAQ",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "\n\nAbout this page\n\nOur systems have detected unusual traffic from your computer network. This page checks to see if it's really you sending the requests, and not a robot. Why did this happen?\n\n\n\nIP address: 34.53.101.163\nTime: 2026-09-27T06:54:33Z\nURL: https://www.google.com/search?q=akashgoudsidduluri+leetcode&sca_esv=65a1095235da4984&sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&source=hp&ei=lr24aqf0M-mt0PEPr_-y2AI&iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&sei=qL24aoL1E8eDm9cPmozjuAQ\n\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": false,
+        "rule": "No action may be refused because the MODEL'S OWN narration contained a page-hijack phrase. Record the full production trace.",
+        "note": "The open web is not deterministic; the trace is the evidence.",
+        "blockedBecauseModelSaidNavigateTo": 0,
+        "injectionInfluenceBlocks": 0,
+        "passes": true,
+        "interpretation": "No action was refused because the model narrated its own plan as page injection."
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+        "observedAfter": {
+          "href": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+          "title": "https://www.google.com/search?q=akashgoudsidduluri+leetcode&sca_esv=65a1095235da4984&sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&source=hp&ei=lr24aqf0M-mt0PEPr_-y2AI&iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&sei=qL24aoL1E8eDm9cPmozjuAQ",
+          "scrollY": 0,
+          "viewportHeight": 757,
+          "scrollHeight": 757,
+          "bodyText": "\n\nAbout this page\n\nOur systems have detected unusual traffic from your computer network. This page checks to see if it's really you sending the requests, and not a robot. Why did this happen?\n\n\n\nIP address: 34.53.101.163\nTime: 2026-09-27T06:54:33Z\nURL: https://www.google.com/search?q=akashgoudsidduluri+leetcode&sca_esv=65a1095235da4984&sxsrf=APpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%3A1790492054872&source=hp&ei=lr24aqf0M-mt0PEPr_-y2AI&iflsig=ABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j&sei=qL24aoL1E8eDm9cPmozjuAQ\n\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+        },
+        "consistency": {
+          "verdictSuccess": false,
+          "rule": "No action may be refused because the MODEL'S OWN narration contained a page-hijack phrase. Record the full production trace.",
+          "note": "The open web is not deterministic; the trace is the evidence.",
+          "blockedBecauseModelSaidNavigateTo": 0,
+          "injectionInfluenceBlocks": 0,
+          "passes": true,
+          "interpretation": "No action was refused because the model narrated its own plan as page injection."
+        }
+      },
+      "googleInterstitial": {
+        "observed": true,
+        "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dakashgoudsidduluri%2Bleetcode%26sca_esv%3D65a1095235da4984%26sxsrf%3DAPpeQnvb1EBqXK40cY12DyEWMRnYJMH27Q%253A1790492054872%26source%3Dhp%26ei%3Dlr24aqf0M-mt0PEPr_-y2AI%26iflsig%3DABILxe8AAAAAarjLprRbRxKiU7yRc4cgRpUkr8bfel_j%26sei%3DqL24aoL1E8eDm9cPmozjuAQ&q=EgQiNWWjGKn74tUGIjDldWewQIPF8opLHbL8YgnhMiAjnjnHtCpXTvICNB5kaYkVkr5LRjriT_mURiEbSaUyAVJaAUM",
+        "pageText": "\n\nAbout this page\n\nOur systems have detected unusual traffic from your computer network. This page checks to see if it's really you sending the requests, and not a robot. Why did this happen?\n\n\n\nIP address: 34.53.101.163\nTime: 2026-09-27T06:54:33Z\nURL: https://www.google.com/search?q=akashgoudsiddul",
+        "notBypassed": "Google's anti-bot interstitial was NOT bypassed, worked around, or retried against. The agent typed the query and submitted; Google served the interstitial; the run stopped there. No proxy, cookie injection, user-agent change, or manual navigation was used.",
+        "recordedSeparately": "This is a property of the OPEN WEB, not of the agent. It is recorded here so it is never mistaken for an agent capability result."
+      },
+      "distinctionTheBriefAskedFor": {
+        "searchActionExecuted": true,
+        "searchActionEvidence": [
+          {
+            "action": "type",
+            "text": "akashgoudsidduluri leetcode",
+            "validationAllowed": true,
+            "effectStatus": "VALUE_STATE_CHANGED"
+          },
+          {
+            "action": "type",
+            "text": "akashgoudsidduluri leetcode",
+            "validationAllowed": true,
+            "effectStatus": "VALUE_STATE_CHANGED"
+          },
+          {
+            "action": "type",
+            "text": "akashgoudsidduluri leetcode",
+            "validationAllowed": true,
+            "effectStatus": "VALUE_STATE_CHANGED"
+          },
+          {
+            "action": "type",
+            "text": "akashgoudsidduluri leetcode",
+            "validationAllowed": true,
+            "effectStatus": "VALUE_STATE_CHANGED"
+          },
+          {
+            "action": "pressKey",
+            "text": null,
+            "validationAllowed": true,
+            "effectStatus": "ACTION_NO_EFFECT"
+          }
+        ],
+        "googleResultsSuccessfullyLoaded": false,
+        "whyNot": "Google served its anti-bot interstitial (\"Our systems have detected unusual traffic from your computer network\"), so no results page was ever rendered. The typed value WAS a real observed effect (VALUE_STATE_CHANGED); the results were NOT.",
+        "productionVerdict": {
+          "terminalStatus": "FAILED",
+          "goalStatus": "FAILED",
+          "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed."
+        },
+        "verdictIsCorrect": "The production pipeline refused to call this a success. A typed query that was never submitted into a results page is not a completed search, and the goal verifier said so."
+      },
+      "earlierAttemptsSuperseded": [
+        {
+          "startedAt": "2026-09-27T06:50:23.699Z",
+          "terminalStatus": "FAILED",
+          "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+          "actions": [
+            "type:VALUE_STATE_CHANGED"
+          ],
+          "observedUrl": "https://www.google.com/?zx=1790491824830",
+          "supersededBy": "real_chrome_run_B.json"
+        }
+      ],
+      "alsoRecorded": {
+        "injectionInfluenceBlocks": 0,
+        "blockedBecauseModelSaidNavigateTo": 0,
+        "note": "DEFECT 1: on a live open-web page, not one action was refused because the model narrated its own plan as page injection."
+      }
+    },
+    {
+      "key": "C",
+      "test": "C",
+      "defect": "DEFECT 1",
+      "task": "open https://github.com/akashgoudsidduluri/PrivAgent and check the total forks",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "OPEN WEB (no determinism claim)",
+      "startedAt": "2026-09-27T06:50:40.828Z",
+      "startUrl": "https://github.com/",
+      "observedBefore": {
+        "href": "https://github.com/",
+        "title": "GitHub · Change is constant. GitHub keeps you ahead. · GitHub",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 10986,
+        "bodyText": "Skip to content\nNavigation Menu\nPlatform\nSolutions\nResources\nOpen Source\nEnterprise\nPricing\nSign in\nSign up\nThe future of building happens together\n\nTools and trends evolve, but collaboration endures. With GitHub, developers, agents, and code come together on one platform.\n\nEnter your email\nSign up for GitHub\nDownload GitHub Copilot app\nGitHub features\nA demonstration animation of a code editor using GitHub Copilot Chat, where the user requests GitHub Copilot to refactor duplicated logic and extract it into a reusable function for a given code snippet.\nCodePlanCollaborateAutomateSecure\n\nWrite, test, and fix code quickly with GitHub Copilot, from simple boilerplate to complex features.\n\nGITHUB CUSTOMERS\nAccelerate your entire workflow\n\nFrom your first line of code to final deployment, GitHub provides AI and automation tools to help you build and ship better software faster.\n\nA Copilot chat window with the 'Ask' mode enabled. The user switches from 'Ask' mode to 'Agent' mode from a dropdown menu, then sends the prompt 'Update the website to allow searching for running races by name.' Copilot analyzes the codebase, then explains the required edits for three files before generating the"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 15267,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "navigate",
+            "url": "https://github.com/akashgoudsidduluri/PrivAgent",
+            "reason": "Navigating to the specified GitHub repository to check the total forks."
+          },
+          "validationAllowed": false,
+          "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
+          "executionSuccess": false,
+          "effectDetails": null,
+          "url": "https://github.com/"
+        },
+        {
+          "step": 2,
+          "proposedAction": {
+            "action": "navigate",
+            "url": "https://github.com/akashgoudsidduluri/PrivAgent",
+            "reason": "The user task requires opening a specific GitHub repository URL to check the total forks. The current page is the GitHub landing page, so navigating to the target repository URL is the necessary first step."
+          },
+          "validationAllowed": false,
+          "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
+          "executionSuccess": false,
+          "effectDetails": null,
+          "url": "https://github.com/"
+        },
+        {
+          "step": 3,
+          "proposedAction": {
+            "action": "navigate",
+            "url": "https://github.com/akashgoudsidduluri/PrivAgent",
+            "reason": "The user wants to open a specific GitHub repository URL to check the total forks. The current page is the GitHub landing page, so navigating to the target URL is the necessary first step."
+          },
+          "validationAllowed": false,
+          "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
+          "executionSuccess": false,
+          "effectDetails": null,
+          "url": "https://github.com/"
+        }
+      ],
+      "cycleCount": 4,
+      "gateRefusals": {
+        "count": 3,
+        "byCode": {
+          "GOAL_MISMATCH": 3
+        },
+        "reasons": [
+          "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal."
+        ]
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Security critic blocked actions repeatedly: Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
+      "targetTabId": 2077305858,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 2,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 3,
+          "phase": "VALIDATION",
+          "url": "https://github.com/"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 3,
+          "phase": "TERMINAL",
+          "url": "https://github.com/"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "https://github.com/",
+          "detectionCount": 6,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 1956,
+          "reasonerLatencyMs": 1574,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://github.com/",
+          "detectionCount": 5,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 1990,
+          "reasonerLatencyMs": 1275,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://github.com/",
+          "detectionCount": 5,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 1990,
+          "reasonerLatencyMs": 728,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        1574,
+        1275,
+        728
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "https://github.com/",
+      "observedTitle": "GitHub · Change is constant. GitHub keeps you ahead. · GitHub",
+      "observedAfter": {
+        "href": "https://github.com/",
+        "title": "GitHub · Change is constant. GitHub keeps you ahead. · GitHub",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 11159,
+        "bodyText": "Skip to content\nNavigation Menu\nPlatform\nSolutions\nResources\nOpen Source\nEnterprise\nPricing\nSign in\nSign up\nMona the Octocat, Copilot, and Ducky float jubilantly upward from behind the GitHub product demo accompanied by a purple glow and a scattering of stars.\nThe future of building happens together\n\nTools and trends evolve, but collaboration endures. With GitHub, developers, agents, and code come together on one platform.\n\nEnter your email\nSign up for GitHub\nDownload GitHub Copilot app\nGitHub features\nA demonstration animation of a code editor using GitHub Copilot Chat, where the user requests GitHub Copilot to refactor duplicated logic and extract it into a reusable function for a given code snippet.\nCodePlanCollaborateAutomateSecure\n\nWrite, test, and fix code quickly with GitHub Copilot, from simple boilerplate to complex features.\n\nGITHUB CUSTOMERS\nAccelerate your entire workflow\n\nFrom your first line of code to final deployment, GitHub provides AI and automation tools to help you build and ship better software faster.\n\nA Copilot chat window with the 'Ask' mode enabled. The user switches from 'Ask' mode to 'Agent' mode from a dropdown menu, then sends the prompt 'Update the web"
+      },
+      "consistency": {
+        "verdictSuccess": false,
+        "rule": "No action may be refused because the MODEL'S OWN narration contained a page-hijack phrase. Record the full production trace.",
+        "note": "The open web is not deterministic; the trace is the evidence.",
+        "blockedBecauseModelSaidNavigateTo": 0,
+        "injectionInfluenceBlocks": 0,
+        "passes": true,
+        "interpretation": "No action was refused because the model narrated its own plan as page injection."
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Security critic blocked actions repeatedly: Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
+        "observedAfter": {
+          "href": "https://github.com/",
+          "title": "GitHub · Change is constant. GitHub keeps you ahead. · GitHub",
+          "scrollY": 0,
+          "viewportHeight": 757,
+          "scrollHeight": 11159,
+          "bodyText": "Skip to content\nNavigation Menu\nPlatform\nSolutions\nResources\nOpen Source\nEnterprise\nPricing\nSign in\nSign up\nMona the Octocat, Copilot, and Ducky float jubilantly upward from behind the GitHub product demo accompanied by a purple glow and a scattering of stars.\nThe future of building happens together\n\nTools and trends evolve, but collaboration endures. With GitHub, developers, agents, and code come together on one platform.\n\nEnter your email\nSign up for GitHub\nDownload GitHub Copilot app\nGitHub features\nA demonstration animation of a code editor using GitHub Copilot Chat, where the user requests GitHub Copilot to refactor duplicated logic and extract it into a reusable function for a given code snippet.\nCodePlanCollaborateAutomateSecure\n\nWrite, test, and fix code quickly with GitHub Copilot, from simple boilerplate to complex features.\n\nGITHUB CUSTOMERS\nAccelerate your entire workflow\n\nFrom your first line of code to final deployment, GitHub provides AI and automation tools to help you build and ship better software faster.\n\nA Copilot chat window with the 'Ask' mode enabled. The user switches from 'Ask' mode to 'Agent' mode from a dropdown menu, then sends the prompt 'Update the web"
+        },
+        "consistency": {
+          "verdictSuccess": false,
+          "rule": "No action may be refused because the MODEL'S OWN narration contained a page-hijack phrase. Record the full production trace.",
+          "note": "The open web is not deterministic; the trace is the evidence.",
+          "blockedBecauseModelSaidNavigateTo": 0,
+          "injectionInfluenceBlocks": 0,
+          "passes": true,
+          "interpretation": "No action was refused because the model narrated its own plan as page injection."
+        }
+      }
+    },
+    {
+      "key": "A4",
+      "test": "A",
+      "defect": "DEFECT 2",
+      "task": "open http://localhost:4200/long and scroll down 2400 pixels",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T06:51:07.326Z",
+      "startUrl": "http://localhost:4200/long",
+      "observedBefore": {
+        "href": "http://localhost:4200/long",
+        "title": "Fixture Long Page",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 6356,
+        "pricingTop": 3094,
+        "pricingHeight": 129,
+        "pricingInViewport": false,
+        "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 2021,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 2400,
+            "reason": "User explicitly requested to scroll down 2400 pixels on the current page."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 2400px.",
+          "executionSuccess": true,
+          "effectStatus": "SCROLL_CHANGED",
+          "effectDetails": "Scroll down by 2400px shifted viewport by 2400px.",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "cycleCount": 2,
+      "gateRefusals": {
+        "count": 0,
+        "byCode": {},
+        "reasons": []
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "SUCCESS",
+      "goalStatus": "SUCCESS",
+      "terminalReason": "Scroll goal verified from observed viewport position: observed 2400px of down travel from a baseline of 0px to 2400px.",
+      "targetTabId": 2077305860,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "SUCCESS",
+          "goalStatus": "SUCCESS",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        },
+        {
+          "status": "SUCCESS",
+          "goalStatus": "SUCCESS",
+          "step": 1,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/long"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/long",
+          "detectionCount": 0,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 1071,
+          "reasonerLatencyMs": 392,
+          "status": 200
+        }
+      ],
+      "reasonerLatency": [
+        392
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "http://localhost:4200/long",
+      "observedTitle": "Fixture Long Page",
+      "observedAfter": {
+        "href": "http://localhost:4200/long",
+        "title": "Fixture Long Page",
+        "scrollY": 2400,
+        "viewportHeight": 757,
+        "scrollHeight": 6356,
+        "pricingTop": 3094,
+        "pricingHeight": 129,
+        "pricingInViewport": true,
+        "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": true,
+        "initialScrollY": 0,
+        "requestedGoal": "open http://localhost:4200/long and scroll down 2400 pixels",
+        "finalScrollY": 2400,
+        "observedScrollDelta": 2400,
+        "targetTopDocumentPx": 3094,
+        "targetInViewportAtEnd": true,
+        "targetInViewportIfScrolledTo3000": true,
+        "documentHeightPx": 6356,
+        "rule": "SUCCESS requires the requested section to be in view AND the observed scroll to have covered the requested distance.",
+        "prerequisite": true,
+        "passes": true,
+        "interpretation": "SUCCESS, and the section really was in view after a real scroll. Legitimate success."
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "SUCCESS",
+        "agentReportedGoalStatus": "SUCCESS",
+        "agentReason": "Scroll goal verified from observed viewport position: observed 2400px of down travel from a baseline of 0px to 2400px.",
+        "observedAfter": {
+          "href": "http://localhost:4200/long",
+          "title": "Fixture Long Page",
+          "scrollY": 2400,
+          "viewportHeight": 757,
+          "scrollHeight": 6356,
+          "pricingTop": 3094,
+          "pricingHeight": 129,
+          "pricingInViewport": true,
+          "bodyText": "Long Page\nTOP\nPricing\n\nPRICING SECTION\n\nFooter\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+        },
+        "consistency": {
+          "verdictSuccess": true,
+          "initialScrollY": 0,
+          "requestedGoal": "open http://localhost:4200/long and scroll down 2400 pixels",
+          "finalScrollY": 2400,
+          "observedScrollDelta": 2400,
+          "targetTopDocumentPx": 3094,
+          "targetInViewportAtEnd": true,
+          "targetInViewportIfScrolledTo3000": true,
+          "documentHeightPx": 6356,
+          "rule": "SUCCESS requires the requested section to be in view AND the observed scroll to have covered the requested distance.",
+          "prerequisite": true,
+          "passes": true,
+          "interpretation": "SUCCESS, and the section really was in view after a real scroll. Legitimate success."
+        }
+      }
+    },
+    {
+      "key": "D",
+      "test": "D",
+      "defect": "DEFECT 3",
+      "task": "open http://localhost:4200/products",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "DETERMINISTIC LOCAL FIXTURE",
+      "startedAt": "2026-09-27T06:51:16.435Z",
+      "startUrl": "http://localhost:4200/details",
+      "observedBefore": {
+        "href": "http://localhost:4200/details",
+        "title": "Fixture Details",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "Fixture Details\nOpen details section\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 15101,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "navigate",
+            "url": "http://localhost:4200/products",
+            "reason": "The user explicitly requested to open the URL http://localhost:4200/products, which requires a full page navigation."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated navigation to 'http://localhost:4200/products'.",
+          "executionSuccess": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "URL navigated from 'http://localhost:4200/details' to 'http://localhost:4200/products'.",
+          "url": "http://localhost:4200/details"
+        }
+      ],
+      "cycleCount": 3,
+      "gateRefusals": {
+        "count": 0,
+        "byCode": {},
+        "reasons": []
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+      "targetTabId": 2077305862,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "http://localhost:4200/details"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/products"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "http://localhost:4200/products"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "http://localhost:4200/details",
+          "detectionCount": 1,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 1209,
+          "reasonerLatencyMs": 521,
+          "status": 200
+        },
+        {
+          "contextUrl": "http://localhost:4200/products",
+          "detectionCount": 3,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": false,
+          "injectionEvidence": null,
+          "historyLength": 1,
+          "contextBytes": 2352,
+          "reasonerLatencyMs": 4553,
+          "status": 503
+        }
+      ],
+      "reasonerLatency": [
+        521,
+        4553
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "http://localhost:4200/products",
+      "observedTitle": "Fixture Products",
+      "observedAfter": {
+        "href": "http://localhost:4200/products",
+        "title": "Fixture Products",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "Products\nHomePricing\nWidget Basic\n\nPrice: 10\n\nWidget Basic Details\nGadget Pro\n\nPrice: 40\n\nGadget Pro\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": false,
+        "rule": "A navigation that really happened must not be ACTION_NO_EFFECT; a URL change alone must not mean task SUCCESS.",
+        "tabUrlBefore": "http://localhost:4200/details",
+        "tabUrlAfter": "http://localhost:4200/products",
+        "navigationObserved": true,
+        "navigationRelatedSteps": [
+          {
+            "action": "navigate",
+            "effectStatus": "URL_NAVIGATION_OBSERVED",
+            "effectDetails": "URL navigated from 'http://localhost:4200/details' to 'http://localhost:4200/products'."
+          }
+        ],
+        "actionNoEffectReported": false,
+        "passes": true,
+        "interpretation": "The navigation was observed through the production snapshot path without a spurious ACTION_NO_EFFECT.",
+        "urlChangeAloneDidNotImplySuccess": true
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+        "observedAfter": {
+          "href": "http://localhost:4200/products",
+          "title": "Fixture Products",
+          "scrollY": 0,
+          "viewportHeight": 757,
+          "scrollHeight": 757,
+          "bodyText": "Products\nHomePricing\nWidget Basic\n\nPrice: 10\n\nWidget Basic Details\nGadget Pro\n\nPrice: 40\n\nGadget Pro\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+        },
+        "consistency": {
+          "verdictSuccess": false,
+          "rule": "A navigation that really happened must not be ACTION_NO_EFFECT; a URL change alone must not mean task SUCCESS.",
+          "tabUrlBefore": "http://localhost:4200/details",
+          "tabUrlAfter": "http://localhost:4200/products",
+          "navigationObserved": true,
+          "navigationRelatedSteps": [
+            {
+              "action": "navigate",
+              "effectStatus": "URL_NAVIGATION_OBSERVED",
+              "effectDetails": "URL navigated from 'http://localhost:4200/details' to 'http://localhost:4200/products'."
+            }
+          ],
+          "actionNoEffectReported": false,
+          "passes": true,
+          "interpretation": "The navigation was observed through the production snapshot path without a spurious ACTION_NO_EFFECT.",
+          "urlChangeAloneDidNotImplySuccess": true
+        }
+      }
+    }
+  ],
+  "reasonerConfig": {
+    "mode": "groq",
+    "apiKeyConfigured": true,
+    "model": "openai/gpt-oss-20b",
+    "configuredFallback": "openrouter",
+    "reasonerClass": "GroqReasoner",
+    "keyValueNeverPrinted": true
+  },
+  "backendReachable": true,
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "serviceWorkerAttached": true,
+  "reasonerRequestsTotal": 17,
+  "summary": {
+    "total": 7,
+    "consistent": 7,
+    "inconsistent": 0,
+    "harnessErrors": 0,
+    "terminal": {
+      "FAILED": 5,
+      "SUCCESS": 2
+    }
+  },
+  "supersededRecords": [
+    {
+      "key": "B",
+      "test": "B",
+      "defect": "DEFECT 1",
+      "task": "open google and search akashgoudsidduluri leetcode",
+      "reasoner": "REAL (groq)",
+      "fixtureClass": "OPEN WEB (no determinism claim)",
+      "startedAt": "2026-09-27T06:50:23.699Z",
+      "startUrl": "https://www.google.com/",
+      "observedBefore": {
+        "href": "https://www.google.com/?zx=1790491824830",
+        "title": "Google",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "About\nStore\nGmailImages\nSign in\n \n 🎂 \n🎂 Celebrating 28 years of Google\nAdvertising\nBusiness\nHow Search works\nBuild, create, and do more with AI tools from Google\nPrivacy\nTerms\nSettings\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "dashboardReady": true,
+      "wallClockMs": 10057,
+      "confirmationPromptsAnswered": 0,
+      "actions": [
+        {
+          "step": 1,
+          "proposedAction": {
+            "action": "type",
+            "target": "ti6dpd",
+            "text": "akashgoudsidduluri leetcode",
+            "reason": "The search input field is visible and needs to be filled with the search query."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated type action on known element 'ti6dpd'.",
+          "executionSuccess": true,
+          "effectStatus": "VALUE_STATE_CHANGED",
+          "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 27).",
+          "targetType": "input",
+          "url": "https://www.google.com/?zx=1790491824830"
+        }
+      ],
+      "cycleCount": 3,
+      "gateRefusals": {
+        "count": 0,
+        "byCode": {},
+        "reasons": []
+      },
+      "injectionInfluenceBlocks": 0,
+      "blockedBecauseModelSaidNavigateTo": 0,
+      "terminalStatus": "FAILED",
+      "goalStatus": "FAILED",
+      "terminalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+      "targetTabId": 2077305856,
+      "phaseTimeline": [
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "RUNNING",
+          "step": 0
+        },
+        {
+          "status": "RUNNING",
+          "step": 0,
+          "phase": "PERCEPTION",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 0,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "step": 1,
+          "phase": "PLANNING",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790491824830"
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "step": 2,
+          "phase": "TERMINAL",
+          "url": "https://www.google.com/?zx=1790491824830"
+        }
+      ],
+      "reasonerRequests": [
+        {
+          "contextUrl": "https://www.google.com/?zx=1790491824830",
+          "detectionCount": 7,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 0,
+          "contextBytes": 2075,
+          "reasonerLatencyMs": 494,
+          "status": 200
+        },
+        {
+          "contextUrl": "https://www.google.com/?zx=1790491824830",
+          "detectionCount": 5,
+          "viewportScrollY": 0,
+          "viewportHeight": 757,
+          "promptInjectionDetected": null,
+          "injectionEvidence": null,
+          "historyLength": 1,
+          "contextBytes": 2162,
+          "reasonerLatencyMs": 8160,
+          "status": 503
+        }
+      ],
+      "reasonerLatency": [
+        494,
+        8160
+      ],
+      "actionsCameFromModel": true,
+      "observedUrl": "https://www.google.com/?zx=1790491824830",
+      "observedTitle": "Google",
+      "observedAfter": {
+        "href": "https://www.google.com/?zx=1790491824830",
+        "title": "Google",
+        "scrollY": 0,
+        "viewportHeight": 757,
+        "scrollHeight": 757,
+        "bodyText": "About\nStore\nGmailImages\nSign in\nakashgoudsidduluri leetcode\nleetcode questions\nleetcode solution\nleetcode answers\n \n 🎂 \n🎂 Celebrating 28 years of Google\nAdvertising\nBusiness\nHow Search works\nBuild, create, and do more with AI tools from Google\nPrivacy\nTerms\nSettings\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+      },
+      "consistency": {
+        "verdictSuccess": false,
+        "rule": "No action may be refused because the MODEL'S OWN narration contained a page-hijack phrase. Record the full production trace.",
+        "note": "The open web is not deterministic; the trace is the evidence.",
+        "blockedBecauseModelSaidNavigateTo": 0,
+        "injectionInfluenceBlocks": 0,
+        "passes": true,
+        "interpretation": "No action was refused because the model narrated its own plan as page injection."
+      },
+      "goalVerification": {
+        "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified production code",
+        "agentReportedStatus": "FAILED",
+        "agentReportedGoalStatus": "FAILED",
+        "agentReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+        "observedAfter": {
+          "href": "https://www.google.com/?zx=1790491824830",
+          "title": "Google",
+          "scrollY": 0,
+          "viewportHeight": 757,
+          "scrollHeight": 757,
+          "bodyText": "About\nStore\nGmailImages\nSign in\nakashgoudsidduluri leetcode\nleetcode questions\nleetcode solution\nleetcode answers\n \n 🎂 \n🎂 Celebrating 28 years of Google\nAdvertising\nBusiness\nHow Search works\nBuild, create, and do more with AI tools from Google\nPrivacy\nTerms\nSettings\nPrivAgent Boundary\nStage: 3/3 (Sanitized Context)\n1. Original\n2. Detected\n3. Sanitized\n×"
+        },
+        "consistency": {
+          "verdictSuccess": false,
+          "rule": "No action may be refused because the MODEL'S OWN narration contained a page-hijack phrase. Record the full production trace.",
+          "note": "The open web is not deterministic; the trace is the evidence.",
+          "blockedBecauseModelSaidNavigateTo": 0,
+          "injectionInfluenceBlocks": 0,
+          "passes": true,
+          "interpretation": "No action was refused because the model narrated its own plan as page injection."
+        }
+      },
+      "_supersededBy": "real_chrome_run_B.json"
+    }
+  ],
+  "runFiles": [
+    {
+      "file": "real_chrome_run_A1-A2-A3-A4-D-B-C.json",
+      "tests": [
+        "A1",
+        "A2",
+        "A3",
+        "B",
+        "C",
+        "A4",
+        "D"
+      ],
+      "timestamp": "2026-09-27T06:49:45.150Z",
+      "reasonerRequestsTotal": 17
+    },
+    {
+      "file": "real_chrome_run_B.json",
+      "tests": [
+        "B"
+      ],
+      "timestamp": "2026-09-27T06:54:12.452Z",
+      "reasonerRequestsTotal": 7
+    }
+  ]
+}

@@ -18,6 +18,7 @@ import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 import { coordinateMultimodalPerception, enrichWorldModelWithMultimodalPerception } from '../visualPerception/multimodalCoordinator';
+import type { ViewportGeometry } from '../capture/coordinateMapper';
 
 // PrivAgent Background Service Worker (Manifest V3)
 let activeLoop: AgentLoop | null = null;
@@ -152,6 +153,44 @@ async function sendToDashboard(payload: any, preferredTabId?: number | null): Pr
   }
 
   return sent;
+}
+
+/**
+ * Reads the LIVE viewport geometry from the target tab's content script.
+ *
+ * Phase 16 P0 remediation. The service worker has no `window`, so the
+ * multimodal coordinator's own geometry fallback always produced scrollX=0
+ * and scrollY=0 here. That made the sanitized context report a viewport
+ * position of zero no matter where the page actually was, which left the
+ * DEFECT 2 scroll goal verifier with no observed state to decide from.
+ *
+ * This asks the content script — the component that can actually see the page
+ * — using the message it already answers. It is a READ: nothing is invented,
+ * no value is derived, and a page that cannot be read yields `null` so the
+ * caller keeps the previous fail-closed behaviour.
+ */
+async function readLiveViewportGeometry(tabId: number): Promise<ViewportGeometry | null> {
+  try {
+    const res = await withTimeout(
+      chrome.tabs.sendMessage(tabId, { type: 'PRIVAGENT_GET_VIEWPORT_GEOMETRY' }),
+      1500,
+      'Live viewport geometry query timed out'
+    ) as {
+      type?: string; viewportWidth?: number; viewportHeight?: number;
+      scrollX?: number; scrollY?: number; devicePixelRatio?: number;
+    } | null;
+    if (!res || res.type !== 'PRIVAGENT_GET_VIEWPORT_GEOMETRY_RESPONSE') return null;
+    if (typeof res.viewportWidth !== 'number' || typeof res.viewportHeight !== 'number') return null;
+    return {
+      viewportWidth: res.viewportWidth,
+      viewportHeight: res.viewportHeight,
+      scrollX: typeof res.scrollX === 'number' ? res.scrollX : 0,
+      scrollY: typeof res.scrollY === 'number' ? res.scrollY : 0,
+      devicePixelRatio: typeof res.devicePixelRatio === 'number' ? res.devicePixelRatio : 1,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -735,6 +774,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   windowId: targetTab?.windowId,
                   scanReport: scanRes.report,
                   pageGeneration: worldModel?.page.pageGeneration ?? 1,
+                  // Phase 16 P0 remediation: the real, observed viewport
+                  // position. Undefined keeps the coordinator's previous
+                  // behaviour, so a page that cannot be read is unchanged.
+                  geometry: (await readLiveViewportGeometry(targetTabId)) ?? undefined,
                 });
                 visualReport = coordination.visualReport;
                 if (worldModel) {
@@ -901,63 +944,128 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           // navigation that replaced the content script is still captured.
           getEffectSnapshot: async (target?: string) => {
             try {
-              const liveUrl = await withTimeout(
+              // Phase 16 P1 remediation. Chrome's tab record is AUTHORITATIVE for
+              // navigation state. pendingUrl is consulted explicitly: during a
+              // navigation tab.url is still the OLD document while pendingUrl
+              // holds the destination, and the previous `url || pendingUrl`
+              // short-circuited on the stale-but-truthy url and never saw it.
+              const tabRecord = (await withTimeout(
                 (async () => {
                   const tab = await chrome.tabs.get(targetTabId);
-                  return tab?.url || (tab as any)?.pendingUrl || null;
+                  return {
+                    url: tab?.url ?? null,
+                    pendingUrl: (tab as any)?.pendingUrl ?? null,
+                    status: tab?.status ?? null,
+                  };
                 })(),
                 2000,
                 'Tab URL read timed out'
-              );
+              )) as { url: string | null; pendingUrl: string | null; status: string | null };
 
-              const res = (await withTimeout(
+              const chromeUrl = tabRecord.pendingUrl || tabRecord.url || null;
+
+              // Phase 16 P1 remediation. A navigation tears the content script down:
+              // Chrome reports the page moved into the back/forward cache and
+              // closed the message port. That is EXPECTED mid-navigation and is
+              // NOT evidence that the action failed. Previously this rejection
+              // propagated to the outer catch, the whole snapshot was discarded,
+              // and a navigation that demonstrably happened was reported
+              // ACTION_NO_EFFECT. Degrade to "no page-side reading" and use
+              // Chrome's authoritative tab record below.
+              const res = await withTimeout(
                 chrome.tabs.sendMessage(targetTabId, {
                   type: 'PRIVAGENT_GET_EFFECT_SNAPSHOT',
                   target,
                 }),
                 3000,
                 'Effect snapshot timed out (3s).'
-              )) as { snapshot?: Record<string, unknown> } | null;
+              ).catch(() => {
+                console.info(
+                  '[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs'
+                );
+                return null;
+              }) as { snapshot?: Record<string, unknown> } | null;
 
               const snap = res?.snapshot;
-              if (
-                !snap ||
-                typeof snap.url !== 'string' ||
-                typeof snap.scrollX !== 'number' ||
-                typeof snap.scrollY !== 'number' ||
-                typeof snap.domElementCount !== 'number'
-              ) {
-                console.warn('[PrivAgent SW] effect snapshot malformed or unavailable; failing closed');
-                return null;
+              // Inlined rather than hoisted into a boolean so TypeScript keeps
+              // the narrowing of snap.url / snap.scrollY below.
+              const pageReadingUsable =
+                !!snap &&
+                typeof snap.url === 'string' &&
+                typeof snap.scrollX === 'number' &&
+                typeof snap.scrollY === 'number' &&
+                typeof snap.domElementCount === 'number';
+              const pageSnap = pageReadingUsable
+                ? (snap as {
+                    url: string;
+                    scrollX: number;
+                    scrollY: number;
+                    domElementCount: number;
+                    openModalsCount?: number;
+                    targetValueLength?: number;
+                    activeElementSelector?: string;
+                    timestamp?: number;
+                  })
+                : null;
+
+              // The page could not be read, but Chrome still authoritatively
+              // knows where the tab is. Report THAT rather than discarding it.
+              // This is an OBSERVATION only: it authorizes nothing, and goal
+              // verification still decides whether the user's goal was met.
+              // Page-side geometry is NOT invented — only the URL is a real
+              // reading, and `pageStateObservable: false` says so.
+              if (!pageReadingUsable) {
+                if (!chromeUrl) {
+                  console.warn(
+                    '[PrivAgent SW] effect snapshot unavailable from BOTH chrome.tabs and the page; failing closed'
+                  );
+                  return null;
+                }
+                console.info('[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable)', {
+                  phase: target ? 'targeted' : 'untargeted',
+                  url: chromeUrl,
+                  tabStatus: tabRecord.status,
+                });
+                return {
+                  url: chromeUrl,
+                  scrollX: 0,
+                  scrollY: 0,
+                  targetValueLength: 0,
+                  openModalsCount: 0,
+                  activeElementSelector: undefined,
+                  domElementCount: 0,
+                  timestamp: Date.now(),
+                  pageStateObservable: false,
+                };
               }
 
               // Chrome's tab URL wins: it reflects the tab even if the content
               // script was torn down and reinjected mid-navigation.
-              const observedUrl = liveUrl || snap.url;
+              const observedUrl = chromeUrl || pageSnap!.url;
               console.info('[AgentTrace] effect snapshot observed', {
                 phase: target ? 'targeted' : 'untargeted',
                 url: observedUrl,
-                scrollY: snap.scrollY,
-                domElementCount: snap.domElementCount,
-                openModalsCount: snap.openModalsCount,
-                targetValueLength: snap.targetValueLength,
+                scrollY: pageSnap!.scrollY,
+                domElementCount: pageSnap!.domElementCount,
+                openModalsCount: pageSnap!.openModalsCount,
+                targetValueLength: pageSnap!.targetValueLength,
               });
 
               return {
                 url: observedUrl,
-                scrollX: snap.scrollX,
-                scrollY: snap.scrollY,
+                scrollX: pageSnap!.scrollX,
+                scrollY: pageSnap!.scrollY,
                 targetValueLength:
-                  typeof snap.targetValueLength === 'number' ? snap.targetValueLength : 0,
+                  typeof pageSnap!.targetValueLength === 'number' ? pageSnap!.targetValueLength : 0,
                 openModalsCount:
-                  typeof snap.openModalsCount === 'number' ? snap.openModalsCount : 0,
+                  typeof pageSnap!.openModalsCount === 'number' ? pageSnap!.openModalsCount : 0,
                 activeElementSelector:
-                  typeof snap.activeElementSelector === 'string'
-                    ? snap.activeElementSelector
+                  typeof pageSnap!.activeElementSelector === 'string'
+                    ? pageSnap!.activeElementSelector
                     : undefined,
-                domElementCount: snap.domElementCount,
+                domElementCount: pageSnap!.domElementCount,
                 timestamp:
-                  typeof snap.timestamp === 'number' ? snap.timestamp : Date.now(),
+                  typeof pageSnap!.timestamp === 'number' ? pageSnap!.timestamp : Date.now(),
               };
             } catch (err) {
               console.warn(

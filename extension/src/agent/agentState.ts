@@ -228,6 +228,19 @@ export interface AgentTaskState extends TaskState {
   memoryHints?: import('../memory/memoryRetriever').MemoryHints;
 
   /**
+   * OBSERVED viewport scroll position at the moment the task began, and the
+   * latest observed position. Read from the live perception context
+   * (`context.viewport.scroll_y`) — never from a requested or proposed action.
+   *
+   * These exist so a scroll goal can be decided from where the browser
+   * actually IS, rather than from the fact that a scroll was once requested.
+   * Purely observational: they grant no permission, and they are never
+   * compared against an action's requested `amount`.
+   */
+  initialScrollY?: number | null;
+  observedScrollY?: number | null;
+
+  /**
    * Phase 8: verdict of the most recent independent Security Critic review.
    * Codes and reasons only — never any value.
    */

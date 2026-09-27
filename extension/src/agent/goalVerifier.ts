@@ -262,6 +262,180 @@ function urlMentionsResearchItem(observedUrl: string, item: string): boolean {
 }
 
 /**
+ * What a scroll goal actually claims, parsed from the user's own words.
+ *
+ * The goal is NOT taken from any action. A proposal is a request; only
+ * observed browser state can satisfy a goal.
+ */
+interface ScrollGoalClaim {
+  kind: 'distance' | 'target' | 'boundary' | 'direction';
+  direction: 'down' | 'up';
+  amountPx: number | null;
+  /** Meaningful words naming a section, e.g. ['pricing', 'section']. */
+  targetTerms: string[];
+}
+
+/** Words that carry no meaning when matching a scroll target. */
+const SCROLL_STOPWORDS = new Set([
+  'the', 'a', 'an', 'to', 'down', 'up', 'scroll', 'page', 'section', 'area',
+  'part', 'bottom', 'top', 'end', 'into', 'on', 'at', 'of', 'and', 'then',
+  'please', 'go', 'bring', 'show', 'find', 'until', 'toward', 'towards',
+]);
+
+/**
+ * Parses a scroll goal out of the task text.
+ *
+ * Handles the three shapes that can be decided from observed state:
+ *   "scroll down 500px"        → distance
+ *   "scroll to the pricing section" → target
+ *   "scroll down"              → direction
+ *
+ * "scroll to the bottom" is recognised as a boundary claim, which cannot be
+ * decided without a document height the sanitized context does not carry, so
+ * it fails closed rather than guessing.
+ */
+export function parseScrollGoal(lowerTask: string): ScrollGoalClaim | null {
+  const m = lowerTask.match(/\bscroll\b/);
+  if (!m) return null;
+
+  const after = lowerTask.slice(m.index! + m[0].length);
+  const direction: 'down' | 'up' = /\bup\b/.test(after) ? 'up' : 'down';
+
+  // "scroll to the bottom" / "to the end" — a boundary claim.
+  if (/\bto\s+the\s+(bottom|end|very\s+bottom)\b/.test(after)) {
+    return { kind: 'boundary', direction, amountPx: null, targetTerms: [] };
+  }
+
+  // "scroll down 500px" / "scroll by 500 pixels" — an absolute distance.
+  const amount = after.match(/(\d{1,6})\s*(?:px|pixels?|px\b)/) || after.match(/\bby\s+(\d{1,6})\b/);
+  if (amount) {
+    return { kind: 'distance', direction, amountPx: parseInt(amount[1] ?? '0', 10), targetTerms: [] };
+  }
+
+  // "scroll to the pricing section" — a named target.
+  const toTarget = after.match(/\bto\s+(?:the\s+)?([a-z0-9'\- ]{2,60})/);
+  if (toTarget) {
+    const terms = (toTarget[1] ?? '')
+      .split(/\s+/)
+      .map((t) => t.replace(/[^a-z0-9'\-]/g, ''))
+      .filter((t) => t.length > 1 && !SCROLL_STOPWORDS.has(t));
+    if (terms.length > 0) {
+      return { kind: 'target', direction, amountPx: null, targetTerms: terms };
+    }
+  }
+
+  // A bare direction with no measurable claim.
+  return { kind: 'direction', direction, amountPx: null, targetTerms: [] };
+}
+
+/**
+ * True when a detection's document-absolute box is inside the CURRENT
+ * observed viewport. Detection bboxes are document-absolute
+ * (`rect.top + window.scrollY`) and the viewport comes from the same live
+ * perception cycle, so this compares two real observations.
+ *
+ * A partly-visible element counts: the goal is "reach the section", not
+ * "centre it perfectly".
+ */
+function isDetectionInViewport(
+  det: AgentDetection,
+  scrollY: number,
+  viewportHeight: number
+): boolean {
+  const bbox = det.bbox;
+  if (!bbox || typeof bbox.y !== 'number' || typeof bbox.height !== 'number') return false;
+  const top = bbox.y;
+  const bottom = bbox.y + bbox.height;
+  const viewTop = scrollY;
+  const viewBottom = scrollY + viewportHeight;
+  return top < viewBottom && bottom > viewTop;
+}
+
+/** Machine-generated surface of a detection, used only to match the user's words. */
+function detectionSurface(det: AgentDetection): string {
+  return `${det.id ?? ''} ${det.selector ?? ''} ${det.label ?? ''} ${det.type ?? ''}`.toLowerCase();
+}
+
+/**
+ * Decides a scroll goal from OBSERVED browser state only.
+ *
+ * Explicitly does NOT consult `previousActions`, a proposed action, or a
+ * requested scroll amount for proof. If the observed state cannot establish
+ * the claim, this returns IN_PROGRESS and fails closed.
+ */
+function verifyScrollGoal(
+  lowerTask: string,
+  state: AgentTaskState,
+  context: AgentContextPayload
+): GoalVerificationResult {
+  const claim = parseScrollGoal(lowerTask);
+  if (!claim) return { satisfied: false, status: 'IN_PROGRESS' };
+
+  const viewport = context.viewport;
+  const scrollY = state.observedScrollY ?? (typeof viewport?.scroll_y === 'number' ? viewport.scroll_y : null);
+  const baseline = state.initialScrollY ?? null;
+  const viewportHeight = typeof viewport?.height === 'number' ? viewport.height : null;
+
+  // ── Observable state must actually exist ────────────────────────────────
+  if (scrollY === null || viewportHeight === null) {
+    return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
+  if (claim.kind === 'boundary') {
+    // Document height is not carried in the sanitized context, so "reached the
+    // bottom" cannot be established. Fail closed rather than assume it.
+    return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
+  if (claim.kind === 'distance') {
+    // Requires an observed baseline from the start of THIS task. Without one
+    // we cannot say how far the page actually moved.
+    if (baseline === null) return { satisfied: false, status: 'IN_PROGRESS' };
+    const moved = claim.direction === 'down' ? scrollY - baseline : baseline - scrollY;
+    const want = claim.amountPx ?? 0;
+    if (moved >= want) {
+      return {
+        satisfied: true,
+        status: 'SUCCESS',
+        reason: `Scroll goal verified from observed viewport position: observed ${moved}px of ${claim.direction} travel from a baseline of ${baseline}px to ${scrollY}px.`,
+      };
+    }
+    return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
+  if (claim.kind === 'direction') {
+    if (baseline === null) return { satisfied: false, status: 'IN_PROGRESS' };
+    const moved = claim.direction === 'down' ? scrollY - baseline : baseline - scrollY;
+    if (moved > 0) {
+      return {
+        satisfied: true,
+        status: 'SUCCESS',
+        reason: `Scroll goal verified from observed viewport position: ${scrollY - baseline}px of ${claim.direction} travel observed (${baseline}px → ${scrollY}px).`,
+      };
+    }
+    return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
+  // claim.kind === 'target'
+  // The named section must be OBSERVED in the current viewport. If no
+  // detection matches the user's words, or none is in view, fail closed.
+  const matches = (context.detections ?? []).filter((d) => {
+    const surface = detectionSurface(d);
+    return claim.targetTerms.every((t) => surface.includes(t));
+  });
+  if (matches.length === 0) return { satisfied: false, status: 'IN_PROGRESS' };
+  const inView = matches.find((d) => isDetectionInViewport(d, scrollY, viewportHeight));
+  if (inView) {
+    return {
+      satisfied: true,
+      status: 'SUCCESS',
+      reason: `Scroll goal verified from observed state: target '${claim.targetTerms.join(' ')}' is inside the observed viewport at ${scrollY}px.`,
+    };
+  }
+  return { satisfied: false, status: 'IN_PROGRESS' };
+}
+
+/**
  * Main goal verification function. Evaluates current observable browser state
  * and decides whether the goal is genuinely achieved.
  */
@@ -486,15 +660,8 @@ export function verifyTaskGoal(
     return { satisfied: false, status: 'IN_PROGRESS' };
   }
 
-  if (lower.includes('scroll down') || lower.includes('scroll')) {
-    if (state.previousActions.some((a) => a.action === 'scroll')) {
-      return {
-        satisfied: true,
-        status: 'SUCCESS',
-        reason: 'Scroll observation action completed.',
-      };
-    }
-    return { satisfied: false, status: 'IN_PROGRESS' };
+  if (lower.includes('scroll')) {
+    return verifyScrollGoal(lower, state, context);
   }
 
   if (lower.includes('account details') || lower.includes('details')) {

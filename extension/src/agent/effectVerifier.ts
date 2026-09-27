@@ -69,12 +69,33 @@ export function verifyActionEffect(
   pre: PreActionSnapshot,
   post: PostActionSnapshot
 ): ActionEffectResult {
+  // Phase 16 P1 remediation. When the page-side reading was unavailable (e.g.
+  // the content script was bfcached mid-navigation) the service worker returns
+  // a tab-authoritative snapshot whose non-URL fields are PLACEHOLDERS, not
+  // observations. Comparing those placeholders against a real pre-snapshot
+  // would manufacture a DOM mutation out of two zero values.
+  //
+  // So: if the post reading is not page-observable, ONLY the URL is evidence.
+  // Everything else is treated as unchanged, which makes the verdict strictly
+  // harder to reach — the safe direction.
+  const pageObservable = (post as { pageStateObservable?: boolean }).pageStateObservable !== false;
+
   const urlChanged = pre.url !== post.url;
-  const scrollDelta = Math.abs((post.scrollY ?? 0) - (pre.scrollY ?? 0)) + Math.abs((post.scrollX ?? 0) - (pre.scrollX ?? 0));
-  const valueLengthChanged = (post.targetValueLength ?? 0) !== (pre.targetValueLength ?? 0);
-  const modalsChanged = (post.openModalsCount ?? 0) !== (pre.openModalsCount ?? 0);
-  const domMutated = (post.domElementCount ?? 0) !== (pre.domElementCount ?? 0);
-  const focusChanged = (post.activeElementSelector || '') !== (pre.activeElementSelector || '');
+  const scrollDelta = pageObservable
+    ? Math.abs((post.scrollY ?? 0) - (pre.scrollY ?? 0)) + Math.abs((post.scrollX ?? 0) - (pre.scrollX ?? 0))
+    : 0;
+  const valueLengthChanged = pageObservable
+    ? (post.targetValueLength ?? 0) !== (pre.targetValueLength ?? 0)
+    : false;
+  const modalsChanged = pageObservable
+    ? (post.openModalsCount ?? 0) !== (pre.openModalsCount ?? 0)
+    : false;
+  const domMutated = pageObservable
+    ? (post.domElementCount ?? 0) !== (pre.domElementCount ?? 0)
+    : false;
+  const focusChanged = pageObservable
+    ? (post.activeElementSelector || '') !== (pre.activeElementSelector || '')
+    : false;
 
   const diagnostics = {
     urlChanged,
@@ -83,6 +104,7 @@ export function verifyActionEffect(
     modalsChanged,
     domMutated,
     focusChanged,
+    pageStateObservable: pageObservable,
   };
 
   switch (action.action) {

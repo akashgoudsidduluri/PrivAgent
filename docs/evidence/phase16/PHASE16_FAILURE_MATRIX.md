@@ -87,3 +87,54 @@ Root cause: `extension/src/agent/goalVerifier.ts:487-494` decides the scroll goa
 | Existing regression tests must be deleted or weakened | **NO** — 0 modifications to existing tests |
 
 **One stop condition triggered. It is documented, root-caused, and left unpatched as instructed.**
+
+---
+
+## 6. Remediation status — added after the fact
+
+> Everything above is Phase 16's own record, unchanged. This section records
+> what later became true. Evidence: `docs/evidence/phase16-remediation/`.
+
+### F21 — RESOLVED
+
+The single Phase 16 stop condition has been fixed. Scroll goals are now decided
+from observed state only:
+
+| Observed state | Before | After |
+|---|---|---|
+| scrollY=0, section off-screen, scroll in history | `SUCCESS` | `IN_PROGRESS` |
+| scrollY=500, section off-screen, scroll in history | `SUCCESS` | `IN_PROGRESS` |
+| scrollY=2900, section genuinely in view | `SUCCESS` | `SUCCESS` (with a reason naming the observed evidence) |
+
+Re-verified on real Chrome: two scroll goals reached `SUCCESS` with genuinely
+observed movement (400 px and 2400 px), and **zero** false successes across
+four scroll runs. Fail-closed where state was unobservable.
+
+The other two Phase 16 defects (DEFECT 1 over-blocking, DEFECT 3
+navigation-blind effect verification) are also fixed; see the Generalization
+Matrix §4 remediation block.
+
+### Stop-condition checklist, re-run after remediation
+
+| Stop condition | Status now |
+|---|---|
+| Raw PII reaches the backend | **NO** — no new transmission path was added |
+| A security gate can be bypassed | **NO** — one gate was *tightened* (cross-origin navigation) |
+| Recovery bypasses authorization | **NO** — unchanged |
+| Containment can be escaped | **NO** — unchanged, and re-tested |
+| Effect verification reports success without observed effect | **NO** — strictly harder: fabricated DOM effects are now suppressed via `pageStateObservable` |
+| **Goal verification succeeds without observed goal state** | **NO — F21 is fixed and regression-tested** |
+| Test infrastructure requires weakening production security | **NO** — no gate was relaxed to pass anything |
+| Existing regression tests must be deleted or weakened | **NO** — 0 deletions, 0 weakenings; full regression 1287/1287 |
+
+### Failures that remain, recorded honestly
+
+| Failure | Detection layer | Response | Recovery | Final state | Auth bypass? | Data leak? |
+|---|---|---|---|---|---|---|
+| A legitimate navigation to a user-named GitHub repo is refused by `GOAL_MISMATCH` | Security Critic (a *different* rule from DEFECT 1) | Refused | n/a | `FAILED` | **No** | No |
+| A bottom-of-page scroll goal is unprovable — the sanitized context carries no document height | Goal verification | Fails closed by design | n/a | `IN_PROGRESS` → `FAILED` | **No** | No |
+| Google served an anti-bot interstitial | Open-web property | Search action executed; results not loaded | n/a | `FAILED` | **No** | No |
+| The long-horizon bound can end a run in the cycle its goal becomes satisfiable | Long-horizon limits | Conservative miss | n/a | `FAILED` | **No** | No |
+
+All four fail **closed**. None was made to pass by relaxing a gate, and each is
+recorded as a limitation rather than patched away.

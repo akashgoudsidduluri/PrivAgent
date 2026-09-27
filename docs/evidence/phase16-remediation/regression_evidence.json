@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-09-27",
+  "work": "Phase 16 defect remediation — regression, typecheck and build evidence",
+  "baselineCommit": "b6b8b73",
+  "note": "Every number below was produced by running the command shown. Nothing is quoted from memory. The Phase 16 result at b6b8b73 stands as recorded and is not restated here as better or worse than it was.",
+  "regression": {
+    "baseline": {
+      "commit": "b6b8b73",
+      "command": "npx vitest run",
+      "testFiles": 102,
+      "tests": 1222,
+      "result": "1222 passed / 1222"
+    },
+    "after": {
+      "command": "npx vitest run --reporter=basic",
+      "testFiles": 105,
+      "tests": 1287,
+      "result": "1287 passed / 1287",
+      "delta": {
+        "newTestFiles": 3,
+        "newTests": 65,
+        "deletedTests": 0,
+        "modifiedTests": 2,
+        "note": "The two modified tests are the Phase 16 it.fails() defect assertions, which were real defects and are now real assertions. Nothing was deleted or skipped."
+      }
+    },
+    "fullSuiteRerun": "A single earlier full-suite run showed 1 failure in tests/centralPrivacyInvariant.test.ts under heavy CPU contention from a concurrent real-Chrome harness; the test passes in isolation and in a clean full run. Treated as an environment timeout, not a regression, and recorded here rather than hidden."
+  },
+  "focusedSuites": {
+    "command": "npx vitest run tests/phase16-remediation/ tests/phase16/ tests/goalVerifier.test.ts tests/phase12/containment.test.ts tests/phase13/harness.test.ts --reporter=basic",
+    "testFiles": 8,
+    "tests": 218,
+    "result": "218 passed / 218",
+    "files": [
+      { "file": "tests/phase13/harness.test.ts", "tests": 47, "note": "7.2 and 7.3 exercise the terminal environment halt. Both pass UNMODIFIED — see the note below." },
+      { "file": "tests/phase12/containment.test.ts", "tests": 43, "note": "6.1 pins that a cross-origin navigate is refused BEFORE containment is consulted. Passes UNMODIFIED — see the note below." },
+      { "file": "tests/phase16/generalizationFindings.test.ts", "tests": 22, "note": "The two it.fails() defect assertions became real assertions." },
+      { "file": "tests/phase16/securityAuthorities.test.ts", "tests": 39 },
+      { "file": "tests/phase16-remediation/securityCriticBoundary.test.ts", "tests": 25 },
+      { "file": "tests/phase16-remediation/navigationObservation.test.ts", "tests": 15 },
+      { "file": "tests/phase16-remediation/scrollGoalVerification.test.ts", "tests": 23 },
+      { "file": "tests/goalVerifier.test.ts", "tests": 4 }
+    ]
+  },
+  "threePreExistingTestsThatBrokeMidRemediation": {
+    "status": "RESOLVED WITHOUT MODIFYING THE TESTS",
+    "tests": [
+      "tests/phase12/containment.test.ts > 6.1 a cross-origin navigate is refused by the pipeline BEFORE containment is consulted",
+      "tests/phase13/harness.test.ts > 7.2 a drifted environment halts the NEXT cycle, before it perceives or dispatches",
+      "tests/phase13/harness.test.ts > 7.3 the environment halt is TERMINAL — no recovery, no retry into the drift"
+    ],
+    "symptom": "After the DEFECT 1 provenance fix, the cross-origin navigate was no longer refused with INJECTION_INFLUENCE, so it reached GATE 5 and the run parked in NEEDS_USER_CONFIRMATION instead of FAILED.",
+    "rootCause": "Two separate things were going on. (1) The ONLY reason those runs were blocked upstream was the DEFECT 1 false positive: the critic was running the page-hijack signature /navigate to/i over the model's own reason text ('Navigate to the requested site'). Fixing DEFECT 1 correctly removed that block. (2) securityCritic.ts:262 decides the cross-origin question from `goal`, which is task PLUS the planner's MODEL-AUTHORED subgoal narration. The subgoal in that run was 'Navigate to search engine or knowledge portal', so hasAnyTerm(goal, NAVIGATE_TERMS) was true and the cross-origin rule stood down. A subgoal the model itself wrote was vouching for an off-origin destination the user never named.",
+    "fix": "securityCritic.ts now judges the cross-origin navigation rule from the USER'S TASK alone (`userGoal`), never from the model's own subgoal narration. This TIGHTENS the rule: it restores the pre-remediation refusal, and it keeps the security authority rather than weakening it. Goal-alignment questions still use the blended goal, because usefulness is a different question from safety.",
+    "securityPosture": {
+      "navigateDispatched": false,
+      "containmentStillAuthoritative": true,
+      "netChange": "The navigate is still refused. It is refused by the cross-origin rule again, which is the EARLIER gate, rather than by a downstream confirmation prompt.",
+      "note": "The DEFECT 1 false positive was doing security work it was never designed to do. Relying on it meant the real rule had been silently disabled. It is now enforced in its own right."
+    },
+    "testsModified": "none — the three assertions are byte-identical to b6b8b73"
+  },
+  "typecheck": {
+    "command": "npx tsc -b --noEmit",
+    "baselineErrors": 5,
+    "afterErrors": 5,
+    "newlyIntroduced": 0,
+    "remaining": [
+      "extension/src/background/targetResolver.ts(285,19) TS18048: 'candidateHost' is possibly 'undefined'.",
+      "extension/src/background/targetResolver.ts(287,25) TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.",
+      "extension/src/background/targetResolver.ts(287,33) TS18048: 'tld' is possibly 'undefined'.",
+      "extension/src/background/targetResolver.ts(290,9) TS2322: Type 'string | undefined' is not assignable to type 'string'.",
+      "extension/src/background/targetResolver.ts(488,9) TS2322: Type 'MinimalTab | undefined' is not assignable to type 'MinimalTab | null'."
+    ],
+    "verdict": "Exactly the same five pre-existing errors, in the same file, at the same lines. No new error introduced. Left untouched on purpose: they are not in scope for this remediation and fixing them would only add unrelated diff."
+  },
+  "builds": {
+    "extension": {
+      "command": "npm run build:extension",
+      "result": "PASS",
+      "detail": "service worker + popup bundle, then the contentScript bundle. 113 modules transformed, then 35.",
+      "artifacts": [
+        "dist/serviceWorker.js",
+        "dist/contentScript.js",
+        "dist/assets/ocrDetector-*.js",
+        "dist/src/popup/popup.html"
+      ]
+    },
+    "frontend": {
+      "command": "npm run build:frontend",
+      "result": "PASS",
+      "detail": "18 modules transformed."
+    }
+  },
+  "ocr": {
+    "changed": false,
+    "note": "OCR activation is untouched, as required."
+  },
+  "secrets": {
+    "checked": true,
+    "note": "No key value was ever printed. The harness reads only whether a key is configured, via backend config.has_api_key('groq')."
+  }
+}
