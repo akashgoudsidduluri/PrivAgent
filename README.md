@@ -23,7 +23,7 @@ User
 Agent (Task Planner & Loop)
   │
   ▼
-Browser Perception (DOM Scanner + Coordinate Mapper + Tesseract OCR)
+Browser Perception (DOM Scanner + Coordinate Mapper + Visual Regions; Tesseract OCR in the popup capture path)
   │
   ▼
 Privacy Layer (Privacy Fusion + Local Redaction + Context Minimization)
@@ -44,7 +44,7 @@ Risk Policy (4-Tier Risk Assessment + Consequential Action Confirmation Gate)
 Browser (DOM Action Dispatch via Content Script)
   │
   ▼
-Effect Verification (DOM Mutation Detection & State Delta)
+Effect Verification (Observed Pre/Post Snapshots read from the live target tab)
   │
   ▼
 Goal Verification (Deterministic Multi-Candidate Completion Check)
@@ -156,9 +156,29 @@ PrivAgent strictly separates local on-device decision cycle latency from cloud i
   - **P50:** 45 ms
   - **P95:** 88 ms
   - Includes: DOM interactive traversal, coordinate HiDPI mapping, M5 structural validation, risk scoring, and local effect verification.
-- **External Cloud Inference Latency (Empirically Measured)**:
+- **External Cloud Inference Latency**:
   - **Per-step Groq roundtrip:** ~1,200 ms – 2,800 ms
   - **Full multi-page task latency (4–5 steps):** ~4.2 s – 9.8 s
+  - *These two figures come from earlier manual observation, not from a committed instrumented measurement. Cloud round-trip latency is **not instrumented** in the codebase. Treat these as unverified estimates, and see `docs/evidence/final-evaluation/PERFORMANCE_BASELINE.md`.*
+
+---
+
+## Final Evaluation
+
+A claim-by-claim, evidence-backed audit of the project at commit `593fe72` lives in `docs/evidence/final-evaluation/`:
+
+| Document | Contents |
+|---|---|
+| `CLAIM_EVIDENCE_MATRIX.md` | Every major claim graded `PROVEN_REAL` / `PROVEN_TEST` / `CONTROLLED_FIXTURE_PROVEN` / `PARTIALLY_PROVEN` / `NOT_PROVEN` / `KNOWN_LIMITATION` |
+| `SECURITY_EVALUATION.md` | All 14 security authorities: authority, enforcement point, evidence, and bypass resistance |
+| `PRIVACY_EVALUATION.md` | Full DOM and visual/OCR privacy paths, with live-vs-dormant status per stage |
+| `AGENT_CAPABILITY_EVALUATION.md` | Loop stages graded real-browser / controlled-fixture / test-only / not-proven |
+| `PERFORMANCE_BASELINE.md` | Measured latencies only; un-instrumented stages marked as such |
+| `FAILURE_RECOVERY_MATRIX.md` | 24 documented failure modes, their fail-safe behaviour, and recovery |
+| `FINAL_DEMO_RUNBOOK.md` | Reproducible controlled success demo |
+| `NEGATIVE_DEMO_RUNBOOK.md` | Fail-closed demos: `ACTION_NO_EFFECT` and the M5 privacy block |
+| `FINAL_METRICS.md` | Measured facts with explicit denominators |
+| `REPRODUCTION.md` | What was executed in the final pass, and what was not |
 
 ---
 
@@ -293,10 +313,12 @@ PrivAgent/
 
 ## Current Limitations
 
-1. **Cloud Reasoner Latency**: While local decisions execute in under 50ms, cloud roundtrips to external LLMs (Groq) introduce 1.2s – 2.8s per step of network/generation latency.
-2. **CAPTCHA & Anti-Bot Mitigations**: PrivAgent does not attempt to bypass CAPTCHAs, Cloudflare turnstiles, or bot challenges; these require human-in-the-loop intervention.
-3. **Cross-Origin Iframe Sandboxes**: Elements embedded within restrictive cross-origin iframes without script access cannot have their DOM nodes inspected directly by the top-level content script.
-4. **Virtualized Content / Infinite Virtual Scroll**: Content that is completely unmounted from the DOM outside the active viewport is only detectable after scrolling.
+1. **Cloud Reasoner Latency**: While local decisions execute in tens of milliseconds, cloud roundtrips to external LLMs (Groq) are expected to dominate cycle time. The per-step figure is an unverified manual estimate, not an instrumented measurement.
+2. **Task scope proven**: exactly one task shape — a two-action search on a controlled local fixture — has reached a goal-verified `SUCCESS`. Generalization to the open web is **not** demonstrated. See `docs/evidence/final-evaluation/AGENT_CAPABILITY_EVALUATION.md`.
+3. **CAPTCHA & Anti-Bot Mitigations**: PrivAgent does not attempt to bypass CAPTCHAs, Cloudflare turnstiles, or bot challenges; these require human-in-the-loop intervention. A live Google run is blocked by this boundary and therefore cannot reach goal-verified `SUCCESS` in a headless fresh-profile session.
+4. **Cross-Origin Iframe Sandboxes**: Elements embedded within restrictive cross-origin iframes without script access cannot have their DOM nodes inspected directly by the top-level content script.
+5. **Virtualized Content / Infinite Virtual Scroll**: Content that is completely unmounted from the DOM outside the active viewport is only detectable after scrolling.
+6. **Formal Security Guarantees**: the controls are structurally enforced and covered by tests, but there is no formal verification, external security audit, or penetration test. See `docs/evidence/final-evaluation/SECURITY_EVALUATION.md`.
 
 ---
 
