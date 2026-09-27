@@ -1,0 +1,86 @@
+{
+  "phase": "17.6",
+  "total": 11,
+  "caught": 11,
+  "survived": 0,
+  "brokenAnchors": 0,
+  "results": [
+    {
+      "id": "M1",
+      "name": "remove the observation requirement before subgoal success",
+      "file": "extension/src/agent/agentLoop.ts",
+      "status": "CAUGHT",
+      "failingTests": 1
+    },
+    {
+      "id": "M2",
+      "name": "restore action-success-as-progress (a subgoal completion counts as progress)",
+      "file": "extension/src/agent/longHorizon.ts",
+      "status": "CAUGHT",
+      "failingTests": 1
+    },
+    {
+      "id": "M3",
+      "name": "bypass stale-observation rejection",
+      "file": "extension/src/agent/agentLoop.ts",
+      "status": "CAUGHT",
+      "failingTests": 1
+    },
+    {
+      "id": "M4",
+      "name": "bypass M5: force the action allowed",
+      "file": "extension/src/agent/agentLoop.ts",
+      "status": "CAUGHT",
+      "failingTests": 1
+    },
+    {
+      "id": "M5",
+      "name": "bypass the Security Critic verdict",
+      "file": "extension/src/agent/agentLoop.ts",
+      "status": "CAUGHT",
+      "failingTests": 5
+    },
+    {
+      "id": "M6",
+      "name": "allow a containment escape",
+      "file": "extension/src/agent/agentLoop.ts",
+      "status": "CAUGHT",
+      "failingTests": 2
+    },
+    {
+      "id": "M7",
+      "name": "make repeated no-effect actions count as meaningful progress",
+      "file": "extension/src/agent/longHorizon.ts",
+      "status": "CAUGHT",
+      "failingTests": 5
+    },
+    {
+      "id": "M8",
+      "name": "re-admit the navigationDestination shortcut so a REQUESTED url can prove a research goal",
+      "file": "extension/src/agent/goalVerifier.ts",
+      "status": "CAUGHT",
+      "failingTests": 1
+    },
+    {
+      "id": "M9",
+      "name": "make the subgoal verifier FAIL OPEN (no condition ⇒ satisfied)",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "status": "CAUGHT",
+      "failingTests": 1
+    },
+    {
+      "id": "M10",
+      "name": "subgoal lifecycle short-circuit: complete a PENDING subgoal by direct assignment",
+      "file": "extension/src/agent/longHorizon.ts",
+      "status": "CAUGHT",
+      "failingTests": 1
+    },
+    {
+      "id": "M11",
+      "name": "forward local ocr_observation provenance to the reasoner (the 17.6 P0)",
+      "file": "extension/src/agent/backendAgentProvider.ts",
+      "status": "CAUGHT",
+      "failingTests": 2
+    }
+  ]
+}

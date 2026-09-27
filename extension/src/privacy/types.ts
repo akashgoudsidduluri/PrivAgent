@@ -251,6 +251,22 @@ export interface AgentContextPayload {
   viewportObservable?: boolean;
   viewportSource?: ViewportObservability['viewportSource'];
   screenshot_dimensions: AgentScreenshotDimensions | null;
+  /**
+   * PHASE 17.6 (F-08). LOCAL ONLY — stripped before the context reaches the
+   * reasoner, exactly like `viewportObservable` above. The service worker
+   * attaches it after a visual capture; it is pure local provenance (capture
+   * state, document URL and page generation at capture time, timestamp,
+   * geometry, scale factors) and carries no pixels and no OCR text.
+   *
+   * It was previously smuggled in through an `as { ocr_observation?: ... }`
+   * cast at the attach site, which meant the type system could not see it and
+   * the egress strip could not see it either. The backend's frozen
+   * `extra="forbid"` schema then rejected the whole request with HTTP 422,
+   * which is how the production Service Worker became unable to reach the
+   * reasoner at all. Declaring it makes the local-only contract explicit and
+   * lets the single egress boundary strip it.
+   */
+  ocr_observation?: import('../ocr/ocrObservationContract').OCRObservation;
   detections: AgentDetection[];
   total_elements_scanned: number;
   sensitive_elements_detected: number;

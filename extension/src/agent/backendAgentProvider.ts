@@ -98,7 +98,32 @@ export class BackendAgentProvider implements AgentProvider {
     // extra="forbid" and these are local facts about whether a reading was
     // obtained — the model has no use for them and the device gains nothing by
     // transmitting them. The wire schema is byte-identical to before.
-    const { viewportObservable: _vo, viewportSource: _vs, ...egressContext } = context;
+    //
+    // PHASE 17.6 (F-08). `ocr_observation` is stripped for the same reason, and
+    // its absence was a HARD BLOCKER rather than a nicety.
+    //
+    // The production Service Worker attaches an `OCRObservation` whenever a
+    // visual capture runs. It was forwarded verbatim, and the backend's frozen
+    // `AgentContextPayload` is `extra="forbid"`, so the request was rejected
+    // with HTTP 422 and the loop failed closed at step 1. Every real-reasoner
+    // run through the actual product path was therefore impossible; this is
+    // why no real-reasoner multi-step completion had ever been observed. The
+    // fail-closed behaviour was CORRECT — the bug was that a local-only field
+    // was being sent at all.
+    //
+    // The field is pure LOCAL provenance: observation state, the document URL
+    // and page generation at capture time, the capture timestamp, bitmap and
+    // viewport geometry, and scale factors. It carries no pixels and no OCR
+    // text, so this is not a PII incident — but it is exactly the class of
+    // device-local fact Phase 17.1 (C6) established should not cross the
+    // boundary, and stripping it is strictly privacy-TIGHTENING: less leaves
+    // the device than before. Nothing in the reasoner depends on it.
+    const {
+      viewportObservable: _vo,
+      viewportSource: _vs,
+      ocr_observation: _ocrObs,
+      ...egressContext
+    } = context;
 
     // 2. Call local backend with safe history metadata
     const controller = new AbortController();
