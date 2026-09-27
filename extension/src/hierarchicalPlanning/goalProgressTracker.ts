@@ -3,11 +3,44 @@
  *
  * Tracks measurable execution progress towards the high-level user goal
  * and validates subgoal completion conditions against live browser perception.
+ *
+ * ── PHASE 17.6 (C): FAIL CLOSED, AND PROVE FROM OBSERVATION ──────────────────
+ *
+ * This class was dead code with no caller anywhere in `extension/src` or
+ * `tests/`, and it was FAIL-OPEN in a way that contradicted the whole agent
+ * architecture:
+ *
+ *   * no `verificationCondition`            -> `satisfied: true`
+ *   * `URL_CONTAINS` with an empty value   -> `satisfied: true`
+ *   * `ELEMENT_EXISTS`                     -> `satisfied: true`, unconditionally
+ *   * `AFFORDANCE_AVAILABLE`               -> `satisfied: true`, unconditionally
+ *   * `STATE_CHANGED`                      -> `satisfied: true`, unconditionally
+ *   * `USER_CONFIRMED`                     -> `satisfied: true`, unconditionally
+ *   * `CUSTOM`                             -> falls through to the same `true`
+ *
+ * Five of the seven declared condition types therefore verified nothing at all.
+ * Read as a status oracle that is exactly "an action was dispatched and
+ * returned without error" wearing a verification interface: the DISPATCH
+ * SUCCESS != GOAL SUCCESS invariant in a second location the 17.2A goal
+ * verifier audit did not reach. It happened to be harmless only because
+ * nothing called it — wiring it up as written would have introduced precisely
+ * the shortcut this project refuses to make.
+ *
+ * Every branch below now answers from OBSERVED, sanitized browser state only,
+ * and every branch that cannot be proven from observation is NOT satisfied.
+ * Absence of evidence is never evidence of completion.
+ *
+ * This does not create a second authorization system. `agentLoop` already owns
+ * dispatch authorization; this function decides one narrow question — "is the
+ * state the subgoal asked for actually observable right now?" — and the
+ * subgoal it governs is planning bookkeeping, not permission. M5, Grounding,
+ * the Security Critic, Risk/Confirmation, Containment, Effect Verification and
+ * Goal Verification all remain authoritative and are untouched.
  */
 
-import { HighLevelGoal, Subgoal } from './hierarchicalTypes';
+import { HighLevelGoal, Subgoal, SubgoalVerificationCondition } from './hierarchicalTypes';
 import { SubgoalGraph } from './subgoalGraph';
-import { BrowserWorldModel } from '../worldModel/types';
+import { AgentContextPayload } from '../privacy/types';
 
 export interface ProgressEvaluation {
   percentComplete: number;
@@ -18,14 +51,64 @@ export interface ProgressEvaluation {
   summary: string;
 }
 
+/** The observation a subgoal condition is judged against. */
+export interface SubgoalObservation {
+  /** Live, sanitized page context from the current perception cycle. */
+  context: AgentContextPayload;
+  /**
+   * Observed page generation, when one is known. A condition that was proven
+   * against an older document is not evidence about this one.
+   */
+  pageGeneration?: number;
+  /**
+   * The immediately PRECEDING perception's sanitized context. Required to prove
+   * a `STATE_CHANGED` condition: without a prior state there is nothing to have
+   * changed relative to, so the condition fails closed.
+   */
+  previous?: AgentContextPayload;
+  /**
+   * Identifiers of actions the user explicitly confirmed AND that actually
+   * dispatched. Required to prove a `USER_CONFIRMED` condition. A proposal
+   * awaiting confirmation is never an entry, so this cannot manufacture consent.
+   */
+  userConfirmedActionIds?: string[];
+}
+
+/** PHASE 17.6: lowercased alphanumeric words, length > 2, for label matching. */
+function words(text: string): string[] {
+  return String(text ?? '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 2);
+}
+
+/** PHASE 17.6: a label/description "contains" the expected value, word-wise. */
+function mentions(haystack: string, needle: string): boolean {
+  const h = String(haystack ?? '').toLowerCase();
+  const n = String(needle ?? '').toLowerCase().trim();
+  if (!n) return false;
+  if (h.includes(n)) return true;
+  const nw = words(n);
+  if (nw.length === 0) return false;
+  return nw.every((w) => h.includes(w));
+}
+
+const verdict = (satisfied: boolean, reason: string) => ({ satisfied, reason });
+
 export class GoalProgressTracker {
   /**
    * Evaluates overall goal progress across the subgoal DAG and live browser state.
+   *
+   * `completedSubgoalsCount` is exactly the number of subgoals whose state is
+   * COMPLETED — and after 17.6 a subgoal can only reach COMPLETED through
+   * `verifySubgoalCondition`, so this ratio is observation-backed. It is still
+   * PLANNING progress, not goal satisfaction: the task-level status is decided
+   * by the goal verifier, never by this percentage.
    */
   public static evaluateProgress(
     graph: SubgoalGraph,
     goal: HighLevelGoal,
-    worldModel?: BrowserWorldModel
+    worldModel?: unknown
   ): ProgressEvaluation {
     const allSubgoals = graph.getAllSubgoals();
     const activeSubgoals = allSubgoals.filter((s) => s.state !== 'SKIPPED');
@@ -54,7 +137,10 @@ export class GoalProgressTracker {
     const ratio = completed.length / activeSubgoals.length;
     const percentComplete = Math.round(ratio * 100);
 
-    // Check if high-level verification condition is met
+    // PHASE 17.6. Kept as a PLANNING signal only. It is deliberately NOT
+    // named `goalSatisfied`-shaped any more than before, and the loop never
+    // reads it as a task outcome — the goal verifier owns that decision. The
+    // field is retained for the existing planner consumers.
     const isGoalSatisfied = completed.length === activeSubgoals.length;
 
     return {
@@ -68,40 +154,169 @@ export class GoalProgressTracker {
   }
 
   /**
-   * Verifies if a specific subgoal's completion criteria is satisfied by the current world model.
+   * PHASE 17.6. Verifies a subgoal's completion criterion against OBSERVED
+   * sanitized browser state.
+   *
+   * Fail-closed in every branch. A subgoal with no declared condition, an
+   * unimplemented condition type, an empty `expectedValue`, or an observation
+   * that does not contain the thing the subgoal asked for is NOT satisfied.
+   * Callers must therefore leave such a subgoal IN_PROGRESS (or route it to
+   * bounded recovery) — it may never be marked COMPLETED.
+   *
+   * This never authorizes anything. It reads only the sanitized context the
+   * perception cycle already produced; it does not dispatch, and it cannot
+   * widen containment, risk or confirmation.
    */
   public static verifySubgoalCondition(
     subgoal: Subgoal,
-    worldModel?: BrowserWorldModel
+    observation: SubgoalObservation | undefined
   ): { satisfied: boolean; reason: string } {
-    const cond = subgoal.verificationCondition;
+    const cond: SubgoalVerificationCondition | undefined = subgoal.verificationCondition;
+
     if (!cond) {
-      // If no explicit condition, rely on successful execution of its action
-      return { satisfied: true, reason: 'Action execution succeeded with default verification.' };
+      // PHASE 17.6. Previously "satisfied: true — rely on successful
+      // execution". That is dispatch state, not evidence. A subgoal with no
+      // declared, provable criterion cannot be shown complete.
+      return verdict(
+        false,
+        `Subgoal ${subgoal.id} declares no verification condition, so its completion cannot be proven from observation.`
+      );
     }
+
+    if (!observation || !observation.context) {
+      return verdict(false, `No observation available to verify subgoal ${subgoal.id}.`);
+    }
+
+    const ctx = observation.context;
+    const semantic = ctx.semantic_context;
+    const currentUrl = String(ctx.url ?? '');
 
     switch (cond.type) {
       case 'URL_CONTAINS': {
-        if (!cond.expectedValue) return { satisfied: true, reason: 'Empty expected URL.' };
-        const currentUrl = worldModel?.page?.url || '';
-        const match = currentUrl.toLowerCase().includes(cond.expectedValue.toLowerCase());
-        return {
-          satisfied: match,
-          reason: match
-            ? `URL contains expected fragment "${cond.expectedValue}".`
-            : `Current URL "${currentUrl}" does not contain "${cond.expectedValue}".`,
-        };
+        const want = String(cond.expectedValue ?? '').trim().toLowerCase();
+        if (!want) {
+          // Previously an empty expected value satisfied the condition.
+          return verdict(false, `Subgoal ${subgoal.id} declares URL_CONTAINS with no expected value.`);
+        }
+        const match = currentUrl.toLowerCase().includes(want);
+        return verdict(
+          match,
+          match
+            ? `Observed URL contains "${want}".`
+            : `Observed URL "${currentUrl}" does not contain "${want}".`
+        );
       }
 
-      case 'ELEMENT_EXISTS':
-      case 'AFFORDANCE_AVAILABLE':
-      case 'STATE_CHANGED':
-      case 'USER_CONFIRMED':
-      default:
-        return {
-          satisfied: true,
-          reason: `Verification condition (${cond.type}: ${cond.description}) accepted.`,
-        };
+      case 'ELEMENT_EXISTS': {
+        const want = String(cond.expectedValue ?? subgoal.targetEntity ?? '').trim();
+        if (!want) {
+          return verdict(false, `Subgoal ${subgoal.id} declares ELEMENT_EXISTS with no expected value.`);
+        }
+        const byDetection = (ctx.detections ?? []).some(
+          (d) =>
+            d.id === want ||
+            mentions(d.label ?? '', want) ||
+            mentions(d.selector ?? '', want) ||
+            mentions(d.type ?? '', want)
+        );
+        const byEntity = (semantic?.entities ?? []).some(
+          (e) => e.id === want || mentions(e.label ?? '', want) || mentions(e.type ?? '', want)
+        );
+        const byAffordance = (semantic?.affordances ?? []).some(
+          (a) => a.targetElementId === want || mentions(a.description ?? '', want)
+        );
+        const found = byDetection || byEntity || byAffordance;
+        return verdict(
+          found,
+          found
+            ? `Element "${want}" is observable in the current sanitized page state.`
+            : `Element "${want}" is not observable in the current sanitized page state.`
+        );
+      }
+
+      case 'ELEMENT_TEXT_CONTAINS': {
+        const want = String(cond.expectedValue ?? '').trim();
+        if (!want) {
+          return verdict(false, `Subgoal ${subgoal.id} declares ELEMENT_TEXT_CONTAINS with no expected value.`);
+        }
+        // The sanitized context is metadata-only: it carries no page text, so
+        // a text-content claim can never be proven here. Failing closed is the
+        // only honest answer; asserting a match would be fabricated evidence.
+        const structuralHit = (ctx.detections ?? []).some(
+          (d) => mentions(d.label ?? '', want) || mentions(d.selector ?? '', want)
+        );
+        return verdict(
+          structuralHit,
+          structuralHit
+            ? `Marker "${want}" is observable as page structure in the sanitized state.`
+            : `Marker "${want}" is not observable. Sanitized context carries no raw page text, so a text-content claim cannot be proven.`
+        );
+      }
+
+      case 'AFFORDANCE_AVAILABLE': {
+        const want = String(cond.expectedValue ?? '').trim();
+        const affordances = semantic?.affordances ?? [];
+        const found = want
+          ? affordances.some(
+              (a) => a.type === want || mentions(a.description ?? '', want) || a.targetElementId === want
+            )
+          : affordances.length > 0;
+        return verdict(
+          found,
+          found
+            ? `Affordance "${want || 'any'}" is available in the observed affordance set.`
+            : `Affordance "${want || 'any'}" is not available in the observed affordance set.`
+        );
+      }
+
+      case 'STATE_CHANGED': {
+        // PHASE 17.6. A state-change claim needs a PRIOR observed state to
+        // compare against. The perception cycle provides the current one; with
+        // no prior observation there is nothing to have changed relative to,
+        // so this cannot be proven. (The loop supplies the prior snapshot.)
+        const prior = observation.previous;
+        if (!prior) {
+          return verdict(
+            false,
+            `Subgoal ${subgoal.id} claims STATE_CHANGED but no prior observation was supplied, so no change can be established.`
+          );
+        }
+        const changed =
+          String(prior.url ?? '') !== currentUrl ||
+          (prior.detections ?? []).length !== (ctx.detections ?? []).length ||
+          (prior.viewport?.scroll_y ?? null) !== (ctx.viewport?.scroll_y ?? null);
+        return verdict(
+          changed,
+          changed
+            ? `Observed state differs from the prior observation (URL, element count or scroll position).`
+            : `Observed state is identical to the prior observation.`
+        );
+      }
+
+      case 'USER_CONFIRMED': {
+        // A user-confirmation subgoal is proven by the loop having actually
+        // recorded a confirmed action — never by a proposal. The loop sets
+        // this flag only after `resumeWithConfirmation` executes, so reading
+        // it here cannot manufacture confirmation.
+        const confirmed = observation.userConfirmedActionIds ?? [];
+        const proven = confirmed.length > 0;
+        return verdict(
+          proven,
+          proven
+            ? `User confirmation was recorded for ${confirmed.length} action(s).`
+            : `No confirmed user action has been recorded for this subgoal.`
+        );
+      }
+
+      case 'CUSTOM':
+      default: {
+        // PHASE 17.6. Previously fell through to `satisfied: true`. A custom
+        // condition is by definition not implemented here, so it is unproven.
+        return verdict(
+          false,
+          `Verification condition type '${cond.type}' has no observation-backed implementation, so subgoal ${subgoal.id} cannot be verified here.`
+        );
+      }
     }
   }
 }

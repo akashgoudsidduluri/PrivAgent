@@ -123,6 +123,7 @@ import {
   SubgoalGraphData,
   PlanningEngineState,
   DynamicReplanner,
+  GoalProgressTracker,
 } from '../hierarchicalPlanning';
 import {
   WorkingMemoryManager,
@@ -342,6 +343,13 @@ export class AgentLoop {
    * UNINITIALIZED and therefore denies — the fail-closed default.
    */
   private readonly containmentScope: ContainmentScope | null;
+  /**
+   * PHASE 17.6 (C). The most recent sanitized perception, one slot only.
+   * Local, never persisted, never transmitted; it exists so a
+   * `STATE_CHANGED` subgoal condition has a real prior state to compare
+   * against rather than being unprovable.
+   */
+  private previousObservation: AgentContextPayload | undefined = undefined;
   private readonly harness: AgentHarness | null;
   private memoryHints?: MemoryHints;
 
@@ -646,6 +654,12 @@ export class AgentLoop {
       }
 
       // 2. Fresh perception cycle: obtain current sanitized context
+      //
+      // PHASE 17.6 (C). The previous cycle's sanitized context: the baseline a
+      // STATE_CHANGED subgoal condition is judged against. Declared at the TOP of
+      // the iteration so the perception block can publish it and the dispatch
+      // block can read it.
+      let previousObservation: AgentContextPayload | undefined = this.previousObservation ?? undefined;
       this.state.perceptionGeneration++;
       this.state.currentPageGeneration = this.state.perceptionGeneration;
       const perceptionGen = this.state.perceptionGeneration;
@@ -674,6 +688,19 @@ export class AgentLoop {
 
       // Defense-in-depth: enforce zero raw PII in newly perceived context
       assertSanitizedContextSafe(context);
+      //
+      // PHASE 17.6 (C). Keep the PREVIOUS cycle's sanitized context so a
+      // `STATE_CHANGED` subgoal condition has a genuine baseline to compare
+      // against. Without it that condition is unprovable, and
+      // `verifySubgoalCondition` fails closed by design — so the loop would
+      // silently never complete a STATE_CHANGED subgoal.
+      //
+      // It is the immediately preceding perception only: one slot, overwritten
+      // each cycle, so it cannot accumulate. It is the SAME already-sanitized
+      // object (assertSanitizedContextSafe just passed over it), so this adds
+      // no new PII surface and is never persisted or transmitted.
+      previousObservation = this.previousObservation ?? undefined;
+      this.previousObservation = context;
       this.state.currentUrl = context.url || worldModel?.page.url || this.state.currentUrl;
 
       // Phase 16 P0 remediation: record where the viewport OBSERVABLY is, so
@@ -2168,13 +2195,65 @@ export class AgentLoop {
       }
 
       // Progress active subgoal in DAG
+      //
+      // PHASE 17.6 (C). SUBGOAL COMPLETION MUST BE PROVEN FROM OBSERVATION.
+      //
+      // This was `if (execResult.success) completeSubgoal(...)`. `execResult`
+      // is DISPATCH state — it reports that the callback returned without
+      // throwing. It says the agent ASKED, not that the page reached the state
+      // the subgoal describes. A one-pixel scroll satisfied an "add the item to
+      // the cart" subgoal, and because `syncFromSubgoalGraph` then mirrors
+      // COMPLETED into the long-horizon tracker, `isAlreadyCompleted` made the
+      // loop SKIP that subgoal from then on — so the real work was never
+      // attempted and the task burned its whole budget.
+      //
+      // Completion now requires `GoalProgressTracker.verifySubgoalCondition` to
+      // answer yes from the OBSERVED sanitized context of this cycle. That
+      // verifier fails closed: no declared condition, an unimplemented
+      // condition type, an empty expected value, or a marker that is not in the
+      // observed state all leave the subgoal IN_PROGRESS.
+      //
+      // SCOPE. This is planning bookkeeping, not authorization. The action has
+      // already been authorized by Grounding, M5, the Security Critic,
+      // Risk/Confirmation and Containment, and its effect has already been
+      // observed by Effect Verification. Making the subgoal bar HIGHER can only
+      // make the agent do more work, never less, and it can never authorize an
+      // action or assert task success. Goal Verification still owns that.
       if (execResult.success && activeSubgoal && this.subgoalGraph) {
-        this.subgoalGraph.completeSubgoal(activeSubgoal.id);
-        this.state.subgoalGraphData = this.subgoalGraph.toData();
-        console.info('[AgentTrace] subgoal completed', {
-          subgoalId: activeSubgoal.id,
-          category: activeSubgoal.category,
+        const subgoalVerification = GoalProgressTracker.verifySubgoalCondition(activeSubgoal, {
+          context,
+          previous: previousObservation,
+          pageGeneration: this.state.currentPageGeneration ?? 0,
+          userConfirmedActionIds: this.state.confirmedActionIds ?? [],
         });
+        if (subgoalVerification.satisfied) {
+          this.subgoalGraph.completeSubgoal(activeSubgoal.id);
+          this.state.subgoalGraphData = this.subgoalGraph.toData();
+          console.info('[AgentTrace] subgoal completed', {
+            subgoalId: activeSubgoal.id,
+            category: activeSubgoal.category,
+            evidence: subgoalVerification.reason,
+          });
+        } else {
+          // Not proven. The subgoal stays ACTIVE and remains eligible for
+          // selection; the observed change is still real progress for the
+          // long-horizon layer, which counts observation independently.
+          console.info('[AgentTrace] subgoal NOT completed — no observed evidence', {
+            subgoalId: activeSubgoal.id,
+            category: activeSubgoal.category,
+            reason: subgoalVerification.reason,
+          });
+          this.state.subgoalVerificationHistory = [
+            ...(this.state.subgoalVerificationHistory ?? []),
+            {
+              subgoalId: activeSubgoal.id,
+              step: this.state.currentStep,
+              satisfied: false,
+              reason: subgoalVerification.reason,
+              timestamp: Date.now(),
+            },
+          ].slice(-64);
+        }
       } else if (!execResult.success && activeSubgoal && this.subgoalGraph) {
         this.subgoalGraph.failSubgoal(activeSubgoal.id, execResult.error || 'Execution failed');
         this.state.subgoalGraphData = this.subgoalGraph.toData();
@@ -2368,6 +2447,78 @@ export class AgentLoop {
       confirmationState: 'AUTHORIZED',
     });
 
+    //
+    // ── PHASE 17.6 (H) · CONTAINMENT RE-EVALUATED BEFORE A CONFIRMED DISPATCH ──
+    //
+    // This path dispatched straight to `executeAction`. Every other dispatch in
+    // the loop passes `evaluateContainment` immediately before execution — it
+    // is the Phase 12 "final ENVIRONMENTAL check" and it is the ONLY place the
+    // origin scope is enforced.
+    //
+    // The gap was a real window, not a formality. The action was gated when it
+    // was PROPOSED; the user then had to answer a prompt, and in that time the
+    // tab can move — the user clicks a link, the page redirects, or the service
+    // worker is evicted and the loop restored. `containmentScope` was captured
+    // in the constructor and never re-read. A `navigate` whose destination was
+    // cross-origin-checked against the OLD current URL, or a `click` on a
+    // target id from a document that has since been replaced, would dispatch
+    // with no environmental check at all.
+    //
+    // Containment can only ever REFUSE MORE. It does not authorize: Grounding,
+    // M5, the Security Critic, Risk/Confirmation and Goal Verification have
+    // already run for this exact action, and re-running them here would change
+    // behaviour. A denial is TERMINAL for the same reason it is inside the
+    // loop: retrying into a refused environment is the drift containment
+    // exists to stop.
+    if (this.containmentScope) {
+      const confirmedLiveUrl =
+        (await this.observeEffectSnapshot(undefined, 'pre'))?.url ||
+        this.state.currentUrl ||
+        null;
+      const confirmedContainment = evaluateContainment({
+        action,
+        scope: this.containmentScope,
+        targetTabId: this.targetTabId,
+        liveUrl: confirmedLiveUrl,
+      });
+      this.state.containmentDecision = {
+        code: confirmedContainment.code,
+        contained: confirmedContainment.contained,
+        reason: confirmedContainment.reason,
+        scope: containmentSummary(this.containmentScope),
+      };
+      console.info('[AgentTrace] containment decision (confirmed resume)', {
+        code: confirmedContainment.code,
+        contained: confirmedContainment.contained,
+        scope: containmentSummary(this.containmentScope),
+      });
+
+      if (!confirmedContainment.contained) {
+        const denialRecord: FailureRecord = {
+          category: 'CONTAINMENT_DENIED',
+          reason: `Containment refused the confirmed action: ${confirmedContainment.reason}`,
+          pageGeneration: this.state.currentPageGeneration,
+          attemptedAction: action,
+          recoveryAttempted: false,
+          finalState: 'FAILED',
+          timestamp: Date.now(),
+        };
+        if (!this.state.failureHistory) this.state.failureHistory = [];
+        this.state.failureHistory.push(denialRecord);
+        this.state.lastFailure = denialRecord;
+        this.state.lastActionResult = { success: false, error: denialRecord.reason };
+        this.state.status = 'FAILED';
+        this.state.goalStatus = 'FAILED';
+        this.state.reason = denialRecord.reason;
+        console.warn('[AgentTrace] CONFIRMED_ACTION_BLOCKED_BY_CONTAINMENT', {
+          code: confirmedContainment.code,
+          actionType: action.action,
+        });
+        this.notifyProgress();
+        return this.getState();
+      }
+    }
+
     // Execute the confirmed action
     console.info('[AgentTrace] executeAction started');
     const execResult = await this.callbacks.executeAction(action);
@@ -2400,6 +2551,15 @@ export class AgentLoop {
     };
     this.state.steps.push(stepRecord);
     this.state.previousActions.push(action);
+    //
+    // PHASE 17.6 (C). Record the CONFIRMED dispatch so a USER_CONFIRMED
+    // subgoal can be proven from an action the user actually authorized and
+    // that actually ran. The proposal that merely *asked* for confirmation is
+    // never recorded here, so this list can never manufacture consent.
+    this.state.confirmedActionIds = [
+      ...(this.state.confirmedActionIds ?? []),
+      `${action.action}:${'target' in action ? String((action as any).target ?? '') : (action as any).url ?? ''}`,
+    ].slice(-64);
     this.notifyProgress();
 
     // Post-navigation page setup: wait for new page to load and re-inject

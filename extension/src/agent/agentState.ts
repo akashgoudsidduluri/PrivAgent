@@ -213,6 +213,28 @@ export interface AgentTaskState extends TaskState {
   lastActionResult: { success: boolean; error?: string } | null;
   expectedStateChange: ExpectedStateChange | null;
 
+  /**
+   * PHASE 17.6 (C). Identifiers of actions the USER explicitly confirmed, i.e.
+   * that `resumeWithConfirmation` actually dispatched. A `USER_CONFIRMED`
+   * subgoal is proven from this list and from nothing else — a *proposal* that
+   * needed confirmation is never an entry here, so this can never manufacture
+   * consent. Content-free: action type and target id only, no values.
+   */
+  confirmedActionIds?: string[];
+
+  /**
+   * PHASE 17.6 (C). Bounded diagnostic trail of subgoal-verification outcomes
+   * that did NOT prove completion. Bounded to 64 entries. Reasons are
+   * structural ("marker not in observed state"), never page content.
+   */
+  subgoalVerificationHistory?: Array<{
+    subgoalId: string;
+    step: number;
+    satisfied: boolean;
+    reason: string;
+    timestamp: number;
+  }>;
+
   // Findings & candidates
   currentFindings: string[];
   candidateItems: CandidateProductItem[];
@@ -332,6 +354,8 @@ export function createAgentTaskState(
     steps: [],
     currentUrl: options.currentUrl ?? '',
     visitedElementIds: [],
+    confirmedActionIds: [],
+    subgoalVerificationHistory: [],
     retryCount: 0,
     maxSteps,
     maxRetries,

@@ -972,17 +972,33 @@ export function syncFromSubgoalGraph(
   if (!graphData) return;
   for (const subgoal of Object.values(graphData.subgoals ?? {})) {
     const tracked = tracker.registerSubgoal(subgoal);
+    //
+    // PHASE 17.6 (C). Every branch below now goes through
+    // `transitionSubgoal`, which validates the transition against
+    // SUBGOAL_TRANSITIONS. It used to assign `tracked.status` directly, which
+    // silently defeated the only rule the state machine exists to enforce:
+    // PENDING may not become COMPLETED without passing through ACTIVE. A graph
+    // subgoal reported COMPLETED would therefore complete its tracker twin from
+    // PENDING, and `isAlreadyCompleted` would then make the loop skip it
+    // forever.
+    //
+    // `transitionSubgoal` returns `ok: false` for an illegal edge and leaves
+    // the object untouched, so an unprovable transition simply does not happen
+    // — it fails closed, exactly as it does everywhere else.
     if (subgoal.state === 'COMPLETED' && tracked.status !== 'COMPLETED') {
-      tracked.status = 'COMPLETED';
+      // A tracker subgoal that is still PENDING has never been observed as
+      // ACTIVE. Promote it to ACTIVE first so the completion is a legal,
+      // observation-backed lifecycle edge rather than a direct assignment.
+      if (tracked.status === 'PENDING') {
+        transitionSubgoal(tracked, 'ACTIVE', 'mirrored as IN_PROGRESS before completion');
+      }
+      transitionSubgoal(tracked, 'COMPLETED', 'mirrored from observed subgoal graph');
     } else if (subgoal.state === 'IN_PROGRESS' && tracked.status === 'PENDING') {
-      tracked.status = 'ACTIVE';
-      tracked.attempts += 1;
+      transitionSubgoal(tracked, 'ACTIVE', 'mirrored from observed subgoal graph');
     } else if (subgoal.state === 'FAILED' && tracked.status === 'ACTIVE') {
-      tracked.status = 'FAILED';
-      tracked.lastReason = subgoal.failureReason ?? 'failed';
+      transitionSubgoal(tracked, 'FAILED', subgoal.failureReason ?? 'failed');
     } else if (subgoal.state === 'SKIPPED' && tracked.status === 'PENDING') {
-      tracked.status = 'FAILED';
-      tracked.lastReason = 'skipped';
+      transitionSubgoal(tracked, 'FAILED', 'skipped');
     }
   }
 }
