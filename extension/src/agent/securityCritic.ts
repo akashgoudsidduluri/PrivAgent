@@ -103,6 +103,22 @@ const SEARCH_TERMS = ['search', 'look up', 'find', 'query', 'google', 'bing', 'd
  */
 const STRONG_SEARCH_TERMS = ['search', 'look up', 'query', 'google', 'bing', 'duckduckgo'];
 const NAVIGATE_TERMS = ['open', 'go to', 'navigate', 'visit', 'browse', 'show me'];
+/**
+ * PHASE 17.5A. The UNAMBIGUOUS subset of `NAVIGATE_TERMS`.
+ *
+ * `NAVIGATE_TERMS` is the right vocabulary for asking "does this goal mention
+ * navigation at all?". It is NOT the right vocabulary for EXEMPTING a goal from
+ * the read-only rule, because `'show me'` is far more often a request to READ
+ * the current page ("Show me the current page title.") than to move away from
+ * it.
+ *
+ * The distinction matters because the cross-origin safety check below also
+ * consults `NAVIGATE_TERMS`. Treating `'show me'` as navigation intent in the
+ * read-only exemption would therefore ALSO satisfy that check, and a read-only
+ * "Show me ..." goal could have permitted an unrelated external navigation.
+ * Only verbs that mean "go somewhere" exempt a goal here.
+ */
+const UNAMBIGUOUS_NAVIGATE_TERMS = ['go to', 'navigate', 'visit', 'browse', 'open'];
 const READ_TERMS = ['show', 'read', 'display', 'view', 'what', 'check', 'see'];
 const TYPE_TERMS = ['enter', 'type', 'fill', 'input', 'write', 'search for'];
 const SCROLL_TERMS = ['scroll', 'down', 'up'];
@@ -460,6 +476,9 @@ function detectGoalMismatch(
   // asked to LOOK, not to act.
   const goalIsReadOnly =
     goalIsRead && !goalIsSearch && !goalIsType && !hasAnyTerm(goal, [...DESTRUCTIVE_TERMS, ...CONSEQUENTIAL_TERMS]);
+  // PHASE 17.5A. Does the goal UNAMBIGUOUSLY ask to go somewhere? See
+  // UNAMBIGUOUS_NAVIGATE_TERMS for why 'show me' is excluded.
+  const goalExplicitlyNavigates = hasAnyTerm(goal, UNAMBIGUOUS_NAVIGATE_TERMS);
   const goalSaysNothingSpecific = !goalIsSearch && !goalIsNavigate && !goalIsType && !goalIsScroll && !goalIsRead;
 
   // Destructive or financial commitment is never implied by an ordinary goal.
@@ -469,7 +488,26 @@ function detectGoalMismatch(
 
   switch (action.action) {
     case 'navigate': {
-      if (goalIsReadOnly) return true;
+      // ── PHASE 17.5A ────────────────────────────────────────────────────────
+      // A goal that ITSELF asks to navigate is not "read-only".
+      //
+      // `goalIsNavigate` is computed a few lines above and was omitted from the
+      // `goalIsReadOnly` expression, so any goal containing BOTH a navigation
+      // verb and a read verb ("Go to X and report Y" — 'go to' + 'report'/
+      // 'display') was classified read-only, and the very next line then
+      // returned a mismatch on the goal's own requested navigation.
+      //
+      // This scoping is deliberate. The read-only rule still holds for goals
+      // that ask ONLY to read ("Read the current page title."), which is the
+      // signal it was written for. A goal that names navigation explicitly has
+      // given POSITIVE evidence that navigation is wanted, which is exactly the
+      // standard the comment below sets for the rest of this case.
+      //
+      // Nothing is broadened: unrelated and out-of-scope destinations are still
+      // blocked by the dedicated navigation-safety checks (unsafe protocol,
+      // raw-IP / credential-in-host, and cross-origin without the goal naming
+      // the destination), and every other authority is untouched.
+      if (goalIsReadOnly && !goalExplicitlyNavigates) return true;
       if (goalSaysNothingSpecific) return true;
       // A navigate is a mismatch only on POSITIVE evidence of conflict. The
       // absence of a search/navigation word in the model-supplied reason proves
