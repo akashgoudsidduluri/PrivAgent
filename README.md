@@ -70,7 +70,7 @@ PrivAgent v1.0 implements the complete M1–M12 capability stack. The table belo
 - **Target Isolation & Lifecycle**: Monotonic page generation counters preventing stale targets from previous pages being acted upon.
 - **Failure Recovery & Self-Healing**: Automated diagnosis of stale targets, missed effects, and bounded recovery replanning.
 - **Provider Fail-Closed Behavior**: Strict fail-closed semantics on cloud reasoning failures (HTTP 401, 429, 5xx, timeouts) with 0 speculative browser actions.
-- **Real Chrome Execution**: Real Google Chrome (CDP) with the built Manifest V3 extension verifies perception, privacy fusion + contextual PII, containment, harness, effect snapshots and the terminal failure path. **A live-reasoner run has been executed** (`docs/evidence/post-phase15-e2e/`): the real configured provider (Groq `openai/gpt-oss-20b`) proposed real actions, every gate ran, the actions dispatched, and effect verification was decided from **observed** browser state — the search box genuinely received the typed text (observed value length 4) and the tab genuinely navigated. **That run did not reach a verified `SUCCESS`**: M5 correctly refused a later action whose reason text tripped the PII scanner, and Google then served its anti-bot interstitial. No run has yet completed a task end-to-end with a goal-verification pass.
+- **Real Chrome Execution**: Real Google Chrome (CDP) with the built Manifest V3 extension verifies perception, privacy fusion + contextual PII, containment, harness, effect snapshots and the terminal failure path. **A live-reasoner run has been executed** (`docs/evidence/post-phase15-e2e/`): the real configured provider (Groq `openai/gpt-oss-20b`) proposed real actions, every gate ran, the actions dispatched, and effect verification was decided from **observed** browser state — the search box genuinely received the typed text (observed value length 4) and the tab genuinely navigated. **That run did not reach a verified `SUCCESS`**: M5 correctly refused a later action whose reason text tripped the PII scanner, and Google then served its anti-bot interstitial. A live-Google run still cannot reach `SUCCESS` — a headless fresh-profile session hits Google's anti-bot interstitial, a boundary PrivAgent does not attempt to bypass. Separately, a **real-reasoner controlled browser task reached verified goal success**: a deterministic local fixture served through the normal browser path, driven by the real Groq reasoner, every gate executed in the normal order, and goal verification passed on **observed** browser state (`docs/evidence/post-phase15-e2e/REAL_REASONER_CONTROLLED_SUCCESS_REPORT.md`). That is a single controlled fixture — it is not a claim that autonomous browser tasks are solved.
 - **M12 Evaluation Suite**: Comprehensive 18-metric SIH evaluation engine with forensic telemetry and receipt auditing.
 
 ---
@@ -212,7 +212,7 @@ npm run build:frontend
 
 ### 4. Running the Tests
 ```bash
-# Run Vitest test suite (1155 tests, 99 files)
+# Run Vitest test suite (1163 tests, 100 files)
 npm test
 
 # Run Pytest backend test suite (requires a Python environment with pytest installed)
@@ -283,7 +283,7 @@ PrivAgent/
 │   ├── src/                  # Views, state stores, adapters
 │   ├── index.html            # Dashboard entrypoint
 │   └── vite.config.ts        # Dashboard Vite config
-├── tests/                    # Vitest test suite (1155 tests, 99 files)
+├── tests/                    # Vitest test suite (1163 tests, 100 files)
 ├── package.json              # Project scripts and dependencies
 ├── tsconfig.json             # TypeScript root configuration
 └── vitest.config.ts          # Vitest configuration

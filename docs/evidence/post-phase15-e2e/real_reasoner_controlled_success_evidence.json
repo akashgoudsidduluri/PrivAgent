@@ -1,0 +1,181 @@
+{
+  "timestamp": "2026-09-27T04:30:53.151Z",
+  "work": "Controlled real-reasoner run reaching verified goal success",
+  "task": "open http://localhost:4199 and search cats",
+  "fixture": {
+    "origin": "http://localhost:4199",
+    "goalMarker": "Search results for cats",
+    "deterministicResultUrl": "http://localhost:4199/results?q=cats"
+  },
+  "substitutionsUsed": "NONE — real backend, real configured provider, real fixture page, real UI",
+  "successCriterion": "Goal Verification = SUCCESS, derived by the production verifier from the OBSERVED browser URL",
+  "reasonerConfig": {
+    "mode": "groq",
+    "apiKeyConfigured": true,
+    "model": "openai/gpt-oss-20b",
+    "configuredFallback": "openrouter",
+    "reasonerClass": "GroqReasoner",
+    "keyValueNeverPrinted": true
+  },
+  "backendReachable": true,
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "serviceWorkerAttached": true,
+  "fixtureTab": {
+    "openedUrl": "http://localhost:4199/",
+    "targetId": "9C40799D8AD72BE369380F3BCFBFA63D"
+  },
+  "fixtureTabLoadedUrl": "http://localhost:4199/",
+  "dashboardLoaded": true,
+  "payloadTimeline": [
+    {
+      "status": "RUNNING",
+      "currentStep": 0,
+      "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+    },
+    {
+      "status": "RUNNING",
+      "phase": "PERCEPTION",
+      "currentStep": 0,
+      "url": "http://localhost:4199/",
+      "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "phase": "PLANNING",
+      "currentStep": 0,
+      "url": "http://localhost:4199/",
+      "reason": null
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "phase": "PLANNING",
+      "currentStep": 1,
+      "url": "http://localhost:4199/",
+      "reason": null
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "phase": "PLANNING",
+      "currentStep": 2,
+      "url": "http://localhost:4199/",
+      "reason": null
+    },
+    {
+      "status": "SUCCESS",
+      "goalStatus": "SUCCESS",
+      "phase": "TERMINAL",
+      "currentStep": 2,
+      "url": "http://localhost:4199/results?q=cats",
+      "reason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'."
+    },
+    {
+      "status": "SUCCESS",
+      "goalStatus": "SUCCESS",
+      "phase": "TERMINAL",
+      "currentStep": 2,
+      "url": "http://localhost:4199/results?q=cats",
+      "reason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'."
+    }
+  ],
+  "actionTrace": [
+    {
+      "step": 1,
+      "proposedAction": {
+        "action": "type",
+        "target": "q",
+        "text": "cats",
+        "reason": "The search input field 'q' is visible and ready to accept the search query 'cats' as per the user task."
+      },
+      "validationAllowed": true,
+      "validationReason": "Validated type action on known element 'q'.",
+      "executionSuccess": true,
+      "effectStatus": "VALUE_STATE_CHANGED",
+      "effectDetails": "Type action registered value change in target 'q' (length: 4).",
+      "targetType": "search"
+    },
+    {
+      "step": 2,
+      "proposedAction": {
+        "action": "click",
+        "target": "go",
+        "reason": "Submit the search query 'cats' by clicking the search button."
+      },
+      "validationAllowed": true,
+      "validationReason": "Validated click action on known element 'go'.",
+      "executionSuccess": true,
+      "effectStatus": "FOCUS_SHIFT_OBSERVED",
+      "effectDetails": "Click on 'go' shifted focus to 'button:nth-child(3)'.",
+      "targetType": "button"
+    }
+  ],
+  "reasonerRequestsOnTheWire": [
+    {
+      "contextUrl": "http://localhost:4199/",
+      "detectionCount": 2,
+      "detections": [
+        {
+          "id": "q",
+          "type": "search",
+          "selector": "#q"
+        },
+        {
+          "id": "go",
+          "type": "button",
+          "selector": "#go"
+        }
+      ],
+      "historyLength": 0
+    },
+    {
+      "contextUrl": "http://localhost:4199/",
+      "detectionCount": 2,
+      "detections": [
+        {
+          "id": "q",
+          "type": "search",
+          "selector": "#q"
+        },
+        {
+          "id": "go",
+          "type": "button",
+          "selector": "#go"
+        }
+      ],
+      "historyLength": 1
+    }
+  ],
+  "targetIdentity": {
+    "origin": "http://localhost:4199",
+    "containmentRootHost": "localhost",
+    "initialUrl": "http://localhost:4199/",
+    "finalUrl": "http://localhost:4199/results?q=cats",
+    "preOpenedTabId": "9C40799D8AD72BE369380F3BCFBFA63D"
+  },
+  "observedFinalState": {
+    "tabFound": true,
+    "url": "http://localhost:4199/results?q=cats",
+    "title": "Fixture Results",
+    "resultMarker": "Search results for cats"
+  },
+  "goalVerification": {
+    "verifier": "verifyTaskGoal (extension/src/agent/goalVerifier.ts) — unmodified",
+    "agentReportedStatus": "SUCCESS",
+    "agentReportedGoalStatus": "SUCCESS",
+    "agentReason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'.",
+    "observedQueryPresent": true,
+    "observedMarkerPresent": true,
+    "success": true,
+    "note": "Success requires the agent terminal SUCCESS AND the observed DOM marker. The harness does not assert goal verification itself."
+  },
+  "backendLogReasonerLines": [
+    "INFO:     127.0.0.1:52210 - \"POST /api/v1/agent/action HTTP/1.1\" 200 OK",
+    "INFO:     127.0.0.1:52210 - \"POST /api/v1/agent/action HTTP/1.1\" 200 OK"
+  ],
+  "result": {
+    "outcome": "GOAL_VERIFICATION_SUCCESS",
+    "honest": true
+  }
+}
