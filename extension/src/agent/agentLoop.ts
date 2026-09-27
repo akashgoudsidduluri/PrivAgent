@@ -159,8 +159,17 @@ export interface AgentLoopCallbacks {
 
   /**
    * Optional snapshot provider for pre/post action state.
+   *
+   * When supplied, the loop uses ONLY these observations for effect
+   * verification. `target` is the action's resolved element id so the provider
+   * can report that element's current value LENGTH (never the value).
+   *
+   * Returning null means "could not observe". A host that provides this
+   * callback and cannot observe must return null so the loop fails closed; the
+   * loop only synthesizes a snapshot when NO provider exists at all (a
+   * non-browser embedding with no tab to observe).
    */
-  getEffectSnapshot?: () => Promise<PreActionSnapshot | PostActionSnapshot>;
+  getEffectSnapshot?: (target?: string) => Promise<PreActionSnapshot | PostActionSnapshot | null>;
 
   /**
    * Optional progress listener called after every step.
@@ -1410,7 +1419,16 @@ export class AgentLoop {
 
       console.info('[AgentTrace] executeAction started');
       // 5. Pre-Action Snapshot for Effect Verification
-      const preSnapshot: PreActionSnapshot = (this.callbacks.getEffectSnapshot ? await this.callbacks.getEffectSnapshot() : null) ?? {
+      //
+      // OBSERVED, not synthesized, whenever the host has an observation
+      // channel. The `actionTarget` is what lets the host report that
+      // element's current value LENGTH (never the value).
+      const actionTarget =
+        'target' in action && typeof (action as any).target === 'string'
+          ? ((action as any).target as string)
+          : undefined;
+      const preSnapshot: PreActionSnapshot =
+        (await this.observeEffectSnapshot(actionTarget, 'pre')) ?? {
         url: context.url || this.state.currentUrl || '',
         scrollX: 0,
         scrollY: 0,
@@ -1620,7 +1638,75 @@ export class AgentLoop {
       // 7. Authoritative Effect Verification
       let postSnapshot: PostActionSnapshot | undefined = (execResult as any).postSnapshot;
       if (!postSnapshot && this.callbacks.getEffectSnapshot) {
-        postSnapshot = await this.callbacks.getEffectSnapshot();
+        postSnapshot = (await this.observeEffectSnapshot(actionTarget, 'post')) ?? undefined;
+        if (!postSnapshot) {
+          // The host HAS an observation channel but could not observe. Do NOT
+          // fall back to deriving the post-state from the requested action: that
+          // is exactly what made a no-op action indistinguishable from a real
+          // one. An effect that cannot be observed is not a verified effect.
+          //
+          // FAIL CLOSED, bounded exactly like any other post-dispatch failure.
+          console.warn('[AgentTrace] post-action state could not be observed; failing closed');
+          const unobservableRecord: FailureRecord = {
+            category: 'ACTION_NO_EFFECT',
+            reason: `Post-action browser state could not be observed after '${action.action}'; effect treated as unverified.`,
+            pageGeneration: this.state.currentPageGeneration,
+            attemptedAction: action,
+            recoveryAttempted: false,
+            finalState: 'IN_PROGRESS',
+            timestamp: Date.now(),
+          };
+          if (!this.state.failureHistory) this.state.failureHistory = [];
+          this.state.failureHistory.push(unobservableRecord);
+          this.state.lastFailure = unobservableRecord;
+          this.state.lastActionResult = {
+            success: false,
+            error: 'EFFECT_UNVERIFIABLE: post-action browser state could not be observed.',
+          };
+          this.state.retryCount++;
+          this.state.failureCount++;
+          this.recordStep(
+            action, true, validation.reason, false, unobservableRecord.reason,
+            targetDet?.type, risk, semantic, confidence, healingResult,
+            false, 'ACTION_NO_EFFECT', unobservableRecord.reason
+          );
+          tracer.recordStep({
+            step: this.state.currentStep,
+            goal: task,
+            proposedAction: action,
+            riskAssessment: {
+              riskLevel: risk.level,
+              score: risk.score,
+              requiresConfirmation: risk.requiresUserConfirmation,
+            },
+            structuralValidation: { passed: true, reason: validation.reason },
+            semanticVerification: {
+              verified: semantic.verified,
+              confidence: semantic.confidence,
+              alignment: semantic.targetAlignment,
+              reason: unobservableRecord.reason,
+            },
+            confidenceEvaluation: {
+              confidenceScore: confidence.confidenceScore,
+              directive: confidence.directive,
+              explanation: unobservableRecord.reason,
+            },
+            executionResult: { success: false, error: unobservableRecord.reason },
+            finalOutcome: 'FAILED',
+          });
+          this.state.decisionTraceSummary = tracer.getSummary();
+          this.notifyProgress();
+          if (this.state.retryCount > this.maxRetries) {
+            unobservableRecord.finalState = 'FAILED';
+            this.state.status = 'FAILED';
+            this.state.goalStatus = 'FAILED';
+            this.state.reason = `Effect verification unavailable repeatedly: ${unobservableRecord.reason}`;
+            console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+            break;
+          }
+          await this.delay(this.delayBetweenStepsMs);
+          continue;
+        }
       }
       if (!postSnapshot) {
         const targetId = 'target' in action ? (action as any).target : undefined;
@@ -2366,6 +2452,28 @@ export class AgentLoop {
     }
 
     return { context: result as AgentContextPayload };
+  }
+
+  /**
+   * Observe REAL browser state for effect verification.
+   *
+   * Returns null when no observation channel exists, and also when the host's
+   * observation failed or threw. Callers decide what that means: the PRE
+   * snapshot may fall back to context-derived values for a host with no tab at
+   * all, while the POST snapshot must fail closed — because deriving the
+   * post-state from the requested action is precisely the defect this replaces.
+   */
+  private async observeEffectSnapshot(
+    target: string | undefined,
+    phase: 'pre' | 'post'
+  ): Promise<PreActionSnapshot | PostActionSnapshot | null> {
+    if (!this.callbacks.getEffectSnapshot) return null;
+    try {
+      return await this.callbacks.getEffectSnapshot(target);
+    } catch (err) {
+      console.warn(`[AgentTrace] ${phase}-action snapshot unavailable:`, err);
+      return null;
+    }
   }
 
   private notifyProgress(): void {

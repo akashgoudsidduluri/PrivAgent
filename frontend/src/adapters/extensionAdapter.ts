@@ -338,6 +338,10 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         confidenceScore: s.confidenceEvaluation?.confidenceScore,
         selfHealingRecovered: s.selfHealing?.recovered,
         semanticContext: s.semanticContext,
+        // The OBSERVED effect verdict. Kept distinct from executionSuccess:
+        // an action can dispatch successfully and still have no effect.
+        effectStatus: s.effectStatus,
+        effectDetails: s.effectDetails,
       };
     });
 

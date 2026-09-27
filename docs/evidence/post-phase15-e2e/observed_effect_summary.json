@@ -1,0 +1,210 @@
+{
+  "timestamp": "2026-09-27T00:00:00.000Z",
+  "work": "Post-Phase-15 Validation & Effect-Verification Closure (bounded slice; not Phase 16)",
+  "baseCommit": "e41b8b9",
+  "headCommit": "UNCOMMITTED_AT_WRITE_TIME",
+  "goals": {
+    "P0-1": "Replace synthetic effect verification with observed browser state",
+    "P0-2": "Prove a genuine real-reasoner -> real-Chrome autonomous run end-to-end"
+  },
+  "results": {
+    "P0-1": "ACHIEVED",
+    "P0-2": "NOT_ACHIEVED_BLOCKED_BY_ENVIRONMENT"
+  },
+  "P0-1_effectVerification": {
+    "defect": "getEffectSnapshot was optional and the service worker never implemented it, so BOTH pre and post snapshots were synthesized inside agentLoop.ts from the REQUESTED action. For navigate, newUrl = action.url; for scroll, newScrollY += delta; for type, newValLen = action.text.length; for click, newDomCount += 1. verifyActionEffect() therefore could not fail for a successful dispatch in production.",
+    "reuseNotRedesign": "The existing PreActionSnapshot / PostActionSnapshot contract and verifyActionEffect() were reused unchanged. No new effect-verification semantics were introduced.",
+    "changes": [
+      {
+        "file": "extension/src/content/contentScript.ts",
+        "change": "Added collectEffectSnapshot(), countOpenModals(), describeActiveElement() and a dedicated PRIVAGENT_GET_EFFECT_SNAPSHOT / PRIVAGENT_GET_EFFECT_SNAPSHOT_RESPONSE message. Reports url, scrollX, scrollY, openModalsCount, activeElementSelector, domElementCount and the target's value LENGTH only."
+      },
+      {
+        "file": "extension/src/privacy/types.ts",
+        "change": "Added the snapshot request/response variants to ExtensionMessage."
+      },
+      {
+        "file": "extension/src/background/serviceWorker.ts",
+        "change": "Implemented getEffectSnapshot(target?): queries the pinned target tab, reads the URL from Chrome's own tab record (survives content-script teardown mid-navigation), validates the response shape, and returns null on any failure. 2s tab-URL timeout, 3s content-script timeout."
+      },
+      {
+        "file": "extension/src/agent/agentLoop.ts",
+        "change": "Added observeEffectSnapshot(target, phase). PRE may fall back for a host with no tab; POST fails CLOSED as ACTION_NO_EFFECT with an EFFECT_UNVERIFIABLE reason, bounded by the existing retry budget. The previous derive-post-state-from-the-request fallback is no longer reachable when a host has an observation channel. getEffectSnapshot signature gained an optional target parameter (backward compatible)."
+      }
+    ],
+    "failClosedCases": [
+      "missing content script",
+      "target tab disappeared",
+      "tab URL read timeout (2s)",
+      "content-script snapshot timeout (3s)",
+      "malformed or absent snapshot payload",
+      "snapshot provider threw"
+    ],
+    "privacy": {
+      "rawValueFields": 0,
+      "targetValueReportedAs": "LENGTH ONLY",
+      "activeElementIdentity": "derived tag:nth-child(n), never the site-supplied raw id",
+      "unresolvableTarget": "reports length 0 (fail-safe, not a guess)",
+      "newBoundaryWeaknesses": "none"
+    }
+  },
+  "P0-1_tests": {
+    "focusedFile": "tests/observedEffect/effectVerificationObserved.test.ts",
+    "focused": "17/17",
+    "regression": "1155/1155 across 99 files",
+    "baseline": "1138/1138 across 98 files",
+    "delta": "+17 tests, +1 file; no existing test weakened or deleted",
+    "typescriptErrors": 5,
+    "typescriptErrorsAllPreExisting": true,
+    "typescriptNewErrors": 0,
+    "buildExtension": "exit 0",
+    "buildFrontend": "exit 0",
+    "regressionSeamsRerun": {
+      "verify_phase15_privacy_fusion": "ALL CHECKS PASS (8/8)",
+      "verify_phase12_containment": "7/7",
+      "verify_reasoner_failure_path": "8/8"
+    }
+  },
+  "P0-1_realChrome": {
+    "harness": "scratch/verify_observed_effect_no_effect.mjs",
+    "evidenceFile": "docs/evidence/post-phase15-e2e/observed_effect_no_effect_evidence.json",
+    "browser": "Chromium headless=new over CDP",
+    "extension": "REAL built dist/ loaded via Extensions.loadUnpacked",
+    "verifier": "verifyActionEffect bundled from extension/src (shipped code, not a reimplementation)",
+    "result": "9/9 PASS",
+    "checks": [
+      "productionSnapshotMessageResponds",
+      "snapshotCarriesNoRawValueField",
+      "observedRealEffectIsVerified",
+      "negativeNoOpIsActionNoEffect",
+      "dispatchSuccessDoesNotImplyEffect",
+      "focusOnlyEffectIsDetectedAsRealEffect",
+      "observedTypeLengthChangeIsVerified",
+      "snapshotNeverContainsTheTypedValue",
+      "unresolvableTargetReportsZeroNotAGuess"
+    ]
+  },
+  "exactObservedBrowserEffect": {
+    "negativeCase": {
+      "action": { "action": "scroll", "direction": "down", "amount": 600 },
+      "scenario": "scroll at the document scroll boundary",
+      "dispatchSucceeded": true,
+      "dispatchMessage": "Scroll produced no viewport movement (boundary reached).",
+      "preSnapshot": {
+        "url": "http://localhost:4198/",
+        "scrollX": 0,
+        "scrollY": 3181,
+        "openModalsCount": 0,
+        "domElementCount": 23
+      },
+      "postSnapshot": {
+        "url": "http://localhost:4198/",
+        "scrollX": 0,
+        "scrollY": 3181,
+        "openModalsCount": 0,
+        "domElementCount": 23
+      },
+      "effectVerdict": {
+        "hasEffect": false,
+        "status": "ACTION_NO_EFFECT",
+        "shouldRecover": true,
+        "diagnostics": {
+          "urlChanged": false,
+          "scrollDelta": 0,
+          "valueLengthChanged": false,
+          "modalsChanged": false,
+          "domMutated": false,
+          "focusChanged": false
+        }
+      },
+      "significance": "The dispatch was acknowledged, the browser did not move, and the verdict says so — from observation, not from the request. This state was unreachable under the previous synthesized post-snapshot."
+    },
+    "positiveControl": {
+      "action": { "action": "scroll", "direction": "down", "amount": 600 },
+      "preScrollY": 0,
+      "postScrollY": 600,
+      "effectVerdict": { "hasEffect": true, "status": "SCROLL_CHANGED" },
+      "note": "The observed delta produced the verdict, not the requested amount."
+    },
+    "subtleControl": {
+      "action": { "action": "click", "target": "inert" },
+      "preFocus": "undefined",
+      "postFocus": "button:nth-child(3)",
+      "effectVerdict": { "hasEffect": true, "status": "FOCUS_SHIFT_OBSERVED" },
+      "note": "A genuine, subtle observed effect is still reported as an effect. Guards against over-correcting into treating everything as a no-op."
+    },
+    "typeControl": {
+      "action": { "action": "type", "target": "q", "text": "cats" },
+      "preTargetValueLength": 0,
+      "postTargetValueLength": 4,
+      "effectVerdict": { "hasEffect": true, "status": "VALUE_STATE_CHANGED" },
+      "note": "Only the LENGTH crossed the boundary; the typed value never appears in any snapshot."
+    }
+  },
+  "P0-2_realReasonerE2E": {
+    "status": "NOT_ACHIEVED",
+    "reason": "Environment cannot run the reasoner. Reported honestly rather than worked around.",
+    "blockers": [
+      { "requirement": "GROQ_API_KEY", "state": "ABSENT", "detail": "No .env or .env.local exists; freebuff-env list reports zero keys" },
+      { "requirement": "fastapi", "state": "NOT_INSTALLED" },
+      { "requirement": "uvicorn", "state": "NOT_INSTALLED" },
+      { "requirement": "pydantic", "state": "NOT_INSTALLED" },
+      { "requirement": "groq", "state": "NOT_INSTALLED" },
+      { "requirement": "pytest", "state": "NOT_INSTALLED" }
+    ],
+    "canonicalTask": "open google and search cats",
+    "substitutionsUsed": "NONE — no scripted proposer and no fabricated LLM response was used to stand in for a real reasoner",
+    "chainStatus": {
+      "START_TASK": "verified in real Chrome",
+      "target_resolution": "verified in real Chrome",
+      "containment": "verified in real Chrome 7/7",
+      "perception": "verified in real Chrome",
+      "reasoner_request": "verified in real Chrome (failure path, 8/8)",
+      "reasoner_response_from_live_model": "NOT VERIFIED — blocked",
+      "security_gates": "covered by the regression suite; exercised for real only under non-LLM proposers",
+      "dispatch": "verified in real Chrome",
+      "observed_post_action_state": "verified in real Chrome",
+      "effect_verification": "verified in real Chrome including the negative case",
+      "goal_verification_complete_run": "NOT VERIFIED — blocked behind the reasoner"
+    },
+    "prerequisitesToComplete": [
+      "Add GROQ_API_KEY via Settings -> Environment",
+      "Install backend/requirements.txt",
+      "Start the backend on 127.0.0.1:8010",
+      "Run the canonical task through the real UI"
+    ],
+    "codeChangeExpectedToComplete": "none"
+  },
+  "gateResults": {
+    "target_grounding": "unchanged, still first",
+    "m5_validator": "unchanged",
+    "security_critic": "unchanged, still after M5",
+    "privacy_policy": "unchanged",
+    "risk_semantic_confidence": "unchanged",
+    "confirmation": "unchanged, still blocking",
+    "containment": "unchanged, still the last gate before dispatch",
+    "harness": "unchanged, still non-authoritative",
+    "recovery": "unchanged, still proposes only",
+    "effect_verification": "post-dispatch truth check only; grants nothing; was not moved ahead of any gate"
+  },
+  "deliberatelyUnchanged": [
+    "Phase 15 semantics",
+    "OCR — still dormant, not activated",
+    "watchdog thresholds and architecture",
+    "redaction",
+    "privacy policy table",
+    "P1-1 planner-context budget — no run justified a change",
+    "P1-3 providerRetries — still 0, no run justified a change",
+    "containment",
+    "harness",
+    "confirmation authority"
+  ],
+  "secretsInEvidence": {
+    "GROQ_API_KEY": false,
+    "tokens": false,
+    "rawPII": false,
+    "rawPasswords": false,
+    "rawCardNumbers": false,
+    "sensitivePageText": false
+  }
+}

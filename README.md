@@ -32,7 +32,7 @@ Privacy Layer (Privacy Fusion + Local Redaction + Context Minimization)
 Sanitized Context (Zero Raw PII, Stripped Credentials, Safe Bounding Boxes)
   │
   ▼
-Reasoner (Groq openai/gpt-oss-20b / Fallback OpenRouter)
+Reasoner (Groq openai/gpt-oss-20b by default)
   │
   ▼
 M5 Validation (Target Grounding, In-Bounds Verification, Geometry Check)
@@ -54,23 +54,23 @@ Goal Verification (Deterministic Multi-Candidate Completion Check)
 
 ## Current Capabilities
 
-PrivAgent v1.0 implements and verifies the complete M1–M12 capability stack:
+PrivAgent v1.0 implements the complete M1–M12 capability stack. The table below distinguishes what is **implemented and unit-tested** from what has been **validated in real Chrome**; most milestones are verified by the automated test suite rather than by an end-to-end browser run.
 
 - **DOM Privacy Detection**: Local rule- and pattern-based discovery of passwords, OTPs, CVVs, PANs, credit cards, bank accounts, emails, and phone numbers.
 - **Screenshot Capture & Coordinate Mapping**: Viewport capture mapped to HiDPI physical device coordinates with clipping.
-- **On-Device OCR**: Local WebAssembly Tesseract OCR scanning canvas and non-DOM visual regions without network transmission.
+- **On-Device OCR**: Local WebAssembly Tesseract OCR scanning canvas and non-DOM visual regions without network transmission. *Implemented and unit-tested. Not currently active in the autonomous agent loop — the service worker does not pass an `ocrEngine` to multimodal perception, so the OCR branch is dormant there. OCR runs in the extension popup's manual capture flow.*
 - **Local Redaction**: Zero-leak visual canvas blackout, blur, and mask overlays preventing visual credential leakage.
 - **Privacy Fusion**: Unification of DOM detections and OCR findings into a single deduplicated spatial coordinate map.
 - **Context Minimization**: Elimination of raw values, inner text, and credential fields (`value`, `password`, `textContent`, `rawText`), exposing only sanitized structural IDs and geometry.
 - **Structured Browser Actions**: Typed browser action schema (`click`, `type`, `scroll`, `select`, `navigate`) constrained to prevent code injection.
 - **Semantic Grounding**: Target verification ensuring proposed action targets exist within the active page's current generation.
-- **Action-Effect Verification**: Post-action DOM mutation observation verifying that executed actions caused an observable change.
+- **Action-Effect Verification**: Post-action verification against **observed** browser state. Pre- and post-action snapshots are read from the live target tab through the content script (URL, scroll, DOM size, open modals, focus, and the target's value *length*), and a dispatched-but-unchanged action is reported as `ACTION_NO_EFFECT` rather than success. A snapshot that cannot be observed fails closed.
 - **Goal Verification**: Multi-condition task completion evaluation preventing premature loop termination or false success claims.
 - **Prompt-Injection Defense**: Isolation of untrusted webpage text from the agent reasoning system; instructions embedded in webpage DOM cannot override user goals.
 - **Target Isolation & Lifecycle**: Monotonic page generation counters preventing stale targets from previous pages being acted upon.
 - **Failure Recovery & Self-Healing**: Automated diagnosis of stale targets, missed effects, and bounded recovery replanning.
 - **Provider Fail-Closed Behavior**: Strict fail-closed semantics on cloud reasoning failures (HTTP 401, 429, 5xx, timeouts) with 0 speculative browser actions.
-- **Real Chrome Execution**: Verified end-to-end execution in real Google Chrome via Chrome DevTools Protocol (CDP) and Manifest V3 extension.
+- **Real Chrome Execution**: Real Google Chrome (CDP) with the built Manifest V3 extension verifies perception, privacy fusion + contextual PII, containment, harness, effect snapshots and the terminal failure path. **A complete autonomous run driven by a live cloud reasoner has not been reproduced in this repository's evidence** — the only real-provider run on record (`docs/evidence/stage2-real-browser/`) ended at user confirmation without a browser effect. Later seams use deterministic local proposers or run with the backend intentionally down. See `docs/evidence/post-phase15-e2e/`.
 - **M12 Evaluation Suite**: Comprehensive 18-metric SIH evaluation engine with forensic telemetry and receipt auditing.
 
 ---
@@ -141,10 +141,10 @@ The PrivAgent evaluation suite measures performance across curated benchmark sui
 | **High-Risk Confirmation Gate** | 100.0% | **VERIFIED** | Actions scoring $\ge 90$ paused for user authorization | Verified |
 | **Provider Fail-Closed Rate** | 100.0% | **VERIFIED** | HTTP 429/401 fail closed with 0 speculative dispatches | Verified |
 | **Goal Verification Accuracy** | 96.8% | **TEST SET ONLY** | 31/32 cases verified; 1 ambiguous case marked UNKNOWN | Verified |
-| **Action-Effect Verification Rate** | 98.0% | **TEST SET ONLY** | 49/50 evaluated action steps confirmed expected mutation | Verified |
+| **Action-Effect Verification Rate** | 98.0% | **TEST SET ONLY** | 49/50 evaluated action steps confirmed expected mutation, over synthetic fixtures with supplied snapshots. Not a measurement of open-web runs. | Verified |
 | **Recovery Success Rate** | 94.4% | **TEST SET ONLY** | 17/18 recoveries succeeded within retry budget | Verified |
 
-*Note: Test-set metrics reflect evaluated ground-truth performance over curated synthetic benchmarks and must not be interpreted as universal open-web performance guarantees.*
+*Note: **Every metric above is a test-set or fixture measurement, not a live production measurement.** They reflect ground-truth performance over curated synthetic benchmarks and local-only harnesses. None of them is an open-web performance guarantee, and none is a measurement of a full autonomous run against a live cloud reasoner.*
 
 ---
 
@@ -212,10 +212,10 @@ npm run build:frontend
 
 ### 4. Running the Tests
 ```bash
-# Run Vitest test suite (451 tests)
+# Run Vitest test suite (1155 tests, 99 files)
 npm test
 
-# Run Pytest backend test suite (205 tests)
+# Run Pytest backend test suite (requires a Python environment with pytest installed)
 npm run test:backend
 ```
 
@@ -251,7 +251,7 @@ PrivAgent/
 │   │   ├── reasoner.py       # Groq & fallback provider adapters
 │   │   ├── security.py       # Outbound sanitization & payload scanner
 │   │   └── text_safety.py    # Regex PII detection for model text
-│   ├── tests/                # Pytest test suite (205 tests)
+│   ├── tests/                # Pytest test suite (requires pytest)
 │   └── requirements.txt      # Python dependencies
 ├── demo/                     # Local test fixtures
 │   ├── shopping-fixture/     # Multi-page e-commerce fixture (ApexCart)
@@ -283,7 +283,7 @@ PrivAgent/
 │   ├── src/                  # Views, state stores, adapters
 │   ├── index.html            # Dashboard entrypoint
 │   └── vite.config.ts        # Dashboard Vite config
-├── tests/                    # Vitest test suite (451 tests)
+├── tests/                    # Vitest test suite (1155 tests, 99 files)
 ├── package.json              # Project scripts and dependencies
 ├── tsconfig.json             # TypeScript root configuration
 └── vitest.config.ts          # Vitest configuration

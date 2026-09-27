@@ -888,6 +888,86 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return ready;
           },
 
+          // ── Observed effect snapshots (M10 production path) ──────────────
+          //
+          // This is the ONLY source of post-dispatch state in the product. It
+          // reads the ACTUAL target tab through the content script, so an action
+          // that dispatched successfully but changed nothing is observable as
+          // unchanged. Returns null (never a guess) whenever the state cannot be
+          // observed; the loop then fails closed rather than deriving the
+          // post-state from the action that was requested.
+          //
+          // The URL comes from Chrome's own tab record as well as the page, so a
+          // navigation that replaced the content script is still captured.
+          getEffectSnapshot: async (target?: string) => {
+            try {
+              const liveUrl = await withTimeout(
+                (async () => {
+                  const tab = await chrome.tabs.get(targetTabId);
+                  return tab?.url || (tab as any)?.pendingUrl || null;
+                })(),
+                2000,
+                'Tab URL read timed out'
+              );
+
+              const res = (await withTimeout(
+                chrome.tabs.sendMessage(targetTabId, {
+                  type: 'PRIVAGENT_GET_EFFECT_SNAPSHOT',
+                  target,
+                }),
+                3000,
+                'Effect snapshot timed out (3s).'
+              )) as { snapshot?: Record<string, unknown> } | null;
+
+              const snap = res?.snapshot;
+              if (
+                !snap ||
+                typeof snap.url !== 'string' ||
+                typeof snap.scrollX !== 'number' ||
+                typeof snap.scrollY !== 'number' ||
+                typeof snap.domElementCount !== 'number'
+              ) {
+                console.warn('[PrivAgent SW] effect snapshot malformed or unavailable; failing closed');
+                return null;
+              }
+
+              // Chrome's tab URL wins: it reflects the tab even if the content
+              // script was torn down and reinjected mid-navigation.
+              const observedUrl = liveUrl || snap.url;
+              console.info('[AgentTrace] effect snapshot observed', {
+                phase: target ? 'targeted' : 'untargeted',
+                url: observedUrl,
+                scrollY: snap.scrollY,
+                domElementCount: snap.domElementCount,
+                openModalsCount: snap.openModalsCount,
+                targetValueLength: snap.targetValueLength,
+              });
+
+              return {
+                url: observedUrl,
+                scrollX: snap.scrollX,
+                scrollY: snap.scrollY,
+                targetValueLength:
+                  typeof snap.targetValueLength === 'number' ? snap.targetValueLength : 0,
+                openModalsCount:
+                  typeof snap.openModalsCount === 'number' ? snap.openModalsCount : 0,
+                activeElementSelector:
+                  typeof snap.activeElementSelector === 'string'
+                    ? snap.activeElementSelector
+                    : undefined,
+                domElementCount: snap.domElementCount,
+                timestamp:
+                  typeof snap.timestamp === 'number' ? snap.timestamp : Date.now(),
+              };
+            } catch (err) {
+              console.warn(
+                '[PrivAgent SW] effect snapshot unavailable:',
+                err instanceof Error ? err.message : String(err)
+              );
+              return null;
+            }
+          },
+
           onStepProgress: (state: TaskState) => {
             // Phase 14 projection + output screening happen inside
             // sendToDashboard, which is the single boundary every outbound

@@ -349,6 +349,27 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
     return false;
   }
 
+  // ── Post-Dispatch Effect Snapshot (M10 production path) ─────────────────
+  //
+  // The ONLY source of post-action state for effect verification. It reports
+  // what the page looks like RIGHT NOW, never what the caller asked for. An
+  // action that dispatched successfully but changed nothing must be visible as
+  // unchanged here, or effect verification cannot tell the two apart.
+  //
+  // PRIVACY: this is metadata only. It carries a value LENGTH (never a value)
+  // for the requested target, and counts/geometry. No raw password, card, OTP,
+  // CVV, input value, textContent or innerText ever crosses this boundary — the
+  // same rule the sanitized perception payload follows.
+  if (message.type === 'PRIVAGENT_GET_EFFECT_SNAPSHOT') {
+    sendResponse({
+      type: 'PRIVAGENT_GET_EFFECT_SNAPSHOT_RESPONSE',
+      snapshot: collectEffectSnapshot(
+        typeof (message as any).target === 'string' ? (message as any).target : undefined
+      ),
+    });
+    return false;
+  }
+
   // Dashboard Progress Relay from background worker to web UI
   if ((message as any).type === 'PRIVAGENT_DASHBOARD_PROGRESS') {
     window.postMessage(
@@ -365,6 +386,85 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
 
   return false;
 });
+
+/**
+ * Count of currently open modal overlays, using the SAME deterministic selector
+ * set the live interactability check already relies on, so a modal that would
+ * occlude a target is also visible to effect verification.
+ */
+function countOpenModals(): number {
+  try {
+    return document.querySelectorAll('dialog[open], [aria-modal="true"], [role="dialog"]').length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Build a stable, value-free identity for the currently focused element.
+ *
+ * Deliberately NOT a full CSS selector: `id` can be caller/site supplied, so
+ * using a raw id could carry page text across the boundary. This is derived from
+ * tagName plus a position ordinal, which is structural metadata only and is
+ * enough for the verifier's focusChanged comparison.
+ */
+function describeActiveElement(): string | undefined {
+  try {
+    const el = document.activeElement as HTMLElement | null;
+    if (!el || !el.tagName) return undefined;
+    const tag = el.tagName.toLowerCase();
+    if (tag === 'body' || tag === 'html') return undefined;
+    const parent = el.parentElement;
+    if (!parent) return tag;
+    const index = Array.prototype.indexOf.call(parent.children, el);
+    return Number.isInteger(index) && index >= 0 ? `${tag}:nth-child(${index + 1})` : tag;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Collect the observable browser state used by `verifyActionEffect`.
+ *
+ * `target` is the action's resolved element id. Its value is read ONLY as a
+ * length. A missing, unresolvable or non-form target yields 0 rather than a
+ * guess, which is what makes a failed `type` observable as no effect.
+ */
+function collectEffectSnapshot(target?: string): {
+  url: string;
+  scrollX: number;
+  scrollY: number;
+  targetValueLength: number;
+  openModalsCount: number;
+  activeElementSelector?: string;
+  domElementCount: number;
+  timestamp: number;
+} {
+  let targetValueLength = 0;
+  if (target) {
+    try {
+      const el = findElementByTarget(target);
+      if (el) {
+        // LENGTH ONLY. The value itself never leaves the page.
+        const v = (el as HTMLInputElement).value;
+        targetValueLength = typeof v === 'string' ? v.length : 0;
+      }
+    } catch {
+      targetValueLength = 0;
+    }
+  }
+
+  return {
+    url: window.location.href,
+    scrollX: Math.round(window.scrollX),
+    scrollY: Math.round(window.scrollY),
+    targetValueLength,
+    openModalsCount: countOpenModals(),
+    activeElementSelector: describeActiveElement(),
+    domElementCount: document.getElementsByTagName('*').length,
+    timestamp: Date.now(),
+  };
+}
 
 function isExtensionContextValid(): boolean {
   try {

@@ -1,0 +1,283 @@
+{
+  "timestamp": "2026-09-27T04:03:09.844Z",
+  "phase": "Post-Phase-15 Validation: Observed Effect Verification",
+  "goal": "Prove the shipped production snapshot path distinguishes \"the action dispatched\" from \"the requested browser effect actually happened\".",
+  "provenance": {
+    "kind": "REAL_CHROME",
+    "browser": "Chromium (headless=new) driven over CDP",
+    "contentScript": "REAL production content script loaded from dist/",
+    "messagePath": "real page → real content script → real PRIVAGENT_GET_EFFECT_SNAPSHOT → real verifyActionEffect() (bundled from extension/src)",
+    "synthetic": false,
+    "securityGatesTouched": false,
+    "note": "The full agent loop is not driven because no live reasoner backend is available in this environment. This exercises the exact production observation + verification seam the loop calls into, against a real browser."
+  },
+  "checks": {
+    "productionSnapshotMessageResponds": {
+      "pass": true,
+      "fields": [
+        "domElementCount",
+        "openModalsCount",
+        "scrollX",
+        "scrollY",
+        "targetValueLength",
+        "timestamp",
+        "url"
+      ],
+      "url": "http://localhost:4198/",
+      "domElementCount": 23
+    },
+    "snapshotCarriesNoRawValueField": {
+      "pass": true,
+      "keysChecked": [
+        "domElementCount",
+        "openModalsCount",
+        "scrollX",
+        "scrollY",
+        "targetValueLength",
+        "timestamp",
+        "url"
+      ],
+      "forbiddenKeysPresent": [],
+      "targetValueLength": 0,
+      "note": "Only a LENGTH is ever reported for a target value."
+    },
+    "observedRealEffectIsVerified": {
+      "pass": true,
+      "preScrollY": 0,
+      "postScrollY": 600,
+      "observedDelta": 600,
+      "requestedAmount": 600,
+      "status": "SCROLL_CHANGED",
+      "note": "The observed delta, not the requested 600, produced the verdict."
+    },
+    "negativeNoOpIsActionNoEffect": {
+      "pass": true,
+      "preScrollY": 5356,
+      "postScrollY": 5356,
+      "requestedAmount": 600,
+      "diagnostics": {
+        "urlChanged": false,
+        "scrollDelta": 0,
+        "valueLengthChanged": false,
+        "modalsChanged": false,
+        "domMutated": false,
+        "focusChanged": false
+      },
+      "status": "ACTION_NO_EFFECT",
+      "details": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+    },
+    "dispatchSuccessDoesNotImplyEffect": {
+      "pass": true,
+      "note": "The exact distinction the previous implementation could not make: a successful dispatch and a verified effect were conflated.",
+      "dispatchSucceeded": true,
+      "effectVerified": false
+    },
+    "focusOnlyEffectIsDetectedAsRealEffect": {
+      "pass": true,
+      "postFocus": "button:nth-child(3)",
+      "status": "FOCUS_SHIFT_OBSERVED",
+      "note": "Guards against over-correcting: a genuine, subtle observed effect must still be reported as an effect."
+    },
+    "observedTypeLengthChangeIsVerified": {
+      "pass": true,
+      "preTargetValueLength": 0,
+      "postTargetValueLength": 4,
+      "status": "VALUE_STATE_CHANGED",
+      "note": "Only the LENGTH crossed the boundary."
+    },
+    "snapshotNeverContainsTheTypedValue": {
+      "pass": true,
+      "postSnapshot": {
+        "url": "http://localhost:4198/",
+        "scrollX": 0,
+        "scrollY": 0,
+        "targetValueLength": 4,
+        "openModalsCount": 0,
+        "activeElementSelector": "input:nth-child(2)",
+        "domElementCount": 23,
+        "timestamp": 1790481802476
+      },
+      "note": "The typed value must not appear in any snapshot payload."
+    },
+    "unresolvableTargetReportsZeroNotAGuess": {
+      "pass": true,
+      "observedTargetValueLength": 0,
+      "preTypeTargetValueLength": 4,
+      "note": "A target that does not resolve reports length 0 rather than guessing or carrying a value over. This is the fail-safe property: no observation means no claim."
+    }
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "targetTabId": 1492227433,
+  "positiveControlScroll": {
+    "action": {
+      "action": "scroll",
+      "direction": "down",
+      "amount": 600
+    },
+    "dispatchSucceeded": true,
+    "dispatchMessage": "Scrolled down by 600px.",
+    "preSnapshot": {
+      "url": "http://localhost:4198/",
+      "scrollX": 0,
+      "scrollY": 0,
+      "targetValueLength": 0,
+      "openModalsCount": 0,
+      "domElementCount": 23,
+      "timestamp": 1790481796299
+    },
+    "postSnapshot": {
+      "url": "http://localhost:4198/",
+      "scrollX": 0,
+      "scrollY": 600,
+      "targetValueLength": 0,
+      "openModalsCount": 0,
+      "domElementCount": 23,
+      "timestamp": 1790481797208
+    },
+    "effectVerdict": {
+      "hasEffect": true,
+      "status": "SCROLL_CHANGED",
+      "details": "Scroll down by 600px shifted viewport by 600px.",
+      "diagnostics": {
+        "urlChanged": false,
+        "scrollDelta": 600,
+        "valueLengthChanged": false,
+        "modalsChanged": false,
+        "domMutated": false,
+        "focusChanged": false
+      },
+      "shouldRecover": false
+    }
+  },
+  "negativeCase": {
+    "action": {
+      "action": "scroll",
+      "direction": "down",
+      "amount": 600
+    },
+    "scenario": "scroll at the document scroll boundary",
+    "dispatchSucceeded": true,
+    "dispatchMessage": "Scroll produced no viewport movement (boundary reached).",
+    "preSnapshot": {
+      "url": "http://localhost:4198/",
+      "scrollX": 0,
+      "scrollY": 5356,
+      "targetValueLength": 0,
+      "openModalsCount": 0,
+      "domElementCount": 23,
+      "timestamp": 1790481799018
+    },
+    "postSnapshot": {
+      "url": "http://localhost:4198/",
+      "scrollX": 0,
+      "scrollY": 5356,
+      "targetValueLength": 0,
+      "openModalsCount": 0,
+      "domElementCount": 23,
+      "timestamp": 1790481799928
+    },
+    "effectVerdict": {
+      "hasEffect": false,
+      "status": "ACTION_NO_EFFECT",
+      "details": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+      "diagnostics": {
+        "urlChanged": false,
+        "scrollDelta": 0,
+        "valueLengthChanged": false,
+        "modalsChanged": false,
+        "domMutated": false,
+        "focusChanged": false
+      },
+      "shouldRecover": true,
+      "suggestedRecovery": "Scroll boundary reached. Consider scrolling in reverse direction or interacting with visible controls."
+    }
+  },
+  "subtleFocusOnlyEffect": {
+    "action": {
+      "action": "click",
+      "target": "inert"
+    },
+    "scenario": "button with no handler — the page does not change, only focus does",
+    "dispatchSucceeded": true,
+    "preSnapshot": {
+      "url": "http://localhost:4198/",
+      "scrollX": 0,
+      "scrollY": 356,
+      "targetValueLength": 0,
+      "openModalsCount": 0,
+      "domElementCount": 23,
+      "timestamp": 1790481801140
+    },
+    "postSnapshot": {
+      "url": "http://localhost:4198/",
+      "scrollX": 0,
+      "scrollY": 0,
+      "targetValueLength": 0,
+      "openModalsCount": 0,
+      "activeElementSelector": "button:nth-child(3)",
+      "domElementCount": 23,
+      "timestamp": 1790481801851
+    },
+    "effectVerdict": {
+      "hasEffect": true,
+      "status": "FOCUS_SHIFT_OBSERVED",
+      "details": "Click on 'inert' shifted focus to 'button:nth-child(3)'.",
+      "diagnostics": {
+        "urlChanged": false,
+        "scrollDelta": 356,
+        "valueLengthChanged": false,
+        "modalsChanged": false,
+        "domMutated": false,
+        "focusChanged": true
+      },
+      "shouldRecover": false
+    }
+  },
+  "positiveControlType": {
+    "action": {
+      "action": "type",
+      "target": "q",
+      "text": "cats"
+    },
+    "dispatchSucceeded": true,
+    "preSnapshot": {
+      "url": "http://localhost:4198/",
+      "scrollX": 0,
+      "scrollY": 0,
+      "targetValueLength": 0,
+      "openModalsCount": 0,
+      "activeElementSelector": "button:nth-child(3)",
+      "domElementCount": 23,
+      "timestamp": 1790481801861
+    },
+    "postSnapshot": {
+      "url": "http://localhost:4198/",
+      "scrollX": 0,
+      "scrollY": 0,
+      "targetValueLength": 4,
+      "openModalsCount": 0,
+      "activeElementSelector": "input:nth-child(2)",
+      "domElementCount": 23,
+      "timestamp": 1790481802476
+    },
+    "effectVerdict": {
+      "hasEffect": true,
+      "status": "VALUE_STATE_CHANGED",
+      "details": "Type action registered value change in target 'q' (length: 4).",
+      "diagnostics": {
+        "urlChanged": false,
+        "scrollDelta": 0,
+        "valueLengthChanged": true,
+        "modalsChanged": false,
+        "domMutated": false,
+        "focusChanged": true
+      },
+      "shouldRecover": false
+    }
+  },
+  "result": {
+    "pass": 9,
+    "fail": 0,
+    "allPassed": true
+  }
+}

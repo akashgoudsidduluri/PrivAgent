@@ -202,7 +202,7 @@ export class AgentView {
               </div>
               <div class="kv-row">
                 <span class="kv-key">Reasoner:</span>
-                <span class="kv-value mono">Groq / gpt-oss-20b</span>
+                <span class="kv-value mono" title="Configured default. The extension does not yet surface the provider actually used for a run, so this is a configuration statement, not a per-run observation.">Groq / gpt-oss-20b (configured)</span>
               </div>
             </div>
           </div>
@@ -502,20 +502,65 @@ Outbound PII Bytes: 0 bytes
       <div class="trace-box" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-xs); padding: 10px;">
         <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">6. Actual Chrome Effect</div>
         <div style="font-size: 11px; color: var(--text-primary); margin-top: 2px;">
-          ${lastStep.executionSuccess ? 'CDP command executed successfully; DOM mutated as expected.' : 'Execution failed or suppressed.'}
+          ${lastStep.executionSuccess ? 'The action was dispatched to the target tab and acknowledged.' : 'Execution failed or was suppressed before dispatch.'}
         </div>
       </div>
 
       <!-- Step 7: Effect Verification -->
+      ${this.formatEffectVerification(lastStep)}
+    `;
+  }
+
+  /**
+   * Effect verification is reported from the OBSERVED post-action browser
+   * state, never from the fact that an action was dispatched. Three states
+   * are shown and they are NOT interchangeable:
+   *
+   *   effect observed    -> the observed change and what changed
+   *   no effect observed -> ACTION_NO_EFFECT: the browser did not change
+   *   not yet verified   -> the step has not reached verification
+   *
+   * A step that dispatched successfully but changed nothing shows NO EFFECT,
+   * not VERIFIED. Effect verification is a post-dispatch truth check, never
+   * an authorization layer, and it is never granted by a successful dispatch.
+   */
+  private formatEffectVerification(lastStep?: {
+    effectStatus?: string;
+    effectDetails?: string;
+  }): string {
+    const status = lastStep?.effectStatus;
+    const details = lastStep?.effectDetails;
+
+    if (!status) {
+      return `
       <div class="trace-box" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-xs); padding: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">7. Effect Verification</span>
-          <span class="badge badge-green">VERIFIED</span>
+          <span class="badge badge-gray">PENDING</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+          Not yet verified. The verdict is derived from the observed browser state after the step runs.
+        </div>
+      </div>`;
+    }
+
+    const noEffect = status === 'ACTION_NO_EFFECT';
+    const border = noEffect ? 'var(--status-red-border)' : 'var(--status-green-border)';
+    const badge = noEffect ? 'badge-red' : 'badge-green';
+    const label = noEffect ? 'NO EFFECT' : 'VERIFIED';
+
+    return `
+      <div class="trace-box" style="background: var(--bg-card); border: 1px solid ${border}; border-radius: var(--radius-xs); padding: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">7. Effect Verification</span>
+          <span class="badge ${badge}">${label}</span>
         </div>
         <div style="font-size: 11px; color: var(--text-primary); margin-top: 4px;">
-          Browser state progressed; ready for next perception cycle.
+          ${details || `Observed effect: ${status}.`}
         </div>
-      </div>
-    `;
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono);">
+          ${status}
+        </div>
+      </div>`;
   }
 }

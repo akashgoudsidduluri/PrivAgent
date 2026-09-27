@@ -140,6 +140,22 @@ export type ExtensionMessage =
   | { type: 'PRIVAGENT_TOGGLE_REDACTION'; enabled: boolean }
   | { type: 'PRIVAGENT_GET_STATE' }
   | { type: 'PRIVAGENT_STATE_RESPONSE'; report: PrivacyScanReport | null; isRedactionActive: boolean }
+  // Post-dispatch effect snapshot. Metadata only: URL, scroll, DOM count,
+  // modal count, focus identity and the target's value LENGTH (never its value).
+  | { type: 'PRIVAGENT_GET_EFFECT_SNAPSHOT'; target?: string }
+  | {
+      type: 'PRIVAGENT_GET_EFFECT_SNAPSHOT_RESPONSE';
+      snapshot: {
+        url: string;
+        scrollX: number;
+        scrollY: number;
+        targetValueLength: number;
+        openModalsCount: number;
+        activeElementSelector?: string;
+        domElementCount: number;
+        timestamp: number;
+      };
+    }
   | { type: 'PRIVAGENT_CAPTURE_SCREENSHOT' }
   | { type: 'PRIVAGENT_CAPTURE_SCREENSHOT_RESPONSE'; dataUrl?: string; error?: string }
   | { type: 'PRIVAGENT_GET_VIEWPORT_GEOMETRY' }

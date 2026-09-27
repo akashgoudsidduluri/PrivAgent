@@ -115,6 +115,13 @@ export interface StepTelemetry {
   confidenceScore?: number;
   selfHealingRecovered?: boolean;
   semanticContext?: any;
+  /**
+   * Authoritative post-dispatch effect verdict, produced by comparing the
+   * OBSERVED pre/post browser snapshots. `undefined` means the step has not
+   * reached effect verification yet — it is NOT the same as "verified".
+   */
+  effectStatus?: string;
+  effectDetails?: string;
 }
 
 export interface PrivacyReceipt {
