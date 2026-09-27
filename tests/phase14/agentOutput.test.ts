@@ -245,10 +245,47 @@ describe('P14-3 live activity is derived, never guessed from prose', () => {
     expect(phaseFromPlanningState('DYNAMIC_REPLANNING')).toBe('RECOVERY');
   });
 
-  it('3.3 the first cycle reports PERCEPTION even though the plan machine is idle', () => {
-    const out = projectAgentOutput(baseState({ status: 'IN_PROGRESS', steps: [], planningEngineState: 'SUBGOAL_SELECTION' }));
-    expect(out.activity.phase).toBe('PERCEPTION');
-    expect(out.activity.summary).toBe('Reading the page.');
+  it('3.3 the first cycle reports PERCEPTION only when the plan machine has not reported', () => {
+    // CORRECTED. This test previously asserted PERCEPTION for
+    // `planningEngineState: 'SUBGOAL_SELECTION'`, even though SUBGOAL_SELECTION
+    // means the machine HAS selected a subgoal — the title said "the plan
+    // machine is idle" but the fixture said the opposite.
+    //
+    // `steps` stays empty for the whole first reasoning call (a step is only
+    // recorded after an action dispatches), so keying PERCEPTION off
+    // `isFirstCycle` labelled the entire first reasoner request as PERCEPTION.
+    // A slow-but-healthy reasoner was therefore indistinguishable from a
+    // perception stall, and the dashboard watchdog misattributed it.
+    const planning = projectAgentOutput(
+      baseState({ status: 'IN_PROGRESS', steps: [], planningEngineState: 'SUBGOAL_SELECTION' })
+    );
+    expect(planning.activity.phase).toBe('PLANNING');
+    expect(planning.activity.summary).toBe('Deciding the next step.');
+
+    // The original intent is preserved: when nothing has been planned yet —
+    // including the service worker's hand-built handshake payload, which has no
+    // planningEngineState at all — the honest answer is PERCEPTION.
+    const unplanned = projectAgentOutput(
+      baseState({ status: 'IN_PROGRESS', steps: [], planningEngineState: undefined })
+    );
+    expect(unplanned.activity.phase).toBe('PERCEPTION');
+    expect(unplanned.activity.summary).toBe('Reading the page.');
+
+    const uninitialised = projectAgentOutput(
+      baseState({ status: 'IN_PROGRESS', steps: [], planningEngineState: 'UNINITIALIZED' })
+    );
+    expect(uninitialised.activity.phase).toBe('PERCEPTION');
+  });
+
+  it('3.3b a slow reasoner is never labelled as a perception stall', () => {
+    // The exact state the forensic run captured: first cycle, no step recorded
+    // yet, but the plan machine has already moved into subgoal selection — i.e.
+    // the loop is WAITING ON THE REASONER, not perceiving.
+    const out = projectAgentOutput(
+      baseState({ status: 'IN_PROGRESS', currentStep: 1, steps: [], planningEngineState: 'SUBGOAL_SELECTION' })
+    );
+    expect(out.activity.phase).not.toBe('PERCEPTION');
+    expect(out.activity.phase).toBe('PLANNING');
   });
 
   it('3.4 the activity line changes as the run progresses', () => {

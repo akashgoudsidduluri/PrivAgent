@@ -102,7 +102,15 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
   private resetWatchdog(timeoutMs?: number): void {
     this.clearWatchdog();
-    const effectiveTimeout = timeoutMs ?? (this.lastLifecycleStage === 'REASONING' ? 60000 : 30000);
+    // While the agent is waiting on the remote reasoner, the local loop is
+    // legitimately idle for as long as the provider timeout allows (55s on
+    // both the provider AbortController and the loop's own race). The watchdog
+    // must outlast that or it reports a healthy-but-slow reasoner as a stalled
+    // pipeline. This branch previously compared against 'REASONING', which is
+    // not a PipelineStage value — the real one is 'LLM_REASONING' — so the
+    // grace window could never apply and every wait was judged against 30s.
+    const awaitingReasoner = this.lastLifecycleStage === 'LLM_REASONING';
+    const effectiveTimeout = timeoutMs ?? (awaitingReasoner ? 60000 : 30000);
     this.watchdogTimer = setTimeout(() => {
       if (this.state.status === 'RUNNING') {
         const stage = this.lastLifecycleStage || 'UNKNOWN';
@@ -277,28 +285,23 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     else if (data.status === 'STOPPED') status = 'STOPPED';
     else if (data.status === 'NEEDS_USER_CONFIRMATION') status = 'NEEDS_USER_CONFIRMATION';
 
+    // The stage MUST be derived before the watchdog is (re)armed. resetWatchdog()
+    // chooses its window from `lastLifecycleStage`, so arming it first always
+    // judged the CURRENT payload against the PREVIOUS payload's stage — the
+    // longer reasoning window lagged one message behind and never actually
+    // applied to the progress that needed it.
+    let stage: PipelineStage = 'IDLE';
+    if (status === 'RUNNING') {
+      stage = data.stage
+        ? (data.stage as PipelineStage)
+        : phaseToPipelineStage(interaction?.activity.phase);
+    }
+    this.lastLifecycleStage = stage === 'IDLE' && status !== 'RUNNING' ? (status as PipelineStage) : stage;
+
     if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED') {
       this.clearWatchdog();
     } else if (status === 'RUNNING') {
       this.resetWatchdog();
-    }
-
-    let stage: PipelineStage = 'IDLE';
-    if (status === 'RUNNING') {
-      // The stage is derived from the STRUCTURED projection. Two bugs lived
-      // here. First, `currentPipelineStage` was hardcoded to
-      // BROWSER_EXECUTION, so the status bar showed "BROWSER_EXECUTION" for an
-      // entire run no matter what the agent was actually doing. Second, the
-      // watchdog's `lastLifecycleStage` fell back to sniffing the legacy
-      // `reason` string for the substring "perception", but `reason` is no
-      // longer populated by the agent loop, so that branch could never fire
-      // either. Both now read the one field that is actually authoritative.
-      stage = data.stage
-        ? (data.stage as PipelineStage)
-        : phaseToPipelineStage(interaction?.activity.phase);
-      this.lastLifecycleStage = stage;
-    } else {
-      this.lastLifecycleStage = status;
     }
 
     // A legacy `reason` is only a fallback. Assigning `data.reason`

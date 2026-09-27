@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-09-26T18:17:38.690Z",
+  "phase": "Reasoner failure path — real-Chrome acceptance",
+  "goal": "Prove a slow-but-real reasoner failure produces a clean terminal REASONER_FAILED, and is no longer misreported by the dashboard as a perception stall.",
+  "provenance": {
+    "kind": "REAL_CHROME_WITH_DETERMINISTIC_SLOW_BACKEND",
+    "browser": "Chromium (headless=new) over CDP",
+    "extension": "REAL production extension from dist/",
+    "reasoner": "A LOCAL STUB on 127.0.0.1:8010 that ACCEPTS the request and delays 40000ms before returning a structured 503 (error_kind=timeout). This is the same shape backend/app/routes/agent.py returns when the upstream model times out (GROQ_TIMEOUT_SECONDS=30).",
+    "synthetic": false,
+    "note": "No success is fabricated. The run genuinely fails through the genuine error path: BackendAgentProvider -> ProviderError -> AgentLoop terminal FAILED. The only thing stubbed is the upstream model latency."
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "backendReachableBeforeTask": {
+    "status": 200,
+    "body": {
+      "backend_status": "CONNECTED",
+      "reasoner": "groq"
+    }
+  },
+  "timing": {
+    "slowReasonerMs": 40000,
+    "reasoningEnteredAtMs": 4966,
+    "m6FailedAtMs": 45008,
+    "terminalAtMs": 45005,
+    "lastProgressAtMs": 112,
+    "backendRequests": 3,
+    "backendPaths": [
+      "/api/v1/health",
+      "/api/v1/health",
+      "/api/v1/agent/action"
+    ]
+  },
+  "phaseDuringReasoner": [
+    "TERMINAL"
+  ],
+  "lastProgressPhase": "PLANNING",
+  "lastProgressAtMs": 112,
+  "watchdog": {
+    "fired": false,
+    "lines": [],
+    "note": "The pre-fix dashboard fired this at 30s while the reasoner was still legitimately pending, and reported \"Last stage: PERCEPTION\"."
+  },
+  "terminal": {
+    "status": "FAILED",
+    "terminal": {
+      "outcome": "FAILED",
+      "reason": "REASONER_FAILED",
+      "headline": "Failed: the reasoning model was unavailable."
+    },
+    "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (timeout) and fallback  failed."
+  },
+  "events": [
+    {
+      "t": 1790446664614,
+      "status": "RUNNING",
+      "currentStep": 0,
+      "hasInteraction": true,
+      "phase": "PERCEPTION",
+      "outcome": "RUNNING",
+      "terminal": null,
+      "currentUrl": "http://localhost:4200/",
+      "reason": "Target tab discovered and ready. Starting visual privacy perception...",
+      "ms": 79
+    },
+    {
+      "t": 1790446664647,
+      "status": "IN_PROGRESS",
+      "currentStep": 0,
+      "hasInteraction": true,
+      "phase": "PLANNING",
+      "outcome": "RUNNING",
+      "terminal": null,
+      "currentUrl": "http://localhost:4200/",
+      "reason": "(absent)",
+      "ms": 112
+    },
+    {
+      "t": 1790446709540,
+      "status": "FAILED",
+      "currentStep": 1,
+      "hasInteraction": true,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "terminal": {
+        "outcome": "FAILED",
+        "reason": "REASONER_FAILED",
+        "headline": "Failed: the reasoning model was unavailable."
+      },
+      "currentUrl": "http://localhost:4200/",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (timeout) and fallback  failed.",
+      "ms": 45005
+    },
+    {
+      "t": 1790446709612,
+      "status": "FAILED",
+      "currentStep": 1,
+      "hasInteraction": true,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "terminal": {
+        "outcome": "FAILED",
+        "reason": "REASONER_FAILED",
+        "headline": "Failed: the reasoning model was unavailable."
+      },
+      "currentUrl": "http://localhost:4200/",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (timeout) and fallback  failed.",
+      "ms": 45077
+    }
+  ],
+  "result": {
+    "backendActuallyReachedTheStub": true,
+    "perceptionCompletedBeforeReasoning": true,
+    "phaseWasPlanningWhileAwaitingReasoner": true,
+    "phaseNeverMisreportedAsPerceptionStall": true,
+    "terminalFailedReachedDashboard": true,
+    "terminalReasonIsReasonerFailed": true,
+    "watchdogDidNotFire": true,
+    "terminalArrivedBeforeAnyWatchdog": true
+  }
+}

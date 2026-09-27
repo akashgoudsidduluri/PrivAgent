@@ -1,0 +1,250 @@
+{
+  "task": "read the heading on the local forensic target",
+  "target": "http://localhost:4199",
+  "events": [],
+  "backendProbe": {
+    "ms": 2,
+    "outcome": "threw",
+    "message": "Failed to fetch"
+  },
+  "timing": {
+    "taskStart": 0,
+    "watchdogWindowMs": 30000,
+    "lastNonTerminalAtMs": 134,
+    "terminalAtMs": 4830,
+    "gapBetweenLastProgressAndTerminalMs": 4696,
+    "watchdogFiredBeforeTerminal": false
+  },
+  "swBoundaries": {
+    "perceptionStartedAtMs": 143,
+    "multimodalCompleteAtMs": 4800,
+    "perceptionReturnedEvidence": [
+      "[AgentTrace] perception started Object",
+      "[AgentTrace] perception started",
+      "[AgentTrace] multimodal perception complete Object",
+      "[AgentLoop] perception completed",
+      "[AgentTrace] perception complete Object",
+      "[AgentTrace] multimodal perception complete Object"
+    ],
+    "reasoningEnteredAtMs": 4817,
+    "reasoningReturnedAtMs": null,
+    "reasoningWindowMs": null,
+    "m6FailedAtMs": 4831,
+    "m6FailedLine": "[AgentTrace] M6 failed Object",
+    "terminalEmittedAtMs": 4832
+  },
+  "dashboardEvents": [
+    {
+      "t": 1790446542500,
+      "status": "RUNNING",
+      "currentStep": 0,
+      "hasInteraction": true,
+      "phase": "PERCEPTION",
+      "planningEngineState": "(absent)",
+      "reason": "Target tab discovered and ready. Starting visual privacy perception...",
+      "outcome": "RUNNING",
+      "terminal": null,
+      "currentUrl": "http://localhost:4199/",
+      "hasSemanticContext": false,
+      "semPageGeneration": null,
+      "semEntityCount": null,
+      "candidateEntityCount": null,
+      "detectionCount": null,
+      "ms": 94
+    },
+    {
+      "t": 1790446542540,
+      "status": "IN_PROGRESS",
+      "currentStep": 0,
+      "hasInteraction": true,
+      "phase": "PLANNING",
+      "planningEngineState": "SUBGOAL_SELECTION",
+      "reason": "(absent)",
+      "outcome": "RUNNING",
+      "terminal": null,
+      "currentUrl": "http://localhost:4199/",
+      "hasSemanticContext": false,
+      "semPageGeneration": null,
+      "semEntityCount": null,
+      "candidateEntityCount": 0,
+      "detectionCount": null,
+      "ms": 134
+    },
+    {
+      "t": 1790446547236,
+      "status": "FAILED",
+      "currentStep": 1,
+      "hasInteraction": true,
+      "phase": "TERMINAL",
+      "planningEngineState": "TARGET_GROUNDING",
+      "reason": "Agent reasoning failed: Backend unavailable. Start it with: python backend/run.py",
+      "outcome": "FAILED",
+      "terminal": {
+        "outcome": "FAILED",
+        "reason": "REASONER_FAILED",
+        "headline": "Failed: the reasoning model was unavailable."
+      },
+      "currentUrl": "http://localhost:4199/",
+      "hasSemanticContext": true,
+      "semPageGeneration": 2,
+      "semEntityCount": 0,
+      "candidateEntityCount": 0,
+      "detectionCount": null,
+      "ms": 4830
+    },
+    {
+      "t": 1790446547248,
+      "status": "FAILED",
+      "currentStep": 1,
+      "hasInteraction": true,
+      "phase": "TERMINAL",
+      "planningEngineState": "TARGET_GROUNDING",
+      "reason": "Agent reasoning failed: Backend unavailable. Start it with: python backend/run.py",
+      "outcome": "FAILED",
+      "terminal": {
+        "outcome": "FAILED",
+        "reason": "REASONER_FAILED",
+        "headline": "Failed: the reasoning model was unavailable."
+      },
+      "currentUrl": "http://localhost:4199/",
+      "hasSemanticContext": true,
+      "semPageGeneration": 2,
+      "semEntityCount": 0,
+      "candidateEntityCount": 0,
+      "detectionCount": null,
+      "ms": 4842
+    }
+  ],
+  "renderedUi": {
+    "kvTargetTab": null,
+    "urlSpan": null,
+    "genBadge": null,
+    "countBadge": null,
+    "protectedBadge": null,
+    "statusbarStage": null,
+    "interactionPanel": null
+  },
+  "swConsole": [
+    {
+      "ms": 13,
+      "line": "[AgentTrace] service worker START_TASK received Object"
+    },
+    {
+      "ms": 79,
+      "line": "[AgentTrace] containment scope established Object"
+    },
+    {
+      "ms": 79,
+      "line": "[AgentTrace] target resolved Object"
+    },
+    {
+      "ms": 80,
+      "line": "[AgentTrace] target content script ready Object"
+    },
+    {
+      "ms": 82,
+      "line": "[AgentTrace] first progress emitted"
+    },
+    {
+      "ms": 92,
+      "line": "[AgentTrace] output screen Object"
+    },
+    {
+      "ms": 99,
+      "line": "[AgentTrace] agent loop started"
+    },
+    {
+      "ms": 124,
+      "line": "[AgentTrace] output screen Object"
+    },
+    {
+      "ms": 140,
+      "line": "[AgentTrace] harness cycle Object"
+    },
+    {
+      "ms": 143,
+      "line": "[AgentTrace] perception started Object"
+    },
+    {
+      "ms": 144,
+      "line": "[AgentTrace] perception started"
+    },
+    {
+      "ms": 4800,
+      "line": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "ms": 4810,
+      "line": "[AgentLoop] perception completed"
+    },
+    {
+      "ms": 4811,
+      "line": "[AgentTrace] perception complete Object"
+    },
+    {
+      "ms": 4811,
+      "line": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "ms": 4812,
+      "line": "[AgentTrace] semantic understanding complete Object"
+    },
+    {
+      "ms": 4814,
+      "line": "[AgentTrace] subgoal selected Object"
+    },
+    {
+      "ms": 4815,
+      "line": "[AgentTrace] long-horizon update Object"
+    },
+    {
+      "ms": 4817,
+      "line": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "ms": 4828,
+      "line": "[AgentTrace] output screen Object"
+    },
+    {
+      "ms": 4831,
+      "line": "[AgentTrace] M6 failed Object"
+    },
+    {
+      "ms": 4831,
+      "line": "[AgentTrace] M6 failed Object"
+    },
+    {
+      "ms": 4832,
+      "line": "[AgentTrace] terminal progress emitted Object"
+    },
+    {
+      "ms": 4833,
+      "line": "[AgentTrace] output screen Object"
+    }
+  ],
+  "contentScriptConsole": [
+    "[ContentScript] message received Object",
+    "[ContentScript] perception started",
+    "perception:start",
+    "dom:start",
+    "dom:done",
+    "visual:start",
+    "visual:done",
+    "fusion:start",
+    "fusion:done",
+    "minimization:start",
+    "minimization:done",
+    "response:start",
+    "[ContentScript] perception completed Object",
+    "response:sent",
+    "[ContentScript] response sent"
+  ],
+  "phaseEvidence": {
+    "note": "planningEngineState is read by phaseFromPlanningState(); if it is absent from the payload the phase falls back to IDLE.",
+    "observed": [
+      "PERCEPTION|(absent)",
+      "PLANNING|SUBGOAL_SELECTION",
+      "TERMINAL|TARGET_GROUNDING"
+    ]
+  }
+}

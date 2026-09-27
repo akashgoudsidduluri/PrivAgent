@@ -194,7 +194,7 @@ export class AgentView {
               </div>
               <div class="kv-row">
                 <span class="kv-key">Target Tab:</span>
-                <span class="kv-value mono" style="color: var(--status-blue-bright);">localhost:4174</span>
+                <span id="agent-kv-target" class="kv-value mono" style="color: var(--status-blue-bright);">—</span>
               </div>
               <div class="kv-row">
                 <span class="kv-key">Privacy Firewall:</span>
@@ -353,10 +353,18 @@ export class AgentView {
     const protectedSpan = document.getElementById('agent-privacy-protected');
     const preview = document.getElementById('agent-perception-preview');
     const genBadge = document.getElementById('agent-browser-generation');
+    const targetTab = document.getElementById('agent-kv-target');
 
     const sem = state.semanticContext;
     if (genBadge && sem?.pageGeneration) {
       genBadge.textContent = `GENERATION ${sem.pageGeneration}`;
+    }
+
+    // The target tab is whatever the loop actually resolved. It used to be a
+    // hardcoded 'localhost:4174' in the template with no id and no update path,
+    // so it named a demo fixture while the agent was really somewhere else.
+    if (targetTab) {
+      targetTab.textContent = state.currentUrl || '—';
     }
 
     if (urlSpan) urlSpan.textContent = state.currentUrl || 'http://localhost:4174';

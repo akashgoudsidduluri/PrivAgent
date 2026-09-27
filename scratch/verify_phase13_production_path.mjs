@@ -41,7 +41,10 @@ const CHROME_BIN =
 const EVIDENCE_DIR = path.join(REPO_ROOT, 'docs', 'evidence', 'phase13-harness');
 const EVIDENCE_JSON = path.join(EVIDENCE_DIR, 'phase13_production_path_evidence.json');
 
-const DASHBOARD_PORT = 5173; // the dashboard port the product treats as the control surface
+// The dashboard port the product treats as the control surface. Overridable so
+// the harness does not collide with a dev server already holding 5173 (e.g. a
+// managed preview); the default is unchanged.
+const DASHBOARD_PORT = Number(process.env.PRIVAGENT_DASHBOARD_PORT || 5173);
 const TARGET_PORT = 4195;
 const TARGET_ORIGIN = `http://localhost:${TARGET_PORT}`;
 

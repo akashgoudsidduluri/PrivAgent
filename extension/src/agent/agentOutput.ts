@@ -373,10 +373,21 @@ export function projectAgentOutput(state: AgentTaskState): AgentInteractionState
   // read here explicitly rather than cast away, so the widening is visible.
   const status = state.status as AgentTaskState['status'] | 'RUNNING';
 
-  // The first cycle has not yet run the plan state machine; it is perceiving.
+  // The service worker's hand-built handshake payload carries no
+  // planningEngineState, so before the plan state machine has reported
+  // anything there is genuinely nothing better to say than "perceiving".
+  //
+  // It must NOT, however, keep claiming that once the machine HAS reported.
+  // `steps` is still empty for the whole first reasoning call — the step is
+  // only recorded after an action is dispatched — so keying the override off
+  // `isFirstCycle` alone labelled the entire first reasoner request as
+  // PERCEPTION, even though the state machine had moved to SUBGOAL_SELECTION.
+  // A slow reasoner was therefore indistinguishable from a perception stall.
   const isFirstCycle = !Array.isArray(state.steps) || state.steps.length === 0;
+  const planReported =
+    typeof state.planningEngineState === 'string' && state.planningEngineState !== 'UNINITIALIZED';
   let phase: AgentActivityPhase = phaseFromPlanningState(state.planningEngineState);
-  if ((status === 'IN_PROGRESS' || status === 'RUNNING') && isFirstCycle) {
+  if ((status === 'IN_PROGRESS' || status === 'RUNNING') && isFirstCycle && !planReported) {
     phase = 'PERCEPTION';
   }
   if (status === 'NEEDS_USER_CONFIRMATION') {
