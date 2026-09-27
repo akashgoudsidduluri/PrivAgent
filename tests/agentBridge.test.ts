@@ -234,9 +234,31 @@ describe('buildAgentPayload — DOM-only path', () => {
 });
 
 describe('buildAgentPayload — visual pipeline path', () => {
-  it('uses visual detections when visual report is provided', () => {
+  it('merges visual detections with the DOM affordances', () => {
+    // CORRECTED. This test previously asserted that a visual report REPLACED
+    // the DOM detection list, yielding exactly the visual report's detections.
+    //
+    // That is the defect a real end-to-end run exposed: the multimodal
+    // coordinator builds `visualDetections` by skipping every detection that is
+    // not a sensitive entity, so using that list alone removed every
+    // interactive control from the reasoner's context. A live run against
+    // google.com sent `detectionCount: 0` to /api/v1/agent/action on a page
+    // that plainly had a search box, so the reasoner could only propose an
+    // inert `scroll`.
+    //
+    // The DOM affordances are now the base and the visual detections augment
+    // them; viewport, screenshot dimensions and OCR metrics still come from the
+    // visual report.
     const payload = buildAgentPayload(makeDomReport(), makeVisualReport())!;
-    expect(payload.detections).toHaveLength(1);  // visual report has 1 detection
+    const ids = payload.detections.map((d) => d.id);
+
+    // DOM affordances survive.
+    expect(ids).toContain('det-001');
+    expect(ids).toContain('det-002');
+    // The visual-only detection is merged in.
+    expect(ids).toContain('vdet-001');
+    // No duplicates.
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('screenshot_dimensions are populated from capture metadata', () => {

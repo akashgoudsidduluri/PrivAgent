@@ -1,0 +1,85 @@
+{
+  "goal": "open google and search cats",
+  "note": "Real google.com context -> real backend -> real configured provider. Response recorded verbatim.",
+  "backendUp": true,
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "sentToReasoner": {
+    "url": "https://www.google.com/?zx=1790482496070",
+    "detectionCount": 8,
+    "detections": [
+      {
+        "id": "ti6dpd",
+        "type": "input",
+        "selector": "#ti6dpd"
+      },
+      {
+        "id": "inter-link-3",
+        "type": "link",
+        "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+      },
+      {
+        "id": "gbqfbb",
+        "type": "button",
+        "selector": "#gbqfbb"
+      },
+      {
+        "id": "inter-button-10",
+        "type": "button",
+        "selector": "input[name=\"btnK\"]"
+      },
+      {
+        "id": "inter-button-11",
+        "type": "button",
+        "selector": "input[name=\"btnI\"]"
+      },
+      {
+        "id": "inter-button-17",
+        "type": "button",
+        "selector": "button[aria-label=\"Close\"]"
+      },
+      {
+        "id": "inter-button-18",
+        "type": "button",
+        "selector": "button.p7eiqf"
+      },
+      {
+        "id": "inter-button-19",
+        "type": "button",
+        "selector": "button.oIdq8b"
+      }
+    ],
+    "pageType": "search"
+  },
+  "reasonerResponse": {
+    "status": 200,
+    "body": {
+      "success": true,
+      "action": {
+        "action": "type",
+        "target": "ti6dpd",
+        "text": "cats",
+        "reason": "type query into search box"
+      },
+      "reason": "type query into search box",
+      "telemetry": {
+        "provider": "groq",
+        "role": "FAST",
+        "latency_ms": 813.1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    }
+  },
+  "observations": {
+    "choseAction": "type",
+    "reasonGiven": "type query into search box",
+    "telemetry": {
+      "provider": "groq",
+      "role": "FAST",
+      "latency_ms": 813.1,
+      "attempts": 1,
+      "fallback_used": false
+    },
+    "analysis": "A search input AND the real Google Search button were present in the context sent to the reasoner."
+  }
+}

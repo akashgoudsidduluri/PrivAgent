@@ -258,7 +258,33 @@ export function buildAgentPayload(
   const detections: AgentDetection[] = [];
 
   if (visualReport) {
+    // The visual report describes SENSITIVE regions only: the multimodal
+    // coordinator builds `visualDetections` by skipping every detection that
+    // is not a sensitive entity. It is therefore NOT a substitute for the DOM
+    // affordance list — using it alone silently removed every interactive
+    // control (search boxes, buttons, links) from the reasoner's context,
+    // which left the reasoner with nothing to act on.
+    //
+    // So the DOM detections remain the base, preserving their `length` and
+    // `label`, and the visual detections are merged in on top for any element
+    // the DOM scan did not already cover. The viewport, screenshot dimensions
+    // and OCR metrics still come from the visual report below.
+    for (const det of domScanReport.detections) {
+      const [bx, by, bw, bh] = det.bbox;
+      detections.push({
+        id: det.id,
+        type: det.type,
+        confidence: det.confidence,
+        bbox: { x: bx, y: by, width: bw, height: bh },
+        length: det.length,
+        source: det.source,
+        selector: det.selector,
+        is_partially_visible: false,
+        label: det.label,
+      });
+    }
     for (const det of visualReport.visualDetections) {
+      if (domScanReport.detections.some((d) => d.id === det.id)) continue;
       const [sx, sy, sw, sh] = det.screenshotBBox;
       detections.push({
         id: det.id,

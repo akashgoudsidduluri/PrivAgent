@@ -1,0 +1,205 @@
+{
+  "goal": "open google and search cats",
+  "source": "REAL google.com + REAL content script + REAL PlannerContextBuilder",
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "targetTabId": 1981335867,
+  "loadedUrl": "https://www.google.com/?zx=1790482457216",
+  "rawDetections": {
+    "totalElementsScanned": 278,
+    "detectionCount": 19,
+    "detections": [
+      {
+        "id": "inter-link-1",
+        "type": "link",
+        "selector": "a.w5hRs"
+      },
+      {
+        "id": "inter-link-2",
+        "type": "link",
+        "selector": "a[aria-label=\"Gmail\\ \"]"
+      },
+      {
+        "id": "inter-link-3",
+        "type": "link",
+        "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+      },
+      {
+        "id": "inter-button-4",
+        "type": "button",
+        "selector": "a[role=\"button\"]"
+      },
+      {
+        "id": "inter-link-5",
+        "type": "link",
+        "selector": "a[aria-label=\"Sign\\ in\"]"
+      },
+      {
+        "id": "inter-link-6",
+        "type": "link",
+        "selector": "a"
+      },
+      {
+        "id": "inter-button-7",
+        "type": "button",
+        "selector": "div[role=\"button\"]"
+      },
+      {
+        "id": "ti6dpd",
+        "type": "input",
+        "selector": "#ti6dpd"
+      },
+      {
+        "id": "inter-button-9",
+        "type": "button",
+        "selector": "span[role=\"button\"]"
+      },
+      {
+        "id": "inter-button-10",
+        "type": "button",
+        "selector": "input[name=\"btnK\"]"
+      },
+      {
+        "id": "inter-button-11",
+        "type": "button",
+        "selector": "input[name=\"btnI\"]"
+      },
+      {
+        "id": "gbqfbb",
+        "type": "button",
+        "selector": "#gbqfbb"
+      },
+      {
+        "id": "inter-link-13",
+        "type": "link",
+        "selector": "a[role=\"link\"]"
+      },
+      {
+        "id": "inter-link-14",
+        "type": "link",
+        "selector": "a.eQtdDf"
+      },
+      {
+        "id": "inter-link-15",
+        "type": "link",
+        "selector": "a[role=\"menuitem\"]"
+      },
+      {
+        "id": "inter-link-16",
+        "type": "link",
+        "selector": "div[role=\"link\"]"
+      },
+      {
+        "id": "inter-button-17",
+        "type": "button",
+        "selector": "button[aria-label=\"Close\"]"
+      },
+      {
+        "id": "inter-button-18",
+        "type": "button",
+        "selector": "button.p7eiqf"
+      },
+      {
+        "id": "inter-button-19",
+        "type": "button",
+        "selector": "button.oIdq8b"
+      }
+    ]
+  },
+  "decomposition": {
+    "goalId": "goal-mujb11wl-240hi",
+    "taskCategory": "INFORMATION_RETRIEVAL",
+    "subgoalCount": 4,
+    "subgoals": [
+      {
+        "id": "goal-mujb11wl-240hi-sg1",
+        "category": "SEARCH",
+        "description": "Enter search query \"google cats\" into search box"
+      },
+      {
+        "id": "goal-mujb11wl-240hi-sg2",
+        "category": "LOCATE",
+        "description": "Locate relevant search result matching \"google cats\""
+      },
+      {
+        "id": "goal-mujb11wl-240hi-sg3",
+        "category": "EXTRACT",
+        "description": "Extract target information from verified search result"
+      },
+      {
+        "id": "goal-mujb11wl-240hi-sg4",
+        "category": "VERIFY",
+        "description": "Verify target information satisfies user query"
+      }
+    ]
+  },
+  "plannerContext": {
+    "budgetBytes": 2048,
+    "actualBytes": 1908,
+    "targetBudgetMet": true,
+    "keptCount": 8,
+    "droppedCount": 11,
+    "kept": [
+      {
+        "id": "ti6dpd",
+        "type": "input",
+        "selector": "#ti6dpd"
+      },
+      {
+        "id": "inter-link-3",
+        "type": "link",
+        "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+      },
+      {
+        "id": "gbqfbb",
+        "type": "button",
+        "selector": "#gbqfbb"
+      },
+      {
+        "id": "inter-button-10",
+        "type": "button",
+        "selector": "input[name=\"btnK\"]"
+      },
+      {
+        "id": "inter-button-11",
+        "type": "button",
+        "selector": "input[name=\"btnI\"]"
+      },
+      {
+        "id": "inter-button-17",
+        "type": "button",
+        "selector": "button[aria-label=\"Close\"]"
+      },
+      {
+        "id": "inter-button-18",
+        "type": "button",
+        "selector": "button.p7eiqf"
+      },
+      {
+        "id": "inter-button-19",
+        "type": "button",
+        "selector": "button.oIdq8b"
+      }
+    ]
+  },
+  "searchAffordanceVisibleToReasoner": {
+    "count": 3,
+    "entries": [
+      {
+        "id": "ti6dpd",
+        "type": "input",
+        "selector": "#ti6dpd"
+      },
+      {
+        "id": "inter-link-3",
+        "type": "link",
+        "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+      },
+      {
+        "id": "inter-button-10",
+        "type": "button",
+        "selector": "input[name=\"btnK\"]"
+      }
+    ]
+  },
+  "verdict": "A_SEARCH_AFFORDANCE_WAS_VISIBLE — P1-1 is NOT the cause"
+}

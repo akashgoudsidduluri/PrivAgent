@@ -1,0 +1,1022 @@
+{
+  "timestamp": "2026-09-27T04:22:42.538Z",
+  "work": "P0-2 real reasoner end-to-end autonomous run",
+  "task": "open google and search cats",
+  "environment": {
+    "python": "Python 3.10.12",
+    "backendPort": 8010,
+    "dashboardPort": 5174,
+    "dashboardBuild": "frontend/dist (production Vite build, served statically)",
+    "extensionBuild": "dist/ (production extension build)"
+  },
+  "substitutionsUsed": "NONE — real backend, real configured provider, no scripted proposer",
+  "gates": {},
+  "distinctions": {
+    "1_backendReachable": true,
+    "2_backendCalledRealProvider": null,
+    "3_reasonerReturnedValidAction": true,
+    "4_actionPassedBackendValidation": true,
+    "5_actionPassedExtensionGates": true,
+    "6_actionDispatched": true,
+    "7_browserStateActuallyChanged": true,
+    "8_goalActuallyAchieved": false
+  },
+  "reasonerConfig": {
+    "mode": "groq",
+    "apiKeyConfigured": true,
+    "model": "openai/gpt-oss-20b",
+    "timeoutSeconds": 30,
+    "configuredFallback": "openrouter",
+    "reasonerClass": "GroqReasoner",
+    "keyValueNeverPrinted": true
+  },
+  "backendStarted": true,
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "dashboardLoaded": true,
+  "serviceWorkerAttachedPreRun": true,
+  "reasonerRequestsOnTheWire": [
+    {
+      "endpoint": "action",
+      "sentAt": 1790482974946,
+      "task": "open google and search cats",
+      "contextUrl": "https://www.google.com/",
+      "detectionCount": 7,
+      "detections": [
+        {
+          "id": "ti6dpd",
+          "type": "input",
+          "selector": "#ti6dpd"
+        },
+        {
+          "id": "inter-link-3",
+          "type": "link",
+          "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+        },
+        {
+          "id": "gbqfbb",
+          "type": "button",
+          "selector": "#gbqfbb"
+        },
+        {
+          "id": "inter-button-10",
+          "type": "button",
+          "selector": "input[name=\"btnK\"]"
+        },
+        {
+          "id": "inter-button-11",
+          "type": "button",
+          "selector": "input[name=\"btnI\"]"
+        },
+        {
+          "id": "inter-button-16",
+          "type": "button",
+          "selector": "button[aria-label=\"Close\"]"
+        },
+        {
+          "id": "inter-button-17",
+          "type": "button",
+          "selector": "button.p7eiqf"
+        }
+      ],
+      "pageType": "search",
+      "historyLength": 0
+    },
+    {
+      "endpoint": "review",
+      "sentAt": 1790482979218,
+      "task": "open google and search cats",
+      "contextUrl": "https://www.google.com/",
+      "detectionCount": 7,
+      "detections": [
+        {
+          "id": "ti6dpd",
+          "type": "input",
+          "selector": "#ti6dpd"
+        },
+        {
+          "id": "inter-link-3",
+          "type": "link",
+          "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+        },
+        {
+          "id": "gbqfbb",
+          "type": "button",
+          "selector": "#gbqfbb"
+        },
+        {
+          "id": "inter-button-10",
+          "type": "button",
+          "selector": "input[name=\"btnK\"]"
+        },
+        {
+          "id": "inter-button-11",
+          "type": "button",
+          "selector": "input[name=\"btnI\"]"
+        },
+        {
+          "id": "inter-button-16",
+          "type": "button",
+          "selector": "button[aria-label=\"Close\"]"
+        },
+        {
+          "id": "inter-button-17",
+          "type": "button",
+          "selector": "button.p7eiqf"
+        }
+      ],
+      "pageType": "search",
+      "historyLength": null
+    },
+    {
+      "endpoint": "action",
+      "sentAt": 1790482979951,
+      "task": "open google and search cats",
+      "contextUrl": "https://www.google.com/",
+      "detectionCount": 5,
+      "detections": [
+        {
+          "id": "ti6dpd",
+          "type": "input",
+          "selector": "#ti6dpd"
+        },
+        {
+          "id": "inter-link-3",
+          "type": "link",
+          "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+        },
+        {
+          "id": "gbqfbb",
+          "type": "button",
+          "selector": "#gbqfbb"
+        },
+        {
+          "id": "inter-button-10",
+          "type": "button",
+          "selector": "input[name=\"btnK\"]"
+        },
+        {
+          "id": "inter-button-11",
+          "type": "button",
+          "selector": "input[name=\"btnI\"]"
+        }
+      ],
+      "pageType": "search",
+      "historyLength": 1
+    },
+    {
+      "endpoint": "action",
+      "sentAt": 1790482981035,
+      "task": "open google and search cats",
+      "contextUrl": "https://www.google.com/",
+      "detectionCount": 5,
+      "detections": [
+        {
+          "id": "ti6dpd",
+          "type": "input",
+          "selector": "#ti6dpd"
+        },
+        {
+          "id": "inter-link-3",
+          "type": "link",
+          "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+        },
+        {
+          "id": "gbqfbb",
+          "type": "button",
+          "selector": "#gbqfbb"
+        },
+        {
+          "id": "inter-button-10",
+          "type": "button",
+          "selector": "input[name=\"btnK\"]"
+        },
+        {
+          "id": "inter-button-11",
+          "type": "button",
+          "selector": "input[name=\"btnI\"]"
+        }
+      ],
+      "pageType": "search",
+      "historyLength": 1
+    },
+    {
+      "endpoint": "review",
+      "sentAt": 1790482987274,
+      "task": "open google and search cats",
+      "contextUrl": "https://www.google.com/",
+      "detectionCount": 5,
+      "detections": [
+        {
+          "id": "ti6dpd",
+          "type": "input",
+          "selector": "#ti6dpd"
+        },
+        {
+          "id": "inter-link-3",
+          "type": "link",
+          "selector": "a[aria-label=\"Search\\ for\\ Images\\ \"]"
+        },
+        {
+          "id": "gbqfbb",
+          "type": "button",
+          "selector": "#gbqfbb"
+        },
+        {
+          "id": "inter-button-10",
+          "type": "button",
+          "selector": "input[name=\"btnK\"]"
+        },
+        {
+          "id": "inter-button-11",
+          "type": "button",
+          "selector": "input[name=\"btnI\"]"
+        }
+      ],
+      "pageType": "search",
+      "historyLength": null
+    },
+    {
+      "endpoint": "action",
+      "sentAt": 1790482990734,
+      "task": "open google and search cats",
+      "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM",
+      "detectionCount": 1,
+      "detections": [
+        {
+          "id": "inter-link-1",
+          "type": "link",
+          "selector": "a"
+        }
+      ],
+      "pageType": "search",
+      "historyLength": 1
+    },
+    {
+      "endpoint": "review",
+      "sentAt": 1790483020476,
+      "task": "open google and search cats",
+      "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM",
+      "detectionCount": 1,
+      "detections": [
+        {
+          "id": "inter-link-1",
+          "type": "link",
+          "selector": "a"
+        }
+      ],
+      "pageType": "search",
+      "historyLength": null
+    },
+    {
+      "endpoint": "action",
+      "sentAt": 1790483021436,
+      "task": "open google and search cats",
+      "contextUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM#",
+      "detectionCount": 1,
+      "detections": [
+        {
+          "id": "inter-link-1",
+          "type": "link",
+          "selector": "a"
+        }
+      ],
+      "pageType": "search",
+      "historyLength": 2
+    }
+  ],
+  "payloadTimeline": [
+    {
+      "status": "RUNNING",
+      "reason": "Target tab discovered and ready. Starting visual privacy perception...",
+      "currentStep": 0,
+      "stepCount": 0
+    },
+    {
+      "status": "RUNNING",
+      "phase": "PERCEPTION",
+      "phaseSummary": "Reading the page.",
+      "reason": "Target tab discovered and ready. Starting visual privacy perception...",
+      "currentStep": 0,
+      "stepCount": 0,
+      "url": "https://www.google.com/"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "phase": "PLANNING",
+      "phaseSummary": "Deciding the next step.",
+      "reason": null,
+      "currentStep": 0,
+      "stepCount": 0,
+      "url": "https://www.google.com/"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "phase": "PLANNING",
+      "phaseSummary": "Deciding the next step.",
+      "reason": null,
+      "currentStep": 1,
+      "stepCount": 1,
+      "url": "https://www.google.com/"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "phase": "RECOVERY",
+      "phaseSummary": "Recovering from a failure.",
+      "reason": null,
+      "currentStep": 2,
+      "stepCount": 2,
+      "url": "https://www.google.com/"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "phase": "RECOVERY",
+      "phaseSummary": "Recovering from a failure.",
+      "reason": null,
+      "currentStep": 3,
+      "stepCount": 3,
+      "url": "https://www.google.com/"
+    },
+    {
+      "status": "IN_PROGRESS",
+      "phase": "PLANNING",
+      "phaseSummary": "Deciding the next step.",
+      "reason": null,
+      "currentStep": 4,
+      "stepCount": 4,
+      "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM"
+    },
+    {
+      "status": "FAILED",
+      "phase": "TERMINAL",
+      "phaseSummary": "Finished.",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+      "currentStep": 5,
+      "stepCount": 4,
+      "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM#"
+    },
+    {
+      "status": "FAILED",
+      "phase": "TERMINAL",
+      "phaseSummary": "Finished.",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+      "currentStep": 5,
+      "stepCount": 4,
+      "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM#"
+    }
+  ],
+  "stepRecords": [
+    {
+      "step": 1,
+      "actionType": "type",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated type action on known element 'ti6dpd'.",
+      "executionSuccess": true,
+      "effectStatus": "VALUE_STATE_CHANGED",
+      "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 4).",
+      "targetType": "input"
+    },
+    {
+      "step": 1,
+      "actionType": "type",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated type action on known element 'ti6dpd'.",
+      "executionSuccess": true,
+      "effectStatus": "VALUE_STATE_CHANGED",
+      "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 4).",
+      "targetType": "input"
+    },
+    {
+      "step": 2,
+      "actionType": "click",
+      "target": "gbqfbb",
+      "validationAllowed": false,
+      "validationReason": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "executionSuccess": false,
+      "executionError": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "effectDetails": null
+    },
+    {
+      "step": 1,
+      "actionType": "type",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated type action on known element 'ti6dpd'.",
+      "executionSuccess": true,
+      "effectStatus": "VALUE_STATE_CHANGED",
+      "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 4).",
+      "targetType": "input"
+    },
+    {
+      "step": 2,
+      "actionType": "click",
+      "target": "gbqfbb",
+      "validationAllowed": false,
+      "validationReason": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "executionSuccess": false,
+      "executionError": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "effectDetails": null
+    },
+    {
+      "step": 3,
+      "actionType": "pressKey",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+      "executionSuccess": false,
+      "executionError": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+      "effectStatus": "ACTION_NO_EFFECT",
+      "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+      "targetType": "input"
+    },
+    {
+      "step": 1,
+      "actionType": "type",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated type action on known element 'ti6dpd'.",
+      "executionSuccess": true,
+      "effectStatus": "VALUE_STATE_CHANGED",
+      "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 4).",
+      "targetType": "input"
+    },
+    {
+      "step": 2,
+      "actionType": "click",
+      "target": "gbqfbb",
+      "validationAllowed": false,
+      "validationReason": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "executionSuccess": false,
+      "executionError": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "effectDetails": null
+    },
+    {
+      "step": 3,
+      "actionType": "pressKey",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+      "executionSuccess": false,
+      "executionError": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+      "effectStatus": "ACTION_NO_EFFECT",
+      "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+      "targetType": "input"
+    },
+    {
+      "step": 4,
+      "actionType": "click",
+      "target": "inter-link-1",
+      "validationAllowed": true,
+      "validationReason": "Validated click action on known element 'inter-link-1'.",
+      "executionSuccess": true,
+      "effectStatus": "URL_NAVIGATION_OBSERVED",
+      "effectDetails": "Click on 'inter-link-1' triggered page navigation to 'https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2r",
+      "targetType": "link"
+    },
+    {
+      "step": 1,
+      "actionType": "type",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated type action on known element 'ti6dpd'.",
+      "executionSuccess": true,
+      "effectStatus": "VALUE_STATE_CHANGED",
+      "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 4).",
+      "targetType": "input"
+    },
+    {
+      "step": 2,
+      "actionType": "click",
+      "target": "gbqfbb",
+      "validationAllowed": false,
+      "validationReason": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "executionSuccess": false,
+      "executionError": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "effectDetails": null
+    },
+    {
+      "step": 3,
+      "actionType": "pressKey",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+      "executionSuccess": false,
+      "executionError": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+      "effectStatus": "ACTION_NO_EFFECT",
+      "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+      "targetType": "input"
+    },
+    {
+      "step": 4,
+      "actionType": "click",
+      "target": "inter-link-1",
+      "validationAllowed": true,
+      "validationReason": "Validated click action on known element 'inter-link-1'.",
+      "executionSuccess": true,
+      "effectStatus": "URL_NAVIGATION_OBSERVED",
+      "effectDetails": "Click on 'inter-link-1' triggered page navigation to 'https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2r",
+      "targetType": "link"
+    },
+    {
+      "step": 1,
+      "actionType": "type",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated type action on known element 'ti6dpd'.",
+      "executionSuccess": true,
+      "effectStatus": "VALUE_STATE_CHANGED",
+      "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 4).",
+      "targetType": "input"
+    },
+    {
+      "step": 2,
+      "actionType": "click",
+      "target": "gbqfbb",
+      "validationAllowed": false,
+      "validationReason": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "executionSuccess": false,
+      "executionError": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+      "effectDetails": null
+    },
+    {
+      "step": 3,
+      "actionType": "pressKey",
+      "target": "ti6dpd",
+      "validationAllowed": true,
+      "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+      "executionSuccess": false,
+      "executionError": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+      "effectStatus": "ACTION_NO_EFFECT",
+      "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+      "targetType": "input"
+    },
+    {
+      "step": 4,
+      "actionType": "click",
+      "target": "inter-link-1",
+      "validationAllowed": true,
+      "validationReason": "Validated click action on known element 'inter-link-1'.",
+      "executionSuccess": true,
+      "effectStatus": "URL_NAVIGATION_OBSERVED",
+      "effectDetails": "Click on 'inter-link-1' triggered page navigation to 'https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2r",
+      "targetType": "link"
+    }
+  ],
+  "finalPayload": {
+    "status": "FAILED",
+    "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+    "currentStep": 5,
+    "phase": "TERMINAL",
+    "phaseSummary": "Finished.",
+    "outcome": "FAILED",
+    "terminal": {
+      "outcome": "FAILED",
+      "reason": "REASONER_FAILED",
+      "headline": "Failed: the reasoning model was unavailable."
+    },
+    "steps": [
+      {
+        "step": 1,
+        "action": {
+          "action": "type",
+          "target": "ti6dpd",
+          "text": "cats",
+          "reason": "Enter the search query into the Google search box."
+        },
+        "validationAllowed": true,
+        "validationReason": "Validated type action on known element 'ti6dpd'.",
+        "executionSuccess": true,
+        "targetId": "ti6dpd",
+        "targetType": "input",
+        "url": "https://www.google.com/",
+        "timestamp": 1790482979301,
+        "riskAssessment": {
+          "riskLevel": "MEDIUM",
+          "level": "MEDIUM",
+          "score": 0.3,
+          "reasons": [
+            "Type inputs text into an interactive element."
+          ],
+          "rationale": "Type inputs text into an interactive element.",
+          "requiresConfirmation": false,
+          "requiresUserConfirmation": false,
+          "allowed": true,
+          "riskFactors": {
+            "actionTypeRisk": "MEDIUM",
+            "targetSensitivityRisk": "LOW",
+            "consequentialImpactRisk": "LOW",
+            "navigationRisk": "LOW",
+            "destructivenessRisk": "LOW"
+          }
+        },
+        "semanticVerification": {
+          "verified": true,
+          "confidence": 0.85,
+          "reason": "Target element tokens correspond to user task description.",
+          "targetAlignment": "ALIGNED",
+          "policyDecision": "ALLOW"
+        },
+        "confidenceEvaluation": {
+          "confidenceScore": 0.76,
+          "directive": "AUTO_EXECUTE",
+          "explanation": "Benign action (0.76) safe for autonomous execution.",
+          "factors": {
+            "semanticAlignmentScore": 0.85,
+            "riskSafetyFactor": 0.7,
+            "historicalReliability": 0
+          }
+        },
+        "expectedStateChange": {
+          "actionType": "type",
+          "expectedTransition": "DOM_UPDATE",
+          "description": "Type text into element ti6dpd",
+          "targetHint": "ti6dpd"
+        },
+        "currentPageGeneration": 1,
+        "pageType": "landing",
+        "effectVerified": true,
+        "effectStatus": "VALUE_STATE_CHANGED",
+        "effectDetails": "Type action registered value change in target 'ti6dpd' (length: 4)."
+      },
+      {
+        "step": 2,
+        "action": {
+          "action": "click",
+          "target": "gbqfbb",
+          "reason": "Submit the search query by clicking the Google Search button."
+        },
+        "validationAllowed": false,
+        "validationReason": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+        "executionSuccess": false,
+        "executionError": "Action reason appears to contain sensitive values (PII). Reasons must not carry raw values into history or prompts.",
+        "targetId": "gbqfbb",
+        "url": "https://www.google.com/",
+        "timestamp": 1790482980378,
+        "selfHealing": {
+          "recovered": false,
+          "originalTargetId": "gbqfbb",
+          "confidence": 0,
+          "strategy": "NONE",
+          "reason": "Could not confidently recover target 'gbqfbb' (highest similarity was 0.00)."
+        },
+        "expectedStateChange": {
+          "actionType": "type",
+          "expectedTransition": "DOM_UPDATE",
+          "description": "Type text into element ti6dpd",
+          "targetHint": "ti6dpd"
+        },
+        "currentPageGeneration": 2,
+        "pageType": "landing"
+      },
+      {
+        "step": 3,
+        "action": {
+          "action": "pressKey",
+          "target": "ti6dpd",
+          "key": "Enter",
+          "reason": "Submit the typed query to search for cats."
+        },
+        "validationAllowed": true,
+        "validationReason": "Validated pressKey 'Enter' (focused-control keyboard interaction).",
+        "executionSuccess": false,
+        "executionError": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation.",
+        "targetId": "ti6dpd",
+        "targetType": "input",
+        "url": "https://www.google.com/",
+        "timestamp": 1790482987462,
+        "riskAssessment": {
+          "riskLevel": "MEDIUM",
+          "level": "MEDIUM",
+          "score": 0.25,
+          "reasons": [
+            "PressKey delivers an allowlisted key to a focused control and may submit a form."
+          ],
+          "rationale": "PressKey delivers an allowlisted key to a focused control and may submit a form.",
+          "requiresConfirmation": false,
+          "requiresUserConfirmation": false,
+          "allowed": true,
+          "riskFactors": {
+            "actionTypeRisk": "MEDIUM",
+            "targetSensitivityRisk": "LOW",
+            "consequentialImpactRisk": "LOW",
+            "navigationRisk": "LOW",
+            "destructivenessRisk": "LOW"
+          }
+        },
+        "semanticVerification": {
+          "verified": true,
+          "confidence": 0.85,
+          "reason": "Target element tokens correspond to user task description.",
+          "targetAlignment": "ALIGNED",
+          "policyDecision": "ALLOW"
+        },
+        "confidenceEvaluation": {
+          "confidenceScore": 0.8,
+          "directive": "AUTO_EXECUTE",
+          "explanation": "Benign action (0.8) safe for autonomous execution.",
+          "factors": {
+            "semanticAlignmentScore": 0.85,
+            "riskSafetyFactor": 0.75,
+            "historicalReliability": 0.03
+          }
+        },
+        "expectedStateChange": {
+          "actionType": "pressKey",
+          "expectedTransition": "DOM_UPDATE",
+          "description": "",
+          "targetHint": "ti6dpd"
+        },
+        "currentPageGeneration": 3,
+        "pageType": "landing",
+        "effectVerified": false,
+        "effectStatus": "ACTION_NO_EFFECT",
+        "effectDetails": "PressKey key 'Enter' on target 'ti6dpd' produced no observable URL change, value change, modal, focus shift, or DOM mutation."
+      },
+      {
+        "step": 4,
+        "action": {
+          "action": "click",
+          "target": "inter-link-1",
+          "reason": "Click the visible verification link on Google's sorry page to continue toward the cats search."
+        },
+        "validationAllowed": true,
+        "validationReason": "Validated click action on known element 'inter-link-1'.",
+        "executionSuccess": true,
+        "targetId": "inter-link-1",
+        "targetType": "link",
+        "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM",
+        "timestamp": 1790483020711,
+        "riskAssessment": {
+          "riskLevel": "LOW",
+          "level": "LOW",
+          "score": 0.2,
+          "reasons": [],
+          "rationale": "Risk assessment complete.",
+          "requiresConfirmation": false,
+          "requiresUserConfirmation": false,
+          "allowed": true,
+          "riskFactors": {
+            "actionTypeRisk": "LOW",
+            "targetSensitivityRisk": "LOW",
+            "consequentialImpactRisk": "LOW",
+            "navigationRisk": "LOW",
+            "destructivenessRisk": "LOW"
+          }
+        },
+        "semanticVerification": {
+          "verified": true,
+          "confidence": 0.95,
+          "reason": "Action target 'a link click the visible verification link on google's sorry page to continue toward the cats search. ' is semantically aligned with goal 'open google and search cats'.",
+          "targetAlignment": "ALIGNED",
+          "policyDecision": "ALLOW"
+        },
+        "confidenceEvaluation": {
+          "confidenceScore": 0.88,
+          "directive": "AUTO_EXECUTE",
+          "explanation": "Benign action (0.88) safe for autonomous execution.",
+          "factors": {
+            "semanticAlignmentScore": 0.95,
+            "riskSafetyFactor": 0.8,
+            "historicalReliability": 0.03
+          }
+        },
+        "expectedStateChange": {
+          "actionType": "click",
+          "expectedTransition": "DOM_UPDATE",
+          "description": "Click element inter-link-1",
+          "targetHint": "inter-link-1"
+        },
+        "currentPageGeneration": 6,
+        "pageType": "landing",
+        "effectVerified": true,
+        "effectStatus": "URL_NAVIGATION_OBSERVED",
+        "effectDetails": "Click on 'inter-link-1' triggered page navigation to 'https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM#'."
+      }
+    ],
+    "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM#",
+    "targetTabId": 90025953
+  },
+  "serviceWorkerAttached": true,
+  "finalBrowserState": {
+    "googleTabFound": true,
+    "url": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM#",
+    "title": "https://www.google.com/search?q=cats&amp;sca_esv=0b3dcb4103cb9ab7&amp;sxsrf=APpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%3A1790482969557&amp;source=hp&amp;ei=GZq4aofbIJHa0PEPoPnSiAQ&amp;iflsig=ABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV&amp;sei=K5q4ao-5FfrP0PEPhPKIiQo"
+  },
+  "goalVerification": {
+    "task": "open google and search cats",
+    "finalUrl": "https://www.google.com/sorry/index?continue=https://www.google.com/search%3Fq%3Dcats%26sca_esv%3D0b3dcb4103cb9ab7%26sxsrf%3DAPpeQnuqfjWz8Br-sJbU2rYSH-Oax7Sqrg%253A1790482969557%26source%3Dhp%26ei%3DGZq4aofbIJHa0PEPoPnSiAQ%26iflsig%3DABILxe8AAAAAarioKczQg_w_4GW0Esze__3W5BAyy7zV%26sei%3DK5q4ao-5FfrP0PEPhPKIiQo&q=EgQiNWWjGKy04tUGIjDhuHlBy1aZ-blsvQpZL3dqZjfIwx80BAjz2U8Ql7_TyajH4IkTH6b69kBYihVYK98yAVJaAUM#",
+    "searchForCatsPerformed": true,
+    "verdict": "NOT_ACHIEVED",
+    "note": "The agent's own SUCCESS claim is NOT trusted. The verdict is derived from the observed final URL."
+  },
+  "adapterReasonerView": "",
+  "terminalResult": {
+    "status": "FAILED",
+    "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
+    "terminal": {
+      "outcome": "FAILED",
+      "reason": "REASONER_FAILED",
+      "headline": "Failed: the reasoning model was unavailable."
+    }
+  },
+  "backendLogReasonerLines": [
+    "Fallback reasoner 'openrouter' also failed (unexpected_format): OpenRouter response missing message content."
+  ],
+  "dashboardConsoleTrace": [
+    "[info] [Adapter][PING] PING_SENT Object",
+    "[info] [Adapter][PING] PONG_EXTENSION_RECEIVED Object",
+    "[info] [Adapter][PING] ADAPTER_RESOLVED Object",
+    "[info] [Adapter] START_TASK received Object",
+    "[info] [AgentTrace] dashboard START_TASK received Object",
+    "[info] [Adapter][PING] PING_SENT Object",
+    "[info] [Adapter][PING] PONG_EXTENSION_RECEIVED Object",
+    "[info] [Adapter][PING] ADAPTER_RESOLVED Object",
+    "[info] [AgentTrace] dashboard START_TASK posted to window Object",
+    "[info] [AgentTrace] content START_TASK received",
+    "[info] [AgentTrace] content script forwarding START_TASK to background worker",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter][PING] PING_SENT Object",
+    "[info] [Adapter][PING] PONG_EXTENSION_RECEIVED Object",
+    "[info] [Adapter][PING] ADAPTER_RESOLVED Object",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter][PING] PING_SENT Object",
+    "[info] [Adapter][PING] PONG_EXTENSION_RECEIVED Object",
+    "[info] [Adapter][PING] ADAPTER_RESOLVED Object",
+    "[info] [Adapter][PING] PING_SENT Object",
+    "[info] [Adapter][PING] PONG_EXTENSION_RECEIVED Object",
+    "[info] [Adapter][PING] ADAPTER_RESOLVED Object",
+    "[warning] [AgentTrace] dashboard task watchdog timed out (WATCHDOG_TIMEOUT). Last stage: BROWSER_EXECUTION",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter] response received Object",
+    "[info] [AgentTrace] dashboard received TASK_PROGRESS Object",
+    "[info] [Adapter][PING] PING_SENT Object",
+    "[info] [Adapter][PING] PONG_EXTENSION_RECEIVED Object",
+    "[info] [Adapter][PING] ADAPTER_RESOLVED Object"
+  ],
+  "serviceWorkerConsoleTrace": [
+    "[info] [SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[info] [ServiceWorker] message received Object",
+    "[info] [AgentTrace] service worker START_TASK received Object",
+    "[info] TARGET_RESOLUTION_STARTED",
+    "[info] TARGET_TAB_CANDIDATES Array(2)",
+    "[info] TARGET_TAB_PROVISIONED Object",
+    "[info] [AgentTrace] target tab provisioned Object",
+    "[info] TARGET_TAB_READY Object",
+    "[info] [AgentTrace] containment scope established Object",
+    "[info] TARGET_TAB_SELECTED Object",
+    "[info] [AgentTrace] target resolved Object",
+    "[info] TARGET_TAB_READY Object",
+    "[info] [AgentTrace] target content script ready Object",
+    "[info] [AgentTrace] first progress emitted",
+    "[info] [AgentTrace] output screen Object",
+    "[info] [ServiceWorker] response forwarded Object",
+    "[info] [AgentTrace] agent loop started",
+    "[info] [AgentTrace] output screen Object",
+    "[info] [ServiceWorker] response forwarded Object",
+    "[info] [AgentTrace] harness cycle Object",
+    "[info] [AgentTrace] perception started Object",
+    "[info] [AgentTrace] perception started",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [ServiceWorker] response forwarded",
+    "[info] [AgentLoop] perception completed",
+    "[info] [AgentTrace] perception complete Object",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [AgentTrace] subgoal selected Object",
+    "[info] [AgentTrace] long-horizon update Object",
+    "[info] [AgentTrace] requesting reasoning",
+    "[info] [AgentTrace] reasoning response received",
+    "[info] [AgentTrace] action validated by M5",
+    "[info] [AgentTrace] security critic Object",
+    "[info] [AgentTrace] action passed privacy policy",
+    "[info] [AgentTrace] requesting safety review",
+    "[info] [AgentTrace] action passed safety review",
+    "[info] [AgentTrace] executeAction started",
+    "[info] [AgentTrace] effect snapshot observed Object",
+    "[info] [AgentTrace] containment decision Object",
+    "[info] [AgentTrace] executeAction response received",
+    "[info] [AgentTrace] effect snapshot observed Object",
+    "[info] [AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
+    "[info] [AgentTrace] subgoal completed Object",
+    "[info] [AgentTrace] output screen Object",
+    "[info] [ServiceWorker] response forwarded Object",
+    "[info] [AgentTrace] M6 next step",
+    "[info] [AgentTrace] harness cycle Object",
+    "[info] [AgentTrace] perception started Object",
+    "[info] [AgentTrace] perception started",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [ServiceWorker] response forwarded",
+    "[info] [AgentLoop] perception completed",
+    "[info] [AgentTrace] perception complete Object",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [AgentTrace] subgoal selected Object",
+    "[info] [AgentTrace] long-horizon update Object",
+    "[info] [AgentTrace] requesting reasoning",
+    "[info] [AgentTrace] reasoning response received",
+    "[info] [AgentTrace] output screen Object",
+    "[info] [ServiceWorker] response forwarded Object",
+    "[info] [AgentTrace] harness cycle Object",
+    "[info] [AgentTrace] perception started Object",
+    "[info] [AgentTrace] perception started",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [ServiceWorker] response forwarded",
+    "[info] [AgentLoop] perception completed",
+    "[info] [AgentTrace] perception complete Object",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [AgentTrace] long-horizon update Object",
+    "[info] [AgentTrace] long-horizon replan Object",
+    "[info] [AgentTrace] requesting reasoning",
+    "[info] [SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[info] [AgentTrace] reasoning response received",
+    "[info] [AgentTrace] action validated by M5",
+    "[info] [AgentTrace] security critic Object",
+    "[info] [AgentTrace] action passed privacy policy",
+    "[info] [AgentTrace] requesting safety review",
+    "[info] [AgentTrace] action passed safety review",
+    "[info] [AgentTrace] executeAction started",
+    "[info] [AgentTrace] effect snapshot observed Object",
+    "[info] [AgentTrace] containment decision Object",
+    "[info] [AgentTrace] executeAction response received",
+    "[info] [AgentTrace] effect snapshot observed Object",
+    "[warning] [AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
+    "[info] [AgentTrace] output screen Object",
+    "[info] [ServiceWorker] response forwarded Object",
+    "[info] [AgentTrace] recovery decision Object",
+    "[info] [AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
+    "[info] [AgentTrace] perception started",
+    "[warning] [PrivAgent SW] Target tab content script auto-injection failed: Error: Could not establish connection. Receiving end does not exist.",
+    "[warning] [PrivAgent SW] Target tab not ready before perception, retrying once...",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [ServiceWorker] response forwarded",
+    "[info] [AgentTrace] harness cycle Object",
+    "[info] [AgentTrace] perception started Object",
+    "[info] [AgentTrace] perception started",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [ServiceWorker] response forwarded",
+    "[info] [AgentLoop] perception completed",
+    "[info] [AgentTrace] perception complete Object",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [AgentTrace] long-horizon update Object",
+    "[info] [AgentTrace] requesting reasoning",
+    "[info] [SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[info] [AgentTrace] reasoning response received",
+    "[info] [AgentTrace] action validated by M5",
+    "[info] [AgentTrace] security critic Object",
+    "[info] [AgentTrace] action passed privacy policy",
+    "[info] [AgentTrace] requesting safety review",
+    "[info] [AgentTrace] action passed safety review",
+    "[info] [AgentTrace] executeAction started",
+    "[info] [AgentTrace] effect snapshot observed Object",
+    "[info] [AgentTrace] containment decision Object",
+    "[info] [AgentTrace] executeAction response received",
+    "[info] [AgentTrace] effect snapshot observed Object",
+    "[info] [AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
+    "[info] [AgentTrace] output screen Object",
+    "[info] [ServiceWorker] response forwarded Object",
+    "[info] [AgentTrace] M6 next step",
+    "[info] [AgentTrace] harness cycle Object",
+    "[info] [AgentTrace] perception started Object",
+    "[info] [AgentTrace] perception started",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [ServiceWorker] response forwarded",
+    "[info] [AgentLoop] perception completed",
+    "[info] [AgentTrace] perception complete Object",
+    "[info] [AgentTrace] multimodal perception complete Object",
+    "[info] [AgentTrace] long-horizon update Object",
+    "[info] [AgentTrace] requesting reasoning",
+    "[info] [AgentTrace] output screen Object",
+    "[info] [ServiceWorker] response forwarded Object",
+    "[info] [AgentTrace] M6 failed Object",
+    "[info] [AgentTrace] M6 failed Object",
+    "[info] [AgentTrace] terminal progress emitted Object",
+    "[info] [AgentTrace] output screen Object",
+    "[info] [ServiceWorker] response forwarded Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[info] [SW][PING] TARGET_RESOLUTION_RESULT Object"
+  ],
+  "result": {
+    "outcome": "NOT_ACHIEVED",
+    "honest": true,
+    "note": "Judged only on observed browser state. Backend reachability, an HTTP 200, a proposed action, a passed gate and a successful dispatch are recorded but none counts as goal achievement."
+  }
+}
