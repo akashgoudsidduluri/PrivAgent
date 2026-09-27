@@ -29,6 +29,10 @@
 import { BrowserAction } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
+// PHASE 17.4. Reuses the Phase 17.3 document-identity primitive rather than
+// inventing a second definition of "same page". No cycle: this contract
+// imports only a type from effectVerifier.
+import { isSameDocumentIdentity } from '../ocr/ocrObservationContract';
 import {
   PlanningBounds,
   DEFAULT_PLANNING_BOUNDS,
@@ -155,6 +159,20 @@ export interface TaskObservation {
   scrollY: number;
   /** LENGTH ONLY of the targeted field's value — never the value itself. */
   targetValueLength: number;
+  /**
+   * PHASE 17.4. True when the geometry numbers above are real readings, false
+   * when they are the all-zero fallback Phase 17.1 identified as "the ABSENCE
+   * of a reading". Carried from `AgentContextPayload.viewportObservable` (the
+   * 17.1 contract) so the long-horizon layer does not decode an unobservable
+   * viewport as "scroll did not move".
+   *
+   * OPTIONAL, matching `AgentContextPayload.viewportObservable`, which is
+   * optional in the 17.1 contract. `undefined` is read as "not asserted
+   * unobservable" so a producer predating the flag keeps its previous
+   * behaviour; only an explicit `false` suppresses the geometry signal. The one
+   * production producer, `observeFromContext`, always sets it explicitly.
+   */
+  viewportObservable?: boolean;
 }
 
 export type ProgressSignal =
@@ -184,6 +202,11 @@ export function observeFromContext(
     candidateIds,
     scrollY: extra.scrollY ?? 0,
     targetValueLength: extra.targetValueLength ?? 0,
+    // PHASE 17.4. Absent flag means the 17.1 producer did not assert
+    // observability. The field is OPTIONAL on AgentContextPayload, so an
+    // absent flag is treated as observable (preserving pre-17.4 behaviour for
+    // producers that predate the flag) but an explicit `false` is honoured.
+    viewportObservable: context.viewportObservable !== false,
   };
 }
 
@@ -213,6 +236,17 @@ export function normalizeUrl(url: string): string {
  * A bounded, deterministic fingerprint of "same page state + same action".
  * Only the first few candidate ids participate, so a long list of unrelated
  * DOM nodes cannot mask a genuine loop.
+ *
+ * PHASE 17.4. The observed geometry now participates. It previously did not,
+ * so a page that genuinely SCROLLED produced the same fingerprint as a page
+ * that had not moved: legitimate repeated scrolling was indistinguishable from
+ * a stuck page, and the loop detector fired on both. That is the "repeated
+ * action with changing observed state" case the reliability model must NOT
+ * treat as repetition.
+ *
+ * An UNOBSERVABLE viewport contributes a fixed marker rather than its numbers,
+ * so "we could not read the geometry" is never confused with "the geometry did
+ * not change" — the two must not collapse into one fingerprint.
  */
 export function fingerprintObservation(observation: TaskObservation, action?: BrowserAction): string {
   const url = normalizeUrl(observation.url);
@@ -221,7 +255,11 @@ export function fingerprintObservation(observation: TaskObservation, action?: Br
   const actionPart = action
     ? `${action.action}:${'target' in action ? String((action as { target?: unknown }).target ?? '') : ''}`
     : 'observe';
-  return stableHash(`${url}|${topCandidates}|${topEntities}|${actionPart}`);
+  const geometryPart =
+    observation.viewportObservable === false
+      ? 'geometry:unobservable'
+      : `geometry:${observation.scrollY}:${observation.targetValueLength}`;
+  return stableHash(`${url}|${topCandidates}|${topEntities}|${geometryPart}|${actionPart}`);
 }
 
 /**
@@ -238,30 +276,60 @@ export function assessProgress(
   opts: { subgoalJustCompleted?: string; discoveriesAdded?: number } = {}
 ): ProgressAssessment {
   const signals: ProgressSignal[] = [];
+  //
+  // PHASE 17.4. `observedChange` is what makes progress MEANINGFUL, and it is
+  // built ONLY from the observation. Bookkeeping (a subgoal being marked
+  // complete, a discovery being added) is recorded in `signals` for the
+  // diagnostic trace but is no longer sufficient on its own: the sole
+  // production call site passed `subgoalJustCompleted` derived from
+  // `lastActionResult.success`, which is DISPATCH state, so every successfully
+  // dispatched action reported progress and `consecutiveNoProgress` could never
+  // advance. Stagnation detection was unreachable as a result.
+  //
+  // This is the fix, and it is deliberately in the pure function rather than at
+  // the call site, so the rule holds for every present and future caller.
+  let observedChange = false;
   if (previous) {
-    if (normalizeUrl(previous.url) !== normalizeUrl(current.url)) {
+    // PHASE 17.4. Reuse the 17.3 document-identity primitive: a hash change is
+    // not a new document, and a genuinely different path/query is.
+    if (!isSameDocumentIdentity(previous.url, current.url)) {
       signals.push('NEW_PAGE');
+      observedChange = true;
     }
     if (current.entityIds.length > previous.entityIds.length) {
       signals.push('NEW_ENTITY');
+      observedChange = true;
     }
     if (current.candidateIds.length > previous.candidateIds.length) {
       signals.push('NEW_CANDIDATE');
+      observedChange = true;
     }
+    // A geometry difference is only evidence when the geometry was actually
+    // READ. An all-zero fallback viewport is the absence of a reading, so
+    // "0 → 0" is not "nothing moved"; it is "we do not know".
+    const geometryObserved = current.viewportObservable !== false && previous.viewportObservable !== false;
     if (
       previous.targetValueLength !== current.targetValueLength ||
-      previous.scrollY !== current.scrollY
+      (geometryObserved && previous.scrollY !== current.scrollY)
     ) {
       signals.push('RELEVANT_STATE_CHANGED');
+      if (geometryObserved || previous.targetValueLength !== current.targetValueLength) {
+        observedChange = true;
+      }
     }
   } else {
     signals.push('NEW_PAGE');
+    observedChange = true;
   }
   if (opts.subgoalJustCompleted) signals.push('SUBGOAL_COMPLETED');
-  if ((opts.discoveriesAdded ?? 0) > 0) signals.push('NEW_ENTITY');
+  if ((opts.discoveriesAdded ?? 0) > 0) {
+    signals.push('NEW_ENTITY');
+    // A discovery is derived from an observed entity, so it is evidence too.
+    observedChange = true;
+  }
 
   return {
-    meaningful: signals.length > 0,
+    meaningful: observedChange,
     signals,
     fingerprint: fingerprintObservation(current),
   };

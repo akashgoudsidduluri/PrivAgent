@@ -794,12 +794,44 @@ export class AgentLoop {
 
       const lhObservation = observeFromContext(context, {
         scrollY: context.viewport?.scroll_y ?? 0,
-        // A typed value's LENGTH is task-relevant state (the field now holds
-        // input); the value itself never leaves the local boundary.
-        targetValueLength: (context as any).typed_value_length ?? 0,
+        //
+        // PHASE 17.4. This previously read `(context as any).typed_value_length`.
+        // `AgentContextPayload` declares no such field, so the `as any` cast
+        // suppressed the type error and the expression was permanently 0 — which
+        // made assessProgress's "targeted value length changed" signal
+        // unreachable, silently, for as long as it existed.
+        //
+        // No sanitized context field carries the targeted value's LENGTH, so the
+        // signal is declared unavailable rather than faked. Reading a DOM/text
+        // goal type is Phase 17.2 proper's work; inventing a field here would
+        // fabricate the observation this phase exists to keep honest.
+        targetValueLength: 0,
       });
-      const lhProgress = this.longHorizon.observe(lhObservation, undefined, {
-        subgoalJustCompleted: this.state.lastActionResult?.success ? this.longHorizon.activeSubgoalId ?? undefined : undefined,
+      //
+      // PHASE 17.4. The action actually ATTEMPTED in the previous cycle.
+      // `fingerprintObservation` is documented as a fingerprint of "same page
+      // state + same action" and takes this argument, but the call site passed
+      // `undefined`, so the action component was permanently the literal
+      // 'observe'. A repeated identical failing action was therefore detected
+      // only because the OBSERVATION repeated, and a different action that also
+      // changed nothing was indistinguishable from it.
+      const lhLastAction =
+        this.state.steps.length > 0 ? this.state.steps[this.state.steps.length - 1]!.action : undefined;
+      const lhProgress = this.longHorizon.observe(lhObservation, lhLastAction, {
+        //
+        // PHASE 17.4. `subgoalJustCompleted` is no longer passed at all.
+        //
+        // It used to be `lastActionResult.success ? activeSubgoalId : undefined`
+        // — DISPATCH state presented to the long-horizon layer as task progress.
+        // Because assessProgress counted any signal as meaningful, every
+        // successfully dispatched action reported progress, so
+        // `consecutiveNoProgress` never advanced and `detectStall` could never
+        // fire. Stagnation detection was unreachable.
+        //
+        // assessProgress no longer treats a completion as sufficient on its own
+        // either, so the rule holds for every caller, and removing the value here
+        // keeps dispatch-derived bookkeeping out of long-horizon state entirely.
+        //
         // Only count an observation as an action once a step has actually run.
         countsAsAction: this.state.lastActionResult !== null,
       });

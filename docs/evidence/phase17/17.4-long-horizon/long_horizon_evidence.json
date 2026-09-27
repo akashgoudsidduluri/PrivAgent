@@ -1,0 +1,696 @@
+{
+  "timestamp": "2026-09-27T11:31:11.146Z",
+  "work": "Phase 17.4 — long-horizon reliability, real-Chrome evidence",
+  "substrate": "REAL headless Chrome + REAL built MV3 extension + REAL service worker + REAL content script + REAL trusted input events",
+  "substitution": {
+    "observation": "REAL — read back from the live tab through the extension and CDP",
+    "interaction": "REAL — trusted Input.dispatchMouseEvent at real element coordinates",
+    "proposer": "DETERMINISTIC FIXTURE — not the model. Reproducibility is the point; the reliability layer is what is under test.",
+    "decision": "HYBRID — the identical production modules (longHorizon, goalVerifier) imported in Node and fed the real browser observations. Production `verifyTaskGoal` is bundled and not exported to the service worker, so it cannot be called in-browser."
+  },
+  "positive": {
+    "question": "Does a genuine multi-page browser journey complete with a goal verified from the CURRENT observation?",
+    "task": "search for cats",
+    "meaningfulInteractions": 12,
+    "distinctPagesObserved": [
+      "http://localhost:4240/",
+      "http://localhost:4240/results?q=",
+      "http://localhost:4240/product?id=1",
+      "http://localhost:4240/products",
+      "http://localhost:4240/pricing",
+      "http://localhost:4240/long",
+      "http://localhost:4240/results?q=cats"
+    ],
+    "cycles": [
+      {
+        "step": 1,
+        "label": "open fixture home",
+        "action": {
+          "selector": "navigate /",
+          "clicked": true,
+          "browserAction": {
+            "action": "navigate",
+            "url": "http://localhost:4240/"
+          },
+          "urlBefore": "http://localhost:4240/",
+          "urlAfter": "http://localhost:4240/"
+        },
+        "observation": {
+          "url": "http://localhost:4240/",
+          "domElementCount": 25,
+          "scrollY": 0,
+          "markers": [],
+          "elementIdCount": 8
+        },
+        "effectVerdict": "ACTION_NO_EFFECT",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 946
+      },
+      {
+        "step": 2,
+        "label": "submit empty search",
+        "action": {
+          "selector": "#go",
+          "clicked": true,
+          "at": {
+            "x": 291,
+            "y": 77
+          },
+          "browserAction": {
+            "action": "click",
+            "target": "go"
+          },
+          "urlBefore": "http://localhost:4240/",
+          "urlAfter": "http://localhost:4240/results?q="
+        },
+        "observation": {
+          "url": "http://localhost:4240/results?q=",
+          "domElementCount": 23,
+          "scrollY": 0,
+          "markers": [
+            "search-results"
+          ],
+          "elementIdCount": 9
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE",
+          "NEW_ENTITY",
+          "NEW_CANDIDATE"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 802
+      },
+      {
+        "step": 3,
+        "label": "open first result",
+        "action": {
+          "selector": "#open-result",
+          "clicked": true,
+          "at": {
+            "x": 81,
+            "y": 149
+          },
+          "browserAction": {
+            "action": "click",
+            "target": "open-result"
+          },
+          "urlBefore": "http://localhost:4240/results?q=",
+          "urlAfter": "http://localhost:4240/product?id=1"
+        },
+        "observation": {
+          "url": "http://localhost:4240/product?id=1",
+          "domElementCount": 23,
+          "scrollY": 0,
+          "markers": [
+            "product-detail"
+          ],
+          "elementIdCount": 9
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 799
+      },
+      {
+        "step": 4,
+        "label": "back to products",
+        "action": {
+          "selector": "#back-link",
+          "clicked": true,
+          "at": {
+            "x": 83,
+            "y": 149
+          },
+          "browserAction": {
+            "action": "click",
+            "target": "back-link"
+          },
+          "urlBefore": "http://localhost:4240/product?id=1",
+          "urlAfter": "http://localhost:4240/products"
+        },
+        "observation": {
+          "url": "http://localhost:4240/products",
+          "domElementCount": 32,
+          "scrollY": 0,
+          "markers": [],
+          "elementIdCount": 10
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE",
+          "NEW_CANDIDATE"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 788
+      },
+      {
+        "step": 5,
+        "label": "open product details",
+        "action": {
+          "selector": "#details-link",
+          "clicked": true,
+          "at": {
+            "x": 166,
+            "y": 219
+          },
+          "browserAction": {
+            "action": "click",
+            "target": "details-link"
+          },
+          "urlBefore": "http://localhost:4240/products",
+          "urlAfter": "http://localhost:4240/product?id=1"
+        },
+        "observation": {
+          "url": "http://localhost:4240/product?id=1",
+          "domElementCount": 23,
+          "scrollY": 0,
+          "markers": [
+            "product-detail"
+          ],
+          "elementIdCount": 9
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE",
+          "NEW_ENTITY"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 783
+      },
+      {
+        "step": 6,
+        "label": "back to products again",
+        "action": {
+          "selector": "#back-link",
+          "clicked": true,
+          "at": {
+            "x": 83,
+            "y": 149
+          },
+          "browserAction": {
+            "action": "click",
+            "target": "back-link"
+          },
+          "urlBefore": "http://localhost:4240/product?id=1",
+          "urlAfter": "http://localhost:4240/products"
+        },
+        "observation": {
+          "url": "http://localhost:4240/products",
+          "domElementCount": 32,
+          "scrollY": 0,
+          "markers": [],
+          "elementIdCount": 10
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE",
+          "NEW_CANDIDATE"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 767
+      },
+      {
+        "step": 7,
+        "label": "navigate to pricing",
+        "action": {
+          "selector": "#nav-pricing",
+          "clicked": true,
+          "at": {
+            "x": 102,
+            "y": 76
+          },
+          "browserAction": {
+            "action": "click",
+            "target": "nav-pricing"
+          },
+          "urlBefore": "http://localhost:4240/products",
+          "urlAfter": "http://localhost:4240/pricing"
+        },
+        "observation": {
+          "url": "http://localhost:4240/pricing",
+          "domElementCount": 21,
+          "scrollY": 0,
+          "markers": [
+            "pricing"
+          ],
+          "elementIdCount": 6
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE",
+          "NEW_ENTITY"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 775
+      },
+      {
+        "step": 8,
+        "label": "open the long page",
+        "action": {
+          "selector": "navigate /long",
+          "clicked": true,
+          "browserAction": {
+            "action": "navigate",
+            "url": "http://localhost:4240/long"
+          },
+          "urlBefore": "http://localhost:4240/pricing",
+          "urlAfter": "http://localhost:4240/long"
+        },
+        "observation": {
+          "url": "http://localhost:4240/long",
+          "domElementCount": 28,
+          "scrollY": 0,
+          "markers": [
+            "pricing"
+          ],
+          "elementIdCount": 11
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE",
+          "NEW_CANDIDATE"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 973
+      },
+      {
+        "step": 9,
+        "label": "scroll down 600",
+        "action": {
+          "scrollBy": 600,
+          "clicked": true,
+          "browserAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 600
+          },
+          "urlBefore": "http://localhost:4240/long",
+          "urlAfter": "http://localhost:4240/long"
+        },
+        "observation": {
+          "url": "http://localhost:4240/long",
+          "domElementCount": 28,
+          "scrollY": 600,
+          "markers": [
+            "pricing"
+          ],
+          "elementIdCount": 11
+        },
+        "effectVerdict": "EFFECT_SCROLL",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "RELEVANT_STATE_CHANGED"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 612
+      },
+      {
+        "step": 10,
+        "label": "scroll down 600 more",
+        "action": {
+          "scrollBy": 600,
+          "clicked": true,
+          "browserAction": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 600
+          },
+          "urlBefore": "http://localhost:4240/long",
+          "urlAfter": "http://localhost:4240/long"
+        },
+        "observation": {
+          "url": "http://localhost:4240/long",
+          "domElementCount": 28,
+          "scrollY": 1200,
+          "markers": [
+            "pricing"
+          ],
+          "elementIdCount": 11
+        },
+        "effectVerdict": "EFFECT_SCROLL",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "RELEVANT_STATE_CHANGED"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 620
+      },
+      {
+        "step": 11,
+        "label": "return home",
+        "action": {
+          "selector": "navigate /",
+          "clicked": true,
+          "browserAction": {
+            "action": "navigate",
+            "url": "http://localhost:4240/"
+          },
+          "urlBefore": "http://localhost:4240/long",
+          "urlAfter": "http://localhost:4240/"
+        },
+        "observation": {
+          "url": "http://localhost:4240/",
+          "domElementCount": 25,
+          "scrollY": 0,
+          "markers": [],
+          "elementIdCount": 8
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": false,
+          "status": "IN_PROGRESS",
+          "reason": null
+        },
+        "progressSignals": [
+          "NEW_PAGE",
+          "RELEVANT_STATE_CHANGED"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "CONTINUE",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 993
+      },
+      {
+        "step": 12,
+        "label": "submit the real query",
+        "action": {
+          "selector": "#go",
+          "clicked": true,
+          "at": {
+            "x": 291,
+            "y": 77
+          },
+          "browserAction": {
+            "action": "click",
+            "target": "go"
+          },
+          "urlBefore": "http://localhost:4240/",
+          "urlAfter": "http://localhost:4240/results?q=cats"
+        },
+        "observation": {
+          "url": "http://localhost:4240/results?q=cats",
+          "domElementCount": 23,
+          "scrollY": 0,
+          "markers": [
+            "search-results"
+          ],
+          "elementIdCount": 9
+        },
+        "effectVerdict": "EFFECT_NAVIGATION",
+        "goalVerdict": {
+          "satisfied": true,
+          "status": "SUCCESS",
+          "reason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'."
+        },
+        "progressSignals": [
+          "NEW_PAGE",
+          "NEW_ENTITY",
+          "NEW_CANDIDATE"
+        ],
+        "meaningfulProgress": true,
+        "loopDetected": false,
+        "stallDetected": false,
+        "recoveryDecision": "CONTINUE",
+        "harnessDecision": "TERMINAL_GOAL",
+        "boundsExhausted": null,
+        "cycleLatencyMs": 734
+      }
+    ],
+    "finalGoalVerdict": {
+      "satisfied": true,
+      "status": "SUCCESS",
+      "reason": "Search goal verified against observed results URL: query 'cats' present at 'localhost'."
+    },
+    "goalVerifiedFromObservation": true,
+    "note": "The goal is decided by verifyTaskGoal on the final live URL. The sequence ending is never consulted. Reaching SUCCESS requires the real `?q=cats` to be present in the observed URL.",
+    "pass": true
+  },
+  "negative": {
+    "repeated_failing_action": {
+      "question": "Does a repeated identical action on an unchanged real page loop indefinitely?",
+      "realObservation": {
+        "url": "http://localhost:4240/results?q=cats",
+        "domElementCount": 23
+      },
+      "action": {
+        "action": "click",
+        "target": "does-not-exist"
+      },
+      "effectVerdict": "ACTION_NO_EFFECT (page unchanged, verified by re-reading the tab)",
+      "goalVerdict": {
+        "satisfied": false,
+        "status": "IN_PROGRESS"
+      },
+      "recoveryDecision": "REPLAN on loop detection",
+      "cycles": [
+        {
+          "cycle": 1,
+          "meaningfulProgress": true,
+          "loop": false,
+          "kind": null,
+          "reason": "No loop detected."
+        },
+        {
+          "cycle": 2,
+          "meaningfulProgress": false,
+          "loop": false,
+          "kind": null,
+          "reason": "No loop detected."
+        },
+        {
+          "cycle": 3,
+          "meaningfulProgress": false,
+          "loop": true,
+          "kind": "REPEATED_STATE",
+          "reason": "The same page-state/action fingerprint occurred 3 times (limit 2)."
+        },
+        {
+          "cycle": 4,
+          "meaningfulProgress": false,
+          "loop": true,
+          "kind": "REPEATED_STATE",
+          "reason": "The same page-state/action fingerprint occurred 4 times (limit 2)."
+        }
+      ],
+      "harnessDecision": "TERMINAL_BOUND once the loop/repeat bound is reached",
+      "pass": true
+    },
+    "stale_observation": {
+      "question": "Can an unobservable (stale) geometry reading be reported as observed progress?",
+      "action": "none — observation only",
+      "observation": {
+        "viewportObservable": false,
+        "scrollYBefore": 0,
+        "scrollYAfter": 900
+      },
+      "effectVerdict": "N/A (no dispatch)",
+      "goalVerdict": {
+        "satisfied": false,
+        "status": "IN_PROGRESS"
+      },
+      "recoveryDecision": "none required — a stale reading produces no progress signal",
+      "pass": true
+    },
+    "recovery_loop": {
+      "question": "Does an alternating A/B recovery pattern loop forever?",
+      "action": "A → B → A → B",
+      "observation": "four real fixture paths, alternating",
+      "effectVerdict": "EFFECT_NAVIGATION each cycle (real navigations occurred)",
+      "goalVerdict": {
+        "satisfied": false,
+        "status": "IN_PROGRESS"
+      },
+      "recoveryDecision": "REPLAN — Alternating state sequence A → B → A → B detected.",
+      "pass": true
+    },
+    "target_tab_drift": {
+      "question": "Could the dashboard or a foreign tab become the agent target?",
+      "observation": {
+        "realTabs": [
+          {
+            "id": 856999552,
+            "url": "http://localhost:4240/results?q=cats",
+            "active": true
+          }
+        ]
+      },
+      "targetTabIsWebTab": true,
+      "targetTabId": 856999552,
+      "effectVerdict": "N/A",
+      "goalVerdict": {
+        "satisfied": false,
+        "status": "IN_PROGRESS"
+      },
+      "recoveryDecision": "The loop pins one target tab for the task; the service worker revalidates it every cycle via ensureTargetTabReady.",
+      "pass": true
+    },
+    "budget_exhaustion": {
+      "question": "Does a budget bound ever become a SUCCESS?",
+      "action": "repeatedly dispatched actions until a bound is hit",
+      "observation": "three alternating fixture paths, so the loop bound is not what fires first",
+      "effectVerdict": "EFFECT_NAVIGATION",
+      "goalVerdict": {
+        "satisfied": false,
+        "status": "IN_PROGRESS"
+      },
+      "recoveryDecision": "none — checkBounds returns a bound, not a verdict",
+      "harnessDecision": "TERMINAL_BOUND",
+      "exhaustedAt": {
+        "atAction": 24,
+        "reason": "ACTION_BUDGET_EXHAUSTED",
+        "detail": "Task reached the maximum of 24 total actions."
+      },
+      "pass": true
+    },
+    "terminal_state_restart": {
+      "question": "Can a terminal task be restarted or recovered into a new run?",
+      "action": "resumeWithConfirmation() after a terminal outcome",
+      "observation": "terminal status = FAILED",
+      "effectVerdict": "N/A — no dispatch occurred",
+      "goalVerdict": {
+        "satisfied": false,
+        "status": "FAILED"
+      },
+      "recoveryDecision": "BLOCKED — resume refused",
+      "restartBlocked": true,
+      "restartError": "Cannot resume: Task is not waiting for user confirmation.",
+      "pass": true
+    }
+  },
+  "realReasoner": {},
+  "performance": {
+    "measured": true,
+    "note": "Local cycle cost only. It INCLUDES a real 700ms settle sleep after every trusted input event, so it is dominated by that deliberate settle, not by agent work. Provider/Groq latency is NOT included and NOT estimated — a deterministic fixture was the proposer.",
+    "cyclesMeasured": 12,
+    "perCycleMs": {
+      "p50": 788,
+      "p90": 973,
+      "min": 612,
+      "max": 993
+    },
+    "totalWallClockMs": 12499,
+    "observationOverhead": "NOT SEPARATELY MEASURED — the observation is a single Runtime.evaluate round trip folded into the cycle number above.",
+    "memory": "NOT MEASURED — no reliable in-harness measurement was available, so none is reported."
+  },
+  "summary": {
+    "positivePass": true,
+    "negative": {
+      "repeated_failing_action": true,
+      "stale_observation": true,
+      "recovery_loop": true,
+      "target_tab_drift": true,
+      "budget_exhaustion": true,
+      "terminal_state_restart": true
+    },
+    "allPass": true
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "serviceWorkerAttached": true
+}

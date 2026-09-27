@@ -1,0 +1,89 @@
+{
+  "timestamp": "2026-09-27T11:32:34.569Z",
+  "work": "Phase 17.4 \u2014 controlled real-reasoner long-horizon run",
+  "substrate": "REAL reasoner (Groq openai/gpt-oss-20b via the production BackendAgentProvider) + REAL built MV3 extension + REAL headless Chrome",
+  "proposer": "REAL MODEL \u2014 not scripted. Every proposed action came from the reasoner over the production HTTP path.",
+  "fixture": "CONTROLLED local fixture (deterministic pages, no network dependence).",
+  "task": "Open http://localhost:4250/ , then find the pricing information on the site, and report the price of the first product.",
+  "provider": {
+    "backendReachable": true,
+    "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+    "startObservation": {
+      "url": "http://localhost:4250/",
+      "title": "Fixture Search",
+      "domElementCount": 25,
+      "scrollY": 0,
+      "markers": [],
+      "ids": [
+        {
+          "id": "q",
+          "tag": "input"
+        },
+        {
+          "id": "go",
+          "tag": "button"
+        },
+        {
+          "id": "status",
+          "tag": "p"
+        },
+        {
+          "id": "privagent-redaction-root",
+          "tag": "div"
+        },
+        {
+          "id": "privagent-inspect-root",
+          "tag": "div"
+        },
+        {
+          "id": "privagent-floating-panel",
+          "tag": "div"
+        },
+        {
+          "id": "privagent-stage-badge",
+          "tag": "span"
+        },
+        {
+          "id": "privagent-close-bar",
+          "tag": "button"
+        }
+      ]
+    },
+    "reasonerLatencyMs": null
+  },
+  "cycles": [],
+  "result": {
+    "status": "FAILED",
+    "goalStatus": "FAILED",
+    "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 422",
+    "steps": 0,
+    "actionsDispatched": 0,
+    "finalObservedUrl": "http://localhost:4250/",
+    "goalVerifiedByVerifier": false
+  },
+  "summary": {
+    "realReasoner": true,
+    "proposerScripted": false,
+    "modelCycles": 0,
+    "reachedVerifiedSuccess": false,
+    "status": "FAILED",
+    "note": "The real reasoner run did NOT reach verified SUCCESS. This is recorded as-is and is NOT replaced with a scripted success."
+  },
+  "backendLogTail": "",
+  "status": "NOT_PROVEN",
+  "diagnosis": {
+    "attempted": true,
+    "providerConfigured": true,
+    "providerMode": "groq",
+    "providerModel": "openai/gpt-oss-20b",
+    "apiKeyConfigured": true,
+    "backendReachable": true,
+    "observedFailure": "HTTP 422 from POST /api/v1/agent/action",
+    "modelActuallyInvoked": false,
+    "modelCyclesObserved": 0,
+    "rootCause": "BackendAgentProvider hardcodes its endpoint to 127.0.0.1:8010. The harness backend was first started on 8061, so the request went elsewhere; on a retry at 8010 that port was already held by a foreign process, so the harness backend never bound and an empty backend log confirms it produced no output. A 422 therefore came from something that is not this backend.",
+    "secondaryCause": "The harness hand-built an AgentContextPayload; the backend's AgentContextPayload is a strict extra=forbid Pydantic model, so a synthesised context is also a plausible 422 source. Not isolated, because the port conflict made the first failure ambiguous.",
+    "whatThisDoesAndDoesNotShow": "This is NOT evidence that the real reasoner is broken. The model was never invoked, so nothing can be concluded about real-reasoner long-horizon behaviour from this run. It is recorded as NOT_PROVEN. No scripted proposer was substituted in its place.",
+    "notFixedBecause": "Requires freeing port 8010 and driving the context through the production buildSanitizedAgentContext/minimizeAgentContext path rather than a hand-built object. That is harness work outside the 17.4 reliability change set, and this phase does not claim the result."
+  }
+}
