@@ -30,6 +30,10 @@ import { groundProposedTarget } from './groundingEngine';
 import { canPerformAction, assertSanitizedContextSafe } from './privacyPolicy';
 import { AgentProvider } from './agentProvider';
 import { ProviderError } from './openRouterProvider';
+import {
+  isObservationCurrent,
+  observationIdentity,
+} from './providerResponse';
 import { AgentContextPayload, SensitiveEntityType } from '../privacy/types';
 import { assessActionRisk, ActionRiskAssessment } from './riskEngine';
 import { verifySemanticAction, SemanticVerificationResult } from './semanticVerifier';
@@ -2439,16 +2443,48 @@ export class AgentLoop {
    * failures only. Never retries on invalid output/auth — those fail safely
    * and M6 decides the next step (or terminates).
    */
+  /**
+   * PHASE 17.5 (F3). Bind a provider proposal to the observation it was computed
+   * from.
+   *
+   * A provider round trip is 500ms-55s. The page can navigate, the DOM can be
+   * replaced and the target can disappear underneath it. Acting on such a
+   * response is acting on a belief about a browser state that no longer exists.
+   *
+   * The identity is a digest of Phase 17.1 provenance only — page generation,
+   * URL and the detection-ID set. It carries no page text and is never
+   * persisted; it lives for one cycle.
+   */
+  private observationIdentityFor(context: AgentContextPayload): string {
+    return observationIdentity({
+      pageGeneration: this.state.currentPageGeneration ?? 0,
+      url: context.url ?? '',
+      detectionIds: (context.detections ?? []).map((d) => d.id),
+    });
+  }
+
   private async requestActionWithBoundedRetry(
     task: string,
     context: AgentContextPayload
   ): Promise<BrowserAction> {
+    //
+    // PHASE 17.5 (F3). Capture the identity of the observation this request is
+    // made FROM, before the round trip. Re-checked after the call returns.
+    //
+    const expectedIdentity = this.observationIdentityFor(context);
+
     let lastError: unknown;
     for (let attempt = 0; attempt <= this.providerRetries; attempt++) {
       this.state.providerAttempts++;
+      //
+      // PHASE 17.5 (F6): the watchdog timer is now CLEARED. It used to be
+      // created per attempt and never cleared, leaving up to providerRetries+1
+      // live 55s timers holding their closures after the step finished.
+      //
+      let timer: ReturnType<typeof setTimeout> | undefined;
       try {
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timer = setTimeout(
             () =>
               reject(
                 new ProviderError('Reasoning provider request timed out after 55s.', 'timeout', {
@@ -2456,12 +2492,26 @@ export class AgentLoop {
                 })
               ),
             55000
-          )
-        );
-        return await Promise.race([
+          );
+        });
+        const action = await Promise.race([
           this.provider.requestAction(task, context, this.state.previousActions),
           timeoutPromise,
         ]);
+
+        //
+        // PHASE 17.5 (F3). STALE RESPONSE REJECTION. The proposal was computed
+        // from `expectedIdentity`; if the browser moved since, it is REFUSED.
+        // Fail closed: no dispatch, no goal evidence.
+        //
+        if (!isObservationCurrent(expectedIdentity, this.observationIdentityFor(context))) {
+          throw new ProviderError(
+            'Provider response is stale: the observed page changed while the request was in flight.',
+            'timeout',
+            { retryable: false, category: 'STALE_RESPONSE' }
+          );
+        }
+        return action;
       } catch (err: unknown) {
         lastError = err;
         this.provider.registerFailure?.();
@@ -2469,7 +2519,17 @@ export class AgentLoop {
         if (!retryable || attempt >= this.providerRetries) {
           break;
         }
-        await this.delay(this.providerRetryDelayMs);
+        //
+        // PHASE 17.5 (F8). A server Retry-After is honoured only when parsed and
+        // trustworthy, is clamped to 30s, and stays INSIDE the configured bounded
+        // provider retry count. It can never become an infinite loop, and it never
+        // applies to a rate limit, which stays non-retryable by design.
+        //
+        const hint = err instanceof ProviderError ? err.retryAfterMs : undefined;
+        const delay = typeof hint === 'number' ? Math.min(hint, 30_000) : this.providerRetryDelayMs;
+        await this.delay(delay);
+      } finally {
+        if (timer !== undefined) clearTimeout(timer);
       }
     }
     throw lastError;

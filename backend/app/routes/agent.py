@@ -283,7 +283,15 @@ async def generate_action(
                     raw_dict.pop(k, None)
         action = BrowserActionModel.model_validate(raw_dict)
     except PydanticValidationError as err:
-        logger.warning("Reasoner produced schema-invalid action: %s | raw: %s | error: %s", err.error_count(), result.raw_action, err)
+        # PHASE 17.5 (F4): PRIVACY. The raw model action used to be logged here
+        # (`raw: %s`). It is model-authored text and may contain a value the model
+        # saw, i.e. PII, which then landed in the backend log permanently. The
+        # error COUNT and the exception are still logged; the payload is not.
+        logger.warning(
+            "Reasoner produced schema-invalid action (%d validation errors): %s",
+            err.error_count(),
+            err,
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={

@@ -22,10 +22,15 @@ import { BrowserAction } from './actionTypes';
 import { AgentContextPayload } from '../privacy/types';
 import { assertSanitizedContextSafe } from './privacyPolicy';
 import { ProviderError, ProviderErrorKind } from './openRouterProvider';
+import {
+  parseRetryAfter,
+  readBoundedJsonBody,
+  validateProviderEnvelope,
+  type ProviderTelemetryEvent,
+} from './providerResponse';
 import { validateEgressPayload } from '../security/egressFirewall';
 
-const AGENT_ACTION_ENDPOINT = 'http://127.0.0.1:8010/api/v1/agent/action';
-const AGENT_REVIEW_ENDPOINT = 'http://127.0.0.1:8010/api/v1/agent/review';
+const DEFAULT_AGENT_API_BASE = 'http://127.0.0.1:8010';
 
 export interface BackendAgentErrorDetail {
   success: false;
@@ -39,17 +44,51 @@ export class BackendAgentProvider implements AgentProvider {
 
   private timeoutMs: number;
 
-  constructor(opts: { timeoutMs?: number } = {}) {
+  /**
+   * PHASE 17.5. The resolved local backend endpoints.
+   *
+   * The DEFAULT is unchanged (`http://127.0.0.1:8010`) — production behaviour is
+   * identical. The base is now overridable so a harness or an operator running
+   * the backend on a different port talks to the backend that is ACTUALLY
+   * listening, instead of silently issuing requests to a port nobody owns.
+   *
+   * This is the direct cause of the 17.4 real-reasoner `NOT_PROVEN`: the provider
+   * hardcoded 8010 while the harness started its backend on 8061, so every
+   * request went to a foreign/absent process and the model was never invoked.
+   *
+   * SECURITY: the override cannot escape the local boundary. The egress firewall
+   * still allowlists only `http://127.0.0.1` and `http://localhost`, so a remote
+   * base here is BLOCKED fail-closed at the single outbound enforcement point —
+   * the API key and the sanitized context can never be sent off-device.
+   */
+  private readonly actionEndpoint: string;
+  private readonly reviewEndpoint: string;
+
+  /**
+   * PHASE 17.5. Structured, CONTENT-FREE telemetry. A ring buffer, not a log
+   * sink: it carries identifiers, categories, counts and statuses only.
+   */
+  private readonly telemetry: ProviderTelemetryEvent[] = [];
+  private static readonly TELEMETRY_RING = 50;
+  /** Monotonic per-provider request counter; the requestId stem. */
+  private requestCounter = 0;
+
+  constructor(opts: { timeoutMs?: number; baseUrl?: string } = {}) {
     // 35s: backend NVIDIA timeout is 30s; giving backend 5s extra ensures the
     // backend's structured 503 arrives before the frontend AbortController fires.
     this.timeoutMs = opts.timeoutMs ?? 55000;
+    const base = (opts.baseUrl ?? DEFAULT_AGENT_API_BASE).replace(/\/+$/, '');
+    this.actionEndpoint = `${base}/api/v1/agent/action`;
+    this.reviewEndpoint = `${base}/api/v1/agent/review`;
   }
 
   async requestAction(
     task: string,
     context: AgentContextPayload,
     history: BrowserAction[] = [],
-    role?: ModelRole
+    role?: ModelRole,
+    cycle = 0,
+    attempt = 1
   ): Promise<BrowserAction> {
     // 1. Verify sanitized context safety
     assertSanitizedContextSafe(context);
@@ -64,15 +103,29 @@ export class BackendAgentProvider implements AgentProvider {
     // 2. Call local backend with safe history metadata
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
-
+    //
+    // PHASE 17.5 (F7). Telemetry is recorded on EVERY exit path — success,
+    // refusal and failure alike. It carries no prompt, page text, PII, OCR text
+    // or credential; only identifiers, categories, counts and statuses.
+    //
+    const startedAt = Date.now();
+    const base = {
+      provider: this.name,
+      cycle,
+      attempt,
+      fallbackUsed: false,
+      retryable: false,
+      retried: attempt > 1,
+      retryAfterMs: null as number | null,
+    };
     try {
       const payload = { task, context: egressContext, history, model_role: role };
-      const egressDecision = validateEgressPayload(payload, AGENT_ACTION_ENDPOINT);
+      const egressDecision = validateEgressPayload(payload, this.actionEndpoint);
       if (egressDecision.directive === 'BLOCK') {
         throw new ProviderError(`Egress Firewall Blocked Request: ${egressDecision.reason}`, 'unknown');
       }
 
-      const resp = await fetch(AGENT_ACTION_ENDPOINT, {
+      const resp = await fetch(this.actionEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -82,28 +135,57 @@ export class BackendAgentProvider implements AgentProvider {
 
       if (!resp.ok) {
         const { detail, kind, retryable } = await this.parseError(resp);
+        const retryAfterMs = parseRetryAfter(resp.headers?.get?.('retry-after'));
         throw new ProviderError(`Backend agent endpoint failed: ${detail}`, kind, {
           retryable,
           status: resp.status,
+          retryAfterMs,
         });
       }
 
-      const data = (await resp.json()) as {
-        success: boolean;
-        action: BrowserAction;
-        reason: string;
-      };
-
-      if (!data.success || !data.action) {
-        throw new ProviderError(
-          `Backend returned unsuccessful action response: ${data.reason || 'unknown'}`,
-          'unknown'
-        );
-      }
-
-      return data.action;
+      //
+      // PHASE 17.5 (F5, F1). BOUNDED body read, then STRICT validation.
+      //
+      // The backend is local and trusted to be *well-intentioned*, but its
+      // response is still untrusted INPUT: a misconfigured or replaced backend
+      // must not be able to hand the agent an arbitrary object. Previously this
+      // returned `data.action` verbatim, with no schema check and no size bound.
+      //
+      // M5 still runs afterwards and remains the authority. This only means a
+      // malformed response is refused HERE, at the boundary, instead of
+      // travelling through the loop to be caught later.
+      const validated = validateProviderEnvelope(await readBoundedJsonBody(resp));
+      this.recordTelemetry({
+        ...base,
+        category: 'OK',
+        httpStatus: resp.status,
+        retryable: false,
+        validation: 'PASS',
+        actionType: validated.action,
+        terminalOutcome: 'CONTINUE',
+        latencyMs: Date.now() - startedAt,
+      });
+      return validated;
     } catch (err: unknown) {
       clearTimeout(timer);
+      //
+      // PHASE 17.5 (F7). Failure telemetry, recorded BEFORE any re-throw so no
+      // exit path escapes it. Only the CATEGORY, status and counters are
+      // recorded — never the message content — so a provider cannot smuggle
+      // content into telemetry.
+      //
+      const isProviderError = err instanceof ProviderError;
+      this.recordTelemetry({
+        ...base,
+        category: isProviderError ? err.category : 'UNKNOWN_PROVIDER_FAILURE',
+        httpStatus: isProviderError ? err.status ?? null : null,
+        retryable: isProviderError ? err.retryable : false,
+        retryAfterMs: isProviderError ? err.retryAfterMs ?? null : null,
+        validation: isProviderError && err.category === 'STALE_RESPONSE' ? 'REFUSED' : 'NOT_RUN',
+        actionType: null,
+        terminalOutcome: 'FAILED',
+        latencyMs: Date.now() - startedAt,
+      });
       if (err instanceof ProviderError) throw err;
 
       const msg = err instanceof Error ? err.message : String(err);
@@ -123,6 +205,21 @@ export class BackendAgentProvider implements AgentProvider {
     }
   }
 
+  /**
+   * PHASE 17.5 (F7). Read the structured provider telemetry ring.
+   * Content-free by construction: see `ProviderTelemetryEvent`.
+   */
+  getTelemetry(): readonly ProviderTelemetryEvent[] {
+    return [...this.telemetry];
+  }
+
+  /** PHASE 17.5. Record one telemetry event, bounded by a ring buffer. */
+  recordTelemetry(event: ProviderTelemetryEvent): void {
+    this.requestCounter += 1;
+    this.telemetry.push({ ...event, requestId: `req-${this.requestCounter}` });
+    if (this.telemetry.length > BackendAgentProvider.TELEMETRY_RING) this.telemetry.shift();
+  }
+
   async reviewAction(action: BrowserAction, task: string, context: AgentContextPayload): Promise<{ safe: boolean; reason: string }> {
     assertSanitizedContextSafe(context);
     // PHASE 17.1 (C6): same local-only strip as the action path.
@@ -131,11 +228,11 @@ export class BackendAgentProvider implements AgentProvider {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       const payload = { action, task, context: egressContext, model_role: 'SAFETY' };
-      const egressDecision = validateEgressPayload(payload, AGENT_REVIEW_ENDPOINT);
+      const egressDecision = validateEgressPayload(payload, this.reviewEndpoint);
       if (egressDecision.directive === 'BLOCK') {
         throw new ProviderError(`Egress Firewall Blocked Review: ${egressDecision.reason}`, 'unknown');
       }
-      const resp = await fetch(AGENT_REVIEW_ENDPOINT, {
+      const resp = await fetch(this.reviewEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -144,9 +241,26 @@ export class BackendAgentProvider implements AgentProvider {
       clearTimeout(timer);
       if (!resp.ok) {
         const { detail, kind, retryable } = await this.parseError(resp);
-        throw new ProviderError(`Backend review endpoint failed: ${detail}`, kind, { retryable, status: resp.status });
+        throw new ProviderError(`Backend review endpoint failed: ${detail}`, kind, {
+          retryable,
+          status: resp.status,
+          retryAfterMs: parseRetryAfter(resp.headers?.get?.('retry-after')),
+        });
       }
-      const data = await resp.json();
+      const parsed = await readBoundedJsonBody(resp);
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new ProviderError('Backend review response is not an object.', 'invalid_json', {
+          category: 'INVALID_JSON',
+        });
+      }
+      const data = parsed as { safe?: unknown; reason?: unknown };
+      if (typeof data.safe !== 'boolean' || typeof data.reason !== 'string') {
+        // The safety verdict is AUTHORITATIVE. A malformed verdict must never be
+        // coerced into `safe: true`.
+        throw new ProviderError('Backend review response is schema-invalid.', 'invalid_json', {
+          category: 'SCHEMA_INVALID',
+        });
+      }
       return { safe: data.safe, reason: data.reason };
     } catch (err: unknown) {
       clearTimeout(timer);

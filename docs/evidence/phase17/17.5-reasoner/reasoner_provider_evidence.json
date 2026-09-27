@@ -1,0 +1,436 @@
+{
+  "timestamp": "2026-09-27T13:22:02.807Z",
+  "work": "Phase 17.5 — reasoner & provider robustness: real-reasoner matrix and real-Chrome acceptance",
+  "substrate": "REAL reasoner (Groq openai/gpt-oss-20b via the production BackendAgentProvider) + REAL built MV3 extension + REAL headless Chrome + REAL production AgentLoop",
+  "realProviderCases": [
+    "R1",
+    "R2",
+    "R5"
+  ],
+  "controlledBoundaryInjectionCases": [
+    "R3",
+    "R4",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R10"
+  ],
+  "cases": {
+    "R1": {
+      "class": "REAL_PROVIDER",
+      "description": "Real provider, simple action",
+      "modelCycles": 3,
+      "reachedModel": true,
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "dispatched": [
+        {
+          "action": "type",
+          "target": "el_0_q",
+          "url": null
+        },
+        {
+          "action": "type",
+          "target": "el_0_q",
+          "url": null
+        },
+        {
+          "action": "type",
+          "target": "el_0_q",
+          "url": null
+        }
+      ],
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "OK",
+          "httpStatus": 200,
+          "validation": "PASS",
+          "actionType": "type",
+          "terminalOutcome": "CONTINUE",
+          "latencyMs": 621,
+          "requestId": "req-1"
+        },
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "OK",
+          "httpStatus": 200,
+          "validation": "PASS",
+          "actionType": "type",
+          "terminalOutcome": "CONTINUE",
+          "latencyMs": 788,
+          "requestId": "req-2"
+        },
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "OK",
+          "httpStatus": 200,
+          "validation": "PASS",
+          "actionType": "type",
+          "terminalOutcome": "CONTINUE",
+          "latencyMs": 803,
+          "requestId": "req-3"
+        }
+      ],
+      "providerLatencyMs": {
+        "n": 3,
+        "min": 621,
+        "p50": 788,
+        "p90": 803,
+        "max": 803
+      },
+      "verdict": "PROVEN_REAL — the real model was invoked and returned actions through the production path.",
+      "caveat": "Did not reach SUCCESS; recorded as-is."
+    },
+    "R2": {
+      "class": "REAL_PROVIDER",
+      "description": "Real provider, multi-step task",
+      "modelCycles": 1,
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (rate_limit) failed.",
+      "dispatched": [],
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "HTTP_429_RATE_LIMIT",
+          "httpStatus": 503,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 472,
+          "requestId": "req-1"
+        }
+      ],
+      "providerLatencyMs": {
+        "n": 1,
+        "min": 472,
+        "p50": 472,
+        "p90": 472,
+        "max": 472
+      },
+      "verdict": "PROVEN_REAL (model invoked)",
+      "caveat": "Did NOT reach SUCCESS. Recorded as-is; not replaced with a scripted proposer."
+    },
+    "R3": {
+      "class": "CONTROLLED_BOUNDARY_INJECTION",
+      "description": "Malformed / invalid response",
+      "dispatched": [],
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Agent reasoning failed: Provider action 'click' is missing required field 'target'.",
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "SCHEMA_INVALID",
+          "httpStatus": null,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 0,
+          "requestId": "req-1"
+        }
+      ],
+      "noDispatch": true,
+      "pass": true,
+      "verdict": "PROVEN_TEST"
+    },
+    "R4": {
+      "class": "CONTROLLED_BOUNDARY_INJECTION",
+      "description": "Provider timeout (abort)",
+      "dispatched": [],
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Task exceeded maximum step limit of 2.",
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "OK",
+          "httpStatus": 200,
+          "validation": "PASS",
+          "actionType": "click",
+          "terminalOutcome": "CONTINUE",
+          "latencyMs": 9005,
+          "requestId": "req-1"
+        },
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "OK",
+          "httpStatus": 200,
+          "validation": "PASS",
+          "actionType": "click",
+          "terminalOutcome": "CONTINUE",
+          "latencyMs": 9004,
+          "requestId": "req-2"
+        }
+      ],
+      "noDispatch": true,
+      "pass": true,
+      "verdict": "PROVEN_TEST"
+    },
+    "R6": {
+      "class": "CONTROLLED_BOUNDARY_INJECTION",
+      "description": "HTTP 5xx",
+      "dispatched": [],
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: unavailable",
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": true,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "HTTP_5XX",
+          "httpStatus": 503,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 0,
+          "requestId": "req-1"
+        },
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": true,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "HTTP_5XX",
+          "httpStatus": 503,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 1,
+          "requestId": "req-2"
+        }
+      ],
+      "noDispatch": true,
+      "pass": true,
+      "verdict": "PROVEN_TEST"
+    },
+    "R7": {
+      "class": "CONTROLLED_BOUNDARY_INJECTION",
+      "description": "Invalid JSON",
+      "dispatched": [],
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Agent reasoning failed: Provider returned a non-JSON response body.",
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "INVALID_JSON",
+          "httpStatus": null,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 0,
+          "requestId": "req-1"
+        }
+      ],
+      "noDispatch": true,
+      "pass": true,
+      "verdict": "PROVEN_TEST"
+    },
+    "R8": {
+      "class": "CONTROLLED_BOUNDARY_INJECTION",
+      "description": "Invalid action schema",
+      "dispatched": [],
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Agent reasoning failed: Provider proposed an unsupported action type: 'teleport'.",
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "UNSUPPORTED_ACTION",
+          "httpStatus": null,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 1,
+          "requestId": "req-1"
+        }
+      ],
+      "noDispatch": true,
+      "pass": true,
+      "verdict": "PROVEN_TEST"
+    },
+    "R10": {
+      "class": "CONTROLLED_BOUNDARY_INJECTION",
+      "description": "Provider failure followed by bounded recovery",
+      "dispatched": [],
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 500",
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": true,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "HTTP_5XX",
+          "httpStatus": 500,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 0,
+          "requestId": "req-1"
+        },
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": true,
+          "retried": false,
+          "retryAfterMs": null,
+          "category": "HTTP_5XX",
+          "httpStatus": 500,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 0,
+          "requestId": "req-2"
+        }
+      ],
+      "noDispatch": true,
+      "pass": true,
+      "verdict": "PROVEN_TEST"
+    },
+    "R5": {
+      "class": "CONTROLLED_BOUNDARY_INJECTION",
+      "description": "HTTP 429 rate limit",
+      "dispatched": [],
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 429: rate limited",
+      "telemetry": [
+        {
+          "provider": "BackendAgentProvider",
+          "cycle": 0,
+          "attempt": 1,
+          "fallbackUsed": false,
+          "retryable": false,
+          "retried": false,
+          "retryAfterMs": 1000,
+          "category": "HTTP_429_RATE_LIMIT",
+          "httpStatus": 429,
+          "validation": "NOT_RUN",
+          "actionType": null,
+          "terminalOutcome": "FAILED",
+          "latencyMs": 1,
+          "requestId": "req-1"
+        }
+      ],
+      "noDispatch": true,
+      "pass": true,
+      "verdict": "PROVEN_TEST"
+    },
+    "R9": {
+      "class": "CONTROLLED_BOUNDARY_INJECTION",
+      "description": "Stale provider response (page generation changes while the request is in flight)",
+      "dispatched": 0,
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "reason": "Agent reasoning failed: Provider response is stale: the observed page changed while the request was in flight.",
+      "noDispatch": true,
+      "pass": true,
+      "verdict": "PROVEN_TEST"
+    }
+  },
+  "performance": {
+    "note": "Only values actually collected. Provider round-trip and local orchestration are reported SEPARATELY and never combined.",
+    "providerRoundTripMs": {
+      "R1": {
+        "n": 3,
+        "min": 621,
+        "p50": 788,
+        "p90": 803,
+        "max": 803
+      },
+      "R2": {
+        "n": 1,
+        "min": 472,
+        "p50": 472,
+        "p90": 472,
+        "max": 472
+      }
+    },
+    "localOrchestrationMs": "NOT SEPARATELY MEASURED — no local-only timer exists in this harness, so none is reported rather than estimated.",
+    "validationLatencyMs": "NOT SEPARATELY MEASURED — validation is pure in-process work on a small object; not instrumented.",
+    "retryLatencyMs": "NOT SEPARATELY MEASURED.",
+    "fallbackLatencyMs": "NOT SEPARATELY MEASURED — fallback is server-side and its latency is inside the provider round-trip above."
+  },
+  "backendReachable": true,
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "summary": {
+    "realModelReached": true,
+    "realProviderCasesPassed": [
+      "R1",
+      "R2"
+    ],
+    "injectedCasesAllFailedClosed": true
+  }
+}

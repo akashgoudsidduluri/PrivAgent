@@ -24,6 +24,13 @@ import { AgentContextPayload } from '../privacy/types';
 import { assertSanitizedContextSafe } from './privacyPolicy';
 import { buildModelFacingContext } from '../privacy/contextMinimizer';
 import { validateEgressPayload } from '../security/egressFirewall';
+import {
+  categoryForKind,
+  parseRetryAfter,
+  readBoundedJsonBody,
+  validateProviderAction,
+  type ProviderFailureCategory,
+} from './providerResponse';
 
 export const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it:free';
 
@@ -35,6 +42,11 @@ export const MAX_TEXT_CHARS = 500;
 export const MAX_OPTION_CHARS = 200;
 export const MAX_RESPONSE_CONTENT_CHARS = 20_000;
 
+/**
+ * PHASE 17.5. The existing error vocabulary is PRESERVED verbatim; the taxonomy
+ * lives in `providerResponse` and maps onto these kinds rather than replacing
+ * them, so no existing branch or test changes meaning.
+ */
 export type ProviderErrorKind =
   | 'auth'
   | 'rate_limit'
@@ -47,21 +59,39 @@ export type ProviderErrorKind =
   | 'empty_response'
   | 'unknown';
 
+/**
+ * PHASE 17.5. This is the SINGLE ProviderError class for the whole extension.
+ * `agentLoop` and the recovery paths branch on `instanceof ProviderError`, so
+ * there must be exactly one — a second class would silently make every
+ * provider failure look non-retryable and change behaviour. It is extended (not
+ * replaced) with the failure taxonomy category and a bounded retry hint.
+ */
 export class ProviderError extends Error {
   readonly kind: ProviderErrorKind;
   readonly retryable: boolean;
   readonly status?: number;
+  /** PHASE 17.5. Taxonomy category (A–P). Derived from kind+status. */
+  readonly category: ProviderFailureCategory;
+  /** PHASE 17.5. Server-supplied retry hint in ms, already clamped. */
+  readonly retryAfterMs?: number;
 
   constructor(
     message: string,
     kind: ProviderErrorKind,
-    opts: { retryable?: boolean; status?: number } = {}
+    opts: {
+      retryable?: boolean;
+      status?: number;
+      category?: ProviderFailureCategory;
+      retryAfterMs?: number;
+    } = {}
   ) {
     super(message);
     this.name = 'ProviderError';
     this.kind = kind;
     this.retryable = opts.retryable ?? false;
     this.status = opts.status;
+    this.category = opts.category ?? categoryForKind(kind, opts.status);
+    this.retryAfterMs = opts.retryAfterMs;
   }
 }
 
@@ -185,9 +215,7 @@ export class OpenRouterProvider implements AgentProvider {
       }
       throw new ProviderError(`OpenRouter network error: ${msg}`, 'network', { retryable: true });
     }
-    clearTimeout(timer);
-
-    if (!response.ok) {
+    clearTimeout(timer);      if (!response.ok) {
       // Never include the API key or full body in errors; a short hint only.
       let hint = '';
       try {
@@ -205,22 +233,22 @@ export class OpenRouterProvider implements AgentProvider {
       // M7 hotfix: HTTP 429 is NON-retryable. A rate-limited (free-tier) model
       // cannot succeed on an immediate retry, and every extra attempt spends
       // the shared OpenRouter quota. The step fails closed immediately.
+      // PHASE 17.5: a server Retry-After is recorded (bounded) but never turns a
+      // rate limit into a retry inside the same step — the step still fails
+      // closed; only the bounded delay hint is carried for observability.
       throw new ProviderError(
         `OpenRouter API error (HTTP ${response.status})${hint ? `: ${hint}` : ''}`,
         kind,
         {
           retryable: kind !== 'rate_limit' && kind !== 'auth',
           status: response.status,
+          retryAfterMs: parseRetryAfter(response.headers?.get?.('retry-after')),
         }
       );
     }
 
-    let data: ChatCompletionResponse;
-    try {
-      data = (await response.json()) as ChatCompletionResponse;
-    } catch {
-      throw new ProviderError('OpenRouter returned a non-JSON response body.', 'unknown');
-    }
+    // PHASE 17.5 (F5): bounded body read BEFORE parsing.
+    const data = (await readBoundedJsonBody(response)) as ChatCompletionResponse;
 
     const content = data.choices?.[0]?.message?.content;
     if (!content || !content.trim()) {
@@ -299,5 +327,13 @@ export function parseLLMAction(content: string): BrowserAction {
     }
   }
 
-  return parsed as BrowserAction;
+  //
+  // PHASE 17.5 (F2). This used to be `return parsed as BrowserAction` — a TYPE
+  // ASSERTION, not a validation. The action-type allowlist above proves the
+  // object claims to be a `click`; it does not prove a `click` HAS a target.
+  // `{ "action": "click" }` used to sail through this function and reach the
+  // loop. It is now strictly validated and REFUSED (never repaired).
+  //
+  // M5 remains the authority and still runs on the result.
+  return validateProviderAction(obj);
 }
