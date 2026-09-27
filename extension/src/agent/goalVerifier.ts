@@ -376,6 +376,16 @@ function verifyScrollGoal(
   const baseline = state.initialScrollY ?? null;
   const viewportHeight = typeof viewport?.height === 'number' ? viewport.height : null;
 
+  //
+  // PHASE 17.1 (C6). A perception with no geometry source reports an all-zero
+  // viewport, which is the ABSENCE of a reading, not a measurement of zero.
+  // Deciding a scroll goal against it would be deciding against a default.
+  // 17.1 adds no goal types; it only refuses to decide without an observation.
+  //
+  if (context.viewportObservable === false) {
+    return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
   // ── Observable state must actually exist ────────────────────────────────
   if (scrollY === null || viewportHeight === null) {
     return { satisfied: false, status: 'IN_PROGRESS' };

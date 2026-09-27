@@ -1433,28 +1433,31 @@ export class AgentLoop {
       console.info('[AgentTrace] executeAction started');
       // 5. Pre-Action Snapshot for Effect Verification
       //
-      // OBSERVED, not synthesized, whenever the host has an observation
-      // channel. The `actionTarget` is what lets the host report that
-      // element's current value LENGTH (never the value).
+      // OBSERVED, never synthesized. The `actionTarget` is what lets the host
+      // report that element's current value LENGTH (never the value).
+      //
+      // PHASE 17.1 (audit finding F1). This used to fall back to a fabricated
+      // object whenever the host could not observe:
+      //
+      //   scrollX: 0, scrollY: 0,                        <- placeholders
+      //   domElementCount: context.totalElementsScanned  <- a SCAN count
+      //   targetValueLength: detection.length             <- a LABEL length
+      //   activeElementSelector: detection.selector       <- a guess
+      //
+      // and then compared that fiction against a REAL post-action reading, so a
+      // page that scrolled 500px from a fabricated baseline of 0 was reported
+      // as SCROLL_CHANGED. That is exactly the "unobservable != zero" failure
+      // the Phase 16 remediation established, reintroduced on the pre side.
+      //
+      // There is no fallback. If the pre-state cannot be read it is null, and
+      // the effect of this action is unverifiable - a claim the loop can make
+      // honestly.
       const actionTarget =
         'target' in action && typeof (action as any).target === 'string'
           ? ((action as any).target as string)
           : undefined;
-      const preSnapshot: PreActionSnapshot =
-        (await this.observeEffectSnapshot(actionTarget, 'pre')) ?? {
-        url: context.url || this.state.currentUrl || '',
-        scrollX: 0,
-        scrollY: 0,
-        domElementCount: (context as any).totalElementsScanned ?? (context as any).total_elements_scanned ?? context.detections?.length ?? 0,
-        openModalsCount: ((context as any).semanticGroups || (context as any).semantic_groups)?.filter((g: any) => g.type === 'modal_overlay').length ?? 0,
-        targetValueLength: 'target' in action && typeof (action as any).target === 'string'
-          ? (context.detections?.find((d) => d.id === (action as any).target || d.selector === (action as any).target)?.length ?? 0)
-          : 0,
-        activeElementSelector: 'target' in action && typeof (action as any).target === 'string'
-          ? context.detections?.find((d) => d.id === (action as any).target || d.selector === (action as any).target)?.selector
-          : undefined,
-        timestamp: Date.now(),
-      };
+      const preSnapshot: PreActionSnapshot | null =
+        await this.observeEffectSnapshot(actionTarget, 'pre');
 
       // 5.5 PHASE 12 CONTAINMENT — final ENVIRONMENTAL check, immediately
       // before dispatch and AFTER every security gate has already run.
@@ -1481,7 +1484,12 @@ export class AgentLoop {
           action,
           scope: this.containmentScope,
           targetTabId: this.targetTabId,
-          liveUrl: preSnapshot.url || this.state.currentUrl || null,
+          // PHASE 17.1: preSnapshot may be null when the effect-observation
+          // channel could not read the page. The fallback is the PERCEPTION
+          // url - a real observation from a different channel - never a
+          // placeholder. Semantics are identical to the pre-17.1 fabricated
+          // branch, which used this same value.
+          liveUrl: preSnapshot?.url || context.url || this.state.currentUrl || null,
         });
         this.state.containmentDecision = {
           code: containment.code,
@@ -1652,17 +1660,17 @@ export class AgentLoop {
       let postSnapshot: PostActionSnapshot | undefined = (execResult as any).postSnapshot;
       if (!postSnapshot && this.callbacks.getEffectSnapshot) {
         postSnapshot = (await this.observeEffectSnapshot(actionTarget, 'post')) ?? undefined;
-        if (!postSnapshot) {
+        if (!postSnapshot || !preSnapshot) {
           // The host HAS an observation channel but could not observe. Do NOT
           // fall back to deriving the post-state from the requested action: that
           // is exactly what made a no-op action indistinguishable from a real
           // one. An effect that cannot be observed is not a verified effect.
           //
           // FAIL CLOSED, bounded exactly like any other post-dispatch failure.
-          console.warn('[AgentTrace] post-action state could not be observed; failing closed');
+          console.warn('[AgentTrace] browser state could not be observed on both sides of the action; failing closed');
           const unobservableRecord: FailureRecord = {
             category: 'ACTION_NO_EFFECT',
-            reason: `Post-action browser state could not be observed after '${action.action}'; effect treated as unverified.`,
+            reason: `${preSnapshot ? 'Post-action' : 'Pre-action'} browser state could not be observed for '${action.action}'; effect treated as unverified.`,
             pageGeneration: this.state.currentPageGeneration,
             attemptedAction: action,
             recoveryAttempted: false,
@@ -1674,7 +1682,7 @@ export class AgentLoop {
           this.state.lastFailure = unobservableRecord;
           this.state.lastActionResult = {
             success: false,
-            error: 'EFFECT_UNVERIFIABLE: post-action browser state could not be observed.',
+            error: `EFFECT_UNVERIFIABLE: ${preSnapshot ? 'post-action' : 'pre-action'} browser state could not be observed.`,
           };
           this.state.retryCount++;
           this.state.failureCount++;
@@ -1721,58 +1729,68 @@ export class AgentLoop {
           continue;
         }
       }
-      if (!postSnapshot) {
-        const targetId = 'target' in action ? (action as any).target : undefined;
+      //
+      // PHASE 17.1 (audit finding C3). Everything below used to exist:
+      //
+      //   navigate -> post.url          = action.url             <- URL ASKED FOR
+      //   scroll   -> post.scrollY     += action.amount          <- delta ASKED FOR
+      //   type     -> post.valueLength  = action.text.length     <- REQUESTED text
+      //   click    -> post.domElementCount += 1                  <- fabricated DOM
+      //
+      // That is the agent's own plan restated as if the browser had performed
+      // it, which made an action that changed nothing indistinguishable from
+      // one that did. It is deleted.
+      //
+      // The ONLY thing carried through is a host that explicitly declared the
+      // action inert, and only when the pre-state was genuinely observed. Even
+      // then it is a claim by the host, not a reading, and it can only ever
+      // produce ACTION_NO_EFFECT - never a positive effect.
+      if (!postSnapshot && preSnapshot) {
         const isNoEffectDeclared = (execResult as any).noEffect === true || (execResult as any).inert === true;
-
         if (isNoEffectDeclared) {
-          postSnapshot = {
-            ...preSnapshot,
-            timestamp: Date.now(),
-          };
-        } else {
-          let newUrl = preSnapshot.url;
-          let newDomCount = preSnapshot.domElementCount ?? 0;
-          let newModalsCount = preSnapshot.openModalsCount ?? 0;
-          let newScrollY = preSnapshot.scrollY;
-          let newScrollX = preSnapshot.scrollX;
-          let newValLen = preSnapshot.targetValueLength ?? 0;
-          let newActiveSelector = preSnapshot.activeElementSelector;
-
-          if (action.action === 'navigate') {
-            newUrl = action.url;
-          } else if (action.action === 'scroll') {
-            const delta = (execResult as any).scrollDelta ?? (action.amount || 250);
-            newScrollY += action.direction === 'down' ? delta : -delta;
-          } else if (action.action === 'type') {
-            newValLen = (action.text || '').length;
-            newActiveSelector = targetId;
-          } else if (action.action === 'click') {
-            if ((execResult as any).urlChanged) {
-              newUrl = (execResult as any).urlChanged;
-            } else if ((execResult as any).domMutated) {
-              newDomCount += 1;
-            } else if ((execResult as any).modalsChanged) {
-              newModalsCount += 1;
-            } else {
-              newActiveSelector = targetId;
-            }
-          } else if (action.action === 'select') {
-            newValLen = (action.option || '').length;
-            newActiveSelector = targetId;
-          }
-
-          postSnapshot = {
-            url: newUrl,
-            scrollX: newScrollX,
-            scrollY: newScrollY,
-            domElementCount: newDomCount,
-            openModalsCount: newModalsCount,
-            targetValueLength: newValLen,
-            activeElementSelector: newActiveSelector,
-            timestamp: Date.now(),
-          };
+          postSnapshot = { ...preSnapshot, timestamp: Date.now() };
         }
+      }
+
+      // Fail closed on whichever side is missing, reusing the refusal path
+      // above. There is no third outcome and no synthesized state.
+      if (!preSnapshot || !postSnapshot) {
+        const missing = !preSnapshot ? 'Pre-action' : 'Post-action';
+        const unobservableRecord: FailureRecord = {
+          category: 'ACTION_NO_EFFECT',
+          reason: `${missing} browser state could not be observed for '${action.action}'; effect treated as unverified.`,
+          pageGeneration: this.state.currentPageGeneration,
+          attemptedAction: action,
+          recoveryAttempted: false,
+          finalState: 'IN_PROGRESS',
+          timestamp: Date.now(),
+        };
+        if (!this.state.failureHistory) this.state.failureHistory = [];
+        this.state.failureHistory.push(unobservableRecord);
+        this.state.lastFailure = unobservableRecord;
+        this.state.lastActionResult = {
+          success: false,
+          error: `EFFECT_UNVERIFIABLE: ${missing.toLowerCase()} browser state could not be observed.`,
+        };
+        this.state.retryCount++;
+        this.state.failureCount++;
+        this.recordStep(
+          action, true, validation.reason, false, unobservableRecord.reason,
+          targetDet?.type, risk, semantic, confidence, healingResult,
+          false, 'EFFECT_UNVERIFIABLE', unobservableRecord.reason
+        );
+        this.state.decisionTraceSummary = tracer.getSummary();
+        this.notifyProgress();
+        if (this.state.retryCount > this.maxRetries) {
+          unobservableRecord.finalState = 'FAILED';
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = `Effect verification unavailable repeatedly: ${unobservableRecord.reason}`;
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+          break;
+        }
+        await this.delay(this.delayBetweenStepsMs);
+        continue;
       }
 
       const effectResult: ActionEffectResult = (execResult as any).effect ?? verifyActionEffect(action, preSnapshot, postSnapshot);

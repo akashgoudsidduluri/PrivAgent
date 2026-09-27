@@ -14,6 +14,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { simulatedBrowser } from './helpers/observingHost';
+import { observingHost, type ObservedPageState } from './helpers/observingHost';
 import { AgentLoop, assertNoSensitiveDataInState } from '../extension/src/agent/agentLoop';
 import { AgentProvider } from '../extension/src/agent/agentProvider';
 import { ProviderError } from '../extension/src/agent/openRouterProvider';
@@ -104,6 +106,15 @@ function eventLog() {
   };
 }
 
+/**
+ * PHASE 17.1 — the simulated page these fixtures observe.
+ *
+ * The real product always has an observation channel. Before 17.1 these
+ * fixtures had none and relied on the loop fabricating a pre-snapshot from
+ * context and synthesizing a post-snapshot from the requested action.
+ */
+const observedPage: ObservedPageState = { url: 'https://shop.example.com/catalog', domElementCount: 0 };
+
 describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
   it('I1. raw sensitive values never reach remote reasoning', async () => {
     const provider = new RecordingProvider(sequence({ action: 'scroll', direction: 'down', amount: 300, reason: 'observe' }));
@@ -111,7 +122,8 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
 
     const loop = new AgentLoop(
       provider,
-      { perceivePage: async () => context, executeAction: async () => ({ success: true, scrollDelta: 300 }) },
+      { getEffectSnapshot: observingHost(observedPage),
+        perceivePage: async () => context, executeAction: async () => ({ success: true, scrollDelta: 300 }) },
       { maxSteps: 1 }
     );
     await loop.runTask('Scroll down');
@@ -141,6 +153,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => ctx(),
         executeAction: async () => {
           executed++;
@@ -171,6 +184,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => {
           executed++;
@@ -215,6 +229,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => {
           executed++;
@@ -251,9 +266,14 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => injected,
-        executeAction: async () => {
+        executeAction: async (action) => {
           executed++;
+          // PHASE 17.1: the simulated page follows the click. This test is
+          // about the SECOND step being refused by M5, so the first step has to
+          // actually happen. Before 17.1 the loop synthesized that for it.
+          await simulatedBrowser(observedPage)(action);
           return { success: true };
         },
       },
@@ -279,6 +299,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => ctx(),
         executeAction: async () => {
           executed++;
@@ -306,6 +327,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => {
           executed++;
@@ -326,6 +348,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const navLoop = new AgentLoop(
       navProvider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => {
           navExecuted++;
@@ -351,6 +374,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => ctx(),
         executeAction: async () => {
           executed++;
@@ -376,6 +400,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => ctx(),
         executeAction: async (a) => {
           dispatched.push(a);
@@ -401,6 +426,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       failing,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => ctx(),
         executeAction: async () => {
           executed++;
@@ -501,6 +527,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => ctx(),
         executeAction: async () => ({ success: true, noEffect: true }),
       },
@@ -528,6 +555,7 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => {
           perceiveCalls++;
           return ctx();

@@ -202,6 +202,23 @@ export interface AgentViewport {
   scroll_y: number;
 }
 
+/**
+ * PHASE 17.1 (C6).
+ *
+ * True when the viewport numbers above are real readings, false when they are
+ * the all-zero fallback produced because no geometry could be obtained.
+ *
+ * Consumers MUST consult this before treating a zero as a measurement. This
+ * lives on the local sanitized context only and is deliberately NOT part of the
+ * outbound reasoner payload — the backend schema forbids extra keys, and
+ * widening what leaves the device is not justified by an observation fix.
+ */
+export interface ViewportObservability {
+  viewportObservable: boolean;
+  /** Where the numbers came from. Local only; never transmitted. */
+  viewportSource: 'CONTENT_SCRIPT' | 'MULTIMODAL_REPORT' | 'UNAVAILABLE';
+}
+
 export interface AgentScreenshotDimensions {
   width: number;
   height: number;
@@ -225,6 +242,13 @@ export interface AgentContextPayload {
   url: string;
   timestamp: number;
   viewport: AgentViewport;
+  /**
+   * PHASE 17.1 (C6). Local only — STRIPPED before the context reaches the
+   * reasoner, so the outbound schema is byte-identical to before. Without it a
+   * zero-sized viewport is indistinguishable from one that was never read.
+   */
+  viewportObservable?: boolean;
+  viewportSource?: ViewportObservability['viewportSource'];
   screenshot_dimensions: AgentScreenshotDimensions | null;
   detections: AgentDetection[];
   total_elements_scanned: number;
@@ -314,6 +338,11 @@ export function buildAgentPayload(
     }
   }
 
+  //
+  // PHASE 17.1 (C6). The all-zero fallback below is NOT a measurement — it is
+  // the absence of one. It is now labelled as such, so a consumer can tell
+  // "the viewport is 0x0" from "the viewport was never observed".
+  //
   const viewport: AgentViewport = visualReport
     ? {
         width: visualReport.captureMetadata.viewportWidth,
@@ -322,6 +351,10 @@ export function buildAgentPayload(
         scroll_y: visualReport.captureMetadata.scrollY,
       }
     : { width: 0, height: 0, scroll_x: 0, scroll_y: 0 };
+
+  const viewportObservability: ViewportObservability = visualReport
+    ? { viewportObservable: true, viewportSource: 'MULTIMODAL_REPORT' }
+    : { viewportObservable: false, viewportSource: 'UNAVAILABLE' };
 
   const screenshot_dimensions: AgentScreenshotDimensions | null = visualReport
     ? {

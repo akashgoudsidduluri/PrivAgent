@@ -434,24 +434,43 @@ function collectEffectSnapshot(target?: string): {
   url: string;
   scrollX: number;
   scrollY: number;
-  targetValueLength: number;
+  targetValueLength: number | null;
   openModalsCount: number;
   activeElementSelector?: string;
   domElementCount: number;
   timestamp: number;
+  pageGeneration: number;
+  targetResolved: boolean;
 } {
-  let targetValueLength = 0;
+  //
+  // PHASE 17.1 (C5). This used to produce `0` for BOTH "the field is empty" and
+  // "the target could not be found", because both the `if (el)` false branch
+  // and the `catch` assigned 0. Those are different facts. `null` now means
+  // "not locatable"; `0` means "genuinely empty".
+  //
+  // This is metadata only. No value ever leaves the page — only a length, and
+  // only when the element was actually found.
+  //
+  let targetValueLength: number | null = null;
+  let targetResolved = false;
   if (target) {
     try {
       const el = findElementByTarget(target);
       if (el) {
+        targetResolved = true;
         // LENGTH ONLY. The value itself never leaves the page.
         const v = (el as HTMLInputElement).value;
         targetValueLength = typeof v === 'string' ? v.length : 0;
       }
     } catch {
-      targetValueLength = 0;
+      targetValueLength = null;
+      targetResolved = false;
     }
+  } else {
+    // No target was asked about, so the question is NOT_APPLICABLE rather
+    // than "the length is 0".
+    targetValueLength = null;
+    targetResolved = false;
   }
 
   return {
@@ -463,6 +482,12 @@ function collectEffectSnapshot(target?: string): {
     activeElementSelector: describeActiveElement(),
     domElementCount: document.getElementsByTagName('*').length,
     timestamp: Date.now(),
+    // PHASE 17.1 (C4). The content script ALREADY maintained this monotonic
+    // counter for stale-target protection; it simply never reached the effect
+    // snapshot, so two snapshots could not be tied to the same page. Reusing it
+    // costs nothing and invents nothing.
+    pageGeneration: currentPageGeneration,
+    targetResolved,
   };
 }
 

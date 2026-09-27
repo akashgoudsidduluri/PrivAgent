@@ -17,11 +17,21 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import { observingHost, type ObservedPageState } from '../helpers/observingHost';
 import { AgentLoop, assertNoSensitiveDataInState } from '../../extension/src/agent/agentLoop';
 import { MockAgentProvider } from '../../extension/src/agent/mockAgentProvider';
 import { BrowserAction } from '../../extension/src/agent/actionTypes';
 import type { PostActionSnapshot } from '../../extension/src/agent/effectVerifier';
 import { ctx, det, snapshot } from './harness';
+
+/**
+ * PHASE 17.1 — the simulated page these fixtures observe.
+ *
+ * The real product always has an observation channel. Before 17.1 these
+ * fixtures had none and relied on the loop fabricating a pre-snapshot from
+ * context and synthesizing a post-snapshot from the requested action.
+ */
+const observedPage: ObservedPageState = { url: 'https://shop.example.com/catalog', domElementCount: 0 };
 
 describe('P11-20 the agent loop drives multi-step human-like interaction', () => {
   it('20.1 click -> type -> pressKey Enter carries a search task to verified success', async () => {
@@ -82,7 +92,8 @@ describe('P11-20 the agent loop drives multi-step human-like interaction', () =>
     const loop = new AgentLoop(
       provider,
       {
-        perceivePage: async () => c,
+        getEffectSnapshot: observingHost(observedPage),
+perceivePage: async () => c,
         executeAction: async (action) =>
           action.action === 'pressKey'
             ? { success: true, noEffect: true }
@@ -112,7 +123,8 @@ describe('P11-20 the agent loop drives multi-step human-like interaction', () =>
 
     const loop = new AgentLoop(
       provider,
-      { perceivePage: async () => c, executeAction },
+      { getEffectSnapshot: observingHost(observedPage),
+perceivePage: async () => c, executeAction },
       { maxSteps: 2, delayBetweenStepsMs: 1 }
     );
     const state = await loop.runTask('Search for black cats');
@@ -137,7 +149,8 @@ describe('P11-20 the agent loop drives multi-step human-like interaction', () =>
     const loop = new AgentLoop(
       provider,
       {
-        perceivePage: async () => c,
+        getEffectSnapshot: observingHost(observedPage),
+perceivePage: async () => c,
         executeAction: async () => {
           executions += 1;
           return { success: true, noEffect: true };
@@ -161,7 +174,8 @@ describe('P11-20 the agent loop drives multi-step human-like interaction', () =>
     const loop = new AgentLoop(
       provider,
       {
-        perceivePage: async () => c,
+        getEffectSnapshot: observingHost(observedPage),
+perceivePage: async () => c,
         executeAction: async (action) =>
           action.action === 'click'
             ? { success: true, urlChanged: 'https://example.com/app?view=results' }
@@ -183,7 +197,8 @@ describe('P11-20 the agent loop drives multi-step human-like interaction', () =>
     const loop = new AgentLoop(
       provider,
       {
-        perceivePage: async () => c,
+        getEffectSnapshot: observingHost(observedPage),
+perceivePage: async () => c,
         executeAction: async () => ({ success: true, scrollDelta: 300 }),
       },
       { maxSteps: 2, delayBetweenStepsMs: 1 }

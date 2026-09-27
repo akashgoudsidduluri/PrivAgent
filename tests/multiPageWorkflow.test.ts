@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
+import { observingHost, type ObservedPageState } from './helpers/observingHost';
+import { simulatedBrowser } from './helpers/observingHost';
 import { AgentLoop, assertNoSensitiveDataInState } from '../extension/src/agent/agentLoop';
 import { CandidateProductItem } from '../extension/src/agent/agentState';
 import { MockAgentProvider } from '../extension/src/agent/mockAgentProvider';
@@ -6,12 +8,28 @@ import { AgentContextPayload } from '../extension/src/privacy/types';
 
 describe('PrivAgent Phase 10 & 11 — Multi-Page Workflow Acceptance Test', () => {
   it('executes full multi-page workflow: Landing -> Login -> Search -> Results -> Goal Verification', async () => {
+    const OBSERVED_URL: Record<string, string> = {
+      landing: 'http://localhost:4174/index.html',
+      login: 'http://localhost:4174/login.html',
+      search: 'http://localhost:4174/search.html',
+      results: 'http://localhost:4174/results.html?q=XXL+black+baggy+bag',
+    };
+    const PERCEIVED_ELEMENT_COUNT: Record<string, number> = {
+      landing: 25, login: 20, search: 22, results: 40,
+    };
     let currentPage = 'landing';
+    const observedPage: ObservedPageState = { url: OBSERVED_URL.landing, domElementCount: 25 };
     let perceptionCount = 0;
 
     // Simulate page contexts based on active workflow page
     const perceivePage = vi.fn(async (): Promise<AgentContextPayload> => {
       perceptionCount++;
+      // PHASE 17.1: the observation channel reads the SAME navigation state
+      // this fixture's perception does, so a page transition is observable
+      // rather than frozen. Before 17.1 the loop rebuilt the post-URL from the
+      // requested action instead.
+      observedPage.url = OBSERVED_URL[currentPage];
+      observedPage.domElementCount = PERCEIVED_ELEMENT_COUNT[currentPage];
       if (currentPage === 'landing') {
         return {
           url: 'http://localhost:4174/index.html',
@@ -168,6 +186,10 @@ describe('PrivAgent Phase 10 & 11 — Multi-Page Workflow Acceptance Test', () =
       } else if (action.action === 'click' && action.target === 'det-search-btn') {
         currentPage = 'results';
       }
+      // PHASE 17.1: the simulated page follows the click, so the focus shift is
+      // a real observation. Before 17.1 the loop synthesized the post-state from
+      // the requested action instead.
+      await simulatedBrowser(observedPage)(action);
       return { success: true };
     });
 
@@ -192,6 +214,7 @@ describe('PrivAgent Phase 10 & 11 — Multi-Page Workflow Acceptance Test', () =
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage,
         executeAction,
         onNavigationComplete,

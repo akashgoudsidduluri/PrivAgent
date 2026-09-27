@@ -16,6 +16,8 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import { observingHost, type ObservedPageState } from './helpers/observingHost';
+import { simulatedBrowser } from './helpers/observingHost';
 
 // Mock chrome.storage.local for the memory subsystem
 const mockStorage: Record<string, any> = {};
@@ -160,6 +162,8 @@ function scope() {
 }
 
 // ── 1. Initialization ───────────────────────────────────────────────────────
+
+
 
 describe('Phase 9 — long-horizon task state', () => {
   beforeEach(async () => {
@@ -445,12 +449,24 @@ function makeLoop(
   execute: (a: BrowserAction) => void,
   opts: Record<string, unknown> = {}
 ) {
+  // PHASE 17.1: one observed page PER LOOP (state must not leak between
+  // tests), mirroring the same navigation state this fixture's perception
+  // already tracks. Before 17.1 the loop rebuilt the post-URL from the
+  // requested action, which is how these tests used to reach a results page
+  // their simulated browser never actually visited.
+  const page: ObservedPageState = { url: 'https://example.com/', domElementCount: 0 };
   return new AgentLoop(
     provider,
     {
-      perceivePage: async () => perceive(),
+      getEffectSnapshot: observingHost(() => ({ ...page, url: page.url })),
+      perceivePage: async () => {
+        const c = perceive();
+        page.url = c.url;
+        return c;
+      },
       executeAction: async (action) => {
         execute(action);
+        await simulatedBrowser(page)(action);
         return { success: true };
       },
     },
@@ -513,6 +529,9 @@ describe('Phase 9 — long-horizon behaviour in the live AgentLoop', () => {
   it('10c. the AgentLoop fails closed when the action budget is exhausted', async () => {
     const pages = Array.from({ length: 30 }, (_, i) => `https://example.com/${i}`);
     let i = 0;
+    // PHASE 17.1: this fixture navigates constantly, so its observed page
+    // tracks the same URL sequence its perception reports.
+    const page: ObservedPageState = { url: pages[0]!, domElementCount: 1 };
     const loop = new AgentLoop(
       {
         name: 'BudgetProvider',
@@ -520,8 +539,13 @@ describe('Phase 9 — long-horizon behaviour in the live AgentLoop', () => {
           ({ action: 'navigate', url: pages[i % pages.length]!, reason: 'Keep going' } as BrowserAction),
       },
       {
-        perceivePage: async () => ctx({ url: pages[i++ % pages.length]!, detections: [det('a', 'link', '#a', 'Link')] }),
-        executeAction: async () => ({ success: true }),
+        getEffectSnapshot: observingHost(page),
+        perceivePage: async () => {
+          const c = ctx({ url: pages[i++ % pages.length]!, detections: [det('a', 'link', '#a', 'Link')] });
+          page.url = c.url;
+          return c;
+        },
+        executeAction: async (action) => simulatedBrowser(page)(action),
       },
       { maxSteps: 40, maxRetries: 0, delayBetweenStepsMs: 0 }
     );

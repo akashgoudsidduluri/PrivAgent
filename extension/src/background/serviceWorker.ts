@@ -18,6 +18,8 @@ import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 import { coordinateMultimodalPerception, enrichWorldModelWithMultimodalPerception } from '../visualPerception/multimodalCoordinator';
+import { observedSnapshotFields, tabOnlySnapshotFields } from '../agent/effectVerifier';
+import type { ObservationState } from '../agent/effectVerifier';
 import type { ViewportGeometry } from '../capture/coordinateMapper';
 
 // PrivAgent Background Service Worker (Manifest V3)
@@ -191,6 +193,25 @@ async function readLiveViewportGeometry(tabId: number): Promise<ViewportGeometry
   } catch {
     return null;
   }
+}
+
+/**
+ * PHASE 17.1 (C8). Resolves the dashboard's ACTUAL origin.
+ *
+ * The default is kept for compatibility, but a caller that knows the real
+ * origin (the dashboard always sends it as `originUrl`) now gets a truthful
+ * answer instead of a hard-coded guess. This only ever makes the existing
+ * "the agent must never drive its own control surface" guard fire correctly.
+ */
+function resolveDashboardOrigin(originFromMessage?: string | null): string {
+  if (typeof originFromMessage === 'string' && originFromMessage.trim()) {
+    try {
+      return new URL(originFromMessage).origin;
+    } catch {
+      /* fall through to the default */
+    }
+  }
+  return 'http://localhost:5173';
 }
 
 /**
@@ -495,7 +516,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const resolution = resolveTargetWebTab(
           allTabs,
           task,
-          message.originUrl || 'http://localhost:5173',
+          resolveDashboardOrigin(message.originUrl),
           dashboardTabId ?? undefined
         );
 
@@ -567,10 +588,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // pipeline still do). A null scope is the FAIL-CLOSED state: the loop
         // then refuses every action with CONTAINMENT_UNINITIALIZED rather than
         // running unbounded.
+        //
+        // PHASE 17.1 (C8). This was the literal 'http://localhost:5173', which
+        // isDashboardUrl() only ever matched on port 5173. The real dashboard
+        // origin arrives on the message and is already used for target
+        // resolution a few lines above; containment was simply never told.
+        // On any other port the agent's own control surface was not recognised
+        // as such. This is an OBSERVATION fix: the guard already existed, it
+        // was just being asked about the wrong origin.
+        const dashboardOrigin = resolveDashboardOrigin(message?.originUrl);
         const containmentScope = establishContainmentScope({
           targetUrl: targetTab.url || null,
           targetTabId,
-          dashboardOrigin: 'http://localhost:5173',
+          dashboardOrigin,
         });
         console.info('[AgentTrace] containment scope established', {
           established: containmentScope !== null,
@@ -799,6 +829,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               if (!built) return null;
 
               const minimized = minimizeAgentContext(built, { task });
+              //
+              // PHASE 17.1 (C6). `built.viewport` is an all-zero DEFAULT when
+              // no geometry could be obtained, and the goal verifier reads it.
+              // That ambiguity is resolved HERE, locally, after the egress
+              // allowlist has run — so the flags describe this device's reading
+              // and never travel to the model or the backend.
+              //
+              (minimized.payload as { viewportObservable?: boolean }).viewportObservable =
+                visualReport !== null;
+              (minimized.payload as { viewportSource?: string }).viewportSource =
+                visualReport !== null ? 'MULTIMODAL_REPORT' : 'UNAVAILABLE';
               return {
                 context: minimized.payload,
                 worldModel,
@@ -956,11 +997,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     url: tab?.url ?? null,
                     pendingUrl: (tab as any)?.pendingUrl ?? null,
                     status: tab?.status ?? null,
+                    // PHASE 17.1 (C7): observed from Chrome, never inferred.
+                    title: tab?.title ?? null,
                   };
                 })(),
                 2000,
                 'Tab URL read timed out'
-              )) as { url: string | null; pendingUrl: string | null; status: string | null };
+              )) as { url: string | null; pendingUrl: string | null; status: string | null; title: string | null };
 
               const chromeUrl = tabRecord.pendingUrl || tabRecord.url || null;
 
@@ -1005,6 +1048,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     targetValueLength?: number;
                     activeElementSelector?: string;
                     timestamp?: number;
+                    pageGeneration?: number;
                   })
                 : null;
 
@@ -1030,12 +1074,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   url: chromeUrl,
                   scrollX: 0,
                   scrollY: 0,
-                  targetValueLength: 0,
+                  // PHASE 17.1 (C5): `null`, not 0 — the target's length was
+                  // never observed, so it is not an observed zero.
+                  targetValueLength: null,
                   openModalsCount: 0,
                   activeElementSelector: undefined,
                   domElementCount: 0,
                   timestamp: Date.now(),
                   pageStateObservable: false,
+                  // PHASE 17.1 (C7): the tab title is a real chrome.tabs
+                  // reading and was previously discarded.
+                  title: tabRecord.title,
+                  observation: {
+                    observedAt: Date.now(),
+                    tabId: targetTabId,
+                    pageGeneration: null,
+                    tabLifecycleObserved: true,
+                    pageReadable: false,
+                    fields: tabOnlySnapshotFields(),
+                  },
                 };
               }
 
@@ -1055,8 +1112,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 url: observedUrl,
                 scrollX: pageSnap!.scrollX,
                 scrollY: pageSnap!.scrollY,
+                // PHASE 17.1 (C5): pass `null` through as `null`. A missing
+                // length is not a length of zero.
                 targetValueLength:
-                  typeof pageSnap!.targetValueLength === 'number' ? pageSnap!.targetValueLength : 0,
+                  typeof pageSnap!.targetValueLength === 'number' ? pageSnap!.targetValueLength : null,
                 openModalsCount:
                   typeof pageSnap!.openModalsCount === 'number' ? pageSnap!.openModalsCount : 0,
                 activeElementSelector:
@@ -1066,6 +1125,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 domElementCount: pageSnap!.domElementCount,
                 timestamp:
                   typeof pageSnap!.timestamp === 'number' ? pageSnap!.timestamp : Date.now(),
+                title: tabRecord.title,
+                // PHASE 17.1 (C4): the page WAS read, so every page-local field
+                // is OBSERVED. `targetValueLength` is the one exception the
+                // content script itself resolves: it reports null when the
+                // target is not locatable.
+                observation: {
+                  observedAt:
+                    typeof pageSnap!.timestamp === 'number' ? pageSnap!.timestamp : Date.now(),
+                  tabId: targetTabId,
+                  pageGeneration: pageSnap!.pageGeneration ?? null,
+                  tabLifecycleObserved: true,
+                  pageReadable: true,
+                  fields: {
+                    ...observedSnapshotFields(),
+                    targetValueLength: (typeof pageSnap!.targetValueLength === 'number'
+                      ? 'OBSERVED'
+                      : 'UNAVAILABLE') as ObservationState,
+                  },
+                },
               };
             } catch (err) {
               console.warn(

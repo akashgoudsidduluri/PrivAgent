@@ -1,0 +1,311 @@
+{
+  "timestamp": "2026-09-27T08:29:02.228Z",
+  "work": "Phase 17.1 — observation generalization, real-Chrome evidence",
+  "substrate": "REAL headless Chrome + REAL built MV3 extension + REAL content script + REAL service worker",
+  "substitutions": "NONE. Every value is read back from the browser. No scripted proposer, no injected action, no asserted verdict.",
+  "cases": {
+    "A_normalPageObservation": {
+      "expectation": "A real page is observed: tab URL, title, scroll, viewport and DOM all read from their authoritative sources.",
+      "label": "A: settled page",
+      "tabFound": true,
+      "tabId": 153106743,
+      "tabStatus": "complete",
+      "tabTitle": "Fixture Long Page",
+      "chromeTabsUrl": "http://localhost:4200/long",
+      "contentScript": "OK",
+      "contentScriptUrl": "http://localhost:4200/long",
+      "page": {
+        "url": "http://localhost:4200/long",
+        "scrollY": 0,
+        "scrollX": 0,
+        "domElementCount": 28,
+        "openModalsCount": 0,
+        "targetValueLength": null,
+        "targetResolved": false,
+        "pageGeneration": 2,
+        "timestamp": 1790497746523
+      },
+      "tabReadMs": 4,
+      "contentReadMs": 15,
+      "latencyMs": 19
+    },
+    "B_scrollObservation": {
+      "expectation": "scrollY is read live from the content script and changes when the page really moves.",
+      "before": {
+        "scrollY": 0,
+        "url": "http://localhost:4200/long"
+      },
+      "after": {
+        "scrollY": 1200,
+        "url": "http://localhost:4200/long"
+      },
+      "realScrollObserved": true,
+      "delta": 1200,
+      "samples": [
+        {
+          "label": "B: before scroll",
+          "tabFound": true,
+          "tabId": 153106743,
+          "tabStatus": "complete",
+          "tabTitle": "Fixture Long Page",
+          "chromeTabsUrl": "http://localhost:4200/long",
+          "contentScript": "OK",
+          "contentScriptUrl": "http://localhost:4200/long",
+          "page": {
+            "url": "http://localhost:4200/long",
+            "scrollY": 0,
+            "scrollX": 0,
+            "domElementCount": 28,
+            "openModalsCount": 0,
+            "targetValueLength": null,
+            "targetResolved": false,
+            "pageGeneration": 2,
+            "timestamp": 1790497746668
+          },
+          "tabReadMs": 1,
+          "contentReadMs": 2,
+          "latencyMs": 3
+        },
+        {
+          "label": "B: after scroll",
+          "tabFound": true,
+          "tabId": 153106743,
+          "tabStatus": "complete",
+          "tabTitle": "Fixture Long Page",
+          "chromeTabsUrl": "http://localhost:4200/long",
+          "contentScript": "OK",
+          "contentScriptUrl": "http://localhost:4200/long",
+          "page": {
+            "url": "http://localhost:4200/long",
+            "scrollY": 1200,
+            "scrollX": 0,
+            "domElementCount": 28,
+            "openModalsCount": 0,
+            "targetValueLength": null,
+            "targetResolved": false,
+            "pageGeneration": 2,
+            "timestamp": 1790497747416
+          },
+          "tabReadMs": 7,
+          "contentReadMs": 1,
+          "latencyMs": 8
+        }
+      ]
+    },
+    "C_navigationObservation": {
+      "expectation": "A real navigation is observed: chrome.tabs moves first, and the page reading follows.",
+      "before": {
+        "label": "C: before navigation",
+        "tabFound": true,
+        "tabId": 153106743,
+        "tabStatus": "complete",
+        "tabTitle": "Fixture Long Page",
+        "chromeTabsUrl": "http://localhost:4200/long",
+        "contentScript": "OK",
+        "contentScriptUrl": "http://localhost:4200/long",
+        "page": {
+          "url": "http://localhost:4200/long",
+          "scrollY": 1200,
+          "scrollX": 0,
+          "domElementCount": 28,
+          "openModalsCount": 0,
+          "targetValueLength": null,
+          "targetResolved": false,
+          "pageGeneration": 2,
+          "timestamp": 1790497747419
+        },
+        "tabReadMs": 1,
+        "contentReadMs": 10,
+        "latencyMs": 11
+      },
+      "after": {
+        "label": "C: after navigation",
+        "tabFound": true,
+        "tabId": 153106743,
+        "tabStatus": "complete",
+        "tabTitle": "Fixture Products",
+        "chromeTabsUrl": "http://localhost:4200/products",
+        "contentScript": "OK",
+        "contentScriptUrl": "http://localhost:4200/products",
+        "page": {
+          "url": "http://localhost:4200/products",
+          "scrollY": 0,
+          "scrollX": 0,
+          "domElementCount": 32,
+          "openModalsCount": 0,
+          "targetValueLength": null,
+          "targetResolved": false,
+          "pageGeneration": 3,
+          "timestamp": 1790497750168
+        },
+        "tabReadMs": 1,
+        "contentReadMs": 1,
+        "latencyMs": 3
+      },
+      "tabUrlBefore": "http://localhost:4200/long",
+      "tabUrlAfter": "http://localhost:4200/products",
+      "navigationObserved": true,
+      "pageUrlAfter": "http://localhost:4200/products",
+      "tabAndPageAgree": true,
+      "pageGenerationAfter": 3
+    },
+    "D_contentScriptUnavailable": {
+      "expectation": "When the content script is torn down, chrome.tabs still knows where the tab is and page-local fields are marked unavailable rather than invented.",
+      "contentScriptUnavailableObserved": true,
+      "chromeTabsUrlDuringTearDown": "http://localhost:4200/details",
+      "pageReadingDuringTearDown": null,
+      "afterSettle": {
+        "contentScript": "OK",
+        "chromeTabsUrl": "http://localhost:4200/details",
+        "scrollY": 0
+      },
+      "noFabricatedGeometry": true,
+      "samples": [
+        {
+          "label": "D: mid-navigation (teardown window)",
+          "tabFound": true,
+          "tabId": 153106743,
+          "tabStatus": "loading",
+          "tabTitle": "localhost:4200/details",
+          "chromeTabsUrl": "http://localhost:4200/details",
+          "contentScript": "UNAVAILABLE: Could not establish connection. Receiving end does not exist.",
+          "contentScriptUrl": null,
+          "page": null,
+          "tabReadMs": 1,
+          "contentReadMs": 26,
+          "latencyMs": 27
+        },
+        {
+          "label": "D: after settle",
+          "tabFound": true,
+          "tabId": 153106743,
+          "tabStatus": "complete",
+          "tabTitle": "Fixture Details",
+          "chromeTabsUrl": "http://localhost:4200/details",
+          "contentScript": "OK",
+          "contentScriptUrl": "http://localhost:4200/details",
+          "page": {
+            "url": "http://localhost:4200/details",
+            "scrollY": 0,
+            "scrollX": 0,
+            "domElementCount": 23,
+            "openModalsCount": 0,
+            "targetValueLength": null,
+            "targetResolved": false,
+            "pageGeneration": 4,
+            "timestamp": 1790497752847
+          },
+          "tabReadMs": 2,
+          "contentReadMs": 1,
+          "latencyMs": 3
+        }
+      ]
+    },
+    "E_backForwardBfcache": {
+      "expectation": "Going back to a previous document is observed; a frozen/bfcached page is reported as unavailable, not as a stale zero.",
+      "atProducts": {
+        "url": "http://localhost:4200/products",
+        "pageGeneration": 5,
+        "scrollY": 0
+      },
+      "midBack": {
+        "chromeTabsUrl": "http://localhost:4200/details",
+        "contentScript": "OK",
+        "page": {
+          "url": "http://localhost:4200/details",
+          "scrollY": 0,
+          "scrollX": 0,
+          "domElementCount": 23,
+          "openModalsCount": 0,
+          "targetValueLength": null,
+          "targetResolved": false,
+          "pageGeneration": 6,
+          "timestamp": 1790497757083
+        }
+      },
+      "restored": {
+        "url": "http://localhost:4200/details",
+        "pageGeneration": 6,
+        "scrollY": 0
+      },
+      "generationAdvanced": true,
+      "bfcacheUnavailableObserved": false
+    },
+    "F_targetTabSwitching": {
+      "expectation": "Each tab is identified by its own id and URL; switching targets never merges or reuses another tab's reading.",
+      "tabs": [
+        {
+          "tabId": "5F232BDF0C1E5A2F20AB555E31B3FA89",
+          "url": "http://localhost:4200/form",
+          "title": "Fixture Form"
+        },
+        {
+          "tabId": "05F25381305490CD3B1065316E862292",
+          "url": "http://localhost:4200/details",
+          "title": "Fixture Details"
+        }
+      ],
+      "distinctTabIds": 2,
+      "distinctUrls": 2,
+      "noCrossContamination": true
+    },
+    "G_dashboardNeverTarget": {
+      "expectation": "The dashboard origin supplied on the message is used by target resolution AND containment, so the control surface is recognised on ANY port — not only 5173.",
+      "guardEvaluatedIn": "real service worker",
+      "dashboardOriginUsed": "http://localhost:5175",
+      "note": "C8 finding: isDashboardUrl() previously matched ONLY port 5173, and containment was passed the literal http://localhost:5173, so on any other port the agent's own control surface was not recognised. Phase 17.1 passes the real origin from message.originUrl. The static proof of the corrected guard is in tests/phase17/observationGeneralization.test.ts (case 15); this record shows the origin actually reaching the guard.",
+      "probe": {
+        "dashboard5175": {
+          "created": 153106746,
+          "url": "http://localhost:5175/"
+        },
+        "fixture": {
+          "created": 153106747,
+          "url": "http://localhost:4200/"
+        }
+      }
+    },
+    "H_noFabricatedGeometry": {
+      "expectation": "With no page-side reading, the system reports the tab URL and marks page-local fields UNAVAILABLE. It never substitutes zeros as if they were measurements.",
+      "settledTab": {
+        "tabFound": true,
+        "tabId": 153106743,
+        "chromeUrl": "http://localhost:4200/details",
+        "contentScriptRejection": null
+      },
+      "rule": "The production contract in serviceWorker.getEffectSnapshot is: page unreadable + a tab URL exists ⇒ report the tab URL with pageStateObservable:false and the per-field contract in tabOnlySnapshotFields(); page unreadable + NO tab URL ⇒ return null and fail closed. Page-side numbers are never fabricated.",
+      "provedBy": [
+        "tests/phase17/observationGeneralization.test.ts (cases 3, 8, 9)",
+        "tests/phase16-remediation/navigationObservation.test.ts (unchanged invariant, refined label)"
+      ]
+    }
+  },
+  "performance": {
+    "observationLatencyMs": {
+      "what": "One full observation: chrome.tabs.query + chrome.tabs.get + content-script PRIVAGENT_GET_EFFECT_SNAPSHOT, measured inside the real service worker.",
+      "n": 30,
+      "p50": 14,
+      "p95": 32,
+      "min": 3,
+      "max": 56,
+      "unit": "ms"
+    },
+    "addedOverheadVsPhase16": "Phase 16.1 already required one chrome.tabs read and one content-script read per snapshot; 17.1 adds the per-field contract to that SAME round trip and adds NO new IPC call. Measured delta: NOT_MEASURED — no pre-change build was available to A/B in this run, and estimating it would be inventing a number.",
+    "perceptionLatencyBefore": "NOT_MEASURED — the perception pipeline was not instrumented before 17.1.",
+    "perceptionLatencyAfter": "NOT_MEASURED — the perception pipeline is not instrumented in this build. Not estimated.",
+    "memoryImpact": "NOT_MEASURED — no reliable measurement was taken; not estimated.",
+    "note": "Only the observation round trip is instrumented. Everything else is explicitly unmeasured rather than guessed."
+  },
+  "summary": {
+    "A_normalPageObservation": true,
+    "B_scrollObserved": true,
+    "C_navigationObserved": true,
+    "D_unavailableObserved": true,
+    "D_noFabricatedGeometry": true,
+    "E_generationAdvanced": true,
+    "F_noCrossContamination": true,
+    "G_dashboardOriginObserved": true
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "serviceWorkerAttached": true
+}

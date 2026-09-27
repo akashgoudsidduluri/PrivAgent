@@ -53,13 +53,20 @@ export class BackendAgentProvider implements AgentProvider {
   ): Promise<BrowserAction> {
     // 1. Verify sanitized context safety
     assertSanitizedContextSafe(context);
+    //
+    // PHASE 17.1 (C6): the local viewport-observability flags are stripped
+    // here, at the single egress boundary. The backend schema is
+    // extra="forbid" and these are local facts about whether a reading was
+    // obtained — the model has no use for them and the device gains nothing by
+    // transmitting them. The wire schema is byte-identical to before.
+    const { viewportObservable: _vo, viewportSource: _vs, ...egressContext } = context;
 
     // 2. Call local backend with safe history metadata
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
-      const payload = { task, context, history, model_role: role };
+      const payload = { task, context: egressContext, history, model_role: role };
       const egressDecision = validateEgressPayload(payload, AGENT_ACTION_ENDPOINT);
       if (egressDecision.directive === 'BLOCK') {
         throw new ProviderError(`Egress Firewall Blocked Request: ${egressDecision.reason}`, 'unknown');
@@ -118,10 +125,12 @@ export class BackendAgentProvider implements AgentProvider {
 
   async reviewAction(action: BrowserAction, task: string, context: AgentContextPayload): Promise<{ safe: boolean; reason: string }> {
     assertSanitizedContextSafe(context);
+    // PHASE 17.1 (C6): same local-only strip as the action path.
+    const { viewportObservable: _vo2, viewportSource: _vs2, ...egressContext } = context;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
-      const payload = { action, task, context, model_role: 'SAFETY' };
+      const payload = { action, task, context: egressContext, model_role: 'SAFETY' };
       const egressDecision = validateEgressPayload(payload, AGENT_REVIEW_ENDPOINT);
       if (egressDecision.directive === 'BLOCK') {
         throw new ProviderError(`Egress Firewall Blocked Review: ${egressDecision.reason}`, 'unknown');

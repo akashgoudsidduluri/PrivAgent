@@ -14,6 +14,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { observingHost, type ObservedPageState } from './helpers/observingHost';
 import { AgentLoop } from '../extension/src/agent/agentLoop';
 import { MockAgentProvider } from '../extension/src/agent/mockAgentProvider';
 import { BrowserAction } from '../extension/src/agent/actionTypes';
@@ -61,6 +62,18 @@ function createMockContext(overrides: Partial<AgentContextPayload> = {}): AgentC
   };
 }
 
+
+/**
+ * PHASE 17.1 — the simulated page this fixture observes.
+ *
+ * The real product always has an observation channel (the service worker's
+ * getEffectSnapshot). Before 17.1 this fixture had none and relied on the loop
+ * fabricating pre-state from context and synthesizing post-state from the
+ * requested action. With those fabrications removed, the fixture models the
+ * browser explicitly here instead.
+ */
+const observedPage: ObservedPageState = { url: 'https://example.com/shop', domElementCount: 0 };
+
 describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () => {
   // 1. successful action + verified effect
   it('1. successful action with verified observable effect is recorded as EFFECT_VERIFIED', async () => {
@@ -72,6 +85,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => ({
           success: true,
@@ -109,6 +123,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => ({
           success: true,
@@ -139,11 +154,18 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
-        executeAction: async (action) =>
-          action.action === 'click'
-            ? { success: true, noEffect: true }
-            : { success: true, scrollDelta: 200 },
+        // PHASE 17.1: the simulated page now ACTUALLY scrolls. Previously the
+        // loop synthesized the post-scroll position from `scrollDelta: 200`
+        // because this fixture had no observation channel. Reporting the scroll
+        // without the page moving is exactly the fabrication 17.1 removed, so
+        // the fixture models the browser instead.
+        executeAction: async (action) => {
+          if (action.action === 'click') return { success: true, noEffect: true };
+          observedPage.scrollY = (observedPage.scrollY ?? 0) + 200;
+          return { success: true, scrollDelta: 200 };
+        },
       },
       { maxRetries: 2, maxSteps: 2 }
     );
@@ -169,6 +191,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => {
           perceiveCount++;
           return context;
@@ -197,6 +220,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async (action) => {
           if (action.action === 'click') {
@@ -239,6 +263,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => ({ success: true, noEffect: true }),
       },
@@ -271,6 +296,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async (action) =>
           action.action === 'click' && (action as { target?: string }).target === 'inert-button'
@@ -304,6 +330,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async (action) => {
           dispatched.push(action);
@@ -331,6 +358,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => ({
           success: true,
@@ -359,6 +387,7 @@ describe('PrivAgent Stage 6: Action Effect Verification + Bounded Recovery', () 
     const loop = new AgentLoop(
       provider,
       {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => context,
         executeAction: async () => ({ success: true, noEffect: true }),
       },

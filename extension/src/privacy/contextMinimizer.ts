@@ -264,6 +264,10 @@ export function minimizeAgentContext(
     url: payload.url,
     timestamp: payload.timestamp,
     viewport: { ...payload.viewport },
+    // PHASE 17.1 (C6): carried through minimization, and stripped at the
+    // egress boundary. This is a local observability fact, not model input.
+    ...(payload.viewportObservable !== undefined ? { viewportObservable: payload.viewportObservable } : {}),
+    ...(payload.viewportSource !== undefined ? { viewportSource: payload.viewportSource } : {}),
     screenshot_dimensions: payload.screenshot_dimensions
       ? { ...payload.screenshot_dimensions }
       : null,

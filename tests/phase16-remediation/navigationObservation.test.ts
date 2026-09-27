@@ -18,7 +18,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { verifyActionEffect } from '../../extension/src/agent/effectVerifier';
+import { verifyActionEffect, tabOnlySnapshotFields } from '../../extension/src/agent/effectVerifier';
 import { evaluateContainment, establishContainmentScope } from '../../extension/src/agent/containment';
 import { verifyTaskGoal } from '../../extension/src/agent/goalVerifier';
 import type { BrowserAction } from '../../extension/src/agent/actionTypes';
@@ -29,12 +29,27 @@ import type { AgentTaskState } from '../../extension/src/agent/agentState';
 const pre = (over: Partial<PreActionSnapshot> = {}): PreActionSnapshot =>
   ({ url: 'http://localhost:4200/', scrollX: 0, scrollY: 0, domElementCount: 100, timestamp: 0, ...over });
 
-/** The fallback shape the SW now returns when the page reading is unavailable. */
+/**
+ * The fallback shape the SW now returns when the page reading is unavailable.
+ *
+ * PHASE 17.1: it now also carries the observation contract, so the verifier
+ * reads the per-field STATES rather than inferring them from placeholder zeros.
+ * The numeric fields are still zeros — that is exactly why the states must be
+ * explicit.
+ */
 const tabOnly = (url: string): PostActionSnapshot =>
   ({
     url, scrollX: 0, scrollY: 0, targetValueLength: 0, openModalsCount: 0,
     activeElementSelector: undefined, domElementCount: 0, timestamp: 1,
     pageStateObservable: false,
+    observation: {
+      observedAt: 1,
+      tabId: 7,
+      pageGeneration: null,
+      tabLifecycleObserved: true,
+      pageReadable: false,
+      fields: tabOnlySnapshotFields(),
+    },
   }) as unknown as PostActionSnapshot;
 
 describe('P1-D3.1 normal navigation is observed', () => {
@@ -66,12 +81,26 @@ describe('P1-D3.3 a bfcache-like lifecycle does not fabricate an effect', () => 
   it('if the tab URL did NOT change, the page-unavailable reading is still no effect', () => {
     const r = verifyActionEffect({ action: 'click', target: 'go' } as BrowserAction, pre(), tabOnly('http://localhost:4200/'));
     expect(r.hasEffect).toBe(false);
-    expect(r.status).toBe('ACTION_NO_EFFECT');
+    // PHASE 17.1 REFINEMENT — the invariant is unchanged, the label is stricter.
+    //
+    // This asserted ACTION_NO_EFFECT. 17.1 adds EFFECT_UNVERIFIABLE and applies
+    // it here, because ACTION_NO_EFFECT is a claim about the browser ("nothing
+    // happened") and in this case the system never read the page. "We could
+    // not tell" and "nothing happened" are different facts, and the whole point
+    // of this phase is that they must not be conflated.
+    //
+    // What this test protects has NOT been weakened: no effect is claimed in
+    // either direction, and the verdict still fails closed.
+    expect(r.status).toBe('EFFECT_UNVERIFIABLE');
+    expect(r.diagnostics.observation.post?.domElementCount).toBe('UNAVAILABLE');
   });
 
   it('a scroll with the page unavailable and the URL unchanged is not an effect', () => {
     const r = verifyActionEffect({ action: 'scroll', direction: 'down', amount: 600 } as unknown as BrowserAction, pre(), tabOnly('http://localhost:4200/'));
     expect(r.hasEffect).toBe(false);
+    // Also unverifiable rather than "no effect": scrollY was never read.
+    expect(r.status).toBe('EFFECT_UNVERIFIABLE');
+    expect(r.diagnostics.scrollDelta).toBe(0);
   });
 });
 

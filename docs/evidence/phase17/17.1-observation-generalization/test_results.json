@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-09-27",
+  "work": "Phase 17.1 — observation generalization, test results",
+  "baselineCommit": "2b10445b048cfd63aa7dc5a5cfcc9482d0a1445b",
+  "scope": "17.1 only. 17.2 Goal Verification 2.0 NOT started.",
+
+  "focused": {
+    "command": "npx vitest run tests/phase17/ --reporter=basic",
+    "testFiles": 1,
+    "tests": 28,
+    "result": "28 passed / 28",
+    "file": "tests/phase17/observationGeneralization.test.ts",
+    "requiredScenariosCovered": {
+      "1 Fresh URL observation": "17.1-1",
+      "2 Stale DOM after navigation": "17.1-2",
+      "3 Content-script unavailable during navigation": "17.1-3",
+      "4 Real scrollY = 0": "17.1-4",
+      "5 Unavailable scrollY": "17.1-5",
+      "6 Real viewport height": "17.1-6",
+      "7 Unavailable viewport height": "17.1-7",
+      "8 No fabricated geometry": "17.1-8",
+      "9 EffectVerifier with unavailable before-state": "17.1-9",
+      "10 EffectVerifier with genuine observed change": "17.1-10",
+      "11 EffectVerifier with stale observation": "17.1-11",
+      "12 Previous action cannot create observed state": "17.1-12",
+      "13 Model output cannot create observed state": "17.1-13",
+      "14 chrome.tabs URL remains authoritative": "17.1-14",
+      "15 Observation version/freshness behaviour": "17.1-15"
+    }
+  },
+
+  "fullRegression": {
+    "command": "npx vitest run --reporter=basic",
+    "testFiles": 106,
+    "tests": 1315,
+    "result": "1315 passed / 1315",
+    "baseline": { "commit": "2b10445", "testFiles": 105, "tests": 1287, "result": "1287 passed / 1287" },
+    "delta": {
+      "newTestFiles": 2,
+      "newTests": 28,
+      "deletedTests": 0,
+      "relaxedAssertions": 1,
+      "relaxationNote": "tests/phase16-remediation/navigationObservation.test.ts asserted ACTION_NO_EFFECT for a tab-only reading with an unchanged URL; 17.1 reports EFFECT_UNVERIFIABLE. The protected invariant is unchanged and still asserted (hasEffect === false, no effect claimed, still fails closed). Only the label is stricter, because ACTION_NO_EFFECT asserts something about the browser that was never read. Documented inline in the test and in ACCEPTANCE_REPORT.md §6."
+    }
+  },
+
+  "securityRegression": {
+    "command": "npx vitest run tests/phase16/securityAuthorities.test.ts tests/phase12/containment.test.ts tests/phase13/harness.test.ts tests/stage5SecurityPipeline.test.ts tests/stage7EndToEndEvaluation.test.ts tests/phase16-remediation/securityCriticBoundary.test.ts tests/securityBoundary.test.ts tests/securityBoundary2.test.ts tests/centralPrivacyInvariant.test.ts tests/privacyFusion.test.ts",
+    "testFiles": 10,
+    "tests": 228,
+    "result": "228 passed / 228",
+    "verdict": "No security authority was bypassed, weakened, reordered, or removed by 17.1."
+  },
+
+  "typecheck": {
+    "command": "npx tsc -b --noEmit",
+    "errors": 5,
+    "newlyIntroduced": 0,
+    "remaining": [
+      "extension/src/background/targetResolver.ts(285,19) TS18048",
+      "extension/src/background/targetResolver.ts(287,25) TS2345",
+      "extension/src/background/targetResolver.ts(287,33) TS18048",
+      "extension/src/background/targetResolver.ts(290,9) TS2322",
+      "extension/src/background/targetResolver.ts(488,9) TS2322"
+    ],
+    "verdict": "Exactly the same five pre-existing errors, same file, same lines."
+  },
+
+  "builds": {
+    "extension": { "command": "npm run build:extension", "result": "PASS" },
+    "frontend": { "command": "npm run build:frontend", "result": "PASS" }
+  },
+
+  "performance": {
+    "instrumented": ["observation round trip (chrome.tabs.query + chrome.tabs.get + content-script snapshot)"],
+    "p50_ms": 6, "p95_ms": 15, "min_ms": 2, "max_ms": 16, "n": 30,
+    "addedOverheadVsPhase16": "NOT_MEASURED",
+    "perceptionLatencyBefore": "NOT_MEASURED",
+    "perceptionLatencyAfter": "NOT_MEASURED",
+    "memoryImpact": "NOT_MEASURED",
+    "note": "Only the observation round trip is instrumented. 17.1 adds the per-field contract to the SAME round trip and introduces no new IPC call. Everything unmeasured is reported as NOT_MEASURED rather than estimated."
+  },
+
+  "changedFiles": {
+    "production": [
+      "extension/src/agent/effectVerifier.ts",
+      "extension/src/agent/agentLoop.ts",
+      "extension/src/agent/goalVerifier.ts",
+      "extension/src/content/contentScript.ts",
+      "extension/src/background/serviceWorker.ts",
+      "extension/src/privacy/types.ts",
+      "extension/src/privacy/contextMinimizer.ts",
+      "extension/src/agent/backendAgentProvider.ts"
+    ],
+    "tests": [
+      "tests/phase17/observationGeneralization.test.ts (new)",
+      "tests/helpers/observingHost.ts (new)",
+      "tests/agentLoop.test.ts",
+      "tests/multiPageWorkflow.test.ts",
+      "tests/phase9LongHorizon.test.ts",
+      "tests/providerRegistry.test.ts",
+      "tests/providerRetryBound.test.ts",
+      "tests/stage5SecurityPipeline.test.ts",
+      "tests/stage6EffectRecovery.test.ts",
+      "tests/stage7EndToEndEvaluation.test.ts",
+      "tests/phase11/agentLoopInteraction.test.ts",
+      "tests/phase16-remediation/navigationObservation.test.ts"
+    ],
+    "harness": [
+      "scratch/verify_phase17_1_observation.mjs (new)"
+    ]
+  },
+
+  "notStarted": [
+    "17.2 Goal Verification 2.0", "17.3 OCR Autonomous Integration",
+    "17.4 Visual/Canvas/Non-DOM", "17.5 Dynamic/Virtualized Content",
+    "17.6 iframe-aware Perception", "17.7 Long-Horizon Reliability",
+    "17.8 Reasoner/Provider Robustness", "17.9 Generalization Evaluation",
+    "17.10 Final Adversarial Evaluation"
+  ]
+}

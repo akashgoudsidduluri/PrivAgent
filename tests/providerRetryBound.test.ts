@@ -13,6 +13,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import { observingHost, type ObservedPageState } from './helpers/observingHost';
+import { simulatedBrowser } from './helpers/observingHost';
 import { AgentLoop, TaskState } from '../extension/src/agent/agentLoop';
 import { AgentProvider } from '../extension/src/agent/agentProvider';
 import { ProviderError } from '../extension/src/agent/openRouterProvider';
@@ -47,8 +49,9 @@ function makeLoop(
   opts: { maxSteps?: number; providerRetries?: number } = {}
 ): AgentLoop {
   return new AgentLoop(provider, {
+    getEffectSnapshot: observingHost(observedPage),
     perceivePage: async () => CONTEXT,
-    executeAction: async () => ({ success: true }),
+    executeAction: async (action) => simulatedBrowser(observedPage)(action),
   }, {
     maxSteps: opts.maxSteps ?? 10,
     maxRetries: 2,
@@ -57,6 +60,18 @@ function makeLoop(
     providerRetryDelayMs: 1,
   });
 }
+
+
+/**
+ * PHASE 17.1 — the simulated page this fixture observes.
+ *
+ * The real product always has an observation channel (the service worker's
+ * getEffectSnapshot). Before 17.1 this fixture had none and relied on the loop
+ * fabricating pre-state from context and synthesizing post-state from the
+ * requested action. With those fabrications removed, the fixture models the
+ * browser explicitly here instead.
+ */
+const observedPage: ObservedPageState = { url: 'https://example.com/shop', domElementCount: 0 };
 
 describe('Provider retry bound proof (Phase 4)', () => {
   it('worst case reaching the product bound: fail providerRetries times, succeed on final attempt, every step', async () => {

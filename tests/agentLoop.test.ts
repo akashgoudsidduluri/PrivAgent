@@ -21,6 +21,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import { observingHost, type ObservedPageState } from './helpers/observingHost';
+import { simulatedBrowser } from './helpers/observingHost';
 import { AgentLoop, assertNoSensitiveDataInState, TaskState } from '../extension/src/agent/agentLoop';
 import { MockAgentProvider } from '../extension/src/agent/mockAgentProvider';
 import { AgentContextPayload } from '../extension/src/privacy/types';
@@ -64,6 +66,18 @@ function createMockContext(step = 0): AgentContextPayload {
   };
 }
 
+
+/**
+ * PHASE 17.1 — the simulated page this fixture observes.
+ *
+ * The real product always has an observation channel (the service worker's
+ * getEffectSnapshot). Before 17.1 this fixture had none and relied on the loop
+ * fabricating pre-state from context and synthesizing post-state from the
+ * requested action. With those fabrications removed, the fixture models the
+ * browser explicitly here instead.
+ */
+const observedPage: ObservedPageState = { url: 'https://example.com/shop', domElementCount: 0 };
+
 describe('PrivAgent M6 Autonomous Agent Loop', () => {
   // Test 1 & 3: Multi-step task execution to SUCCESS
   it('1 & 3. executes a multi-step task to SUCCESS with fresh context on each step', async () => {
@@ -76,11 +90,17 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
       return createMockContext(perceptionCount);
     });
 
+    const page: ObservedPageState = { url: 'https://example.com/dashboard', domElementCount: 0 };
     const executeAction = vi.fn(async (action: BrowserAction) => {
+      await simulatedBrowser(page)(action);
       return { success: true, message: `Executed ${action.action}` };
     });
 
-    const loop = new AgentLoop(provider, { perceivePage, executeAction }, { delayBetweenStepsMs: 10 });
+    const loop = new AgentLoop(
+      provider,
+      { getEffectSnapshot: observingHost(page), perceivePage, executeAction },
+      { delayBetweenStepsMs: 10 }
+    );
     const finalState = await loop.runTask('Open the account details and find the recent transactions');
 
     expect(finalState.status).toBe('SUCCESS');
@@ -106,8 +126,13 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
       return ctx;
     });
 
-    const executeAction = vi.fn(async () => ({ success: true }));
-    const loop = new AgentLoop(provider, { perceivePage, executeAction }, { delayBetweenStepsMs: 5 });
+    const page: ObservedPageState = { url: 'https://example.com/dashboard', domElementCount: 0 };
+    const executeAction = vi.fn(async (action: BrowserAction) => simulatedBrowser(page)(action));
+    const loop = new AgentLoop(
+      provider,
+      { getEffectSnapshot: observingHost(page), perceivePage, executeAction },
+      { delayBetweenStepsMs: 5 }
+    );
 
     await loop.runTask('Open the account details and find the recent transactions');
 
@@ -128,10 +153,15 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
     }));
 
     const perceivePage = vi.fn(async () => createMockContext(0));
-    const executeAction = vi.fn(async () => ({ success: true }));
+    const page: ObservedPageState = { url: 'https://example.com/dashboard', domElementCount: 0 };
+    const executeAction = vi.fn(async (action: BrowserAction) => simulatedBrowser(page)(action));
 
     const maxSteps = 4;
-    const loop = new AgentLoop(provider, { perceivePage, executeAction }, { maxSteps, delayBetweenStepsMs: 5 });
+    const loop = new AgentLoop(
+      provider,
+      { getEffectSnapshot: observingHost(page), perceivePage, executeAction },
+      { maxSteps, delayBetweenStepsMs: 5 }
+    );
     const finalState = await loop.runTask('Never ending task');
 
     expect(finalState.status).toBe('FAILED');
@@ -325,6 +355,7 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
     const provider = new MockAgentProvider();
     const staleModel = buildBrowserWorldModel({ root: document, pageGeneration: 3, id: 'wm-stale-older' });
     const loop = new AgentLoop(provider, {
+      getEffectSnapshot: observingHost(observedPage),
       perceivePage: vi.fn(async () => ({
         context: createMockContext(0),
         worldModel: staleModel,

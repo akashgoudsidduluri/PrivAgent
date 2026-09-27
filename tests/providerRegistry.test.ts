@@ -16,6 +16,8 @@
  */
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { observingHost, type ObservedPageState } from './helpers/observingHost';
+import { simulatedBrowser } from './helpers/observingHost';
 import {
   AGENT_PROVIDERS,
   ProviderRegistryError,
@@ -80,6 +82,18 @@ function backendCompletion(url?: string): Response {
 afterEach(() => {
   vi.unstubAllGlobals();
 });
+
+
+/**
+ * PHASE 17.1 — the simulated page this fixture observes.
+ *
+ * The real product always has an observation channel (the service worker's
+ * getEffectSnapshot). Before 17.1 this fixture had none and relied on the loop
+ * fabricating pre-state from context and synthesizing post-state from the
+ * requested action. With those fabrications removed, the fixture models the
+ * browser explicitly here instead.
+ */
+const observedPage: ObservedPageState = { url: 'https://example.com/shop', domElementCount: 0 };
 
 describe('Provider registry declaration', () => {
   it('registers the production backend provider as the selectable default', () => {
@@ -174,9 +188,15 @@ describe('M6 is provider-agnostic (one loop, swappable provider)', () => {
     for (const provider of providers) {
       const executed: BrowserAction[] = [];
       const loop = new AgentLoop(provider, {
+        getEffectSnapshot: observingHost(observedPage),
         perceivePage: async () => CONTEXT,
         executeAction: async (action) => {
           executed.push(action);
+          // PHASE 17.1: the simulated page follows the click. This test is about
+          // provider-agnosticism, so the action has to actually land for the
+          // loop to reach its goal on every provider. Before 17.1 the loop
+          // synthesized the post-state from the requested action.
+          await simulatedBrowser(observedPage)(action);
           return { success: true };
         },
       }, { maxSteps: 5, delayBetweenStepsMs: 1, providerRetries: 1, providerRetryDelayMs: 1 });
@@ -218,8 +238,9 @@ describe('M6 is provider-agnostic (one loop, swappable provider)', () => {
     );
 
     const loop = new AgentLoop(createAgentProvider({ provider: 'backend' }), {
+      getEffectSnapshot: observingHost(observedPage),
       perceivePage: async () => CONTEXT,
-      executeAction: async () => ({ success: true }),
+      executeAction: async (action) => simulatedBrowser(observedPage)(action),
     }, { maxSteps: 3, maxRetries: 0, delayBetweenStepsMs: 1 });
 
     const state = await loop.runTask(TASK);
