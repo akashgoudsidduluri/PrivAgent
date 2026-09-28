@@ -339,6 +339,14 @@ Per instruction, production behaviour was **not** changed. Both are reported for
 
 ### D-02 — Goal-semantic recovery is dead code, for two independent reasons
 
+> **RESOLVED in Phase 17.9 — `ed9d35e`.** The defect described below was fixed. This
+> section is preserved as the record of what 17.8 found. The closure audit also
+> established a **third** layer the two below do not name: the local `goal` was
+> assigned twice and read zero times, so re-pointing the hint or passing the goal at
+> the call sites — either alone — would still have left the value unconsumed. See
+> `docs/evidence/phase17/17.9-d02-remediation/D02_REMEDIATION_REPORT.md` and
+> `docs/evidence/phase17/17.9-closure/PHASE_17_9_CLOSURE_REPORT.md`.
+
 **Severity: LOW. Fail-safe.**
 
 **Exact failure.** `recoverStaleTarget` computes `const goalHint = (taskGoal || '').toLowerCase()` and scores 0.88–0.90 against any candidate whose selector mentions a goal concept. It is never reached:
