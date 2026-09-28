@@ -228,27 +228,24 @@ describe('D-01 · the refusal is recorded and the task survives', () => {
     expect(audited).not.toContain('@example.com');
   });
 
-  // ── KNOWN LIMITATION — surfaced by this work, REPORTED and NOT fixed here ──
-  it('KNOWN LIMITATION: the refused action is retained verbatim in the in-memory step record', () => {
-    // WHY THIS IS NOT PART OF D-01. `state.steps[].action` is the loop's own
-    // StepRecord, written by `this.recordStep(...)`. It has always stored the
-    // full proposed action, whether or not it was ever dispatched, and it does
-    // not pass through the wire firewall that governs the decision trace. That
-    // retention predates D-01 and is a separate defect with a different blast
-    // radius: closing it means changing the loop's step-record data model, which
-    // the D-01 scope explicitly forbids.
+  // ── FOLLOW-UP, NOW CLOSED: retained step state no longer keeps the raw value ──
+  it('the refused action is NO LONGER retained verbatim in the in-memory step record', () => {
+    // HISTORY. This test used to assert the OPPOSITE and was named
+    // `KNOWN LIMITATION`. The defect it pinned was real and predated D-01:
+    // `state.steps[].action` held the live `BrowserAction`, so a refused action
+    // left its whole `text` in task state. Task state is what `getState()`
+    // returns and what the service worker hands to `sendToDashboard`, so it was
+    // a retention site on a real egress path, not merely a long-lived local.
     //
-    // WHY IT IS STILL WORTH A TEST. The value never left the process — it was
-    // not dispatched, not traced, not sent to a provider and not rendered to a
-    // dashboard, all of which the tests above assert. But it is a raw value
-    // sitting in memory longer than it needs to be, and that must stay visible
-    // rather than be quietly forgotten. This test pins the CURRENT behaviour so
-    // the gap cannot drift silently in either direction, and so whoever picks
-    // up the follow-up finds it already characterised.
+    // The follow-up replaced the retained action with a value-free projection.
+    // This test now PROVES the raw value is gone while the step is still
+    // present and still auditable — see the positive control in the dedicated
+    // improvement suite.
     const step = r.state.steps[0]!;
     expect(step.validationAllowed).toBe(false);
-    expect('text' in step.action ? step.action.text : undefined).toBe(RAW_EMAIL);
-    // The privacy-relevant counterweight: it never went anywhere.
+    expect('text' in step.action ? (step.action as { text?: string }).text : undefined).toBeUndefined();
+    expect(JSON.stringify(r.state)).not.toContain(RAW_EMAIL);
+    // The privacy-relevant counterweight is unchanged.
     expect(r.dispatched).toEqual([]);
     expect(r.state.decisionTraceSummary?.entries ?? []).toEqual([]);
   });

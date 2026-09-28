@@ -118,7 +118,7 @@ describe('PrivAgent Phase 3 — Verified Goal Completion', () => {
     // Step 1: on login page
     state.steps.push({
       step: 1,
-      action: { action: 'type', target: 'input-username', text: 'shopper' },
+      action: { action: 'type', target: 'input-username', valueLength: 'shopper'.length },
       validationAllowed: true,
       validationReason: 'Valid',
       executionSuccess: true,

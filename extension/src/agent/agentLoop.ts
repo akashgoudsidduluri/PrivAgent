@@ -49,6 +49,7 @@ import {
   ConfidenceEvaluation,
 } from './confidenceScorer';
 import { AgentDecisionTracer, DecisionTraceEntry } from './decisionTrace';
+import { sanitizeRetainedAction, sanitizeRetainedSelfHealing } from './agentState';
 import { PrivacyBoundaryError } from '../privacy/rawValueScanner';
 import {
   AgentTaskState,
@@ -2627,7 +2628,9 @@ export class AgentLoop {
     // Record the confirmed step with navigation trace fields
     const stepRecord: StepRecord = {
       step: this.state.currentStep,
-      action,
+      // Same projection as `recordStep`. A user-CONFIRMED action is still an
+      // action, and confirmation is not a licence to retain its raw value.
+      action: sanitizeRetainedAction(action),
       validationAllowed: true,
       validationReason: 'User explicitly confirmed consequential action',
       executionSuccess: true,
@@ -2830,7 +2833,9 @@ export class AgentLoop {
   ): void {
     const record: StepRecord = {
       step: this.state.currentStep,
-      action,
+      // RETAINED, value-free. The live `action` continues through the pipeline
+      // untouched; only what is kept is projected.
+      action: sanitizeRetainedAction(action),
       validationAllowed,
       validationReason,
       executionSuccess,
@@ -2842,7 +2847,7 @@ export class AgentLoop {
       riskAssessment,
       semanticVerification,
       confidenceEvaluation,
-      selfHealing,
+      selfHealing: sanitizeRetainedSelfHealing(selfHealing),
       expectedStateChange: this.state.expectedStateChange,
       currentPageGeneration: this.state.currentPageGeneration,
       pageType: this.state.pageType,

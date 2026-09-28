@@ -248,12 +248,19 @@ export function normalizeUrl(url: string): string {
  * so "we could not read the geometry" is never confused with "the geometry did
  * not change" — the two must not collapse into one fingerprint.
  */
-export function fingerprintObservation(observation: TaskObservation, action?: BrowserAction): string {
+export function fingerprintObservation(
+  observation: TaskObservation,
+  // Structurally minimal on purpose. The fingerprint reads ONLY `action`
+  // and `target` (see `actionPart` below), so it accepts a live
+  // `BrowserAction` during the pipeline AND the value-free `RetainedAction`
+  // read back from task state afterwards. Nothing here needs a value.
+  action?: { action: string; target?: string }
+): string {
   const url = normalizeUrl(observation.url);
   const topCandidates = observation.candidateIds.slice(0, 5).join(',');
   const topEntities = observation.entityIds.slice(0, 5).join(',');
   const actionPart = action
-    ? `${action.action}:${'target' in action ? String((action as { target?: unknown }).target ?? '') : ''}`
+    ? `${action.action}:${String(action.target ?? '')}`
     : 'observe';
   const geometryPart =
     observation.viewportObservable === false
@@ -612,7 +619,7 @@ export class LongHorizonTracker {
    */
   observe(
     observation: TaskObservation,
-    action?: BrowserAction,
+    action?: { action: string; target?: string },
     opts: { subgoalJustCompleted?: string; discoveriesAdded?: number; countsAsAction?: boolean } = {}
   ): ProgressAssessment {
     const assessment = assessProgress(this.lastObservation, observation, {

@@ -116,9 +116,89 @@ export interface ExpectedStateChange {
   targetHint?: string;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// RETAINED ACTIONS — the value-free projection the loop is allowed to KEEP
+// ══════════════════════════════════════════════════════════════════════════
+//
+// The header of this file states the invariant: state never stores raw sensitive
+// PII. `StepRecord` broke it. It held the live `BrowserAction`, so a refused or
+// executed `type` action left its entire `text` sitting in task state — and task
+// state is what `getState()` returns, what the service worker hands to
+// `sendToDashboard`, and what the popup renders with `formatActionForDisplay`.
+//
+// The live action object the authorization and dispatch pipeline uses is
+// UNTOUCHED. This is a projection made at the moment of retention, and nothing
+// in the pipeline ever reads it back. See `sanitizeRetainedAction`.
+//
+// What survives is what something genuinely still needs AFTER the gates have
+// run. The audit that produced this type found the real consumers:
+//   - `fingerprintObservation` reads `action` and `target` (long-horizon stall
+//     detection), so both are preserved verbatim.
+//   - the popup step trail and the frontend adapter render `action`, `target`,
+//     `direction`, `amount` and `url`, all preserved.
+//   - a VALUE length is retained instead of the value, so a step can still be
+//     audited for "did this type something, and how much", which is the only
+//     thing any consumer ever wanted from it.
+
+export type RetainedAction =
+  | { action: 'click'; target: string; reason?: string }
+  | { action: 'scroll'; direction: string; amount: number; reason?: string }
+  | { action: 'type'; target: string; valueLength: number; reason?: string }
+  | { action: 'select'; target: string; valueLength: number; reason?: string }
+  | { action: 'navigate'; url: string; reason?: string }
+  | { action: 'pressKey'; key: string; target?: string; reason?: string };
+
+/**
+ * Project a live action down to what may be RETAINED.
+ *
+ * The `text` of a `type` action and the `option` of a `select` are the two
+ * fields that can carry a raw user value, and they are replaced by their
+ * LENGTH. Nothing else is dropped: `action`, `target` and the geometric or
+ * routing fields are what the fingerprint, the step trail and the adapters read.
+ *
+ * `reason` is retained. It is model-authored free text that M5 already screens
+ * at the moment of authorization, and it is the only record of why a proposal
+ * was made. Removing it would lose diagnostics without closing a boundary —
+ * the `person_name` false positive is a separate, explicitly tracked issue.
+ */
+export function sanitizeRetainedAction(action: BrowserAction): RetainedAction {
+  switch (action.action) {
+    case 'type':
+      return { action: 'type', target: action.target, valueLength: action.text.length, reason: action.reason };
+    case 'select':
+      return { action: 'select', target: action.target, valueLength: action.option.length, reason: action.reason };
+    case 'click':
+      return { action: 'click', target: action.target, reason: action.reason };
+    case 'scroll':
+      return { action: 'scroll', direction: action.direction, amount: action.amount, reason: action.reason };
+    case 'navigate':
+      return { action: 'navigate', url: action.url, reason: action.reason };
+    case 'pressKey':
+      return { action: 'pressKey', key: action.key, target: action.target, reason: action.reason };
+  }
+}
+
+/**
+ * The self-healing record as RETAINED. `recoveredAction` is a full
+ * `BrowserAction` and therefore carries the same raw value the original did, so
+ * it is projected too. Only `recovered` (a boolean) is read back by any
+ * production consumer, so this costs nothing.
+ */
+export interface RetainedSelfHealing extends Omit<SelfHealingResult, 'recoveredAction'> {
+  recoveredAction?: RetainedAction;
+}
+
+export function sanitizeRetainedSelfHealing(result: SelfHealingResult | undefined): RetainedSelfHealing | undefined {
+  if (!result) return undefined;
+  return {
+    ...result,
+    recoveredAction: result.recoveredAction ? sanitizeRetainedAction(result.recoveredAction) : undefined,
+  };
+}
+
 export interface StepRecord {
   step: number;
-  action: BrowserAction;
+  action: RetainedAction;
   validationAllowed: boolean;
   validationReason: string;
   executionSuccess: boolean;
@@ -130,7 +210,7 @@ export interface StepRecord {
   riskAssessment?: ActionRiskAssessment;
   semanticVerification?: SemanticVerificationResult;
   confidenceEvaluation?: ConfidenceEvaluation;
-  selfHealing?: SelfHealingResult;
+  selfHealing?: RetainedSelfHealing;
   /**
    * Populated for navigate actions — the REQUESTED destination URL.
    *

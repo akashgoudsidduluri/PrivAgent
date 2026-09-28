@@ -38,6 +38,7 @@ import { AgentLoop } from '../../extension/src/agent/agentLoop';
 import { ctx, det, scope } from '../../evaluation/phase17_8/fixtures';
 import type { AgentContextPayload } from '../../extension/src/privacy/types';
 import type { BrowserAction } from '../../extension/src/agent/actionTypes';
+import type { RetainedAction } from '../../extension/src/agent/agentState';
 
 // `scope()` is contained to shop.example, so the page must live under it.
 // Anything else and containment refuses before recovery is ever reached — which
@@ -124,7 +125,9 @@ async function runLoop(
   }
 }
 
-const target = (a: BrowserAction) => (a as { target?: string }).target;
+// Accepts a live action OR a retained value-free projection. Only `target` is
+// ever needed, and `target` is absent on scroll/navigate shapes.
+const target = (a: BrowserAction | RetainedAction) => ('target' in a ? a.target : undefined);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 1-3 · THE PRODUCTION CALL SHAPE

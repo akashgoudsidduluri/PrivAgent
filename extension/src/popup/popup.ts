@@ -17,6 +17,7 @@ import { AgentProvider } from '../agent/agentProvider';
 import { createAgentProvider, getProviderDescriptor } from '../agent/providerRegistry';
 import { ModelRouter } from '../agent/modelRouter';
 import { validateAction } from '../agent/actionValidator';
+import type { RetainedAction } from '../agent/agentState';
 import { canPerformAction } from '../agent/privacyPolicy';
 import { BrowserAction } from '../agent/actionTypes';
 import { AgentLoop, TaskState } from '../agent/agentLoop';
@@ -687,20 +688,48 @@ const m5ValidatorStatus = document.getElementById('m5-validator-status');
 const m5ExecutionStatus = document.getElementById('m5-execution-status');
 const presetBtns = document.querySelectorAll('.preset-btn');
 
-function formatActionForDisplay(action: BrowserAction): string {
+/**
+ * Render an action for the M5 panel and the step trail.
+ *
+ * Two call shapes exist and both are correct here:
+ *  - a LIVE `BrowserAction`, from the model's current proposal below; and
+ *  - a `RetainedAction` read back out of task state.
+ *
+ * For a live `type`/`select` the value is shown, because this is the operator's
+ * own view of the proposal M5 is about to judge. For a RETAINED action there is
+ * no value to show — task state deliberately keeps only its length — so the
+ * length is rendered instead. The live branch is unchanged.
+ */
+function formatActionForDisplay(action: BrowserAction | RetainedAction): string {
+  if (action.action === 'type') {
+    const a = action as { target: string; text?: string; valueLength?: number };
+    return a.text !== undefined
+      ? `type(${a.target}, "${a.text}")`
+      : `type(${a.target}, <${a.valueLength ?? 0} chars withheld>)`;
+  }
+  if (action.action === 'select') {
+    const a = action as { target: string; option?: string; valueLength?: number };
+    return a.option !== undefined
+      ? `select(${a.target}, "${a.option}")`
+      : `select(${a.target}, <${a.valueLength ?? 0} chars withheld>)`;
+  }
   switch (action.action) {
-    case 'click':
-      return `click(${action.target})`;
-    case 'pressKey':
-      return `pressKey(${action.key})`;
-    case 'scroll':
-      return `scroll(${action.direction}, ${action.amount}px)`;
-    case 'type':
-      return `type(${action.target}, "${action.text}")`;
-    case 'select':
-      return `select(${action.target}, "${action.option}")`;
-    case 'navigate':
-      return `navigate("${action.url}")`;
+    case 'click': {
+      const a = action as { target: string };
+      return `click(${a.target})`;
+    }
+    case 'pressKey': {
+      const a = action as { key: string };
+      return `pressKey(${a.key})`;
+    }
+    case 'scroll': {
+      const a = action as { direction: string; amount: number };
+      return `scroll(${a.direction}, ${a.amount}px)`;
+    }
+    case 'navigate': {
+      const a = action as { url: string };
+      return `navigate("${a.url}")`;
+    }
   }
 }
 
