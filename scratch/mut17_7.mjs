@@ -330,4 +330,8 @@ function main() {
   console.log(`\n${RESULTS}`);
 }
 
-main();
+// Imported by the Phase 17.8 harness to REUSE the mutation definitions rather
+// than duplicate them. `main()` must not run on import in that case, or the
+// Phase 17.7 audit would re-execute as a side effect of reading its list.
+// The guard cannot change any 17.7 result: unset, this is the original call.
+if (process.env.MUT_HARNESS_IMPORTED !== '1') main();

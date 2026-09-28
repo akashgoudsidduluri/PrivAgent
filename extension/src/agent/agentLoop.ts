@@ -49,6 +49,7 @@ import {
   ConfidenceEvaluation,
 } from './confidenceScorer';
 import { AgentDecisionTracer, DecisionTraceEntry } from './decisionTrace';
+import { PrivacyBoundaryError } from '../privacy/rawValueScanner';
 import {
   AgentTaskState,
   TaskState,
@@ -338,6 +339,82 @@ export class AgentLoop {
    * Security Critic → Privacy → Risk/Confirmation → Execution → Verification).
    */
   private readonly recoveryEngine = new RecoveryEngine(DEFAULT_RECOVERY_BOUNDS);
+
+  /**
+   * PHASE 17.8 D-01. Number of decision-trace steps whose DETAILED trace could
+   * not be written because the proposal carried a raw sensitive value.
+   *
+   * The value itself is never counted, stored or logged — only the fact that a
+   * trace was withheld. See `recordDecisionStep` for why this is not a
+   * security event.
+   */
+  private decisionTraceWithheldCount = 0;
+
+  /**
+   * How many decision-trace steps were withheld because their proposal
+   * contained a raw sensitive value.
+   *
+   * Non-zero means the explainability trace is INCOMPLETE for that task. The
+   * security decision is unaffected and remains fail-closed; only the audit
+   * trail is partial. Exposed so a host can surface the gap rather than present
+   * a silently truncated trace as a complete one.
+   */
+  get withheldDecisionTraceSteps(): number {
+    return this.decisionTraceWithheldCount;
+  }
+
+  /**
+   * PHASE 17.8 D-01 — make refusal tracing non-fatal.
+   *
+   * THE DEFECT. `AgentDecisionTracer.recordStep` runs the raw-value firewall
+   * over the whole entry, and every entry includes `proposedAction: action`.
+   * So when the model proposes an action carrying a raw value — an email in a
+   * `type` action's text, a card number in a reason — the trace that is
+   * supposed to RECORD THE REFUSAL is itself rejected for carrying that value.
+   * `PrivacyBoundaryError` then escapes `runTask`, and the task ends with no
+   * state, no reason and no trace.
+   *
+   * WHY THIS IS NOT A SECURITY DEFECT. Nothing is dispatched, nothing is
+   * authorized and nothing leaks. M5 already refused; the throw happens after
+   * that decision, on the audit path. The security outcome was fail-closed
+   * before the exception was thrown and is unchanged by catching it. What was
+   * broken is RELIABILITY: a correct, safe refusal became an unhandled error.
+   *
+   * WHY ONLY THIS EXCEPTION. `PrivacyBoundaryError` is the specific, expected
+   * signal that the tracer could not safely serialize an entry. Every other
+   * error is a real bug and is re-thrown unchanged, so this cannot become a
+   * general "ignore tracing errors" handler.
+   *
+   * WHY NO FALLBACK ENTRY. `DecisionTraceEntry.proposedAction` is required, so
+   * a "safe" entry would have to invent a placeholder action. Writing a
+   * fabricated proposal into an explainability trace is exactly the class of
+   * fabrication this project exists to refuse, so the detailed entry is
+   * WITHHELD rather than replaced. The refusal itself is unaffected: it is
+   * already recorded by `this.recordStep(...)` into `state.steps`, which does
+   * not run the wire firewall, and by `state.reason`.
+   *
+   * The tracer itself is deliberately NOT modified. Weakening it at the source
+   * would suppress this signal for every other consumer of the trace, and this
+   * fix is about the CALLER handling an expected refusal, not about relaxing
+   * what the firewall refuses.
+   */
+  private recordDecisionStep(
+    tracer: AgentDecisionTracer,
+    entry: Omit<DecisionTraceEntry, 'timestamp'>
+  ): void {
+    try {
+      tracer.recordStep(entry);
+    } catch (err) {
+      if (!(err instanceof PrivacyBoundaryError)) throw err;
+      this.decisionTraceWithheldCount++;
+      // Value-free by construction: a step number and a fixed constant. No
+      // action, no page text, no model output, no reason string.
+      console.info('[AgentTrace] decision trace withheld', {
+        step: entry.step,
+        reason: 'RAW_VALUE_IN_PROPOSAL',
+      });
+    }
+  }
   /**
    * Phase 12 Containment scope. Defaults to null, which containment treats as
    * UNINITIALIZED and therefore denies — the fail-closed default.
@@ -1089,7 +1166,7 @@ export class AgentLoop {
 
         const failReason = `Target Grounding Failed (${grounding.failureReason || 'ELEMENT_NOT_FOUND'}): ${grounding.details}`;
         this.recordStep(action, false, failReason, false, failReason);
-        tracer.recordStep({
+        this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
@@ -1200,7 +1277,7 @@ export class AgentLoop {
           undefined,
           healingResult
         );
-        tracer.recordStep({
+        this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
@@ -1291,7 +1368,7 @@ export class AgentLoop {
 
         const criticReason = `Security Critic BLOCKED (${critic.code}): ${critic.reason}`;
         this.recordStep(action, false, criticReason, false, criticReason);
-        tracer.recordStep({
+        this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
@@ -1347,7 +1424,7 @@ export class AgentLoop {
           policy.reason,
           targetDet?.type
         );
-        tracer.recordStep({
+        this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
@@ -1415,7 +1492,7 @@ export class AgentLoop {
           semantic,
           confidence
         );
-        tracer.recordStep({
+        this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
@@ -1495,7 +1572,7 @@ export class AgentLoop {
           semantic,
           confidence
         );
-        tracer.recordStep({
+        this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
@@ -1731,7 +1808,7 @@ export class AgentLoop {
           confidence,
           healingResult
         );
-        tracer.recordStep({
+        this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
@@ -1819,7 +1896,7 @@ export class AgentLoop {
             targetDet?.type, risk, semantic, confidence, healingResult,
             false, 'ACTION_NO_EFFECT', unobservableRecord.reason
           );
-          tracer.recordStep({
+          this.recordDecisionStep(tracer, {
             step: this.state.currentStep,
             goal: task,
             proposedAction: action,
@@ -1988,7 +2065,7 @@ export class AgentLoop {
           effectResult.details
         );
 
-        tracer.recordStep({
+        this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
           proposedAction: action,
@@ -2312,7 +2389,7 @@ export class AgentLoop {
         effectResult.status,
         effectResult.details
       );
-      tracer.recordStep({
+      this.recordDecisionStep(tracer, {
         step: this.state.currentStep,
         goal: task,
         proposedAction: action,

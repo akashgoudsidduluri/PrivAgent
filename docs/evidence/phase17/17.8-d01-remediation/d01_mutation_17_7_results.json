@@ -1,0 +1,46 @@
+{
+  "phase": "17.8 D-01 remediation",
+  "track": "PHASE_17_7_MUTATION_AUDIT_RERUN",
+  "question": "Do all fifteen Phase 17.7 mutations still behave exactly as at the pre-D-01 baseline, after the D-01 fix to agentLoop.ts?",
+  "harness": "scratch/mut17_7.mjs",
+  "mutationDefinitions": "UNCHANGED. No definition was edited, relaxed or re-anchored to make a result favourable.",
+  "detectionRule": "vitest EXIT CODE ONLY. The agent loop logs the literal string 'M6 failed' on clean runs, so any output-parsing rule reports false failures.",
+  "fileSetNote": "The suite was rebuilt for the re-run to 117 files (/tmp/all_tests.txt) to include the new D-01 regression file, and the mutation-targeted set to 63 files to include it as well. No existing test was removed, skipped or re-anchored.",
+  "tiers": {
+    "targeted": "the 63-file security/privacy + phase17 targeted set",
+    "full": "all 117 files, run in chunks, used to escalate anything that survived the targeted tier"
+  },
+  "sourceOfRecord": "This file is the durable record. The raw harness output at scratch/.mut17_7_results.json was transient state from the re-run and was deliberately RESTORED to its pre-remediation committed version rather than committed, so this file is the authoritative D-01 comparison.",
+  "baseline": {
+    "source": "the pre-D-01 committed record at HEAD (109db62), confirmed byte-identical to scratch/.mut17_7_results.json before the restore",
+    "caught": 14,
+    "survived": ["M9"]
+  },
+  "d01Rerun": {
+    "caught": 14,
+    "survived": ["M9"],
+    "allFilesRestored": true,
+    "verdict": "IDENTICAL TO BASELINE - 14 caught, M9 proven-equivalent, 0 regressions, 0 result changed"
+  },
+  "results": [
+    { "id": "M1",  "name": "Goal Verification bypass",                                     "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M2",  "name": "M5 privacy/action-validator bypass",                           "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M3",  "name": "Security Critic bypass",                                      "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M4",  "name": "Containment bypass at the dispatch boundary",                  "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M5",  "name": "Effect Verification fabrication (unobservable page)",           "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M5b", "name": "Effect Verification fabrication (per-field OBSERVED contract)", "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M6",  "name": "Observation fabrication (unobservable state synthesised)",     "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M7",  "name": "Stale observation acceptance",                                 "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M8",  "name": "Prompt-injection acceptance",                                  "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M9",  "name": "Recovery / self-healing authorization",                         "baseline": "SURVIVED", "d01Rerun": "SURVIVED", "caughtAtTier": null,       "exitStatus": 0, "restored": true, "note": "Survives the ENTIRE 117-file suite. Proven-equivalent mutant, not a coverage gap. Same verdict as the 17.7 baseline." },
+    { "id": "M9b", "name": "Recovery / self-healing authorization (healed target trusted without re-gating)", "baseline": "CAUGHT", "d01Rerun": "CAUGHT", "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M10", "name": "Subgoal completion fabrication",                                "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M11", "name": "Privacy egress leak (raw-value firewall disabled)",             "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "full",     "exitStatus": 1, "restored": true, "note": "Survived the targeted tier and was escalated to the full tier, where it was caught. Same escalation path as the 17.7 baseline." },
+    { "id": "M11b","name": "Privacy egress leak (F-08 re-opened: OCR re-attached to the wire)", "baseline": "CAUGHT", "d01Rerun": "CAUGHT", "caughtAtTier": "targeted", "exitStatus": 1, "restored": true },
+    { "id": "M12", "name": "Provider schema weakening (unknown action fields accepted)",     "baseline": "CAUGHT",  "d01Rerun": "CAUGHT",  "caughtAtTier": "targeted", "exitStatus": 1, "restored": true }
+  ],
+  "crashSafety": {
+    "journal": "scratch/.mut17_7_journal.json",
+    "note": "One batch was killed by the command timeout mid-mutation during this re-run. The journal restored extension/src/agent/agentLoop.ts and was verified clean before the remaining mutations ran. No mutation was left stranded; every entry above reports restored=true."
+  }
+}

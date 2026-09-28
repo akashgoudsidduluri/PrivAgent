@@ -1,0 +1,95 @@
+{
+  "phase": "17.8 D-01 remediation",
+  "question": "Do the six required mutations still behave EXACTLY as at the 17.8 baseline after the D-01 fix?",
+  "testFile": "tests/phase17/phase178Benchmark.test.ts",
+  "mutationDefinitions": "UNCHANGED. Imported from scratch/mut17_7.mjs; no definition edited, relaxed or re-anchored to make a result favourable.",
+  "detectionRule": "vitest EXIT CODE ONLY (the loop logs the literal string 'M6 failed' on clean runs, so output parsing gives false failures).",
+  "baseline_17_8": {
+    "M5": "CAUGHT",
+    "M5b": "CAUGHT",
+    "M9": "ESCAPED (proven-equivalent)",
+    "M9b": "CAUGHT",
+    "M11": "CAUGHT",
+    "M11b": "CAUGHT"
+  },
+  "verdict": "IDENTICAL TO BASELINE \u2014 5 caught, 1 proven-equivalent escape (M9), 0 regressions",
+  "caught": 5,
+  "escaped": [
+    "M9"
+  ],
+  "anchorMissing": [],
+  "results": [
+    {
+      "id": "M5",
+      "name": "Effect Verification fabrication (unobservable page treated as observable)",
+      "file": "extension/src/agent/effectVerifier.ts",
+      "breaks": "pageStateObservable is no longer honoured, so a snapshot whose page could not be read is compared as if every field were a real reading.",
+      "status": "CAUGHT",
+      "caughtByBenchmark": true,
+      "exitStatus": 1,
+      "restored": true,
+      "beforeHash": "a64454e74ed1990d",
+      "mutatedHash": "e7e75962c2a5a5c9"
+    },
+    {
+      "id": "M5b",
+      "name": "Effect Verification fabrication (per-field OBSERVED contract weakened)",
+      "file": "extension/src/agent/effectVerifier.ts",
+      "breaks": "A field counts as a real reading when EITHER side merely is not marked UNAVAILABLE, so an unobserved value can be compared as an observed one.",
+      "status": "CAUGHT",
+      "caughtByBenchmark": true,
+      "exitStatus": 1,
+      "restored": true,
+      "beforeHash": "a64454e74ed1990d",
+      "mutatedHash": "898e8c0e915361b2"
+    },
+    {
+      "id": "M9",
+      "name": "Recovery / self-healing authorization",
+      "file": "extension/src/agent/agentLoop.ts",
+      "breaks": "A self-healed target is adopted even when the healed action FAILED re-grounding, so recovery dispatches an unvalidated target.",
+      "status": "ESCAPED",
+      "caughtByBenchmark": false,
+      "exitStatus": 0,
+      "restored": true,
+      "beforeHash": "40c34557a07109cf",
+      "mutatedHash": "daf5eeeabeedf289"
+    },
+    {
+      "id": "M9b",
+      "name": "Recovery / self-healing authorization (healed target trusted without re-gating)",
+      "file": "extension/src/agent/agentLoop.ts",
+      "breaks": "A self-healed target is adopted AND marked allowed even when it failed re-grounding, so recovery dispatches a target that M5 never approved.",
+      "status": "CAUGHT",
+      "caughtByBenchmark": true,
+      "exitStatus": 1,
+      "restored": true,
+      "beforeHash": "40c34557a07109cf",
+      "mutatedHash": "b50518c9c8b4d207"
+    },
+    {
+      "id": "M11",
+      "name": "Privacy egress leak (raw-value firewall disabled)",
+      "file": "extension/src/agent/privacyPolicy.ts",
+      "breaks": "assertSanitizedContextSafe no longer refuses a context carrying raw sensitive values; the local privacy boundary is a no-op.",
+      "status": "CAUGHT",
+      "caughtByBenchmark": true,
+      "exitStatus": 1,
+      "restored": true,
+      "beforeHash": "c532dc146830770f",
+      "mutatedHash": "ae618e83e093d74c"
+    },
+    {
+      "id": "M11b",
+      "name": "Privacy egress leak (F-08 re-opened: local-only ocr_observation re-attached to the wire)",
+      "file": "extension/src/agent/backendAgentProvider.ts",
+      "breaks": "The local-only OCR provenance object crosses the egress boundary again (the Phase 17.6 F-08 condition).",
+      "status": "CAUGHT",
+      "caughtByBenchmark": true,
+      "exitStatus": 1,
+      "restored": true,
+      "beforeHash": "99984ba17998938e",
+      "mutatedHash": "24f9af8a9b7093b5"
+    }
+  ]
+}

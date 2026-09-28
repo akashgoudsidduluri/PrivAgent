@@ -1,0 +1,142 @@
+{
+  "phase": "17.8 D-01 remediation",
+  "track": "REAL_CHROME",
+  "classification": "PROVEN_REAL",
+  "whatIsReal": {
+    "browser": "Playwright Chromium (same binary as the earlier phases), headless=new, CDP-driven",
+    "extension": "PRODUCTION BUILD from dist/, loaded with --load-extension",
+    "perception": "the real content script PRIVAGENT_SCAN_REQUEST over the live page, then the real buildAgentPayload + minimizeAgentContext egress path",
+    "authorities": "the production AgentLoop, AgentDecisionTracer, M5 and containment, imported from source and unmodified",
+    "dispatch": "a real DOM write into the live page, read back from the page itself"
+  },
+  "whatIsStubbed": {
+    "model": "The provider returns a fixed PII-bearing proposal. A real reasoner cannot be made to deterministically propose one raw value, and D-01 is exactly about what happens when one is proposed. D-01 does not live in the provider."
+  },
+  "requiredObservation": "PII-bearing proposed action -> M5 refusal -> trace handling does not crash -> no dispatch",
+  "chromeBinary": "/home/daytona/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+  "fixtureOrigin": "http://127.0.0.1:4271",
+  "realDetections": 2,
+  "recipientDetection": {
+    "id": "privagent-det-1",
+    "label": null
+  },
+  "checks": [
+    {
+      "name": "the production MV3 extension loads into real Chromium",
+      "expected": "a live chrome-extension:// service worker",
+      "actual": "chrome-extension://ihbbhmifbgfcibhjhcafakdkcppkccaf/serviceWorker.js",
+      "pass": true
+    },
+    {
+      "name": "the fixture page is a real tab in the browser",
+      "expected": "a real chrome tab id > 0",
+      "actual": 968924636,
+      "pass": true
+    },
+    {
+      "name": "the real page input starts empty",
+      "expected": "\"\"",
+      "actual": "",
+      "pass": true
+    },
+    {
+      "name": "the real content script returns a real sanitized scan report",
+      "expected": "a report with a passed privacy status",
+      "actual": "Sanitized Context — Local Privacy Check Passed",
+      "pass": true
+    },
+    {
+      "name": "real perception yields real detections for the live page",
+      "expected": "> 0 real detections",
+      "actual": 2,
+      "pass": true
+    },
+    {
+      "name": "a real detection identifies the recipient email input",
+      "expected": "a real detection with an id and selector",
+      "actual": {
+        "id": "privagent-det-1"
+      },
+      "pass": true
+    },
+    {
+      "name": "the production tracer throws PrivacyBoundaryError on this real proposal (the D-01 precondition)",
+      "expected": "PrivacyBoundaryError",
+      "actual": "PrivacyBoundaryError",
+      "pass": true
+    },
+    {
+      "name": "PrivacyBoundaryError does NOT escape runTask against the real page",
+      "expected": "no exception",
+      "actual": null,
+      "pass": true
+    },
+    {
+      "name": "the task ends in a refusal/failure state",
+      "expected": "FAILED",
+      "actual": "FAILED",
+      "pass": true
+    },
+    {
+      "name": "no SUCCESS is produced",
+      "expected": "status is not SUCCESS",
+      "actual": "FAILED",
+      "pass": true
+    },
+    {
+      "name": "the refused action was never dispatched to the real page",
+      "expected": "0 real dispatches",
+      "actual": 0,
+      "pass": true
+    },
+    {
+      "name": "the real page input is still empty — the PII never reached the DOM",
+      "expected": "\"\"",
+      "actual": "",
+      "pass": true
+    },
+    {
+      "name": "no downstream effect occurred on the real page",
+      "expected": "\"no-receipt-yet\"",
+      "actual": "no-receipt-yet",
+      "pass": true
+    },
+    {
+      "name": "the trace was withheld rather than fabricated",
+      "expected": "withheldDecisionTraceSteps === 1",
+      "actual": 1,
+      "pass": true
+    },
+    {
+      "name": "the real audited surface carries no raw PII",
+      "expected": "no raw email in trace/reason",
+      "actual": "clean",
+      "pass": true
+    },
+    {
+      "name": "the raw value never appears in any browser log line",
+      "expected": "no raw email in the browser console",
+      "actual": "clean",
+      "pass": true
+    },
+    {
+      "name": "the raw value never appears in the loop log either",
+      "expected": "no raw email in the loop log",
+      "actual": "clean",
+      "pass": true
+    },
+    {
+      "name": "the withheld marker is emitted by the running production loop",
+      "expected": "an '[AgentTrace] decision trace withheld' line in the loop's own log",
+      "actual": true,
+      "pass": true
+    },
+    {
+      "name": "the withheld marker carries only the step and the constant",
+      "expected": "step 1 and 'RAW_VALUE_IN_PROPOSAL', no raw value",
+      "actual": "[AgentTrace] decision trace withheld {\"step\":1,\"reason\":\"RAW_VALUE_IN_PROPOSAL\"}",
+      "pass": true
+    }
+  ],
+  "verdict": "ALL REAL-CHROME CHECKS PASSED"
+}
