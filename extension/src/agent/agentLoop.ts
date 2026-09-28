@@ -1212,7 +1212,12 @@ export class AgentLoop {
       if (!validation.allowed && 'target' in action && typeof (action as any).target === 'string') {
         // Attempt target self-healing for stale or mutated targets
         const staleTargetId = (action as any).target;
-        healingResult = recoverStaleTarget(staleTargetId, action, context);
+        // PHASE 17.9 D-02. Pass the task goal so goal-alignment recovery is
+        // actually reachable. `this.state.taskGoal` is set to the runTask goal at
+        // the top of this method, so this is the intended goal and nothing else.
+        // Recovery still only PROPOSES: the healed target below is re-grounded
+        // and re-validated by GATE 1 and M5 before anything else can happen.
+        healingResult = recoverStaleTarget(staleTargetId, action, context, this.state.taskGoal);
         if (healingResult.recovered && healingResult.recoveredAction) {
           // A healed target is UNTRUSTED until it passes the SAME gates as any
           // other proposal: Target Grounding (generation + origin) then M5.
@@ -1759,7 +1764,12 @@ export class AgentLoop {
         // It must re-enter the loop and pass the complete Stage 5 pipeline again:
         //   Target Grounding -> M5 Validator -> Privacy Policy -> Risk/Semantic ->
         //   User Confirmation -> Browser Execution.
-        healingResult = recoverStaleTarget((action as any).target, action, context);
+        //
+        // PHASE 17.9 D-02. Pass the task goal here too, so a target that fails
+        // after execution gets the same goal-alignment recovery as one that
+        // fails before it. The SECURITY INVARIANT above is unchanged: this
+        // branch records a proposal and never dispatches it.
+        healingResult = recoverStaleTarget((action as any).target, action, context, this.state.taskGoal);
         if (healingResult.recovered) {
           console.info('[AgentTrace] self-healing proposal recorded (not dispatched)', {
             originalTarget: healingResult.originalTargetId,

@@ -1,0 +1,187 @@
+{
+  "phase": "17.9 D-02 remediation",
+  "question": "Do the mutations behave exactly as at the 17.7/17.8 baselines after widening what recovery can propose?",
+  "mutationDefinitions": "UNCHANGED. No definition was edited, relaxed or re-anchored to make a result favourable.",
+  "detectionRule": "vitest EXIT CODE ONLY. The agent loop logs the literal string 'M6 failed' on clean runs.",
+  "fileSet": "Rebuilt for the re-run to 118 files to include the new D-02 regression file, and the mutation-targeted set to 64 files. No existing test was removed, skipped or re-anchored.",
+  "whyThisWasReRun": "D-02 widens which targets goal-aware recovery can PROPOSE. M9 and M9b are the isolating mutations for the healed-target adoption path that a live goal branch now feeds, so they are the two most likely to move.",
+  "requiredVerdicts": {
+    "M9": {
+      "baseline": "ESCAPED (proven-equivalent)",
+      "d02Rerun": "ESCAPED (proven-equivalent)",
+      "unchanged": true
+    },
+    "M9b": {
+      "baseline": "CAUGHT",
+      "d02Rerun": "CAUGHT",
+      "unchanged": true
+    }
+  },
+  "verdict": "IDENTICAL TO BASELINE \u2014 14 caught / 15, M9 proven-equivalent, 0 regressions",
+  "phase17_8_harness": {
+    "testFile": "tests/phase17/phase178Benchmark.test.ts",
+    "note": "M9 and M9b measured against the 17.8 benchmark alone.",
+    "results": [
+      {
+        "id": "M9",
+        "name": "Recovery / self-healing authorization",
+        "status": "ESCAPED",
+        "exitStatus": 0,
+        "restored": true
+      },
+      {
+        "id": "M9b",
+        "name": "Recovery / self-healing authorization (healed target trusted without re-gating)",
+        "status": "CAUGHT",
+        "exitStatus": 1,
+        "restored": true
+      }
+    ]
+  },
+  "phase17_7_harness": {
+    "harness": "scratch/mut17_7.mjs",
+    "caught": 14,
+    "run": 15,
+    "survived": [
+      "M9"
+    ],
+    "allFilesRestored": true,
+    "results": [
+      {
+        "id": "M1",
+        "name": "Goal Verification bypass",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M2",
+        "name": "M5 privacy/action-validator bypass",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M3",
+        "name": "Security Critic bypass",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M4",
+        "name": "Containment bypass at the dispatch boundary",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M5",
+        "name": "Effect Verification fabrication (unobservable page treated as observable)",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M5b",
+        "name": "Effect Verification fabrication (per-field OBSERVED contract weakened)",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M6",
+        "name": "Observation fabrication (unobservable state synthesised)",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M7",
+        "name": "Stale observation acceptance",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M8",
+        "name": "Prompt-injection acceptance",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M9",
+        "name": "Recovery / self-healing authorization",
+        "caughtBySuite": false,
+        "verdict": "SURVIVED (proven-equivalent)",
+        "caughtAtTier": null,
+        "exitStatus": 0,
+        "restored": true
+      },
+      {
+        "id": "M9b",
+        "name": "Recovery / self-healing authorization (healed target trusted without re-gating)",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M10",
+        "name": "Subgoal completion fabrication",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M11",
+        "name": "Privacy egress leak (raw-value firewall disabled)",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "full",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M11b",
+        "name": "Privacy egress leak (F-08 re-opened: local-only ocr_observation re-attached to the wire)",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      },
+      {
+        "id": "M12",
+        "name": "Provider schema weakening (unknown action fields accepted)",
+        "caughtBySuite": true,
+        "verdict": "CAUGHT",
+        "caughtAtTier": "targeted",
+        "exitStatus": 1,
+        "restored": true
+      }
+    ]
+  }
+}

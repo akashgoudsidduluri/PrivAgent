@@ -1,0 +1,97 @@
+{
+  "phase": "17.9 D-02 remediation",
+  "track": "REAL_CHROME",
+  "classification": "PROVEN_REAL",
+  "reuses": "scratch/phase16_cdp.mjs (existing Phase 16 CDP infrastructure) — no new browser harness",
+  "whatIsReal": {
+    "browser": "Chromium, CDP-driven, same binary as every earlier phase",
+    "extension": "PRODUCTION BUILD from dist/, loaded with --load-extension",
+    "perception": "real content script PRIVAGENT_SCAN_REQUEST over the live page, then the real buildAgentPayload + minimizeAgentContext",
+    "authorities": "production AgentLoop, M5, grounding and containment, imported from source and unmodified",
+    "dispatch": "a real element.click() in the live page, with the DOM result read back"
+  },
+  "whatIsStubbed": {
+    "model": "the provider returns one fixed M5-refused proposal; D-02 does not live in the provider"
+  },
+  "goal": "Open the transaction history",
+  "realDetections": 2,
+  "orphanDetection": {
+    "id": "zzz-opaque",
+    "selector": "#zzz-opaque"
+  },
+  "goalDetection": {
+    "id": "transaction-history",
+    "selector": "#transaction-history"
+  },
+  "dispatchedTargets": [
+    "transaction-history"
+  ],
+  "pageEffect": "history-opened",
+  "checks": [
+    {
+      "name": "the production MV3 extension loads into real Chromium",
+      "pass": true,
+      "actual": "chrome-extension://ihbbhmifbgfcibhjhcafakdkcppkccaf/serviceWorker.js"
+    },
+    {
+      "name": "the fixture page is a real tab",
+      "pass": true,
+      "actual": 1880756681
+    },
+    {
+      "name": "the real content script returns a real sanitized scan report",
+      "pass": true,
+      "actual": "Sanitized Context — Local Privacy Check Passed"
+    },
+    {
+      "name": "real perception produces detections for the live page",
+      "pass": true,
+      "actual": 2
+    },
+    {
+      "name": "a real detection is the opaque control",
+      "pass": true,
+      "actual": "zzz-opaque"
+    },
+    {
+      "name": "a real detection is the goal-aligned control",
+      "pass": true,
+      "actual": "transaction-history"
+    },
+    {
+      "name": "runTask does not throw",
+      "pass": true,
+      "actual": null
+    },
+    {
+      "name": "the healed GOAL-ALIGNED target is what was dispatched",
+      "pass": true,
+      "actual": [
+        "transaction-history"
+      ]
+    },
+    {
+      "name": "the original refused control was NEVER dispatched",
+      "pass": true,
+      "actual": [
+        "transaction-history"
+      ]
+    },
+    {
+      "name": "the real page shows the effect of the HEALED control",
+      "pass": true,
+      "actual": "history-opened"
+    },
+    {
+      "name": "no SUCCESS was produced",
+      "pass": true,
+      "actual": "FAILED"
+    },
+    {
+      "name": "no raw PII entered the decision trace",
+      "pass": true,
+      "actual": "clean"
+    }
+  ],
+  "verdict": "ALL REAL-CHROME CHECKS PASSED"
+}

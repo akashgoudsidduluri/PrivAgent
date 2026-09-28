@@ -337,7 +337,7 @@ export const H_CASES: BenchmarkCase[] = [
     },
     expectation: { verdict: 'RECOVERED', blocked: false, failClosed: null },
     rationale:
-      'The control, expressed against the signal recovery ACTUALLY uses — token overlap between the failed target and the candidate SELECTOR. See finding D-02: the goal-semantic branch is unreachable, so a case built on it would be testing dead code.',
+      'The control, expressed against the signal recovery has always used — token overlap between the failed target and the candidate SELECTOR. The goal-semantic branch became reachable in Phase 17.9 (D-02); this case deliberately isolates the similarity path so a failure here points at token similarity and nothing else.',
   },
   {
     id: 'H2',
@@ -377,7 +377,7 @@ export const H_CASES: BenchmarkCase[] = [
     },
     expectation: { verdict: 'NOT_RECOVERED', blocked: true, failClosed: true },
     rationale:
-      'Below the similarity floor, recovery declines. Guessing a neighbour here would be catastrophic. Note this case also holds once the goal is supplied, which is a separate observation: see finding D-02.',
+      'Below the similarity floor, recovery declines. Guessing a neighbour here would be catastrophic. This case also holds with the goal supplied, since the goal names neither a transaction nor an account and the goal-alignment branch cannot fire on it.',
   },
   {
     id: 'H4',

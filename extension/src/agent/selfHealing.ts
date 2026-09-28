@@ -63,6 +63,8 @@ export function recoverStaleTarget(
   let failedTargetId = '';
   let failedAction: BrowserAction | undefined;
   let context: AgentContextPayload | undefined;
+  // PHASE 17.9 D-02. The single resolved goal, for both call shapes. This is
+  // what `goalHint` reads; see the note at its declaration below.
   let goal = taskGoal;
 
   if (typeof failedActionOrTargetId === 'string') {
@@ -73,7 +75,10 @@ export function recoverStaleTarget(
     failedAction = failedActionOrTargetId;
     if (actionOrLastKnownOrContext && 'detections' in actionOrLastKnownOrContext) {
       context = actionOrLastKnownOrContext as AgentContextPayload;
-      goal = contextOrGoal as string | undefined;
+      // PHASE 17.9 D-02. `contextOrGoal` is the goal in this shape, but a caller
+      // may still pass it fourth (the shape that used to be the only working one).
+      // Accept both rather than silently discarding a goal the caller supplied.
+      goal = (contextOrGoal as string | undefined) ?? taskGoal;
     } else {
       context = contextOrGoal as AgentContextPayload;
     }
@@ -107,7 +112,22 @@ export function recoverStaleTarget(
   // Extract hints from the failed action's reason and target ID
   const targetIdHint = failedTargetId.toLowerCase().replace(/^(det|privagent)-/, '');
   const actionReason = 'reason' in failedAction && typeof failedAction.reason === 'string' ? failedAction.reason : '';
-  const goalHint = (taskGoal || '').toLowerCase();
+  // PHASE 17.9 D-02. Read the goal the function actually RESOLVED, not the
+  // fourth parameter.
+  //
+  // `goal` is the single accumulator for both call shapes: the string-target form
+  // seeds it from `taskGoal` above, and the action-first form overwrites it with
+  // `contextOrGoal`. Reading `taskGoal` here instead meant the goal-alignment
+  // block below was guarded by an always-empty string, so it could only ever be
+  // reached by a caller passing a fourth argument — and nothing in the codebase
+  // does. Recovery was therefore silently downgraded to token similarity alone.
+  //
+  // Reading `goal` also means every assignment above is live, so there is no
+  // longer a write-only local that can drift back into being dead.
+  //
+  // The value is used ONLY for local substring comparison below. It is never
+  // stored, logged or transmitted.
+  const goalHint = (goal || '').toLowerCase();
 
   let bestMatch: AgentDetection | null = null;
   let bestScore = 0.0;
