@@ -29,6 +29,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 import { servePhase176Fixture } from './phase176_fixture.mjs';
@@ -94,6 +95,39 @@ const pending = new Map();
 
 const log = (...a) => console.log('[RR]', ...a);
 
+/**
+ * Whitelisted identity metadata extracted from a CDP RemoteObject.
+ * Only generation counters, ids and URLs — nothing else can pass this filter.
+ */
+const META_KEYS = new Set([
+  'localGeneration',
+  'worldModelGeneration',
+  'refGeneration',
+  'pageGeneration',
+  'perceptionGeneration',
+  'semanticGeneration',
+  'worldModelId',
+  'contextUrl',
+  'url',
+  'generation',
+]);
+const consoleArgMeta = (a) => {
+  const out = {};
+  if (!a) return out;
+  if (typeof a.value === 'string' || typeof a.value === 'number' || typeof a.value === 'boolean') {
+    // Primitive first arg is usually a log label; keep only when it is a URL.
+    if (typeof a.value === 'string' && /^https?:\/\//.test(a.value)) out.url = a.value.slice(0, 120);
+    return out;
+  }
+  const props = a.preview?.properties || [];
+  for (const p of props) {
+    if (!META_KEYS.has(p.name)) continue;
+    if (typeof p.value === 'number') out[p.name] = p.value;
+    else if (typeof p.value === 'string') out[p.name] = p.value.slice(0, 120);
+  }
+  return out;
+};
+
 const percentile = (arr, p) => {
   if (!arr.length) return null;
   const s = [...arr].sort((a, b) => a - b);
@@ -106,6 +140,42 @@ const stats = (arr) =>
 
 /* ── boot ────────────────────────────────────────────────────────────────── */
 
+/**
+ * Kill every process whose command line mentions `needle`.
+ * Used to reap a previous run's Chrome, which otherwise keeps holding the CDP
+ * port and makes the next run attach to a stale browser with a stale extension
+ * and stale tabs. That failure mode is harness-only, but it silently makes the
+ * evidence meaningless, so it is fenced here.
+ */
+const killMatching = (needle) => {
+  let out = '';
+  try { out = execFileSync('ps', ['-eo', 'pid,args'], { encoding: 'utf8' }); } catch { return 0; }
+  let n = 0;
+  for (const line of out.split('\n')) {
+    if (!line.includes(needle)) continue;
+    if (line.includes('ps -eo') || line.includes('grep')) continue;
+    const pid = Number(line.trim().split(/\s+/)[0]);
+    if (!Number.isFinite(pid) || pid === process.pid) continue;
+    try { process.kill(pid, 'SIGKILL'); n++; } catch { /* already gone */ }
+  }
+  return n;
+};
+
+// Preflight: a previous run's Chrome (or a leftover node harness) on this CDP
+// port would be attached to instead of a fresh browser. Refuse to run blind.
+const preflight = (async () => {
+  const occupied = await cdpGet(CDP_PORT, '/json/version').then(() => true).catch(() => false);
+  if (occupied) {
+    log(`CDP port ${CDP_PORT} already occupied — reaping the stale browser first`);
+    killMatching(`remote-debugging-port=${CDP_PORT}`);
+    await sleep(2500);
+    const still = await cdpGet(CDP_PORT, '/json/version').then(() => true).catch(() => false);
+    if (still) throw new Error(`CDP port ${CDP_PORT} is still occupied by a foreign browser; refusing to attach to it.`);
+  }
+})();
+
+await preflight;
+
 const chrome = launchChrome(CDP_PORT);
 const profile = path.join('/tmp', `rr-proof-profile-${CDP_PORT}`);
 const fixture = await servePhase176Fixture(FIXTURE_PORT);
@@ -113,7 +183,11 @@ const dashboard = await serveStatic(DASHBOARD_PORT, path.join(REPO_ROOT, 'fronte
 
 const tidy = async () => {
   for (const s of sessions) { try { s.close(); } catch { /* closed */ } }
-  try { chrome.kill('SIGKILL'); } catch { /* gone */ }
+  try { chrome.proc.kill('SIGKILL'); } catch { /* gone */ }
+  // Chrome's renderer/gpu children outlive the parent process we spawned and
+  // keep the CDP port bound. Reap them by profile path, then by port.
+  try { killMatching(chrome.profile); } catch { /* best effort */ }
+  killMatching(`remote-debugging-port=${CDP_PORT}`);
   try { fs.rmSync(profile, { recursive: true, force: true }); } catch { /* best effort */ }
   for (const srv of [fixture, dashboard]) { try { srv.close(); } catch { /* closed */ } }
 };
@@ -188,6 +262,10 @@ try {
           swLogs.push({
             t: Date.now(),
             text: (m.params.args || []).map((a) => a.value ?? a.description ?? '').join(' ').slice(0, 300),
+            // IDENTITY METADATA ONLY. Whitelisted numeric/identity keys pulled
+            // from the console payloads so generation desyncs are visible.
+            // Never page text, never PII, never model output.
+            meta: (m.params.args || []).map((a) => consoleArgMeta(a)).filter((x) => x && Object.keys(x).length),
           });
         } catch { /* ignore */ }
       }
@@ -442,6 +520,12 @@ try {
     // payloads as the literal "Object", so this carries decision text and state
     // transitions, not page content.
     M.swConsoleAll = swLogs.map((l) => l.text).slice(-220);
+    // Identity metadata only: every console line that carried a generation
+    // counter, world model id or URL. Used to localise the generation desync.
+    M.swIdentityMeta = swLogs
+      .map((l, i) => ({ i, text: l.text, meta: l.meta }))
+      .filter((l) => l.meta && l.meta.some((x) => Object.keys(x).length))
+      .slice(-160);
     log(`attempt ${attempt}:`, M.classification);
     fs.mkdirSync(OUT_DIR, { recursive: true });
     fs.writeFileSync(OUT, JSON.stringify(out, null, 2));
@@ -474,4 +558,7 @@ try {
   process.exitCode = 1;
 } finally {
   await tidy();
+  // Open CDP websockets keep the event loop alive; exit deterministically so a
+  // crashed run can never linger and poison the next one.
+  process.exit(process.exitCode || 0);
 }

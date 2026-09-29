@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-28T18:22:11.092Z",
+  "timestamp": "2026-09-29T02:30:21.019Z",
   "work": "Post-17.9 — real-reasoner multi-step SUCCESS proof",
   "taskWording": {
     "goal": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
@@ -24,7 +24,7 @@
   "cases": {
     "MAIN": {
       "class": "REAL_REASONER_PRODUCTION_SW",
-      "attempt": 5,
+      "attempt": 3,
       "task": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
       "modelCycles": [],
       "observedTransitions": [
@@ -38,7 +38,7 @@
         },
         {
           "phase": "TRANSITION",
-          "t": 619,
+          "t": 612,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -47,21 +47,13 @@
           "heading": null
         },
         {
-          "phase": "TRANSITION",
-          "t": 7911,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [],
+          "phase": "FINAL",
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
           "priceText": null,
           "heading": null
-        },
-        {
-          "phase": "FINAL",
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24",
-          "heading": "Alpha Widget"
         }
       ],
       "actions": [
@@ -70,7 +62,7 @@
           "action": {
             "action": "click",
             "target": "browse-catalog",
-            "reason": "The task requires opening the store catalog. The element 'browse-catalog' is a link that likely leads to the catalog page. Clicking it is the most direct way to proceed."
+            "reason": "Open the store catalog to view the product list"
           },
           "validationAllowed": true,
           "validationReason": "Validated click action on known element 'browse-catalog'.",
@@ -79,50 +71,6 @@
           "effectDetails": "Click on 'browse-catalog' triggered page navigation to 'http://localhost:4291/catalog'.",
           "targetId": "browse-catalog",
           "url": "http://localhost:4291/"
-        },
-        {
-          "step": 2,
-          "action": {
-            "action": "click",
-            "target": "alpha-widget-link",
-            "reason": "The catalog page is loaded and the first listed product link appears to be alpha-widget-link, so click it to open its product page and find the price."
-          },
-          "validationAllowed": false,
-          "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
-          "executionSuccess": false,
-          "effectDetails": null,
-          "targetId": "alpha-widget-link",
-          "url": "http://localhost:4291/catalog"
-        },
-        {
-          "step": 3,
-          "action": {
-            "action": "click",
-            "target": "alpha-widget-link",
-            "reason": "The catalog is open and the first listed product link appears to be alpha-widget-link; clicking it should open the product page to read the price."
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated click action on known element 'alpha-widget-link'.",
-          "executionSuccess": true,
-          "effectStatus": "URL_NAVIGATION_OBSERVED",
-          "effectDetails": "Click on 'alpha-widget-link' triggered page navigation to 'http://localhost:4291/product/alpha-widget'.",
-          "targetId": "alpha-widget-link",
-          "url": "http://localhost:4291/catalog"
-        },
-        {
-          "step": 4,
-          "action": {
-            "action": "scroll",
-            "direction": "down",
-            "amount": 500,
-            "reason": "The product page is open, but the price element is not present in the current visible element metadata; scrolling down may reveal the price or additional product details."
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated scroll down by 500px.",
-          "executionSuccess": false,
-          "effectStatus": "ACTION_NO_EFFECT",
-          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
-          "url": "http://localhost:4291/product/alpha-widget"
         }
       ],
       "timeline": [
@@ -150,43 +98,19 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 1,
           "url": "http://localhost:4291/",
-          "perceptionGeneration": 86,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 2,
-          "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 88,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 3,
-          "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 89,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 4,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 91,
+          "perceptionGeneration": 23,
           "reason": null
         },
         {
           "status": "FAILED",
           "goalStatus": "FAILED",
-          "currentStep": 4,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 94,
-          "reason": "Perception failed: Unable to obtain sanitized page context."
+          "currentStep": 2,
+          "url": "http://localhost:4291/catalog",
+          "perceptionGeneration": 25,
+          "reason": "Agent reasoning failed: Reasoning provider request timed out after 55s."
         }
       ],
-      "wallClockMs": 16996,
+      "wallClockMs": 56164,
       "domSamples": [
         {
           "t": 3,
@@ -197,7 +121,7 @@
           "priceText": null
         },
         {
-          "t": 619,
+          "t": 612,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -205,7 +129,7 @@
           "priceText": null
         },
         {
-          "t": 1225,
+          "t": 1216,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -213,7 +137,7 @@
           "priceText": null
         },
         {
-          "t": 1827,
+          "t": 1819,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -221,7 +145,7 @@
           "priceText": null
         },
         {
-          "t": 2430,
+          "t": 2422,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -229,7 +153,7 @@
           "priceText": null
         },
         {
-          "t": 3033,
+          "t": 3026,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -237,7 +161,7 @@
           "priceText": null
         },
         {
-          "t": 3639,
+          "t": 3629,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -245,7 +169,7 @@
           "priceText": null
         },
         {
-          "t": 4242,
+          "t": 4233,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -253,7 +177,7 @@
           "priceText": null
         },
         {
-          "t": 4844,
+          "t": 4836,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -261,7 +185,7 @@
           "priceText": null
         },
         {
-          "t": 5447,
+          "t": 5443,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -269,7 +193,7 @@
           "priceText": null
         },
         {
-          "t": 6050,
+          "t": 6046,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -277,7 +201,7 @@
           "priceText": null
         },
         {
-          "t": 6652,
+          "t": 6650,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -285,7 +209,7 @@
           "priceText": null
         },
         {
-          "t": 7258,
+          "t": 7255,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -293,188 +217,708 @@
           "priceText": null
         },
         {
-          "t": 7911,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [],
+          "t": 7858,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
           "priceText": null
         },
         {
-          "t": 8525,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 8461,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 9128,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 9064,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 9732,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 9667,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 10335,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 10270,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 10938,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 10875,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 11542,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 11478,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 12145,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 12082,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 12748,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 12685,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 13351,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 13291,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 13955,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 13895,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 14558,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 14498,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 15161,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 15101,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 15785,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 15706,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 16392,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 16309,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 16995,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 16912,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
+        },
+        {
+          "t": 17515,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 18118,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 18725,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 19328,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 19931,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 20534,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 21138,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 21742,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 22345,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 22947,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 23551,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 24155,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 24758,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 25361,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 25966,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 26576,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 27178,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 27781,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 28384,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 28986,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 29594,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 30199,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 30806,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 31409,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 32012,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 32615,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 33218,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 33824,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 34427,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 35030,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 35635,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 36244,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 36847,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 37450,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 38053,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 38659,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 39262,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 39865,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 40468,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 41072,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 41675,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 42278,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 42881,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 43486,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 44089,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 44692,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 45296,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 45899,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 46503,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 47106,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 47709,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 48312,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 48915,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 49520,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 50127,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 50730,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 51333,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 51937,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 52540,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 53144,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 53747,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 54350,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 54953,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 55561,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 56163,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
         }
       ],
       "observedUrlSequence": [
         "http://localhost:4291/",
-        "http://localhost:4291/catalog",
-        "http://localhost:4291/product/alpha-widget"
+        "http://localhost:4291/catalog"
       ],
       "liveTabActuallyMoved": true,
-      "finalObservedUrl": "http://localhost:4291/product/alpha-widget",
+      "finalObservedUrl": "http://localhost:4291/catalog",
       "finalObservedMarkers": [
-        "product-detail"
+        "catalog"
       ],
-      "finalObservedPrice": "Price: 24",
-      "finalObservedHeading": "Alpha Widget",
+      "finalObservedPrice": null,
+      "finalObservedHeading": null,
       "finalStatus": "FAILED",
       "finalGoalStatus": "FAILED",
-      "finalReason": "Perception failed: Unable to obtain sanitized page context.",
+      "finalReason": "Agent reasoning failed: Reasoning provider request timed out after 55s.",
       "distinctUrlsVisited": [
         "http://localhost:4291/",
-        "http://localhost:4291/catalog",
-        "http://localhost:4291/product/alpha-widget"
+        "http://localhost:4291/catalog"
       ],
-      "providerCalls": 4,
+      "providerCalls": 2,
       "providerCallsByStatus": {
-        "200": 4
+        "200": 1,
+        "pending": 1
       },
       "providerRttsMs": {
-        "n": 4,
-        "min": 396,
-        "p50": 2905,
-        "p90": 7531,
-        "max": 7531
+        "n": 1,
+        "min": 330,
+        "p50": 330,
+        "p90": 330,
+        "max": 330
       },
       "observationLatencyMs": {
-        "n": 29,
-        "min": 0,
+        "n": 94,
+        "min": 1,
         "p50": 1,
-        "p90": 5,
-        "max": 50
+        "p90": 2,
+        "max": 6
       },
-      "totalTaskWallMs": 16996,
+      "totalTaskWallMs": 56164,
       "anyProviderCallCarriedSyntheticPII": false,
-      "browserActionsDispatched": 4,
+      "browserActionsDispatched": 1,
       "distinctActionTargets": [
-        "browse-catalog",
-        "alpha-widget-link"
+        "browse-catalog"
       ],
-      "observedEffects": 3,
-      "realReasonerCycles": 4,
+      "observedEffects": 1,
+      "realReasonerCycles": 2,
       "refusedByPersonNameHeuristic": false,
       "verdictInputs": {
-        "reachedProduct": true,
-        "markerObserved": true,
-        "priceObserved": true,
+        "reachedProduct": false,
+        "markerObserved": false,
+        "priceObserved": false,
         "finalGoalStatus": "FAILED"
       },
       "successCameExclusivelyFromObservation": false,
-      "verdict": "NOT_PROVEN — real reasoner reached (4 call(s)), 4 browser action(s), 3 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
+      "verdict": "NOT_PROVEN — real reasoner reached (2 call(s)), 1 browser action(s), 1 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
       "classification": "NOT_PROVEN",
       "swConsoleAll": [
         "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
@@ -484,7 +928,7 @@
         "[ServiceWorker] message received Object",
         "[AgentTrace] service worker START_TASK received Object",
         "TARGET_RESOLUTION_STARTED",
-        "TARGET_TAB_CANDIDATES Array(4)",
+        "TARGET_TAB_CANDIDATES Array(2)",
         "[AgentTrace] containment scope established Object",
         "TARGET_TAB_SELECTED Object",
         "[AgentTrace] target resolved Object",
@@ -538,78 +982,18 @@
         "[AgentTrace] subgoal selected Object",
         "[AgentTrace] long-horizon update Object",
         "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
-        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
-        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] M6 next step",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
         "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
         "[SW][PING] TARGET_RESOLUTION_STARTED Object",
         "[SW][PING] TARGET_RESOLUTION_RESULT Object",
         "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] recovery decision Object",
-        "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] rejecting stale world model before attachment Object",
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object",
         "[AgentTrace] M6 failed Object",
@@ -617,6 +1001,86 @@
         "[AgentTrace] terminal progress emitted Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object"
+      ],
+      "swIdentityMeta": [
+        {
+          "i": 21,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 26,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "contextUrl": "http://localhost:4291/",
+              "worldModelId": "wm-g23-mum285o1-aw7s"
+            }
+          ]
+        },
+        {
+          "i": 28,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "23"
+            }
+          ]
+        },
+        {
+          "i": 39,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 43,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 50,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "24",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 55,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "24",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g25-mum286ev-6eiy"
+            }
+          ]
+        },
+        {
+          "i": 57,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "25"
+            }
+          ]
+        }
       ]
     }
   },
@@ -649,17 +1113,15 @@
         },
         {
           "phase": "TRANSITION",
-          "t": 1229,
+          "t": 687,
           "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
+          "markers": [],
           "priceText": null,
           "heading": null
         },
         {
           "phase": "TRANSITION",
-          "t": 3644,
+          "t": 3150,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -726,15 +1188,45 @@
           "step": 4,
           "action": {
             "action": "scroll",
-            "direction": "up",
+            "direction": "down",
             "amount": 300,
-            "reason": "The product page is loaded but the price element is not visible in the current viewport; scrolling up may reveal the product details and price at the top of the page."
+            "reason": "Scroll down to reveal the product price on the product page"
           },
           "validationAllowed": true,
-          "validationReason": "Validated scroll up by 300px.",
+          "validationReason": "Validated scroll down by 300px.",
           "executionSuccess": false,
           "effectStatus": "ACTION_NO_EFFECT",
-          "effectDetails": "Scroll up produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+          "url": "http://localhost:4291/product/alpha-widget"
+        },
+        {
+          "step": 5,
+          "action": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 300,
+            "reason": "The product page is open but no price element is currently listed; scroll to reveal more of the product details."
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+          "url": "http://localhost:4291/product/alpha-widget"
+        },
+        {
+          "step": 6,
+          "action": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 300,
+            "reason": "Scroll down to reveal the product price which is not currently visible in the viewport"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
           "url": "http://localhost:4291/product/alpha-widget"
         }
       ],
@@ -763,7 +1255,7 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 1,
           "url": "http://localhost:4291/",
-          "perceptionGeneration": 50,
+          "perceptionGeneration": 3,
           "reason": null
         },
         {
@@ -771,7 +1263,7 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 2,
           "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 52,
+          "perceptionGeneration": 5,
           "reason": null
         },
         {
@@ -779,7 +1271,7 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 3,
           "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 53,
+          "perceptionGeneration": 6,
           "reason": null
         },
         {
@@ -787,22 +1279,38 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 4,
           "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 55,
+          "perceptionGeneration": 8,
+          "reason": null
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 5,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "perceptionGeneration": 10,
+          "reason": null
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 6,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "perceptionGeneration": 12,
           "reason": null
         },
         {
           "status": "FAILED",
           "goalStatus": "FAILED",
-          "currentStep": 4,
+          "currentStep": 6,
           "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 58,
-          "reason": "Perception failed: Unable to obtain sanitized page context."
+          "perceptionGeneration": 12,
+          "reason": "Recovery limit exceeded (2 retries). Action produced no observable effect: Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
         }
       ],
-      "wallClockMs": 5456,
+      "wallClockMs": 14055,
       "domSamples": [
         {
-          "t": 17,
+          "t": 15,
           "url": "http://localhost:4291/",
           "markers": [
             "home"
@@ -810,15 +1318,13 @@
           "priceText": null
         },
         {
-          "t": 625,
-          "url": "http://localhost:4291/",
-          "markers": [
-            "home"
-          ],
+          "t": 687,
+          "url": "http://localhost:4291/catalog",
+          "markers": [],
           "priceText": null
         },
         {
-          "t": 1229,
+          "t": 1338,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -826,7 +1332,7 @@
           "priceText": null
         },
         {
-          "t": 1832,
+          "t": 1941,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -834,7 +1340,7 @@
           "priceText": null
         },
         {
-          "t": 2436,
+          "t": 2547,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -842,15 +1348,7 @@
           "priceText": null
         },
         {
-          "t": 3040,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 3644,
+          "t": 3150,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -858,7 +1356,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 4248,
+          "t": 3755,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -866,7 +1364,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 4851,
+          "t": 4357,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -874,7 +1372,127 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 5455,
+          "t": 4963,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 5567,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 6171,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 6774,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 7379,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 7984,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 8593,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 9199,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 9803,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 10407,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 11011,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 11633,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 12238,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 12841,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 13443,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 14053,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -896,39 +1514,39 @@
       "finalObservedHeading": "Alpha Widget",
       "finalStatus": "FAILED",
       "finalGoalStatus": "FAILED",
-      "finalReason": "Perception failed: Unable to obtain sanitized page context.",
+      "finalReason": "Recovery limit exceeded (2 retries). Action produced no observable effect: Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
       "distinctUrlsVisited": [
         "http://localhost:4291/",
         "http://localhost:4291/catalog",
         "http://localhost:4291/product/alpha-widget"
       ],
-      "providerCalls": 4,
+      "providerCalls": 6,
       "providerCallsByStatus": {
-        "200": 4
+        "200": 6
       },
       "providerRttsMs": {
-        "n": 4,
-        "min": 422,
-        "p50": 461,
-        "p90": 670,
-        "max": 670
+        "n": 6,
+        "min": 372,
+        "p50": 391,
+        "p90": 8436,
+        "max": 8436
       },
       "observationLatencyMs": {
-        "n": 10,
+        "n": 24,
         "min": 1,
         "p50": 2,
-        "p90": 3,
-        "max": 13
+        "p90": 7,
+        "max": 59
       },
-      "totalTaskWallMs": 5456,
+      "totalTaskWallMs": 14055,
       "anyProviderCallCarriedSyntheticPII": false,
-      "browserActionsDispatched": 4,
+      "browserActionsDispatched": 6,
       "distinctActionTargets": [
         "browse-catalog",
         "alpha-widget-link"
       ],
-      "observedEffects": 3,
-      "realReasonerCycles": 4,
+      "observedEffects": 5,
+      "realReasonerCycles": 6,
       "refusedByPersonNameHeuristic": false,
       "verdictInputs": {
         "reachedProduct": true,
@@ -937,7 +1555,7 @@
         "finalGoalStatus": "FAILED"
       },
       "successCameExclusivelyFromObservation": false,
-      "verdict": "NOT_PROVEN — real reasoner reached (4 call(s)), 4 browser action(s), 3 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
+      "verdict": "NOT_PROVEN — real reasoner reached (6 call(s)), 6 browser action(s), 5 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
       "classification": "NOT_PROVEN",
       "swConsoleAll": [
         "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
@@ -947,7 +1565,7 @@
         "[ServiceWorker] message received Object",
         "[AgentTrace] service worker START_TASK received Object",
         "TARGET_RESOLUTION_STARTED",
-        "TARGET_TAB_CANDIDATES Array(4)",
+        "TARGET_TAB_CANDIDATES Array(2)",
         "[AgentTrace] containment scope established Object",
         "TARGET_TAB_SELECTED Object",
         "[AgentTrace] target resolved Object",
@@ -1068,7 +1686,58 @@
         "[AgentTrace] perception started",
         "[AgentTrace] multimodal perception complete Object",
         "[ServiceWorker] response forwarded",
-        "[AgentLoop] rejecting stale world model before attachment Object",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+        "[AgentTrace] reasoning response received",
+        "[AgentTrace] action validated by M5",
+        "[AgentTrace] security critic Object",
+        "[AgentTrace] action passed privacy policy",
+        "[AgentTrace] requesting safety review",
+        "[AgentTrace] action passed safety review",
+        "[AgentTrace] executeAction started",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] containment decision Object",
+        "[AgentTrace] executeAction response received",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] recovery decision Object",
+        "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] reasoning response received",
+        "[AgentTrace] action validated by M5",
+        "[AgentTrace] security critic Object",
+        "[AgentTrace] action passed privacy policy",
+        "[AgentTrace] requesting safety review",
+        "[AgentTrace] action passed safety review",
+        "[AgentTrace] executeAction started",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] containment decision Object",
+        "[AgentTrace] executeAction response received",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object",
         "[AgentTrace] M6 failed Object",
@@ -1076,6 +1745,278 @@
         "[AgentTrace] terminal progress emitted Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object"
+      ],
+      "swIdentityMeta": [
+        {
+          "i": 21,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 26,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "contextUrl": "http://localhost:4291/",
+              "worldModelId": "wm-g3-mum273ga-49aq"
+            }
+          ]
+        },
+        {
+          "i": 28,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "3"
+            }
+          ]
+        },
+        {
+          "i": 39,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 43,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 50,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "4",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 55,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "4",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g5-mum2749s-havg"
+            }
+          ]
+        },
+        {
+          "i": 57,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "5"
+            }
+          ]
+        },
+        {
+          "i": 67,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "6",
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 72,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "6",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g6-mum2750i-oury"
+            }
+          ]
+        },
+        {
+          "i": 74,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "6"
+            }
+          ]
+        },
+        {
+          "i": 84,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 88,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 94,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "7",
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 99,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "7",
+              "contextUrl": "http://localhost:4291/product/alpha-widget",
+              "worldModelId": "wm-g8-mum275u4-yf1u"
+            }
+          ]
+        },
+        {
+          "i": 101,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "8"
+            }
+          ]
+        },
+        {
+          "i": 111,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 114,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 124,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "10",
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 129,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "10",
+              "contextUrl": "http://localhost:4291/product/alpha-widget",
+              "worldModelId": "wm-g10-mum276nb-hksc"
+            }
+          ]
+        },
+        {
+          "i": 131,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "10"
+            }
+          ]
+        },
+        {
+          "i": 145,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 148,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 158,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "12",
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 163,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "12",
+              "contextUrl": "http://localhost:4291/product/alpha-widget",
+              "worldModelId": "wm-g12-mum27dn0-xo76"
+            }
+          ]
+        },
+        {
+          "i": 165,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "12"
+            }
+          ]
+        },
+        {
+          "i": 175,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 178,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        }
       ]
     },
     {
@@ -1094,7 +2035,7 @@
         },
         {
           "phase": "TRANSITION",
-          "t": 618,
+          "t": 7278,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1104,7 +2045,7 @@
         },
         {
           "phase": "TRANSITION",
-          "t": 7364,
+          "t": 20581,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1128,7 +2069,7 @@
           "action": {
             "action": "click",
             "target": "browse-catalog",
-            "reason": "Open the store catalog to view the product list"
+            "reason": "Open the store catalog from the landing page to reach the product listing."
           },
           "validationAllowed": true,
           "validationReason": "Validated click action on known element 'browse-catalog'.",
@@ -1143,7 +2084,7 @@
           "action": {
             "action": "click",
             "target": "alpha-widget-link",
-            "reason": "Open the first listed product to view its product page and price"
+            "reason": "Open the first product listed in the catalog to view its product page and price."
           },
           "validationAllowed": false,
           "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
@@ -1157,7 +2098,7 @@
           "action": {
             "action": "click",
             "target": "alpha-widget-link",
-            "reason": "Open the first listed product to view its product page and price"
+            "reason": "Open the first listed product to view its product page and price."
           },
           "validationAllowed": true,
           "validationReason": "Validated click action on known element 'alpha-widget-link'.",
@@ -1172,11 +2113,11 @@
           "action": {
             "action": "scroll",
             "direction": "down",
-            "amount": 500,
-            "reason": "The product price is not present in the currently detected elements, so scroll to reveal more of the product page."
+            "amount": 300,
+            "reason": "The product page is loaded but the price element is not visible in the current viewport; scroll down to reveal the product details and price."
           },
           "validationAllowed": true,
-          "validationReason": "Validated scroll down by 500px.",
+          "validationReason": "Validated scroll down by 300px.",
           "executionSuccess": false,
           "effectStatus": "ACTION_NO_EFFECT",
           "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
@@ -1208,7 +2149,7 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 1,
           "url": "http://localhost:4291/",
-          "perceptionGeneration": 59,
+          "perceptionGeneration": 14,
           "reason": null
         },
         {
@@ -1216,7 +2157,7 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 2,
           "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 61,
+          "perceptionGeneration": 16,
           "reason": null
         },
         {
@@ -1224,7 +2165,7 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 3,
           "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 62,
+          "perceptionGeneration": 17,
           "reason": null
         },
         {
@@ -1232,22 +2173,22 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 4,
           "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 64,
+          "perceptionGeneration": 19,
           "reason": null
         },
         {
           "status": "FAILED",
           "goalStatus": "FAILED",
-          "currentStep": 4,
+          "currentStep": 5,
           "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 67,
-          "reason": "Perception failed: Unable to obtain sanitized page context."
+          "perceptionGeneration": 21,
+          "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed."
         }
       ],
-      "wallClockMs": 14612,
+      "wallClockMs": 33279,
       "domSamples": [
         {
-          "t": 10,
+          "t": 4,
           "url": "http://localhost:4291/",
           "markers": [
             "home"
@@ -1255,7 +2196,95 @@
           "priceText": null
         },
         {
-          "t": 618,
+          "t": 619,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 1226,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 1829,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 2432,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 3035,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 3639,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 4245,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 4848,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 5452,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 6055,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 6676,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 7278,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1263,7 +2292,7 @@
           "priceText": null
         },
         {
-          "t": 1228,
+          "t": 7882,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1271,7 +2300,7 @@
           "priceText": null
         },
         {
-          "t": 1837,
+          "t": 8484,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1279,7 +2308,7 @@
           "priceText": null
         },
         {
-          "t": 2441,
+          "t": 9088,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1287,7 +2316,7 @@
           "priceText": null
         },
         {
-          "t": 3045,
+          "t": 9690,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1295,7 +2324,7 @@
           "priceText": null
         },
         {
-          "t": 3648,
+          "t": 10293,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1303,7 +2332,7 @@
           "priceText": null
         },
         {
-          "t": 4317,
+          "t": 10897,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1311,7 +2340,7 @@
           "priceText": null
         },
         {
-          "t": 4935,
+          "t": 11501,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1319,7 +2348,7 @@
           "priceText": null
         },
         {
-          "t": 5543,
+          "t": 12105,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1327,7 +2356,7 @@
           "priceText": null
         },
         {
-          "t": 6146,
+          "t": 12708,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1335,7 +2364,7 @@
           "priceText": null
         },
         {
-          "t": 6755,
+          "t": 13311,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1343,7 +2372,95 @@
           "priceText": null
         },
         {
-          "t": 7364,
+          "t": 13923,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 14545,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 15149,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 15752,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 16356,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 16959,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 17563,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 18167,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 18769,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 19375,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 19979,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 20581,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1351,7 +2468,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 7968,
+          "t": 21184,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1359,7 +2476,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 8571,
+          "t": 21786,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1367,7 +2484,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 9175,
+          "t": 22389,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1375,7 +2492,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 9779,
+          "t": 22993,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1383,7 +2500,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 10383,
+          "t": 23597,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1391,7 +2508,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 10989,
+          "t": 24200,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1399,7 +2516,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 11592,
+          "t": 24804,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1407,7 +2524,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 12195,
+          "t": 25412,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1415,7 +2532,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 12798,
+          "t": 26016,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1423,7 +2540,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 13402,
+          "t": 26619,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1431,7 +2548,7 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 14007,
+          "t": 27225,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1439,7 +2556,79 @@
           "priceText": "Price: 24"
         },
         {
-          "t": 14611,
+          "t": 27828,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 28432,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 29036,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 29642,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 30245,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 30849,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 31452,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 32066,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 32674,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 33277,
           "url": "http://localhost:4291/product/alpha-widget",
           "markers": [
             "product-detail"
@@ -1461,31 +2650,32 @@
       "finalObservedHeading": "Alpha Widget",
       "finalStatus": "FAILED",
       "finalGoalStatus": "FAILED",
-      "finalReason": "Perception failed: Unable to obtain sanitized page context.",
+      "finalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (unexpected_format) failed.",
       "distinctUrlsVisited": [
         "http://localhost:4291/",
         "http://localhost:4291/catalog",
         "http://localhost:4291/product/alpha-widget"
       ],
-      "providerCalls": 4,
+      "providerCalls": 5,
       "providerCallsByStatus": {
-        "200": 4
+        "200": 4,
+        "503": 1
       },
       "providerRttsMs": {
-        "n": 4,
-        "min": 379,
-        "p50": 1682,
-        "p90": 6391,
-        "max": 6391
+        "n": 5,
+        "min": 373,
+        "p50": 6988,
+        "p90": 11612,
+        "max": 11612
       },
       "observationLatencyMs": {
-        "n": 25,
+        "n": 56,
         "min": 1,
         "p50": 2,
-        "p90": 8,
-        "max": 63
+        "p90": 4,
+        "max": 12
       },
-      "totalTaskWallMs": 14612,
+      "totalTaskWallMs": 33279,
       "anyProviderCallCarriedSyntheticPII": false,
       "browserActionsDispatched": 4,
       "distinctActionTargets": [
@@ -1493,7 +2683,7 @@
         "alpha-widget-link"
       ],
       "observedEffects": 3,
-      "realReasonerCycles": 4,
+      "realReasonerCycles": 5,
       "refusedByPersonNameHeuristic": false,
       "verdictInputs": {
         "reachedProduct": true,
@@ -1502,7 +2692,7 @@
         "finalGoalStatus": "FAILED"
       },
       "successCameExclusivelyFromObservation": false,
-      "verdict": "NOT_PROVEN — real reasoner reached (4 call(s)), 4 browser action(s), 3 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
+      "verdict": "NOT_PROVEN — real reasoner reached (5 call(s)), 4 browser action(s), 3 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
       "classification": "NOT_PROVEN",
       "swConsoleAll": [
         "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
@@ -1512,7 +2702,7 @@
         "[ServiceWorker] message received Object",
         "[AgentTrace] service worker START_TASK received Object",
         "TARGET_RESOLUTION_STARTED",
-        "TARGET_TAB_CANDIDATES Array(4)",
+        "TARGET_TAB_CANDIDATES Array(2)",
         "[AgentTrace] containment scope established Object",
         "TARGET_TAB_SELECTED Object",
         "[AgentTrace] target resolved Object",
@@ -1596,7 +2786,8 @@
         "[AgentTrace] effect snapshot observed Object",
         "[AgentTrace] containment decision Object",
         "[AgentTrace] executeAction response received",
-        "[AgentTrace] effect snapshot observed Object",
+        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
+        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
         "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object",
@@ -1636,7 +2827,16 @@
         "[AgentTrace] perception started",
         "[AgentTrace] multimodal perception complete Object",
         "[ServiceWorker] response forwarded",
-        "[AgentLoop] rejecting stale world model before attachment Object",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object",
         "[AgentTrace] M6 failed Object",
@@ -1644,6 +2844,212 @@
         "[AgentTrace] terminal progress emitted Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object"
+      ],
+      "swIdentityMeta": [
+        {
+          "i": 21,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 26,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "contextUrl": "http://localhost:4291/",
+              "worldModelId": "wm-g14-mum27f4f-t7so"
+            }
+          ]
+        },
+        {
+          "i": 28,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "14"
+            }
+          ]
+        },
+        {
+          "i": 39,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 43,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 50,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "15",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 55,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "15",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g16-mum27l0j-71tv"
+            }
+          ]
+        },
+        {
+          "i": 57,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "16"
+            }
+          ]
+        },
+        {
+          "i": 67,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "17",
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 72,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "17",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g17-mum27lr3-t542"
+            }
+          ]
+        },
+        {
+          "i": 74,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "17"
+            }
+          ]
+        },
+        {
+          "i": 88,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 92,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 98,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "18",
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 103,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "18",
+              "contextUrl": "http://localhost:4291/product/alpha-widget",
+              "worldModelId": "wm-g19-mum27v80-0cr1"
+            }
+          ]
+        },
+        {
+          "i": 105,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "19"
+            }
+          ]
+        },
+        {
+          "i": 115,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 118,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 128,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "21",
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 133,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "21",
+              "contextUrl": "http://localhost:4291/product/alpha-widget",
+              "worldModelId": "wm-g21-mum27w19-i41g"
+            }
+          ]
+        },
+        {
+          "i": 135,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "21"
+            }
+          ]
+        }
       ]
     },
     {
@@ -1662,7 +3068,7 @@
         },
         {
           "phase": "TRANSITION",
-          "t": 618,
+          "t": 612,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1671,23 +3077,13 @@
           "heading": null
         },
         {
-          "phase": "TRANSITION",
-          "t": 16913,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24",
-          "heading": "Alpha Widget"
-        },
-        {
           "phase": "FINAL",
-          "url": "http://localhost:4291/product/alpha-widget",
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24",
-          "heading": "Alpha Widget"
+          "priceText": null,
+          "heading": null
         }
       ],
       "actions": [
@@ -1705,50 +3101,6 @@
           "effectDetails": "Click on 'browse-catalog' triggered page navigation to 'http://localhost:4291/catalog'.",
           "targetId": "browse-catalog",
           "url": "http://localhost:4291/"
-        },
-        {
-          "step": 2,
-          "action": {
-            "action": "click",
-            "target": "alpha-widget-link",
-            "reason": "Open the first product listed on the catalog page"
-          },
-          "validationAllowed": false,
-          "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
-          "executionSuccess": false,
-          "effectDetails": null,
-          "targetId": "alpha-widget-link",
-          "url": "http://localhost:4291/catalog"
-        },
-        {
-          "step": 3,
-          "action": {
-            "action": "click",
-            "target": "alpha-widget-link",
-            "reason": "Open the first product listed in the catalog to view its product page and price"
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated click action on known element 'alpha-widget-link'.",
-          "executionSuccess": true,
-          "effectStatus": "URL_NAVIGATION_OBSERVED",
-          "effectDetails": "Click on 'alpha-widget-link' triggered page navigation to 'http://localhost:4291/product/alpha-widget'.",
-          "targetId": "alpha-widget-link",
-          "url": "http://localhost:4291/catalog"
-        },
-        {
-          "step": 4,
-          "action": {
-            "action": "scroll",
-            "direction": "down",
-            "amount": 500,
-            "reason": "The product page is open, but the price is not represented in the visible interactive elements; scroll down to reveal the product details and price."
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated scroll down by 500px.",
-          "executionSuccess": false,
-          "effectStatus": "ACTION_NO_EFFECT",
-          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
-          "url": "http://localhost:4291/product/alpha-widget"
         }
       ],
       "timeline": [
@@ -1776,43 +3128,19 @@
           "goalStatus": "IN_PROGRESS",
           "currentStep": 1,
           "url": "http://localhost:4291/",
-          "perceptionGeneration": 68,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 2,
-          "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 70,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 3,
-          "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 71,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 4,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 73,
+          "perceptionGeneration": 23,
           "reason": null
         },
         {
           "status": "FAILED",
           "goalStatus": "FAILED",
-          "currentStep": 4,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 76,
-          "reason": "Perception failed: Unable to obtain sanitized page context."
+          "currentStep": 2,
+          "url": "http://localhost:4291/catalog",
+          "perceptionGeneration": 25,
+          "reason": "Agent reasoning failed: Reasoning provider request timed out after 55s."
         }
       ],
-      "wallClockMs": 24158,
+      "wallClockMs": 56164,
       "domSamples": [
         {
           "t": 3,
@@ -1823,7 +3151,7 @@
           "priceText": null
         },
         {
-          "t": 618,
+          "t": 612,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1831,7 +3159,7 @@
           "priceText": null
         },
         {
-          "t": 1222,
+          "t": 1216,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1839,7 +3167,7 @@
           "priceText": null
         },
         {
-          "t": 1825,
+          "t": 1819,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1847,7 +3175,7 @@
           "priceText": null
         },
         {
-          "t": 2429,
+          "t": 2422,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1855,7 +3183,7 @@
           "priceText": null
         },
         {
-          "t": 3035,
+          "t": 3026,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1863,7 +3191,7 @@
           "priceText": null
         },
         {
-          "t": 3637,
+          "t": 3629,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1871,7 +3199,7 @@
           "priceText": null
         },
         {
-          "t": 4240,
+          "t": 4233,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1879,7 +3207,7 @@
           "priceText": null
         },
         {
-          "t": 4844,
+          "t": 4836,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1887,7 +3215,7 @@
           "priceText": null
         },
         {
-          "t": 5447,
+          "t": 5443,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1895,7 +3223,7 @@
           "priceText": null
         },
         {
-          "t": 6050,
+          "t": 6046,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1903,7 +3231,7 @@
           "priceText": null
         },
         {
-          "t": 6653,
+          "t": 6650,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1911,7 +3239,7 @@
           "priceText": null
         },
         {
-          "t": 7256,
+          "t": 7255,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1919,7 +3247,7 @@
           "priceText": null
         },
         {
-          "t": 7861,
+          "t": 7858,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1927,7 +3255,7 @@
           "priceText": null
         },
         {
-          "t": 8464,
+          "t": 8461,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1935,7 +3263,7 @@
           "priceText": null
         },
         {
-          "t": 9067,
+          "t": 9064,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1943,7 +3271,7 @@
           "priceText": null
         },
         {
-          "t": 9670,
+          "t": 9667,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1951,7 +3279,7 @@
           "priceText": null
         },
         {
-          "t": 10273,
+          "t": 10270,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1959,7 +3287,7 @@
           "priceText": null
         },
         {
-          "t": 10877,
+          "t": 10875,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1967,7 +3295,7 @@
           "priceText": null
         },
         {
-          "t": 11481,
+          "t": 11478,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1975,7 +3303,7 @@
           "priceText": null
         },
         {
-          "t": 12084,
+          "t": 12082,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1983,7 +3311,7 @@
           "priceText": null
         },
         {
-          "t": 12687,
+          "t": 12685,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1991,7 +3319,7 @@
           "priceText": null
         },
         {
-          "t": 13290,
+          "t": 13291,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -1999,7 +3327,7 @@
           "priceText": null
         },
         {
-          "t": 13894,
+          "t": 13895,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -2007,7 +3335,7 @@
           "priceText": null
         },
         {
-          "t": 14497,
+          "t": 14498,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -2015,7 +3343,7 @@
           "priceText": null
         },
         {
-          "t": 15100,
+          "t": 15101,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -2023,7 +3351,7 @@
           "priceText": null
         },
         {
-          "t": 15702,
+          "t": 15706,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -2031,7 +3359,7 @@
           "priceText": null
         },
         {
-          "t": 16305,
+          "t": 16309,
           "url": "http://localhost:4291/catalog",
           "markers": [
             "catalog"
@@ -2039,731 +3367,588 @@
           "priceText": null
         },
         {
-          "t": 16913,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 16912,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 17519,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 17515,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 18122,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 18118,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
           "t": 18725,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 19331,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 19328,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 19934,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 19931,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 20537,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 20534,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 21141,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 21138,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 21744,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 21742,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 22347,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 22345,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 22950,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 22947,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 23554,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 23551,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
         },
         {
-          "t": 24157,
-          "url": "http://localhost:4291/product/alpha-widget",
+          "t": 24155,
+          "url": "http://localhost:4291/catalog",
           "markers": [
-            "product-detail"
+            "catalog"
           ],
-          "priceText": "Price: 24"
+          "priceText": null
+        },
+        {
+          "t": 24758,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 25361,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 25966,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 26576,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 27178,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 27781,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 28384,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 28986,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 29594,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 30199,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 30806,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 31409,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 32012,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 32615,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 33218,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 33824,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 34427,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 35030,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 35635,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 36244,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 36847,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 37450,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 38053,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 38659,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 39262,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 39865,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 40468,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 41072,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 41675,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 42278,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 42881,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 43486,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 44089,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 44692,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 45296,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 45899,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 46503,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 47106,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 47709,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 48312,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 48915,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 49520,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 50127,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 50730,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 51333,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 51937,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 52540,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 53144,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 53747,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 54350,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 54953,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 55561,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 56163,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
         }
       ],
       "observedUrlSequence": [
         "http://localhost:4291/",
-        "http://localhost:4291/catalog",
-        "http://localhost:4291/product/alpha-widget"
+        "http://localhost:4291/catalog"
       ],
       "liveTabActuallyMoved": true,
-      "finalObservedUrl": "http://localhost:4291/product/alpha-widget",
+      "finalObservedUrl": "http://localhost:4291/catalog",
       "finalObservedMarkers": [
-        "product-detail"
+        "catalog"
       ],
-      "finalObservedPrice": "Price: 24",
-      "finalObservedHeading": "Alpha Widget",
+      "finalObservedPrice": null,
+      "finalObservedHeading": null,
       "finalStatus": "FAILED",
       "finalGoalStatus": "FAILED",
-      "finalReason": "Perception failed: Unable to obtain sanitized page context.",
+      "finalReason": "Agent reasoning failed: Reasoning provider request timed out after 55s.",
       "distinctUrlsVisited": [
         "http://localhost:4291/",
-        "http://localhost:4291/catalog",
-        "http://localhost:4291/product/alpha-widget"
+        "http://localhost:4291/catalog"
       ],
-      "providerCalls": 4,
+      "providerCalls": 2,
       "providerCallsByStatus": {
-        "200": 4
+        "200": 1,
+        "pending": 1
       },
       "providerRttsMs": {
-        "n": 4,
-        "min": 348,
-        "p50": 393,
-        "p90": 14379,
-        "max": 14379
+        "n": 1,
+        "min": 330,
+        "p50": 330,
+        "p90": 330,
+        "max": 330
       },
       "observationLatencyMs": {
-        "n": 41,
-        "min": 0,
-        "p50": 1,
-        "p90": 2,
-        "max": 10
-      },
-      "totalTaskWallMs": 24158,
-      "anyProviderCallCarriedSyntheticPII": false,
-      "browserActionsDispatched": 4,
-      "distinctActionTargets": [
-        "browse-catalog",
-        "alpha-widget-link"
-      ],
-      "observedEffects": 3,
-      "realReasonerCycles": 4,
-      "refusedByPersonNameHeuristic": false,
-      "verdictInputs": {
-        "reachedProduct": true,
-        "markerObserved": true,
-        "priceObserved": true,
-        "finalGoalStatus": "FAILED"
-      },
-      "successCameExclusivelyFromObservation": false,
-      "verdict": "NOT_PROVEN — real reasoner reached (4 call(s)), 4 browser action(s), 3 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
-      "classification": "NOT_PROVEN",
-      "swConsoleAll": [
-        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
-        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
-        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
-        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
-        "[ServiceWorker] message received Object",
-        "[AgentTrace] service worker START_TASK received Object",
-        "TARGET_RESOLUTION_STARTED",
-        "TARGET_TAB_CANDIDATES Array(4)",
-        "[AgentTrace] containment scope established Object",
-        "TARGET_TAB_SELECTED Object",
-        "[AgentTrace] target resolved Object",
-        "TARGET_TAB_READY Object",
-        "[AgentTrace] target content script ready Object",
-        "[AgentTrace] first progress emitted",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] agent loop started",
-        "[AgentTrace] long-horizon state Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] subgoal selected Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
-        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
-        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
-        "[AgentTrace] subgoal completed Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] M6 next step",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] subgoal selected Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
-        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
-        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
-        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
-        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
-        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] M6 next step",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
-        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
-        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
-        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] recovery decision Object",
-        "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] rejecting stale world model before attachment Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] M6 failed Object",
-        "[AgentTrace] M6 failed Object",
-        "[AgentTrace] terminal progress emitted Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object"
-      ]
-    },
-    {
-      "class": "REAL_REASONER_PRODUCTION_SW",
-      "attempt": 4,
-      "task": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
-      "modelCycles": [],
-      "observedTransitions": [
-        {
-          "phase": "START",
-          "url": "http://localhost:4291/",
-          "markers": [
-            "home"
-          ],
-          "priceText": null
-        },
-        {
-          "phase": "TRANSITION",
-          "t": 614,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null,
-          "heading": null
-        },
-        {
-          "phase": "TRANSITION",
-          "t": 7265,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24",
-          "heading": "Alpha Widget"
-        },
-        {
-          "phase": "FINAL",
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24",
-          "heading": "Alpha Widget"
-        }
-      ],
-      "actions": [
-        {
-          "step": 1,
-          "action": {
-            "action": "click",
-            "target": "browse-catalog",
-            "reason": "Open the store catalog to view the product list"
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated click action on known element 'browse-catalog'.",
-          "executionSuccess": true,
-          "effectStatus": "URL_NAVIGATION_OBSERVED",
-          "effectDetails": "Click on 'browse-catalog' triggered page navigation to 'http://localhost:4291/catalog'.",
-          "targetId": "browse-catalog",
-          "url": "http://localhost:4291/"
-        },
-        {
-          "step": 2,
-          "action": {
-            "action": "click",
-            "target": "alpha-widget-link",
-            "reason": "Open the first listed product to view its product page and price"
-          },
-          "validationAllowed": false,
-          "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
-          "executionSuccess": false,
-          "effectDetails": null,
-          "targetId": "alpha-widget-link",
-          "url": "http://localhost:4291/catalog"
-        },
-        {
-          "step": 3,
-          "action": {
-            "action": "click",
-            "target": "alpha-widget-link",
-            "reason": "Open the first product listed in the catalog to view its product page and price"
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated click action on known element 'alpha-widget-link'.",
-          "executionSuccess": true,
-          "effectStatus": "URL_NAVIGATION_OBSERVED",
-          "effectDetails": "Click on 'alpha-widget-link' triggered page navigation to 'http://localhost:4291/product/alpha-widget'.",
-          "targetId": "alpha-widget-link",
-          "url": "http://localhost:4291/catalog"
-        },
-        {
-          "step": 4,
-          "action": {
-            "action": "scroll",
-            "direction": "down",
-            "amount": 500,
-            "reason": "The product page is open but the price is not represented in the visible elements; scroll down to reveal additional product details."
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated scroll down by 500px.",
-          "executionSuccess": false,
-          "effectStatus": "ACTION_NO_EFFECT",
-          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
-          "url": "http://localhost:4291/product/alpha-widget"
-        }
-      ],
-      "timeline": [
-        {
-          "status": "RUNNING",
-          "currentStep": 0,
-          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
-        },
-        {
-          "status": "RUNNING",
-          "currentStep": 0,
-          "url": "http://localhost:4291/",
-          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 0,
-          "url": "http://localhost:4291/",
-          "perceptionGeneration": 0,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 1,
-          "url": "http://localhost:4291/",
-          "perceptionGeneration": 77,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 2,
-          "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 79,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 3,
-          "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 80,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 4,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 82,
-          "reason": null
-        },
-        {
-          "status": "FAILED",
-          "goalStatus": "FAILED",
-          "currentStep": 4,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 85,
-          "reason": "Perception failed: Unable to obtain sanitized page context."
-        }
-      ],
-      "wallClockMs": 13907,
-      "domSamples": [
-        {
-          "t": 5,
-          "url": "http://localhost:4291/",
-          "markers": [
-            "home"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 614,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 1221,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 1827,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 2430,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 3035,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 3639,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 4244,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 4847,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 5449,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 6056,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 6662,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 7265,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 7871,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 8474,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 9077,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 9680,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 10283,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 10891,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 11494,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 12097,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 12700,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 13304,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 13906,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        }
-      ],
-      "observedUrlSequence": [
-        "http://localhost:4291/",
-        "http://localhost:4291/catalog",
-        "http://localhost:4291/product/alpha-widget"
-      ],
-      "liveTabActuallyMoved": true,
-      "finalObservedUrl": "http://localhost:4291/product/alpha-widget",
-      "finalObservedMarkers": [
-        "product-detail"
-      ],
-      "finalObservedPrice": "Price: 24",
-      "finalObservedHeading": "Alpha Widget",
-      "finalStatus": "FAILED",
-      "finalGoalStatus": "FAILED",
-      "finalReason": "Perception failed: Unable to obtain sanitized page context.",
-      "distinctUrlsVisited": [
-        "http://localhost:4291/",
-        "http://localhost:4291/catalog",
-        "http://localhost:4291/product/alpha-widget"
-      ],
-      "providerCalls": 4,
-      "providerCallsByStatus": {
-        "200": 4
-      },
-      "providerRttsMs": {
-        "n": 4,
-        "min": 337,
-        "p50": 373,
-        "p90": 5529,
-        "max": 5529
-      },
-      "observationLatencyMs": {
-        "n": 24,
+        "n": 94,
         "min": 1,
         "p50": 1,
-        "p90": 3,
-        "max": 5
+        "p90": 2,
+        "max": 6
       },
-      "totalTaskWallMs": 13907,
+      "totalTaskWallMs": 56164,
       "anyProviderCallCarriedSyntheticPII": false,
-      "browserActionsDispatched": 4,
+      "browserActionsDispatched": 1,
       "distinctActionTargets": [
-        "browse-catalog",
-        "alpha-widget-link"
+        "browse-catalog"
       ],
-      "observedEffects": 3,
-      "realReasonerCycles": 4,
+      "observedEffects": 1,
+      "realReasonerCycles": 2,
       "refusedByPersonNameHeuristic": false,
       "verdictInputs": {
-        "reachedProduct": true,
-        "markerObserved": true,
-        "priceObserved": true,
+        "reachedProduct": false,
+        "markerObserved": false,
+        "priceObserved": false,
         "finalGoalStatus": "FAILED"
       },
       "successCameExclusivelyFromObservation": false,
-      "verdict": "NOT_PROVEN — real reasoner reached (4 call(s)), 4 browser action(s), 3 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
+      "verdict": "NOT_PROVEN — real reasoner reached (2 call(s)), 1 browser action(s), 1 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
       "classification": "NOT_PROVEN",
       "swConsoleAll": [
         "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
@@ -2773,7 +3958,7 @@
         "[ServiceWorker] message received Object",
         "[AgentTrace] service worker START_TASK received Object",
         "TARGET_RESOLUTION_STARTED",
-        "TARGET_TAB_CANDIDATES Array(4)",
+        "TARGET_TAB_CANDIDATES Array(2)",
         "[AgentTrace] containment scope established Object",
         "TARGET_TAB_SELECTED Object",
         "[AgentTrace] target resolved Object",
@@ -2827,78 +4012,18 @@
         "[AgentTrace] subgoal selected Object",
         "[AgentTrace] long-horizon update Object",
         "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
-        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
-        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] M6 next step",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
         "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
         "[SW][PING] TARGET_RESOLUTION_STARTED Object",
         "[SW][PING] TARGET_RESOLUTION_RESULT Object",
         "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] recovery decision Object",
-        "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] rejecting stale world model before attachment Object",
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object",
         "[AgentTrace] M6 failed Object",
@@ -2906,603 +4031,86 @@
         "[AgentTrace] terminal progress emitted Object",
         "[AgentTrace] output screen Object",
         "[ServiceWorker] response forwarded Object"
-      ]
-    },
-    {
-      "class": "REAL_REASONER_PRODUCTION_SW",
-      "attempt": 5,
-      "task": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
-      "modelCycles": [],
-      "observedTransitions": [
+      ],
+      "swIdentityMeta": [
         {
-          "phase": "START",
-          "url": "http://localhost:4291/",
-          "markers": [
-            "home"
-          ],
-          "priceText": null
+          "i": 21,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "url": "http://localhost:4291/"
+            }
+          ]
         },
         {
-          "phase": "TRANSITION",
-          "t": 619,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null,
-          "heading": null
+          "i": 26,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "contextUrl": "http://localhost:4291/",
+              "worldModelId": "wm-g23-mum285o1-aw7s"
+            }
+          ]
         },
         {
-          "phase": "TRANSITION",
-          "t": 7911,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [],
-          "priceText": null,
-          "heading": null
+          "i": 28,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "23"
+            }
+          ]
         },
         {
-          "phase": "FINAL",
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24",
-          "heading": "Alpha Widget"
+          "i": 39,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 43,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 50,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "24",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 55,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "24",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g25-mum286ev-6eiy"
+            }
+          ]
+        },
+        {
+          "i": 57,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "25"
+            }
+          ]
         }
-      ],
-      "actions": [
-        {
-          "step": 1,
-          "action": {
-            "action": "click",
-            "target": "browse-catalog",
-            "reason": "The task requires opening the store catalog. The element 'browse-catalog' is a link that likely leads to the catalog page. Clicking it is the most direct way to proceed."
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated click action on known element 'browse-catalog'.",
-          "executionSuccess": true,
-          "effectStatus": "URL_NAVIGATION_OBSERVED",
-          "effectDetails": "Click on 'browse-catalog' triggered page navigation to 'http://localhost:4291/catalog'.",
-          "targetId": "browse-catalog",
-          "url": "http://localhost:4291/"
-        },
-        {
-          "step": 2,
-          "action": {
-            "action": "click",
-            "target": "alpha-widget-link",
-            "reason": "The catalog page is loaded and the first listed product link appears to be alpha-widget-link, so click it to open its product page and find the price."
-          },
-          "validationAllowed": false,
-          "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
-          "executionSuccess": false,
-          "effectDetails": null,
-          "targetId": "alpha-widget-link",
-          "url": "http://localhost:4291/catalog"
-        },
-        {
-          "step": 3,
-          "action": {
-            "action": "click",
-            "target": "alpha-widget-link",
-            "reason": "The catalog is open and the first listed product link appears to be alpha-widget-link; clicking it should open the product page to read the price."
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated click action on known element 'alpha-widget-link'.",
-          "executionSuccess": true,
-          "effectStatus": "URL_NAVIGATION_OBSERVED",
-          "effectDetails": "Click on 'alpha-widget-link' triggered page navigation to 'http://localhost:4291/product/alpha-widget'.",
-          "targetId": "alpha-widget-link",
-          "url": "http://localhost:4291/catalog"
-        },
-        {
-          "step": 4,
-          "action": {
-            "action": "scroll",
-            "direction": "down",
-            "amount": 500,
-            "reason": "The product page is open, but the price element is not present in the current visible element metadata; scrolling down may reveal the price or additional product details."
-          },
-          "validationAllowed": true,
-          "validationReason": "Validated scroll down by 500px.",
-          "executionSuccess": false,
-          "effectStatus": "ACTION_NO_EFFECT",
-          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
-          "url": "http://localhost:4291/product/alpha-widget"
-        }
-      ],
-      "timeline": [
-        {
-          "status": "RUNNING",
-          "currentStep": 0,
-          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
-        },
-        {
-          "status": "RUNNING",
-          "currentStep": 0,
-          "url": "http://localhost:4291/",
-          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 0,
-          "url": "http://localhost:4291/",
-          "perceptionGeneration": 0,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 1,
-          "url": "http://localhost:4291/",
-          "perceptionGeneration": 86,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 2,
-          "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 88,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 3,
-          "url": "http://localhost:4291/catalog",
-          "perceptionGeneration": 89,
-          "reason": null
-        },
-        {
-          "status": "IN_PROGRESS",
-          "goalStatus": "IN_PROGRESS",
-          "currentStep": 4,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 91,
-          "reason": null
-        },
-        {
-          "status": "FAILED",
-          "goalStatus": "FAILED",
-          "currentStep": 4,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "perceptionGeneration": 94,
-          "reason": "Perception failed: Unable to obtain sanitized page context."
-        }
-      ],
-      "wallClockMs": 16996,
-      "domSamples": [
-        {
-          "t": 3,
-          "url": "http://localhost:4291/",
-          "markers": [
-            "home"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 619,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 1225,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 1827,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 2430,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 3033,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 3639,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 4242,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 4844,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 5447,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 6050,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 6652,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 7258,
-          "url": "http://localhost:4291/catalog",
-          "markers": [
-            "catalog"
-          ],
-          "priceText": null
-        },
-        {
-          "t": 7911,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [],
-          "priceText": null
-        },
-        {
-          "t": 8525,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 9128,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 9732,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 10335,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 10938,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 11542,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 12145,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 12748,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 13351,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 13955,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 14558,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 15161,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 15785,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 16392,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        },
-        {
-          "t": 16995,
-          "url": "http://localhost:4291/product/alpha-widget",
-          "markers": [
-            "product-detail"
-          ],
-          "priceText": "Price: 24"
-        }
-      ],
-      "observedUrlSequence": [
-        "http://localhost:4291/",
-        "http://localhost:4291/catalog",
-        "http://localhost:4291/product/alpha-widget"
-      ],
-      "liveTabActuallyMoved": true,
-      "finalObservedUrl": "http://localhost:4291/product/alpha-widget",
-      "finalObservedMarkers": [
-        "product-detail"
-      ],
-      "finalObservedPrice": "Price: 24",
-      "finalObservedHeading": "Alpha Widget",
-      "finalStatus": "FAILED",
-      "finalGoalStatus": "FAILED",
-      "finalReason": "Perception failed: Unable to obtain sanitized page context.",
-      "distinctUrlsVisited": [
-        "http://localhost:4291/",
-        "http://localhost:4291/catalog",
-        "http://localhost:4291/product/alpha-widget"
-      ],
-      "providerCalls": 4,
-      "providerCallsByStatus": {
-        "200": 4
-      },
-      "providerRttsMs": {
-        "n": 4,
-        "min": 396,
-        "p50": 2905,
-        "p90": 7531,
-        "max": 7531
-      },
-      "observationLatencyMs": {
-        "n": 29,
-        "min": 0,
-        "p50": 1,
-        "p90": 5,
-        "max": 50
-      },
-      "totalTaskWallMs": 16996,
-      "anyProviderCallCarriedSyntheticPII": false,
-      "browserActionsDispatched": 4,
-      "distinctActionTargets": [
-        "browse-catalog",
-        "alpha-widget-link"
-      ],
-      "observedEffects": 3,
-      "realReasonerCycles": 4,
-      "refusedByPersonNameHeuristic": false,
-      "verdictInputs": {
-        "reachedProduct": true,
-        "markerObserved": true,
-        "priceObserved": true,
-        "finalGoalStatus": "FAILED"
-      },
-      "successCameExclusivelyFromObservation": false,
-      "verdict": "NOT_PROVEN — real reasoner reached (4 call(s)), 4 browser action(s), 3 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
-      "classification": "NOT_PROVEN",
-      "swConsoleAll": [
-        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
-        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
-        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
-        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
-        "[ServiceWorker] message received Object",
-        "[AgentTrace] service worker START_TASK received Object",
-        "TARGET_RESOLUTION_STARTED",
-        "TARGET_TAB_CANDIDATES Array(4)",
-        "[AgentTrace] containment scope established Object",
-        "TARGET_TAB_SELECTED Object",
-        "[AgentTrace] target resolved Object",
-        "TARGET_TAB_READY Object",
-        "[AgentTrace] target content script ready Object",
-        "[AgentTrace] first progress emitted",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] agent loop started",
-        "[AgentTrace] long-horizon state Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] subgoal selected Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
-        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
-        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
-        "[AgentTrace] subgoal completed Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] M6 next step",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] subgoal selected Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
-        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
-        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] M6 next step",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] perception completed",
-        "[AgentTrace] perception complete Object",
-        "[AgentTrace] multimodal perception complete Object",
-        "[AgentTrace] semantic understanding complete Object",
-        "[AgentTrace] long-horizon update Object",
-        "[AgentTrace] requesting reasoning",
-        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
-        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
-        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
-        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
-        "[AgentTrace] reasoning response received",
-        "[AgentTrace] action validated by M5",
-        "[AgentTrace] security critic Object",
-        "[AgentTrace] action passed privacy policy",
-        "[AgentTrace] requesting safety review",
-        "[AgentTrace] action passed safety review",
-        "[AgentTrace] executeAction started",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] containment decision Object",
-        "[AgentTrace] executeAction response received",
-        "[AgentTrace] effect snapshot observed Object",
-        "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] recovery decision Object",
-        "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentTrace] harness cycle Object",
-        "[AgentTrace] perception started Object",
-        "[AgentTrace] perception started",
-        "[AgentTrace] multimodal perception complete Object",
-        "[ServiceWorker] response forwarded",
-        "[AgentLoop] rejecting stale world model before attachment Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object",
-        "[AgentTrace] M6 failed Object",
-        "[AgentTrace] M6 failed Object",
-        "[AgentTrace] terminal progress emitted Object",
-        "[AgentTrace] output screen Object",
-        "[ServiceWorker] response forwarded Object"
       ]
     }
   ],
@@ -3511,9 +4119,9 @@
     {
       "attempt": 1,
       "classification": "NOT_PROVEN",
-      "providerCalls": 4,
-      "browserActions": 4,
-      "observedEffects": 3,
+      "providerCalls": 6,
+      "browserActions": 6,
+      "observedEffects": 5,
       "finalGoalStatus": "FAILED",
       "finalUrl": "http://localhost:4291/product/alpha-widget",
       "finalMarkers": [
@@ -3523,7 +4131,7 @@
     {
       "attempt": 2,
       "classification": "NOT_PROVEN",
-      "providerCalls": 4,
+      "providerCalls": 5,
       "browserActions": 4,
       "observedEffects": 3,
       "finalGoalStatus": "FAILED",
@@ -3535,37 +4143,13 @@
     {
       "attempt": 3,
       "classification": "NOT_PROVEN",
-      "providerCalls": 4,
-      "browserActions": 4,
-      "observedEffects": 3,
+      "providerCalls": 2,
+      "browserActions": 1,
+      "observedEffects": 1,
       "finalGoalStatus": "FAILED",
-      "finalUrl": "http://localhost:4291/product/alpha-widget",
+      "finalUrl": "http://localhost:4291/catalog",
       "finalMarkers": [
-        "product-detail"
-      ]
-    },
-    {
-      "attempt": 4,
-      "classification": "NOT_PROVEN",
-      "providerCalls": 4,
-      "browserActions": 4,
-      "observedEffects": 3,
-      "finalGoalStatus": "FAILED",
-      "finalUrl": "http://localhost:4291/product/alpha-widget",
-      "finalMarkers": [
-        "product-detail"
-      ]
-    },
-    {
-      "attempt": 5,
-      "classification": "NOT_PROVEN",
-      "providerCalls": 4,
-      "browserActions": 4,
-      "observedEffects": 3,
-      "finalGoalStatus": "FAILED",
-      "finalUrl": "http://localhost:4291/product/alpha-widget",
-      "finalMarkers": [
-        "product-detail"
+        "catalog"
       ]
     }
   ]

@@ -1,0 +1,45 @@
+{
+  "probe": "goal verification coverage",
+  "method": "deterministic: real fixture DOM in jsdom → real scanInteractiveElements → real extractCandidatesFromContext → real verifyTaskGoal. No model, no provider, no browser.",
+  "task": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
+  "rows": [
+    {
+      "page": "CATALOG",
+      "fixturePath": "/catalog",
+      "classifyPage": "unknown",
+      "interactiveIds": [
+        "nav-home",
+        "nav-catalog",
+        "nav-cart",
+        "alpha-widget-link",
+        "beta-gizmo-link"
+      ],
+      "detectionsMatchingProductItemCardResult": 0,
+      "detectionsNamedPrice": 0,
+      "extractCandidatesFromContext": 0,
+      "goalSatisfied": false,
+      "goalStatus": "IN_PROGRESS",
+      "goalReason": null
+    },
+    {
+      "page": "PRODUCT",
+      "fixturePath": "/product/alpha-widget",
+      "classifyPage": "unknown",
+      "interactiveIds": [
+        "nav-home",
+        "nav-catalog",
+        "nav-cart",
+        "qty",
+        "add-to-cart",
+        "back-to-catalog"
+      ],
+      "detectionsMatchingProductItemCardResult": 0,
+      "detectionsNamedPrice": 0,
+      "extractCandidatesFromContext": 0,
+      "goalSatisfied": false,
+      "goalStatus": "IN_PROGRESS",
+      "goalReason": null
+    }
+  ],
+  "conclusion": "The shopping goal rule requires a qualifying candidate extracted from an OBSERVED detection whose id/selector names a product/item/card/result. Neither fixture page exposes one, so the goal cannot be certified and the verifier correctly stays IN_PROGRESS rather than fabricating success."
+}

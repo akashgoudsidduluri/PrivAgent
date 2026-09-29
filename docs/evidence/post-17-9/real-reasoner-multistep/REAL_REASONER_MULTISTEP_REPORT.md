@@ -1,13 +1,279 @@
 # Post-17.9 — Real-Reasoner Multi-Step SUCCESS Proof
 
-**Date:** 2026-09-28
-**Work type:** Evidence task. **No production code was changed.**
-**Harness:** `scratch/rr_multistep_proof.mjs` (new), reusing `scratch/phase16_cdp.mjs` helpers and
-`scratch/phase176_fixture.mjs` unchanged. Controls: `scratch/rr_controls.ts` (new).
+**Date:** 2026-09-28 · **Post-audit update:** 2026-09-29
+**Work type:** Evidence task, plus **one production fix** (see §0 — the audit below found a real
+synchronization defect and fixed it).
+**Harness:** `scratch/rr_multistep_proof.mjs`, reusing `scratch/phase16_cdp.mjs` helpers and
+`scratch/phase176_fixture.mjs` unchanged. Controls: `scratch/rr_controls.ts`.
+
+> **§1–§12 below are the PRE-AUDIT record from 2026-09-28. They are kept unchanged**
+> so the original NOT_PROVEN result, its measurements and its characterisation remain
+> auditable. **§1's verdict line and §11's limitations list are superseded by §0.**
+> Read §0 first: it states what was actually wrong, what was fixed, and what is still
+> not proven.
 
 ---
 
-## 1. Verdict up front
+## 0. POST-AUDIT UPDATE — the stale-world-model rejection was a FALSE POSITIVE
+
+### 0.1 Verdict
+
+| | Pre-audit (2026-09-28) | Post-audit (2026-09-29) |
+|---|---|---|
+| Attempts run | 5 | 6 |
+| Attempts with ≥1 real provider cycle | 5/5 | 5/6 |
+| Real provider calls | 20 (20×200) | 21 (**16×200**, 4×503 rate-limit, 1 timed out) |
+| `rejecting stale world model before attachment` | **5/5 attempts** | **0/6 attempts** |
+| Loop died on `Perception failed: Unable to obtain sanitized page context` | **5/5 attempts** | **0/6 attempts** |
+| Best attempt | 4 calls / 4 actions / 3 effects | **6 calls / 6 actions / 5 effects** |
+| Reached `/product/alpha-widget`, observed `product-detail` + `Price: 24` | 5/5 | 6/6 attempts that got past cycle 1 |
+| **Observation-backed SUCCESS** | **NOT PROVEN** | **NOT PROVEN — different, later blocker (§0.6)** |
+
+**Classification:**
+
+* **PROVEN_REAL** — the stale-world-model rejection was a *false* positive, at a named code
+  address, with the numbers to prove it (§0.2, §0.4).
+* **PROVEN_REAL** — the fix removes that rejection in real Chrome against the real reasoner:
+  **0 rejections across 6 post-fix attempts**, with the loop reaching the product page and
+  continuing past the point where it previously died.
+* **PROVEN_TEST** — 13 new regression tests; **5 of them fail against the pre-fix code** and all
+  pass with it (§0.7).
+* **NOT_PROVEN** — multi-step SUCCESS. Goal Verification is now *reached and consulted* and
+  returns `IN_PROGRESS`; it has no observed evidence type that can certify this goal on this
+  fixture (§0.6).
+* **KNOWN_LIMITATION** — the sanitized agent context carries no page text, so the model cannot
+  see the value it is asked to report and re-proposes a futile scroll (§0.6).
+
+### 0.2 Exact root cause
+
+The loop's page-generation counter is **anchored to the page** — after every successful
+perception `state.currentPageGeneration = worldModel.page.pageGeneration` — and the stale guard in
+`normalizePerceptionResult` refuses a world model whose generation is below that anchor:
+
+```ts
+const localGeneration = this.state.currentPageGeneration || this.state.perceptionGeneration;
+if (localGeneration > 0 && liveGeneration < localGeneration) {   // ← fired
+  console.warn('[AgentLoop] rejecting stale world model before attachment', { ... });
+  return null;   // → 'Perception failed: Unable to obtain sanitized page context.'
+}
+```
+
+The `ACTION_NO_EFFECT` recovery path advanced that counter **twice for one world-model build**:
+
+```ts
+// on entering recovery                       // after the mandatory re-perception
+advancePageGeneration(this.state);            // ← bumped
+...                                           advancePageGeneration(this.state);   // ← bumped again
+const fresh = await perceivePage();            this.state.currentPageGeneration = this.state.perceptionGeneration;
+```
+
+`perceivePage()` builds exactly one world model, so the loop consumed **three** generation steps
+per two builds (two recovery bumps plus the next cycle's bump). The counter therefore ran *ahead*
+of the page, and the next genuinely fresh model was refused as stale. The guard was reporting a
+model that was the freshest the page had.
+
+**Proven by measurement, not inference.** Instrumenting the harness to capture the guard's own
+payload across the real run (`pre_fix_generation_desync.json`, attempt 1):
+
+```
+perception started   perceptionGeneration = 7  → complete: worldModelId = wm-g8   (accepted)
+  … the ACTION_NO_EFFECT recovery ran here …
+perception started   perceptionGeneration = 11 → REJECTED
+  localGeneration 11, worldModelGeneration 10, refGeneration 10, worldModelId wm-g10
+```
+
+The loop advanced 8 → 11 (+3) while the content script advanced 8 → 10 (+2). 10 < 11 → refused.
+The rejected model, `wm-g10`, was the newest one the page had.
+
+**Why it is a false positive and not correct staleness.** The content script builds a fresh world
+model on *every* scan request and increments its own generation each time; the service worker
+re-validates `ref.pageGeneration === worldModel.page.pageGeneration` before attachment. Freshness
+is guaranteed by the build, not by the loop's counter. The counter is only a defence-in-depth
+lower bound, and the recovery path pushed it above the page's own value.
+
+### 0.3 The fix
+
+Two production files, ~15 lines net.
+
+`extension/src/agent/agentState.ts` — the invalidation and the counter advance are now separable.
+A new `invalidatePageGenerationState(state, generation?)` performs what the recovery path actually
+needs (clear `visitedElementIds`, null `activeWorldModelRef`, invalidate the generation);
+`advancePageGeneration` now delegates to it and keeps its existing contract exactly (it still
+advances both counters), so its other two call sites are unchanged.
+
+`extension/src/agent/agentLoop.ts` — the recovery path now:
+
+1. **invalidates without advancing** (`invalidatePageGenerationState`) — stale-target protection is
+   preserved, the spurious counter bump is removed; and
+2. **re-anchors** the counter to the generation the fresh perception actually observed
+   (`normalized.worldModel?.page?.pageGeneration`), mirroring what the perception cycle already does.
+
+The stale guard itself is **byte-for-byte unchanged**, as are M5, Grounding, the Security Critic,
+Risk/Confirmation, Containment, Effect Verification, Goal Verification, Recovery authorisation,
+the privacy boundary, F-09 and the egress firewall. No observation is fabricated, no stale model
+is accepted, and nothing is derived from `previousActions`, `executionSuccess`, a requested URL or
+a model claim: the counter can now only ever move *towards* what the browser reported.
+
+### 0.4 Reproduction (Task 1)
+
+Re-ran the existing harness, unmodified, before touching any production code. The failure
+reproduced exactly as reported (2/2 attempts): `/` → `/catalog` → `/product/alpha-widget` observed
+live, `product-detail` + `Price: 24` read from the DOM, then
+`rejecting stale world model before attachment` → `M6 failed` → `Perception failed` → `FAILED`.
+
+Harness reliability was hardened first, because the first two diagnostic runs died on CDP
+`Inspected target navigated or closed`: a crashed run left Chrome holding the CDP port, so the next
+run attached to a *stale* browser, and `tidy()` never exited the process. The harness now reaps a
+foreign browser on its CDP port before launching, kills Chrome by profile path and port, and exits
+deterministically. **Every number in §0.5 is from a run that passed that preflight.**
+
+### 0.5 Post-fix real-Chrome results (Task 5)
+
+Build: the real `dist/` extension, rebuilt from the fixed source. Provider: the configured backend
+(groq `openai/gpt-oss-20b`). No scripted proposer, no stubbed provider.
+
+| # | Provider calls | Actions | Effects | URLs visited | Ended on | Stale rejections |
+|---|---|---|---|---|---|---|
+| 1 | 6 (6×200) | 6 | 5 | `/`, `/catalog`, `/product/alpha-widget` | recovery bound (3 × futile scroll) | **0** |
+| 2 | 5 (4×200, 1×503) | 4 | 3 | `/`, `/catalog`, `/product/alpha-widget` | provider 503 rate-limit | **0** |
+| 3 | 2 (1×200, 1 timeout) | 1 | 1 | `/`, `/catalog` | provider timeout | **0** |
+| retry 1 | 5 (4×200, 1×503) | 4 | 3 | `/`, `/catalog`, `/product/alpha-widget` | provider 503 rate-limit | **0** |
+| retry 2 | 2 (1×200, 1×503) | 1 | 1 | `/`, `/catalog` | provider 503 rate-limit | **0** |
+| retry 3 | 1 (1×503) | 0 | 0 | `/` | provider 503 rate-limit | **0** |
+
+Attempt 1 is the strongest run and the direct comparison with the pre-audit baseline:
+
+| | Pre-fix | Post-fix |
+|---|---|---|
+| Provider calls | 4 (4×200) | **6 (6×200)** |
+| Browser actions | 4 | **6** |
+| Observed effects | 3 | **5** |
+| Ended on | `Perception failed` (0 actions left possible) | recovery bound after the 3rd futile scroll |
+
+Its per-step record, from the live tab:
+
+| Step | Proposed | M5 | Security Critic | Effect |
+|---|---|---|---|---|
+| 1 | `click browse-catalog` | ✅ | — | `URL_NAVIGATION_OBSERVED` → `/catalog` |
+| 2 | `click alpha-widget-link` | — | **BLOCK `GOAL_MISMATCH`** | not dispatched |
+| 3 | `click alpha-widget-link` | ✅ | pass | `URL_NAVIGATION_OBSERVED` → `/product/alpha-widget` |
+| 4 | `scroll down 300` | ✅ | pass | `ACTION_NO_EFFECT` → recovery `REPERCEIVE` |
+| 5 | `scroll down 300` | ✅ | pass | `ACTION_NO_EFFECT` → recovery |
+| 6 | `scroll down 300` | ✅ | pass | `ACTION_NO_EFFECT` → recovery bound exceeded |
+
+Note step 2→3: the Security Critic refused a live model proposal and the recovery path then retried
+it successfully. The recovery path is exercised and healthy — it simply no longer poisons the
+page-generation counter.
+
+**Performance** (recorded, not optimised): provider RTT p50 391 ms (min 372, max 8436) for the
+6-call attempt; local observation latency p50 2 ms; attempt wall time 14.1 s (attempt 2: 33.3 s,
+provider-dominated).
+
+### 0.6 The remaining blocker — separately classified, NOT fixed here
+
+With the false rejection gone, the loop reaches the product page and Goal Verification is now
+*consulted* on the fresh observation. It returns `IN_PROGRESS`, and the run ends on the recovery
+bound instead. Two independent causes, both outside this fix's scope:
+
+**(a) The model cannot see the value it is asked to report — KNOWN_LIMITATION.** The sanitized
+context carries interaction detections, not page text. The model's own reasons make the consequence
+explicit — it believes the price is not visible, so it re-proposes `scroll down 300` on a page that
+fits in the viewport. Three futile scrolls exhaust the bounded recovery and the task fails closed.
+The recovery bound and the failure classification are correct behaviour given those proposals.
+
+**(b) Goal Verification has no observed evidence type for this goal — NOT_PROVEN.**
+`verifyTaskGoal`'s shopping rule certifies a product goal when a *qualifying candidate* is
+extracted from an observed detection whose id/selector names a product/item/card/result, on a
+product URL. Probed deterministically against the real fixture DOM (no model, no browser):
+
+| Page | `classifyPage` | detections matching product/item/card/result | candidates | verifier |
+|---|---|---|---|---|
+| `/catalog` | `unknown` | **0** | **0** | `IN_PROGRESS` |
+| `/product/alpha-widget` | `unknown` | **0** | **0** | `IN_PROGRESS` |
+
+Product-page interactive ids are `nav-home, nav-catalog, nav-cart, qty, add-to-cart,
+back-to-catalog`; the price element (`#product-alpha-widget-price-24`) is not interactive and so is
+never a detection. Being *on* the product page therefore cannot certify a goal about a value shown
+on it, and the verifier correctly refuses rather than fabricating success. The codebase already
+documents this gap (Phase 17.2A: *"the sanitized context carries no row content. Phase 17.2 proper
+adds the text/content goal type for that"*).
+
+Adding a goal type, changing the fixture, or rewriting the task wording to make SUCCESS reachable
+would all be manufacturing the result. Per the task's stop conditions this was reported instead.
+
+### 0.7 Tests (Task 4)
+
+`tests/post179WorldModelGeneration.test.ts` — **13 tests, new**. Coverage:
+
+| # | Property |
+|---|---|
+| A1 | `invalidatePageGenerationState` clears generation-derived state **without** advancing the counter |
+| A2 | `advancePageGeneration` keeps its contract (counter advances, state cleared) |
+| B1 | an earlier-generation world model is rejected |
+| B1b | …and is still rejected after a navigation-time generation advance |
+| B2 | a fresh model for the new generation is accepted |
+| B3 | a same-document observation at the current generation is accepted |
+| B5 | a reference/payload generation disagreement is rejected |
+| C6 | **after an ACTION_NO_EFFECT recovery the counter never runs ahead of the newest generation the page reported**, with no stale rejection and no `Perception failed` |
+| C7 | after a recovery the counter equals the generation the fresh perception observed |
+| C8 | a recovery whose re-perception **fails** still cannot drift the counter, and fabricates no observation or success |
+| D9 | the old double-advance arithmetic rejects a fresh model; the fixed path accepts it |
+| E10 | being on the product page never fabricates SUCCESS for a value-reading goal |
+| F4 | a provider response computed from a superseded observation is still refused, never dispatched |
+
+**Verified to fail without the fix.** With the two production files reverted to HEAD (stash, run,
+restore, byte-compared against a backup): **5 of 13 fail** — A1, C6, C7, C8 and D9 — and the
+failures are the defect itself (`Perception failed` / the refusal of a fresh model). With the fix,
+13/13 pass. The other 8 are non-weakening pins: they pass either way, which is what "the guard was
+not touched" has to look like.
+
+### 0.8 Mutation check — the success-evidence boundary
+
+Two mutants of `verifyTaskGoal`, both reverted afterwards (`goalVerifier.ts` byte-identical to HEAD).
+
+| # | Mutation | Result |
+|---|---|---|
+| M1 | shopping SUCCESS no longer requires `qualifying.length > 0` (outer conjunct removed) | **not caught — and provably equivalent**: the inner `if (best)` guard still requires an observed candidate, so the mutant cannot return SUCCESS. Not a success-evidence defect. |
+| M2 | the boundary itself: SUCCESS returned on a product URL with **no** qualifying candidate | **caught** by the new **E10** (and by nothing else — `goalEvidenceFabrication.test.ts` does not cover this conjunct) |
+
+M2 is the fabrication this boundary exists to prevent, and E10 is what catches it.
+
+### 0.9 Limitations introduced or remaining
+
+1. **Multi-step SUCCESS is NOT_PROVEN** — blocked by §0.6(a)+(b), neither of which is this defect.
+2. **The `navigate`-action path still advances the counter unconditionally** (`agentLoop.ts`, the
+   post-navigation settle branch). It is the same *class* of unsupported bump, but it was **not**
+   observed to misfire in any run: a real navigation re-loads the content script, which builds a
+   world model and keeps the page counter ahead. Left unchanged deliberately — the proven bug was
+   the recovery path, and changing an unproven path is not this task. Flagged for the backlog.
+3. **Provider rate limiting is now the dominant environmental blocker.** 2 of 6 post-fix attempts'
+   calls returned `HTTP 503: groq (rate_limit)` and the openrouter fallback also failed. Longer
+   tasks cannot currently be run repeatedly.
+4. The popup render path remains structurally safe but not browser-proven (unchanged from before).
+5. No test asserts the fixture's own DOM shape, so §0.6(b) is recorded as a probe artifact rather
+   than a pinned test; E10 pins the *behaviour* (no fabricated success) without pinning the fixture.
+
+### 0.10 Artifacts and files
+
+| File | Status |
+|---|---|
+| `extension/src/agent/agentState.ts` | **modified** — `invalidatePageGenerationState`; `advancePageGeneration` delegates |
+| `extension/src/agent/agentLoop.ts` | **modified** — recovery path: invalidate-without-advance + re-anchor |
+| `tests/post179WorldModelGeneration.test.ts` | **new** — 13 regression tests |
+| `scratch/rr_multistep_proof.mjs` | modified — CDP preflight/reaping, deterministic exit, whitelisted identity metadata |
+| `docs/evidence/post-17-9/real-reasoner-multistep/real_reasoner_results.json` | replaced — post-fix run, 3 attempts |
+| `docs/evidence/post-17-9/real-reasoner-multistep/real_reasoner_results_retry_ratelimited.json` | new — follow-up retest (provider 503) |
+| `docs/evidence/post-17-9/real-reasoner-multistep/pre_fix_generation_desync.json` | new — pre-fix instrumented run carrying the guard's own numbers |
+| `docs/evidence/post-17-9/real-reasoner-multistep/goal_verification_coverage_probe.json` | new — deterministic §0.6(b) probe |
+| **Evidence contents** | metadata and booleans only. **0 email addresses, 0 card-shaped values, no raw page text, no request bodies.** |
+
+**Verification run:** full regression **120 files / 1595 tests** (was 119/1582 — +1 file, +13 tests)
+· security/privacy **20 files / 320** · backend pytests **215** · `tsc --noEmit` exit 0 ·
+`build:extension` exit 0 · `build:frontend` exit 0 · `git diff --check` clean.
+
+---
+
+## 1. Verdict up front (PRE-AUDIT, 2026-09-28 — superseded by §0)
 
 | | |
 |---|---|

@@ -64,6 +64,7 @@ import {
   FailureRecord,
   createAgentTaskState,
   advancePageGeneration,
+  invalidatePageGenerationState,
 } from './agentState';
 import {
   verifyActionEffect,
@@ -2177,8 +2178,14 @@ export class AgentLoop {
         // Bounded Recovery Trigger (Phase 6, strategy named by Phase 10):
         this.state.recoveryCount++;
         this.state.recoveryStrategy = recoveryDecision.strategy;
-        advancePageGeneration(this.state);
-        this.state.currentPageGeneration = this.state.perceptionGeneration;
+        //
+        // Stale-target protection: the failed action's generation is invalidated
+        // so its targets can never be reused. The generation counter is
+        // deliberately NOT advanced here. It is anchored to the generation the
+        // content script actually reported, and an increment with no matching
+        // world-model build drifts it ahead of the page - which makes the next
+        // FRESH world model look stale to normalizePerceptionResult.
+        invalidatePageGenerationState(this.state);
 
         if (this.subgoalGraph && this.hierarchicalGoal) {
           DynamicReplanner.replan({
@@ -2210,10 +2217,19 @@ export class AgentLoop {
             context = normalized.context;
             worldModel = normalized.worldModel;
             semanticContext = normalized.semanticContext;
-            // Invalidate the stale generation so the recovered action can only
-            // ground against the FRESH one (stale-target protection).
-            advancePageGeneration(this.state);
-            this.state.currentPageGeneration = this.state.perceptionGeneration;
+            //
+            // Re-anchor the generation counter to the generation the fresh
+            // perception actually OBSERVED, exactly as the perception cycle
+            // does. This is what lets the recovered action ground against the
+            // FRESH page (stale-target protection) and what keeps the next
+            // perception cycle comparing like with like. Advancing it a second
+            // time instead - with no further world-model build behind it - is
+            // precisely what desynchronised the loop from the page.
+            const observedGeneration = normalized.worldModel?.page?.pageGeneration;
+            if (typeof observedGeneration === 'number' && observedGeneration > 0) {
+              this.state.currentPageGeneration = observedGeneration;
+              this.state.perceptionGeneration = observedGeneration;
+            }
           }
         }
 

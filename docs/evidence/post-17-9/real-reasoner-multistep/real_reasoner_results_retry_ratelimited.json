@@ -1,0 +1,1447 @@
+{
+  "timestamp": "2026-09-29T02:41:40.075Z",
+  "work": "Post-17.9 — real-reasoner multi-step SUCCESS proof",
+  "taskWording": {
+    "goal": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
+    "namesTheProduct": false,
+    "note": "A goal that names a product pushes the model to name it in its reason, which the F-09 person_name heuristic refuses. A neutral goal is recorded separately and disclosed; no gate is changed either way."
+  },
+  "provider": {
+    "backend": "http://127.0.0.1:8010",
+    "realModel": true,
+    "stubbedProposer": false
+  },
+  "fixture": {
+    "origin": "http://localhost:4291",
+    "routes": [
+      "/",
+      "/catalog",
+      "/product/alpha-widget",
+      "/cart"
+    ],
+    "note": "product detail is reachable only through the catalog, so one guessed navigate cannot finish the task"
+  },
+  "cases": {
+    "MAIN": {
+      "class": "REAL_REASONER_PRODUCTION_SW",
+      "attempt": 3,
+      "task": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
+      "modelCycles": [],
+      "observedTransitions": [
+        {
+          "phase": "START",
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "phase": "FINAL",
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null,
+          "heading": null
+        }
+      ],
+      "actions": [],
+      "timeline": [
+        {
+          "status": "RUNNING",
+          "currentStep": 0,
+          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+        },
+        {
+          "status": "RUNNING",
+          "currentStep": 0,
+          "url": "http://localhost:4291/",
+          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 0,
+          "url": "http://localhost:4291/",
+          "perceptionGeneration": 0,
+          "reason": null
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "currentStep": 1,
+          "url": "http://localhost:4291/",
+          "perceptionGeneration": 16,
+          "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed."
+        }
+      ],
+      "wallClockMs": 617,
+      "domSamples": [
+        {
+          "t": 6,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 616,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        }
+      ],
+      "observedUrlSequence": [
+        "http://localhost:4291/"
+      ],
+      "liveTabActuallyMoved": false,
+      "finalObservedUrl": "http://localhost:4291/",
+      "finalObservedMarkers": [
+        "home"
+      ],
+      "finalObservedPrice": null,
+      "finalObservedHeading": null,
+      "finalStatus": "FAILED",
+      "finalGoalStatus": "FAILED",
+      "finalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.",
+      "distinctUrlsVisited": [
+        "http://localhost:4291/"
+      ],
+      "providerCalls": 1,
+      "providerCallsByStatus": {
+        "503": 1
+      },
+      "providerRttsMs": {
+        "n": 1,
+        "min": 272,
+        "p50": 272,
+        "p90": 272,
+        "max": 272
+      },
+      "observationLatencyMs": {
+        "n": 2,
+        "min": 1,
+        "p50": 1,
+        "p90": 1,
+        "max": 1
+      },
+      "totalTaskWallMs": 617,
+      "anyProviderCallCarriedSyntheticPII": false,
+      "browserActionsDispatched": 0,
+      "distinctActionTargets": [],
+      "observedEffects": 0,
+      "realReasonerCycles": 1,
+      "refusedByPersonNameHeuristic": false,
+      "verdictInputs": {
+        "reachedProduct": false,
+        "markerObserved": false,
+        "priceObserved": false,
+        "finalGoalStatus": "FAILED"
+      },
+      "successCameExclusivelyFromObservation": false,
+      "verdict": "NOT_PROVEN — real reasoner reached (1 call(s)), 0 browser action(s), 0 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
+      "classification": "NOT_PROVEN",
+      "swConsoleAll": [
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+        "[ServiceWorker] message received Object",
+        "[AgentTrace] service worker START_TASK received Object",
+        "TARGET_RESOLUTION_STARTED",
+        "TARGET_TAB_CANDIDATES Array(2)",
+        "[AgentTrace] containment scope established Object",
+        "TARGET_TAB_SELECTED Object",
+        "[AgentTrace] target resolved Object",
+        "TARGET_TAB_READY Object",
+        "[AgentTrace] target content script ready Object",
+        "[AgentTrace] first progress emitted",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] agent loop started",
+        "[AgentTrace] long-horizon state Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] subgoal selected Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] M6 failed Object",
+        "[AgentTrace] M6 failed Object",
+        "[AgentTrace] terminal progress emitted Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object"
+      ],
+      "swIdentityMeta": [
+        {
+          "i": 21,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 26,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "contextUrl": "http://localhost:4291/",
+              "worldModelId": "wm-g16-mum2luaa-lz4b"
+            }
+          ]
+        },
+        {
+          "i": 28,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "16"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "backendReachable": true,
+  "providerHealth": {
+    "status": "ok",
+    "reasoner": "groq",
+    "reasonerStatus": "AVAILABLE",
+    "model": "openai/gpt-oss-20b",
+    "fallbackConfigured": true,
+    "privacyFirewall": "ACTIVE",
+    "sensitiveDataSent": 0
+  },
+  "extensionId": "ihbbhmifbgfcibhjhcafakdkcppkccaf",
+  "serviceWorkerAttached": true,
+  "attempts": [
+    {
+      "class": "REAL_REASONER_PRODUCTION_SW",
+      "attempt": 1,
+      "task": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
+      "modelCycles": [],
+      "observedTransitions": [
+        {
+          "phase": "START",
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "phase": "TRANSITION",
+          "t": 707,
+          "url": "http://localhost:4291/catalog",
+          "markers": [],
+          "priceText": null,
+          "heading": null
+        },
+        {
+          "phase": "TRANSITION",
+          "t": 3195,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24",
+          "heading": "Alpha Widget"
+        },
+        {
+          "phase": "FINAL",
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24",
+          "heading": "Alpha Widget"
+        }
+      ],
+      "actions": [
+        {
+          "step": 1,
+          "action": {
+            "action": "click",
+            "target": "browse-catalog",
+            "reason": "Open the store catalog to view the product list"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated click action on known element 'browse-catalog'.",
+          "executionSuccess": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "Click on 'browse-catalog' triggered page navigation to 'http://localhost:4291/catalog'.",
+          "targetId": "browse-catalog",
+          "url": "http://localhost:4291/"
+        },
+        {
+          "step": 2,
+          "action": {
+            "action": "click",
+            "target": "alpha-widget-link",
+            "reason": "Open the first product listed in the catalog to view its product page and price"
+          },
+          "validationAllowed": false,
+          "validationReason": "Security Critic BLOCKED (GOAL_MISMATCH): Proposed action is unrelated to the current goal or subgoal.",
+          "executionSuccess": false,
+          "effectDetails": null,
+          "targetId": "alpha-widget-link",
+          "url": "http://localhost:4291/catalog"
+        },
+        {
+          "step": 3,
+          "action": {
+            "action": "click",
+            "target": "alpha-widget-link",
+            "reason": "Open the first product listed in the catalog to view its product page and price"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated click action on known element 'alpha-widget-link'.",
+          "executionSuccess": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "Click on 'alpha-widget-link' triggered page navigation to 'http://localhost:4291/product/alpha-widget'.",
+          "targetId": "alpha-widget-link",
+          "url": "http://localhost:4291/catalog"
+        },
+        {
+          "step": 4,
+          "action": {
+            "action": "scroll",
+            "direction": "down",
+            "amount": 300,
+            "reason": "Scroll down to reveal the product price on the product page"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated scroll down by 300px.",
+          "executionSuccess": false,
+          "effectStatus": "ACTION_NO_EFFECT",
+          "effectDetails": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.",
+          "url": "http://localhost:4291/product/alpha-widget"
+        }
+      ],
+      "timeline": [
+        {
+          "status": "RUNNING",
+          "currentStep": 0,
+          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+        },
+        {
+          "status": "RUNNING",
+          "currentStep": 0,
+          "url": "http://localhost:4291/",
+          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 0,
+          "url": "http://localhost:4291/",
+          "perceptionGeneration": 0,
+          "reason": null
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 1,
+          "url": "http://localhost:4291/",
+          "perceptionGeneration": 3,
+          "reason": null
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 2,
+          "url": "http://localhost:4291/catalog",
+          "perceptionGeneration": 5,
+          "reason": null
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 3,
+          "url": "http://localhost:4291/catalog",
+          "perceptionGeneration": 6,
+          "reason": null
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 4,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "perceptionGeneration": 8,
+          "reason": null
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "currentStep": 5,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "perceptionGeneration": 10,
+          "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed."
+        }
+      ],
+      "wallClockMs": 5011,
+      "domSamples": [
+        {
+          "t": 30,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 707,
+          "url": "http://localhost:4291/catalog",
+          "markers": [],
+          "priceText": null
+        },
+        {
+          "t": 1361,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 1964,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 2566,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 3195,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 3798,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 4402,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        },
+        {
+          "t": 5010,
+          "url": "http://localhost:4291/product/alpha-widget",
+          "markers": [
+            "product-detail"
+          ],
+          "priceText": "Price: 24"
+        }
+      ],
+      "observedUrlSequence": [
+        "http://localhost:4291/",
+        "http://localhost:4291/catalog",
+        "http://localhost:4291/product/alpha-widget"
+      ],
+      "liveTabActuallyMoved": true,
+      "finalObservedUrl": "http://localhost:4291/product/alpha-widget",
+      "finalObservedMarkers": [
+        "product-detail"
+      ],
+      "finalObservedPrice": "Price: 24",
+      "finalObservedHeading": "Alpha Widget",
+      "finalStatus": "FAILED",
+      "finalGoalStatus": "FAILED",
+      "finalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.",
+      "distinctUrlsVisited": [
+        "http://localhost:4291/",
+        "http://localhost:4291/catalog",
+        "http://localhost:4291/product/alpha-widget"
+      ],
+      "providerCalls": 5,
+      "providerCallsByStatus": {
+        "200": 4,
+        "503": 1
+      },
+      "providerRttsMs": {
+        "n": 5,
+        "min": 319,
+        "p50": 361,
+        "p90": 380,
+        "max": 380
+      },
+      "observationLatencyMs": {
+        "n": 9,
+        "min": 1,
+        "p50": 2,
+        "p90": 58,
+        "max": 58
+      },
+      "totalTaskWallMs": 5011,
+      "anyProviderCallCarriedSyntheticPII": false,
+      "browserActionsDispatched": 4,
+      "distinctActionTargets": [
+        "browse-catalog",
+        "alpha-widget-link"
+      ],
+      "observedEffects": 3,
+      "realReasonerCycles": 5,
+      "refusedByPersonNameHeuristic": false,
+      "verdictInputs": {
+        "reachedProduct": true,
+        "markerObserved": true,
+        "priceObserved": true,
+        "finalGoalStatus": "FAILED"
+      },
+      "successCameExclusivelyFromObservation": false,
+      "verdict": "NOT_PROVEN — real reasoner reached (5 call(s)), 4 browser action(s), 3 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
+      "classification": "NOT_PROVEN",
+      "swConsoleAll": [
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+        "[ServiceWorker] message received Object",
+        "[AgentTrace] service worker START_TASK received Object",
+        "TARGET_RESOLUTION_STARTED",
+        "TARGET_TAB_CANDIDATES Array(2)",
+        "[AgentTrace] containment scope established Object",
+        "TARGET_TAB_SELECTED Object",
+        "[AgentTrace] target resolved Object",
+        "TARGET_TAB_READY Object",
+        "[AgentTrace] target content script ready Object",
+        "[AgentTrace] first progress emitted",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] agent loop started",
+        "[AgentTrace] long-horizon state Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] subgoal selected Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] reasoning response received",
+        "[AgentTrace] action validated by M5",
+        "[AgentTrace] security critic Object",
+        "[AgentTrace] action passed privacy policy",
+        "[AgentTrace] requesting safety review",
+        "[AgentTrace] action passed safety review",
+        "[AgentTrace] executeAction started",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] containment decision Object",
+        "[AgentTrace] executeAction response received",
+        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
+        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
+        "[AgentTrace] subgoal completed Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] M6 next step",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] subgoal selected Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] reasoning response received",
+        "[AgentTrace] action validated by M5",
+        "[AgentTrace] security critic Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] reasoning response received",
+        "[AgentTrace] action validated by M5",
+        "[AgentTrace] security critic Object",
+        "[AgentTrace] action passed privacy policy",
+        "[AgentTrace] requesting safety review",
+        "[AgentTrace] action passed safety review",
+        "[AgentTrace] executeAction started",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] containment decision Object",
+        "[AgentTrace] executeAction response received",
+        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
+        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] M6 next step",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] reasoning response received",
+        "[AgentTrace] action validated by M5",
+        "[AgentTrace] security critic Object",
+        "[AgentTrace] action passed privacy policy",
+        "[AgentTrace] requesting safety review",
+        "[AgentTrace] action passed safety review",
+        "[AgentTrace] executeAction started",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] containment decision Object",
+        "[AgentTrace] executeAction response received",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] recovery decision Object",
+        "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] M6 failed Object",
+        "[AgentTrace] M6 failed Object",
+        "[AgentTrace] terminal progress emitted Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object"
+      ],
+      "swIdentityMeta": [
+        {
+          "i": 21,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 26,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "contextUrl": "http://localhost:4291/",
+              "worldModelId": "wm-g3-mum2lnal-e7lf"
+            }
+          ]
+        },
+        {
+          "i": 28,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "3"
+            }
+          ]
+        },
+        {
+          "i": 39,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 43,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 50,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "4",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 55,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "4",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g5-mum2lo44-vt4z"
+            }
+          ]
+        },
+        {
+          "i": 57,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "5"
+            }
+          ]
+        },
+        {
+          "i": 67,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "6",
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 72,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "6",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g6-mum2louf-ciyh"
+            }
+          ]
+        },
+        {
+          "i": 74,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "6"
+            }
+          ]
+        },
+        {
+          "i": 84,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 88,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 94,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "7",
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 99,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "7",
+              "contextUrl": "http://localhost:4291/product/alpha-widget",
+              "worldModelId": "wm-g8-mum2lpmf-1xfx"
+            }
+          ]
+        },
+        {
+          "i": 101,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "8"
+            }
+          ]
+        },
+        {
+          "i": 111,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 114,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 124,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "10",
+              "url": "http://localhost:4291/product/alpha-widget"
+            }
+          ]
+        },
+        {
+          "i": 129,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "10",
+              "contextUrl": "http://localhost:4291/product/alpha-widget",
+              "worldModelId": "wm-g10-mum2lqe6-rxkh"
+            }
+          ]
+        },
+        {
+          "i": 131,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class": "REAL_REASONER_PRODUCTION_SW",
+      "attempt": 2,
+      "task": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
+      "modelCycles": [],
+      "observedTransitions": [
+        {
+          "phase": "START",
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "phase": "TRANSITION",
+          "t": 616,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null,
+          "heading": null
+        },
+        {
+          "phase": "FINAL",
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null,
+          "heading": null
+        }
+      ],
+      "actions": [
+        {
+          "step": 1,
+          "action": {
+            "action": "click",
+            "target": "browse-catalog",
+            "reason": "Open the store catalog to view the product list"
+          },
+          "validationAllowed": true,
+          "validationReason": "Validated click action on known element 'browse-catalog'.",
+          "executionSuccess": true,
+          "effectStatus": "URL_NAVIGATION_OBSERVED",
+          "effectDetails": "Click on 'browse-catalog' triggered page navigation to 'http://localhost:4291/catalog'.",
+          "targetId": "browse-catalog",
+          "url": "http://localhost:4291/"
+        }
+      ],
+      "timeline": [
+        {
+          "status": "RUNNING",
+          "currentStep": 0,
+          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+        },
+        {
+          "status": "RUNNING",
+          "currentStep": 0,
+          "url": "http://localhost:4291/",
+          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 0,
+          "url": "http://localhost:4291/",
+          "perceptionGeneration": 0,
+          "reason": null
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 1,
+          "url": "http://localhost:4291/",
+          "perceptionGeneration": 12,
+          "reason": null
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "currentStep": 2,
+          "url": "http://localhost:4291/catalog",
+          "perceptionGeneration": 14,
+          "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed."
+        }
+      ],
+      "wallClockMs": 1831,
+      "domSamples": [
+        {
+          "t": 4,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 616,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 1228,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 1830,
+          "url": "http://localhost:4291/catalog",
+          "markers": [
+            "catalog"
+          ],
+          "priceText": null
+        }
+      ],
+      "observedUrlSequence": [
+        "http://localhost:4291/",
+        "http://localhost:4291/catalog"
+      ],
+      "liveTabActuallyMoved": true,
+      "finalObservedUrl": "http://localhost:4291/catalog",
+      "finalObservedMarkers": [
+        "catalog"
+      ],
+      "finalObservedPrice": null,
+      "finalObservedHeading": null,
+      "finalStatus": "FAILED",
+      "finalGoalStatus": "FAILED",
+      "finalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.",
+      "distinctUrlsVisited": [
+        "http://localhost:4291/",
+        "http://localhost:4291/catalog"
+      ],
+      "providerCalls": 2,
+      "providerCallsByStatus": {
+        "200": 1,
+        "503": 1
+      },
+      "providerRttsMs": {
+        "n": 2,
+        "min": 265,
+        "p50": 265,
+        "p90": 354,
+        "max": 354
+      },
+      "observationLatencyMs": {
+        "n": 4,
+        "min": 1,
+        "p50": 1,
+        "p90": 8,
+        "max": 8
+      },
+      "totalTaskWallMs": 1831,
+      "anyProviderCallCarriedSyntheticPII": false,
+      "browserActionsDispatched": 1,
+      "distinctActionTargets": [
+        "browse-catalog"
+      ],
+      "observedEffects": 1,
+      "realReasonerCycles": 2,
+      "refusedByPersonNameHeuristic": false,
+      "verdictInputs": {
+        "reachedProduct": false,
+        "markerObserved": false,
+        "priceObserved": false,
+        "finalGoalStatus": "FAILED"
+      },
+      "successCameExclusivelyFromObservation": false,
+      "verdict": "NOT_PROVEN — real reasoner reached (2 call(s)), 1 browser action(s), 1 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
+      "classification": "NOT_PROVEN",
+      "swConsoleAll": [
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+        "[ServiceWorker] message received Object",
+        "[AgentTrace] service worker START_TASK received Object",
+        "TARGET_RESOLUTION_STARTED",
+        "TARGET_TAB_CANDIDATES Array(2)",
+        "[AgentTrace] containment scope established Object",
+        "TARGET_TAB_SELECTED Object",
+        "[AgentTrace] target resolved Object",
+        "TARGET_TAB_READY Object",
+        "[AgentTrace] target content script ready Object",
+        "[AgentTrace] first progress emitted",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] agent loop started",
+        "[AgentTrace] long-horizon state Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] subgoal selected Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] reasoning response received",
+        "[AgentTrace] action validated by M5",
+        "[AgentTrace] security critic Object",
+        "[AgentTrace] action passed privacy policy",
+        "[AgentTrace] requesting safety review",
+        "[AgentTrace] action passed safety review",
+        "[AgentTrace] executeAction started",
+        "[AgentTrace] effect snapshot observed Object",
+        "[AgentTrace] containment decision Object",
+        "[AgentTrace] executeAction response received",
+        "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
+        "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+        "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
+        "[AgentTrace] subgoal completed Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] M6 next step",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] subgoal selected Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] M6 failed Object",
+        "[AgentTrace] M6 failed Object",
+        "[AgentTrace] terminal progress emitted Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object"
+      ],
+      "swIdentityMeta": [
+        {
+          "i": 21,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 26,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "contextUrl": "http://localhost:4291/",
+              "worldModelId": "wm-g12-mum2lrz2-sq3q"
+            }
+          ]
+        },
+        {
+          "i": 28,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "12"
+            }
+          ]
+        },
+        {
+          "i": 39,
+          "text": "[AgentTrace] effect snapshot observed Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 43,
+          "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+          "meta": [
+            {
+              "url": "http://localhost:4291/catalog"
+            }
+          ]
+        },
+        {
+          "i": 50,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "13",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 55,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "13",
+              "contextUrl": "http://localhost:4291/catalog",
+              "worldModelId": "wm-g14-mum2lsqf-qpt9"
+            }
+          ]
+        },
+        {
+          "i": 57,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "14"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class": "REAL_REASONER_PRODUCTION_SW",
+      "attempt": 3,
+      "task": "Open the store catalog at http://localhost:4291, open the first product listed, and report the price shown on its product page.",
+      "modelCycles": [],
+      "observedTransitions": [
+        {
+          "phase": "START",
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "phase": "FINAL",
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null,
+          "heading": null
+        }
+      ],
+      "actions": [],
+      "timeline": [
+        {
+          "status": "RUNNING",
+          "currentStep": 0,
+          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+        },
+        {
+          "status": "RUNNING",
+          "currentStep": 0,
+          "url": "http://localhost:4291/",
+          "reason": "Target tab discovered and ready. Starting visual privacy perception..."
+        },
+        {
+          "status": "IN_PROGRESS",
+          "goalStatus": "IN_PROGRESS",
+          "currentStep": 0,
+          "url": "http://localhost:4291/",
+          "perceptionGeneration": 0,
+          "reason": null
+        },
+        {
+          "status": "FAILED",
+          "goalStatus": "FAILED",
+          "currentStep": 1,
+          "url": "http://localhost:4291/",
+          "perceptionGeneration": 16,
+          "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed."
+        }
+      ],
+      "wallClockMs": 617,
+      "domSamples": [
+        {
+          "t": 6,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        },
+        {
+          "t": 616,
+          "url": "http://localhost:4291/",
+          "markers": [
+            "home"
+          ],
+          "priceText": null
+        }
+      ],
+      "observedUrlSequence": [
+        "http://localhost:4291/"
+      ],
+      "liveTabActuallyMoved": false,
+      "finalObservedUrl": "http://localhost:4291/",
+      "finalObservedMarkers": [
+        "home"
+      ],
+      "finalObservedPrice": null,
+      "finalObservedHeading": null,
+      "finalStatus": "FAILED",
+      "finalGoalStatus": "FAILED",
+      "finalReason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.",
+      "distinctUrlsVisited": [
+        "http://localhost:4291/"
+      ],
+      "providerCalls": 1,
+      "providerCallsByStatus": {
+        "503": 1
+      },
+      "providerRttsMs": {
+        "n": 1,
+        "min": 272,
+        "p50": 272,
+        "p90": 272,
+        "max": 272
+      },
+      "observationLatencyMs": {
+        "n": 2,
+        "min": 1,
+        "p50": 1,
+        "p90": 1,
+        "max": 1
+      },
+      "totalTaskWallMs": 617,
+      "anyProviderCallCarriedSyntheticPII": false,
+      "browserActionsDispatched": 0,
+      "distinctActionTargets": [],
+      "observedEffects": 0,
+      "realReasonerCycles": 1,
+      "refusedByPersonNameHeuristic": false,
+      "verdictInputs": {
+        "reachedProduct": false,
+        "markerObserved": false,
+        "priceObserved": false,
+        "finalGoalStatus": "FAILED"
+      },
+      "successCameExclusivelyFromObservation": false,
+      "verdict": "NOT_PROVEN — real reasoner reached (1 call(s)), 0 browser action(s), 0 observed effect(s); Goal Verification reported FAILED from observed state. Final status FAILED.",
+      "classification": "NOT_PROVEN",
+      "swConsoleAll": [
+        "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+        "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+        "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+        "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+        "[ServiceWorker] message received Object",
+        "[AgentTrace] service worker START_TASK received Object",
+        "TARGET_RESOLUTION_STARTED",
+        "TARGET_TAB_CANDIDATES Array(2)",
+        "[AgentTrace] containment scope established Object",
+        "TARGET_TAB_SELECTED Object",
+        "[AgentTrace] target resolved Object",
+        "TARGET_TAB_READY Object",
+        "[AgentTrace] target content script ready Object",
+        "[AgentTrace] first progress emitted",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] agent loop started",
+        "[AgentTrace] long-horizon state Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] harness cycle Object",
+        "[AgentTrace] perception started Object",
+        "[AgentTrace] perception started",
+        "[AgentTrace] multimodal perception complete Object",
+        "[ServiceWorker] response forwarded",
+        "[AgentLoop] perception completed",
+        "[AgentTrace] perception complete Object",
+        "[AgentTrace] multimodal perception complete Object",
+        "[AgentTrace] semantic understanding complete Object",
+        "[AgentTrace] subgoal selected Object",
+        "[AgentTrace] long-horizon update Object",
+        "[AgentTrace] requesting reasoning",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object",
+        "[AgentTrace] M6 failed Object",
+        "[AgentTrace] M6 failed Object",
+        "[AgentTrace] terminal progress emitted Object",
+        "[AgentTrace] output screen Object",
+        "[ServiceWorker] response forwarded Object"
+      ],
+      "swIdentityMeta": [
+        {
+          "i": 21,
+          "text": "[AgentTrace] perception started Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "url": "http://localhost:4291/"
+            }
+          ]
+        },
+        {
+          "i": 26,
+          "text": "[AgentTrace] perception complete Object",
+          "meta": [
+            {
+              "perceptionGeneration": "1",
+              "contextUrl": "http://localhost:4291/",
+              "worldModelId": "wm-g16-mum2luaa-lz4b"
+            }
+          ]
+        },
+        {
+          "i": 28,
+          "text": "[AgentTrace] semantic understanding complete Object",
+          "meta": [
+            {
+              "pageGeneration": "16"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dashboardLoaded": true,
+  "attemptSummary": [
+    {
+      "attempt": 1,
+      "classification": "NOT_PROVEN",
+      "providerCalls": 5,
+      "browserActions": 4,
+      "observedEffects": 3,
+      "finalGoalStatus": "FAILED",
+      "finalUrl": "http://localhost:4291/product/alpha-widget",
+      "finalMarkers": [
+        "product-detail"
+      ]
+    },
+    {
+      "attempt": 2,
+      "classification": "NOT_PROVEN",
+      "providerCalls": 2,
+      "browserActions": 1,
+      "observedEffects": 1,
+      "finalGoalStatus": "FAILED",
+      "finalUrl": "http://localhost:4291/catalog",
+      "finalMarkers": [
+        "catalog"
+      ]
+    },
+    {
+      "attempt": 3,
+      "classification": "NOT_PROVEN",
+      "providerCalls": 1,
+      "browserActions": 0,
+      "observedEffects": 0,
+      "finalGoalStatus": "FAILED",
+      "finalUrl": "http://localhost:4291/",
+      "finalMarkers": [
+        "home"
+      ]
+    }
+  ]
+}

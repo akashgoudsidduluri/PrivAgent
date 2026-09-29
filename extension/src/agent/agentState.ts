@@ -471,6 +471,33 @@ export function createAgentTaskState(
 }
 
 /**
+ * Invalidate the state derived from a page generation, WITHOUT advancing the
+ * generation counter.
+ *
+ * Stale-target protection needs the invalidation on its own. `AgentLoop` anchors
+ * `currentPageGeneration` to the generation the content script actually reported
+ * (`worldModel.page.pageGeneration`), and the stale-world-model guard in
+ * `normalizePerceptionResult` compares a received model against it
+ * (`liveGeneration < localGeneration`). Advancing the counter without a matching
+ * content-script world-model build therefore pushes it ahead of the page's own
+ * generation, and the NEXT genuinely fresh model is rejected as stale: the task
+ * aborts with "Perception failed" before Goal Verification is ever consulted.
+ * That is fail-closed, but it is a false positive - the model was not stale.
+ */
+export function invalidatePageGenerationState(
+  state: AgentTaskState,
+  generation: number = state.currentPageGeneration
+): AgentTaskState {
+  // Old element IDs and active world model ref belong to destroyed or mutated DOM tree; clear them
+  state.visitedElementIds = [];
+  state.activeWorldModelRef = null;
+  if (generation > 0) {
+    worldModelStore.invalidateGeneration(generation);
+  }
+  return state;
+}
+
+/**
  * Advance page generation on meaningful navigation or DOM re-render.
  * Clears stale DOM references from visited elements and resets transient failure count.
  */
@@ -488,11 +515,6 @@ export function advancePageGeneration(
   if (detectedPageType) {
     state.pageType = detectedPageType;
   }
-  // Old element IDs and active world model ref belong to destroyed or mutated DOM tree; clear them
-  state.visitedElementIds = [];
-  state.activeWorldModelRef = null;
-  if (previousGeneration > 0) {
-    worldModelStore.invalidateGeneration(previousGeneration);
-  }
+  invalidatePageGenerationState(state, previousGeneration);
   return state;
 }
