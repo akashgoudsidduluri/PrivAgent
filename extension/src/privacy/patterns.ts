@@ -80,6 +80,83 @@ export function isPotentialAccountNumber(text: string, surroundingContext?: stri
   return matchesKeyword(surroundingContext, KEYWORDS.ACCOUNT_NUMBER);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Contextual phone detection (M8 phone-gap remediation)
+//
+// WHY THIS EXISTS. `PATTERNS.PHONE` only matches a bare 10-digit run when it
+// begins with [6-9] — the Indian mobile numbering plan — or when it carries
+// separators. A real number in prose such as "Support line 5551234567" starts
+// with 5 and has no separators, so it matched nothing. The leading-digit
+// restriction is deliberate and is NOT relaxed here.
+//
+// WHY NOT JUST `\d{10}`. A bare 10-digit number is far more often a product ID,
+// order ID, invoice number, tracking number, timestamp or reference number. On
+// a 22-case corpus, treating every bare 10-digit run as a phone produced 13
+// false positives. Recall was not bought with precision.
+//
+// THE RULE. Three independent gates, ALL of which must hold, so no single gate
+// is load-bearing on its own:
+//
+//   G1 SHAPE   exactly 10 digits, not adjacent to another digit or a dash, so a
+//              longer numeric token is never split into a "phone".
+//   G2 CONTEXT a phone-intent word within a bounded window before or after the
+//              run. This is what separates "Support line 5551234567" from
+//              "Product ID 1234567890".
+//   G3 GUARD   an explicit non-phone identifier label immediately preceding the
+//              run wins over a generic intent word.
+//
+// Generic words (notably a bare "number") are deliberately NOT intent tokens:
+// "The number 1234567890 appears in the report" must not become a phone.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Words that introduce a phone number. Multi-word forms are listed as regex
+ * alternations because `matchesKeyword` does a plain substring test and
+ * KEYWORDS.PHONE's underscored entries ("contact_number") do not match the
+ * space-separated labels found in real markup ("Contact Number").
+ */
+const PHONE_INTENT_WORD =
+  /\b(?:phone|telephone|tel|mobile|cellphone|contact(?:\s+number|\s+no)?|support(?:\s+line)?|line|hotline|helpline|call(?:\s+us)?|dial|reach(?:\s+us)?|ring|sms|whatsapp|enquir(?:y|ies)|inquir(?:y|ies))\b/i;
+
+/**
+ * Labels that positively identify a number as something OTHER than a phone.
+ * Checked against the label immediately before the run, and it overrides G2.
+ */
+const NON_PHONE_LABEL_WORD =
+  /\b(?:id|ids|identifier|no|nos|num|code|zip|zipcode|postal|pin|invoice|inv|order|ord|tracking|track|reference|ref|acct|account|serial|ser|timestamp|time|epoch|sku|ean|isbn|upc|ssn|pan|aadhar|aadhaar|uid|utr|neft|ifsc|hash|uuid|guid|token|otp|mmid|trans|transaction|txn|doc|document|policy|passport|license|licence|lic|permit|reg|registration)\b/i;
+
+/** How far either side of the run a context word may sit. */
+const PHONE_CONTEXT_WINDOW_CHARS = 48;
+
+/**
+ * Detects an unformatted 10-digit phone number that `PATTERNS.PHONE` cannot
+ * see, but only when its surrounding text says it is a phone.
+ *
+ * Local and deterministic; no I/O, no network, no model. Returns a boolean so
+ * callers keep their existing confidence/source metadata.
+ */
+export function hasContextualPhone(text: string | null | undefined): boolean {
+  if (!text) return false;
+  // Cheap reject first: the rule needs a 10-digit run to exist at all.
+  if (!/\d/.test(text)) return false;
+
+  for (const match of text.matchAll(/(?<![\d-])(\d{10})(?![\d-])/g)) {
+    const at = match.index ?? 0;
+    const before = text.slice(Math.max(0, at - PHONE_CONTEXT_WINDOW_CHARS), at);
+    const after = text.slice(at + 10, Math.min(text.length, at + 10 + PHONE_CONTEXT_WINDOW_CHARS));
+
+    // G2 — phone intent nearby, on either side.
+    if (!PHONE_INTENT_WORD.test(before) && !PHONE_INTENT_WORD.test(after)) continue;
+
+    // G3 — an explicit non-phone label immediately before the run wins.
+    const label = before.match(/([A-Za-z][A-Za-z\s._-]{0,24})\s*[:=#-]?\s*$/)?.[1] ?? '';
+    if (label && NON_PHONE_LABEL_WORD.test(label)) continue;
+
+    return true;
+  }
+  return false;
+}
+
 /**
  * Validates a potential credit card number using the standard Luhn algorithm (mod 10).
  */

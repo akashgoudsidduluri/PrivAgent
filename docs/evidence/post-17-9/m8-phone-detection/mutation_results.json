@@ -1,0 +1,69 @@
+[
+  {
+    "mutant": "P1",
+    "description": "remove the context gate: any bare 10-digit run is a phone",
+    "caught": true,
+    "failing_tests": 6,
+    "passed_tests": 47,
+    "killed_by": "M8 phone gap \u2014 POSITIVE cases > the [6-9] leading-digit restriction is still in force;M8 phone gap \u2014 NEGATIVE cases (precision) > 7. arbitrary 10-digit, no phone context is NOT a phone;M8 phone gap \u2014 NEGATIVE cases (precision) > 7b. arbitrary 10-digit in prose is NOT a phone;M8 phone gap \u2014 NEGATIVE cases (precision) > 11. price-like number is NOT a phone"
+  },
+  {
+    "mutant": "P2",
+    "description": "remove the non-phone label guard: 'Product ID 1234567890' becomes a phone",
+    "caught": true,
+    "failing_tests": 2,
+    "passed_tests": 51,
+    "killed_by": "M8 phone gap \u2014 NEGATIVE cases (precision) > 14f. phone word but an ID label is NOT a phone;M8 phone gap \u2014 NEGATIVE cases (precision) > 14g. tracking with the word \"call\" is NOT a phone"
+  },
+  {
+    "mutant": "P3",
+    "description": "loosen the digit-length requirement: match any 7+ digit run",
+    "caught": true,
+    "failing_tests": 3,
+    "passed_tests": 50,
+    "killed_by": "M8 phone gap \u2014 NEGATIVE cases (precision) > 14i. 8-digit run in phone context is NOT a phone;M8 phone gap \u2014 NEGATIVE cases (precision) > 14k. 13-digit run in phone context is NOT a phone;M8 phone gap \u2014 NEGATIVE cases (precision) > 14m. 11-digit run in phone context is NOT a phone"
+  },
+  {
+    "mutant": "P4",
+    "description": "remove the digit boundary: a 12-digit serial is split into a phone",
+    "caught": true,
+    "failing_tests": 2,
+    "passed_tests": 51,
+    "killed_by": "M8 phone gap \u2014 NEGATIVE cases (precision) > 14k. 13-digit run in phone context is NOT a phone;M8 phone gap \u2014 NEGATIVE cases (precision) > 14m. 11-digit run in phone context is NOT a phone"
+  },
+  {
+    "mutant": "P5",
+    "description": "unwire the contextual rule from the M8 raw-value scanner",
+    "caught": true,
+    "failing_tests": 3,
+    "passed_tests": 50,
+    "killed_by": "M8 phone gap \u2014 detection metadata carries no raw value > the M8 raw-value scanner flags the prose phone it used to miss;M8 phone gap \u2014 detection metadata carries no raw value > a violation record contains only a path and a rule code;M8 phone gap \u2014 redaction, minimization and egress > an outbound payload carrying the phone is rejected by the firewall"
+  },
+  {
+    "mutant": "P6",
+    "description": "unwire the contextual rule from the DOM text detector",
+    "caught": true,
+    "failing_tests": 2,
+    "passed_tests": 51,
+    "killed_by": "M8 phone gap \u2014 detection metadata carries no raw value > end-to-end: the prose case the old rules missed is now detected in the real DOM;M8 phone gap \u2014 redaction, minimization and egress > context minimization carries no raw phone value"
+  },
+  {
+    "mutant": "P7",
+    "description": "restore the original [6-9]-only rule: the gap comes back",
+    "caught": true,
+    "failing_tests": 14,
+    "passed_tests": 39,
+    "killed_by": "M8 phone gap \u2014 POSITIVE cases > 1. clear phone context is detected as a phone;M8 phone gap \u2014 POSITIVE cases > 4c. phone with punctuation/context is detected as a phone;M8 phone gap \u2014 POSITIVE cases > 5a. prose introduction is detected as a phone;M8 phone gap \u2014 POSITIVE cases > 5b. prose support line is detected as a phone"
+  },
+  {
+    "mutant": "P8",
+    "description": "bypass redaction: record the raw value in the violation record",
+    "caught": true,
+    "failing_tests": 2,
+    "passed_tests": 51,
+    "killed_by": "M8 phone gap \u2014 detection metadata carries no raw value > a violation record contains only a path and a rule code;M8 phone gap \u2014 redaction, minimization and egress > an outbound payload carrying the phone is rejected by the firewall"
+  },
+  {
+    "restored_byte_identical": true
+  }
+]

@@ -1,5 +1,5 @@
 import { DetectionResult, DetectionSource, SensitiveEntityType } from './types';
-import { KEYWORDS, PATTERNS, isValidLuhn, isValidPAN, isPotentialCVV, isPotentialOTP, isPotentialAccountNumber, matchesKeyword } from './patterns';
+import { KEYWORDS, PATTERNS, isValidLuhn, isValidPAN, isPotentialCVV, isPotentialOTP, isPotentialAccountNumber, matchesKeyword, hasContextualPhone } from './patterns';
 
 /**
  * Safe CSS selector escaping compatible with all browser and JSDOM environments.
@@ -247,7 +247,7 @@ export function scanDOM(root?: Document | HTMLElement): ScanResult {
       detectedType = 'phone';
       confidence = 0.98;
       source = 'dom_autocomplete';
-    } else if (rawValue && PATTERNS.PHONE.test(rawValue)) {
+    } else if (rawValue && (PATTERNS.PHONE.test(rawValue) || hasContextualPhone(`${inputContext} ${rawValue}`))) {
       detectedType = 'phone';
       confidence = 0.95;
       source = 'text_pattern';
@@ -357,8 +357,13 @@ export function scanDOM(root?: Document | HTMLElement): ScanResult {
       confidence = 0.97;
       source = 'text_pattern';
     }
-    // 6. Phone number in text (strict phone pattern + length limits)
-    else if (PATTERNS.PHONE.test(text) && text.length <= 60) {
+    // 6. Phone number in text (strict phone pattern + length limits, plus the
+    //    contextual rule for unformatted 10-digit numbers the pattern cannot
+    //    see; context is read from the surrounding text, never from raw values)
+    else if (
+      (PATTERNS.PHONE.test(text) || (text.length <= 60 && hasContextualPhone(`${context} ${text}`))) &&
+      text.length <= 60
+    ) {
       detectedType = 'phone';
       confidence = 0.94;
       source = 'text_pattern';

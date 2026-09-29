@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-09-29T15:07:51.097Z",
+  "work": "M8 phone-detection gap — real Chrome verification",
+  "evidencePolicy": "Metadata, booleans and lengths only. The synthetic phone value is never recorded; only its digit count and whether the raw value appeared where it must not.",
+  "environment": {
+    "realChrome": true,
+    "stubbedDetection": false,
+    "reasonerInvoked": false,
+    "backendReachable": true,
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "extensionLoaded": true,
+    "serviceWorkerAttached": true
+  },
+  "cases": {
+    "pageUrl": "http://127.0.0.1:4292/",
+    "liveTabContents": {
+      "prosePhoneInDom": true,
+      "prosePhoneTextLength": 44,
+      "phoneDigitsInDom": 10,
+      "productIdInDom": true,
+      "productIdTextLength": 21,
+      "emailInDom": true,
+      "panInDom": true
+    },
+    "targetTabResolved": true,
+    "realContentScriptScan": {
+      "totalElementsScanned": 42,
+      "sensitiveElementsDetected": 7,
+      "detectionCount": 8,
+      "phoneDetectionCount": 5,
+      "categoriesDetected": [
+        "credit_card",
+        "email",
+        "input",
+        "phone"
+      ],
+      "detectionMetadataShape": [
+        "bbox",
+        "confidence",
+        "id",
+        "length",
+        "selector",
+        "source",
+        "type"
+      ],
+      "containsRawPhoneValue": false,
+      "containsRawEmail": false
+    },
+    "worldModelBoundary": {
+      "present": true,
+      "containsRawPhoneValue": false,
+      "textRegionCount": 16,
+      "protectedTextRegionCount": 5
+    },
+    "egressBoundary": {
+      "serializedReportLength": 1636,
+      "containsRawPhoneValue": false
+    }
+  },
+  "verdict": "PROVEN_REAL"
+}

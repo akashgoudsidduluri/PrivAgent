@@ -1,0 +1,50 @@
+{
+  "unit": "milliseconds per call",
+  "method": {
+    "warmup_iterations": 200,
+    "measured_iterations": 2000,
+    "corpus_size": 44,
+    "note": "jsdom/Node, real production functions. \"before\" is the pre-change path reconstructed by omitting the contextual clause."
+  },
+  "contextual_rule_alone": {
+    "n": 2000,
+    "min": 0.0001,
+    "p50": 0.0004,
+    "p95": 0.0009,
+    "p99": 0.0013,
+    "max": 1.0541,
+    "mean": 0.0015
+  },
+  "raw_value_scanner_after": {
+    "n": 2000,
+    "min": 0.0017,
+    "p50": 0.003,
+    "p95": 0.0052,
+    "p99": 0.0159,
+    "max": 4.2449,
+    "mean": 0.0073
+  },
+  "pre_change_phone_check_only": {
+    "n": 2000,
+    "min": 0.0001,
+    "p50": 0.0002,
+    "p95": 0.0004,
+    "p99": 0.0004,
+    "max": 0.018,
+    "mean": 0.0002
+  },
+  "overhead_p95_ms": 0.0048,
+  "false_positive_corpus": {
+    "strings_total": 44,
+    "newly_flagged_as_phone": 5,
+    "newly_flagged_detail": [
+      "<redacted len=44>",
+      "<redacted len=39>",
+      "<redacted len=26>",
+      "<redacted len=18>",
+      "<redacted len=15>"
+    ],
+    "previously_flagged_now_missed": 0,
+    "note": "Every newly-flagged string is a genuine phone; no non-phone string was newly flagged."
+  }
+}

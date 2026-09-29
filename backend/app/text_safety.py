@@ -28,6 +28,53 @@ EMAIL_PATTERN = re.compile(r"[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}", re.IGNORECA
 # Indian mobile numbers, boundary/separator-context anchored to avoid amounts.
 INDIAN_PHONE_PATTERN = re.compile(r"(?:^|[\s(-])(\+?91[-\s]?)?[6-9]\d{9}(?=$|[\s).,])")
 
+# Contextual phone detection (M8 phone-gap remediation).
+#
+# INDIAN_PHONE_PATTERN only matches a bare 10-digit run beginning with [6-9] or
+# one carrying separators, so "Support line 5551234567" matched nothing. The
+# leading-digit restriction is deliberate (Indian mobile numbering plan) and is
+# NOT relaxed. Instead a bare 10-digit run is accepted only when all three gates
+# hold, mirroring extension/src/privacy/patterns.ts:hasContextualPhone:
+#   shape   exactly 10 digits, not adjacent to another digit or a dash
+#   context a phone-intent word within 48 chars either side
+#   guard   an explicit non-phone identifier label before the run wins
+# A bare 10-digit number is far more often an order/invoice/tracking/reference
+# number, so a bare "\d{10}" rule is deliberately NOT used.
+PHONE_INTENT_WORD = re.compile(
+    r"\b(?:phone|telephone|tel|mobile|cellphone|contact(?:\s+number|\s+no)?|"
+    r"support(?:\s+line)?|line|hotline|helpline|call(?:\s+us)?|dial|"
+    r"reach(?:\s+us)?|ring|sms|whatsapp|enquir(?:y|ies)|inquir(?:y|ies))\b",
+    re.IGNORECASE,
+)
+NON_PHONE_LABEL_WORD = re.compile(
+    r"\b(?:id|ids|identifier|no|nos|num|code|zip|zipcode|postal|pin|invoice|inv|"
+    r"order|ord|tracking|track|reference|ref|acct|account|serial|ser|timestamp|"
+    r"time|epoch|sku|ean|isbn|upc|ssn|pan|aadhar|aadhaar|uid|utr|neft|ifsc|hash|"
+    r"uuid|guid|token|otp|mmid|trans|transaction|txn|doc|document|policy|passport|"
+    r"license|licence|lic|permit|reg|registration)\b",
+    re.IGNORECASE,
+)
+PHONE_CONTEXT_WINDOW_CHARS = 48
+_BARE_TEN_DIGIT = re.compile(r"(?<![\d-])(\d{10})(?![\d-])")
+_TRAILING_LABEL = re.compile(r"([A-Za-z][A-Za-z\s._-]{0,24})\s*[:=#-]?\s*$")
+
+
+def _has_contextual_phone(candidate: str) -> bool:
+    """True when a bare 10-digit run is introduced as a phone number."""
+    if not candidate or not any(ch.isdigit() for ch in candidate):
+        return False
+    for m in _BARE_TEN_DIGIT.finditer(candidate):
+        at = m.start()
+        before = candidate[max(0, at - PHONE_CONTEXT_WINDOW_CHARS):at]
+        after = candidate[at + 10:at + 10 + PHONE_CONTEXT_WINDOW_CHARS]
+        if not PHONE_INTENT_WORD.search(before) and not PHONE_INTENT_WORD.search(after):
+            continue
+        label_match = _TRAILING_LABEL.search(before)
+        if label_match and NON_PHONE_LABEL_WORD.search(label_match.group(1)):
+            continue
+        return True
+    return False
+
 # PAN: privacy-first over-approximation — 4th char accepts any letter so the
 # project's own synthetic fixture 'ABCDE1234F' is caught (audit HIGH-1).
 PAN_PATTERN = re.compile(r"\b[A-Z]{3}[A-Z][A-Z]\d{4}[A-Z]\b")
@@ -120,6 +167,9 @@ def _scan_structured(candidate: str) -> Optional[TextSafetyFinding]:
     m = INDIAN_PHONE_PATTERN.search(candidate)
     if m:
         return TextSafetyFinding(rule="phone", snippet=m.group(0)[:6] + "…")
+
+    if _has_contextual_phone(candidate):
+        return TextSafetyFinding(rule="phone", snippet="contextual…")
 
     m = CREDENTIAL_TOKEN_PATTERN.search(candidate)
     if m:

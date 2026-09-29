@@ -26,7 +26,7 @@
  * and a rule code.
  */
 
-import { PATTERNS, isValidLuhn, isValidPAN } from './patterns';
+import { PATTERNS, isValidLuhn, isValidPAN, hasContextualPhone } from './patterns';
 import { assertZeroLeakageInPayload } from '../ocr/ocrSecurityBoundary';
 
 export type RawValueRule =
@@ -103,7 +103,9 @@ function valueRuleViolations(text: string): RawValueRule[] {
     hits.push('account_number');
   }
 
-  if (INDIAN_PHONE_RULE.test(text) || PATTERNS.PHONE.test(text)) hits.push('phone');
+  if (INDIAN_PHONE_RULE.test(text) || PATTERNS.PHONE.test(text) || hasContextualPhone(text)) {
+    hits.push('phone');
+  }
 
   const isDateOrTimestamp =
     /\b\d{1,2}-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2,4}\b/i.test(text) ||
