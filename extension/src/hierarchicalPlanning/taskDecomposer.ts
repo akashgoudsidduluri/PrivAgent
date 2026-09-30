@@ -139,6 +139,15 @@ function extractEntitiesAndConstraints(
   // Fallback simple noun extraction for common categories
   if (entities.length === 0) {
     const tokens = prompt
+      // A URL is an ADDRESS, not page content. Strip it before tokenising so a
+      // host/port fragment can never be manufactured into a target entity.
+      // Without this, "open the store catalog at http://localhost:4174 and open
+      // the first product listed" yields the entity "store catalog
+      // httplocalhost4174" — a mangled URL asserted as the product to search
+      // for, which no affordance on any page can ever match. That fabricated
+      // subgoal is what drove the wasted reasoning cycles after the first
+      // navigation: the planner was hunting a product that was never named.
+      .replace(/https?:\/\/\S+/gi, ' ')
       .replace(/[^\w\s-]/g, '')
       .split(/\s+/)
       .filter((t) => t.length > 2);
@@ -268,7 +277,14 @@ export function decomposeTask(
         `Enter search query "${searchTarget}" into search box`,
         'type',
         searchPrereq,
-        { type: 'AFFORDANCE_AVAILABLE', description: 'Query results displayed' },
+        // The observed affordance that makes THIS subgoal's own action
+        // (`type` a query into a search box) groundable. Named, so the
+        // condition can be proven or refuted from the observed affordance set
+        // instead of degrading to "the page has affordances", which
+        // `discoverActionAffordances` satisfies on every document via its
+        // unconditional `SCROLL`. The POST-condition ("results are displayed")
+        // is a page-state claim and is deliberately not asserted here.
+        { type: 'AFFORDANCE_AVAILABLE', expectedValue: 'ENTER_QUERY', description: 'Search query input available on the observed page' },
         searchTarget
       );
 
@@ -307,6 +323,23 @@ export function decomposeTask(
           'Navigate to commerce catalog or store front',
           'navigate',
           [],
+          // POST-17.10 — KNOWN-UNVERIFIABLE, DELIBERATELY UNCHANGED.
+          //
+          // "Store catalog reachable" is a DESTINATION claim. It cannot be
+          // expressed with any existing observation-backed condition without
+          // inventing destination ontology: `URL_CONTAINS` would need a
+          // hardcoded store domain, `AFFORDANCE_AVAILABLE` needs a named
+          // affordance that means "catalog", and neither exists. The
+          // destination-intent design (a declared destination on the subgoal,
+          // matched against observed page identity) is the required future
+          // change; it is deliberately NOT invented here.
+          //
+          // Consequence, measured not assumed: `GoalProgressTracker` now fails
+          // this unnamed condition closed, so this subgoal stays IN_PROGRESS
+          // and the dependent SEARCH/SELECT/VERIFY chain stays unreachable,
+          // which surfaces as `NEEDS_REPLAN`. That is the safe direction — it
+          // cannot fabricate completion, and Goal Verification remains the sole
+          // task-SUCCESS authority.
           { type: 'AFFORDANCE_AVAILABLE', description: 'Store catalog reachable' }
         );
       } else {
@@ -320,7 +353,10 @@ export function decomposeTask(
         `Search catalog for product "${productQuery}"`,
         'type',
         searchPrereq,
-        { type: 'AFFORDANCE_AVAILABLE', description: 'Catalog results presented' },
+        // Named for the same reason as the INFORMATION_RETRIEVAL SEARCH above:
+        // the observed affordance that makes `type`ing a product query into the
+        // catalog groundable. Naming it keeps the condition falsifiable.
+        { type: 'AFFORDANCE_AVAILABLE', expectedValue: 'ENTER_QUERY', description: 'Catalog query input available on the observed page' },
         productQuery
       );
 
@@ -435,6 +471,18 @@ export function decomposeTask(
         `Perceive page and locate candidate controls relevant to "${highLevelGoal.sanitizedGoalDescription}"`,
         'inspect',
         [],
+        // POST-17.10 — KNOWN-UNVERIFIABLE, DELIBERATELY UNCHANGED.
+        //
+        // "Controls identified" is an EXISTENCE claim, not a named-affordance
+        // claim, and no single `ActionAffordanceType` expresses it. Wiring
+        // `SCROLL` would be the forbidden "always true in another form":
+        // `discoverActionAffordances` appends `SCROLL` unconditionally for
+        // every document, so it would reintroduce exactly the vacuous
+        // verification this condition previously had. The required future
+        // change is a first-class, page-derived "the page exposes N
+        // interactive elements" observation distinct from the affordance set;
+        // it is deliberately NOT invented here. See the sibling comment on
+        // the ECOMMERCE NAVIGATE subgoal above.
         { type: 'AFFORDANCE_AVAILABLE', description: 'Controls identified' }
       );
 

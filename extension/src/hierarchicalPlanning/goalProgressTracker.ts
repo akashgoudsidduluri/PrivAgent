@@ -19,6 +19,15 @@
  *   * `CUSTOM`                             -> falls through to the same `true`
  *
  * Five of the seven declared condition types therefore verified nothing at all.
+ *
+ * POST-17.10. `AFFORDANCE_AVAILABLE` was the one holdout Phase 17.6 missed.
+ * Its empty-`expectedValue` form fell back to `affordances.length > 0`, which
+ * is not a claim about the subgoal at all: `discoverActionAffordances` appends
+ * a `SCROLL` affordance unconditionally for every document
+ * (`actionAffordance.ts`), so the condition was satisfied by any page
+ * whatsoever — including one with zero controls. It is now the seventh
+ * condition type to require a NAMED affordance that is actually observed, and
+ * an unnamed `AFFORDANCE_AVAILABLE` fails closed like its six siblings.
  * Read as a status oracle that is exactly "an action was dispatched and
  * returned without error" wearing a verification interface: the DISPATCH
  * SUCCESS != GOAL SUCCESS invariant in a second location the 17.2A goal
@@ -254,18 +263,30 @@ export class GoalProgressTracker {
       }
 
       case 'AFFORDANCE_AVAILABLE': {
+        // The claim is "the OBSERVED affordance set contains THIS named
+        // affordance" — not "the page has affordances". With no name there is
+        // nothing to look for, and an unnamed condition previously degraded to
+        // `affordances.length > 0`. That test is vacuous: `discoverActionAffordances`
+        // appends an unconditional `SCROLL` affordance for every document, so it
+        // was satisfied by every page, including one with no controls at all —
+        // a "verification" that could never fail. Absence of evidence is never
+        // evidence of completion.
         const want = String(cond.expectedValue ?? '').trim();
+        if (!want) {
+          return verdict(
+            false,
+            `Subgoal ${subgoal.id} declares AFFORDANCE_AVAILABLE with no named affordance, so no specific affordance can be shown present.`
+          );
+        }
         const affordances = semantic?.affordances ?? [];
-        const found = want
-          ? affordances.some(
-              (a) => a.type === want || mentions(a.description ?? '', want) || a.targetElementId === want
-            )
-          : affordances.length > 0;
+        const found = affordances.some(
+          (a) => a.type === want || mentions(a.description ?? '', want) || a.targetElementId === want
+        );
         return verdict(
           found,
           found
-            ? `Affordance "${want || 'any'}" is available in the observed affordance set.`
-            : `Affordance "${want || 'any'}" is not available in the observed affordance set.`
+            ? `Affordance "${want}" is available in the observed affordance set.`
+            : `Affordance "${want}" is not available in the observed affordance set.`
         );
       }
 
