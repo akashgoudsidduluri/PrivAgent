@@ -1,0 +1,152 @@
+{
+  "realistic": {
+    "unit": "milliseconds per call",
+    "warmup_iterations": 50,
+    "measured_iterations": 300,
+    "page": {
+      "text_regions_considered": 3,
+      "facts_extracted": 3,
+      "facts_to_model": 3,
+      "dropped_sensitive_candidates": 0,
+      "quarantined_injection_candidates": 0
+    },
+    "steps": {
+      "world_model_build": {
+        "n": 300,
+        "min": 8.734,
+        "p50": 12.717,
+        "p90": 19.165,
+        "p95": 23.858,
+        "p99": 56.393,
+        "max": 59.028,
+        "mean": 14.455
+      },
+      "semantic_observation": {
+        "n": 300,
+        "min": 0.012,
+        "p50": 0.013,
+        "p90": 0.02,
+        "p95": 0.051,
+        "p99": 0.48,
+        "max": 2.361,
+        "mean": 0.035
+      },
+      "freshness_gate": {
+        "n": 300,
+        "min": 0,
+        "p50": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 0.001,
+        "max": 0.899,
+        "mean": 0.003
+      },
+      "sanitize_facts": {
+        "n": 300,
+        "min": 0,
+        "p50": 0.001,
+        "p90": 0.001,
+        "p95": 0.001,
+        "p99": 0.013,
+        "max": 0.576,
+        "mean": 0.003
+      },
+      "goal_verification": {
+        "n": 300,
+        "min": 0.045,
+        "p50": 0.051,
+        "p90": 0.097,
+        "p95": 0.149,
+        "p99": 4.592,
+        "max": 7.173,
+        "mean": 0.167
+      },
+      "observe_then_verify_end_to_end": {
+        "n": 300,
+        "min": 0.071,
+        "p50": 0.079,
+        "p90": 0.123,
+        "p95": 0.168,
+        "p99": 1.586,
+        "max": 1.927,
+        "mean": 0.127
+      }
+    },
+    "added_over_world_model_build_p95_ms": -23.807
+  },
+  "adversarial": {
+    "unit": "milliseconds per call",
+    "warmup_iterations": 50,
+    "measured_iterations": 300,
+    "page": {
+      "text_regions_considered": 28,
+      "facts_extracted": 24,
+      "facts_to_model": 24,
+      "dropped_sensitive_candidates": 0,
+      "quarantined_injection_candidates": 1
+    },
+    "steps": {
+      "world_model_build": {
+        "n": 300,
+        "min": 9.822,
+        "p50": 14.742,
+        "p90": 23.076,
+        "p95": 33.18,
+        "p99": 58.439,
+        "max": 74.173,
+        "mean": 17.102
+      },
+      "semantic_observation": {
+        "n": 300,
+        "min": 0.075,
+        "p50": 0.091,
+        "p90": 0.131,
+        "p95": 0.158,
+        "p99": 3.514,
+        "max": 7.042,
+        "mean": 0.167
+      },
+      "freshness_gate": {
+        "n": 300,
+        "min": 0,
+        "p50": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0.026,
+        "mean": 0
+      },
+      "sanitize_facts": {
+        "n": 300,
+        "min": 0,
+        "p50": 0,
+        "p90": 0.001,
+        "p95": 0.001,
+        "p99": 0.002,
+        "max": 0.469,
+        "mean": 0.002
+      },
+      "goal_verification": {
+        "n": 300,
+        "min": 0.032,
+        "p50": 0.033,
+        "p90": 0.047,
+        "p95": 0.064,
+        "p99": 0.078,
+        "max": 1.687,
+        "mean": 0.044
+      },
+      "observe_then_verify_end_to_end": {
+        "n": 300,
+        "min": 0.114,
+        "p50": 0.135,
+        "p90": 0.181,
+        "p95": 0.233,
+        "p99": 2.204,
+        "max": 23.682,
+        "mean": 0.267
+      }
+    },
+    "added_over_world_model_build_p95_ms": -33.022
+  }
+}

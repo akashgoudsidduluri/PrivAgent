@@ -90,6 +90,29 @@ export interface ModelFacingContext {
     entities: Array<{ id: string; type: string; label: string; confidence: number; actionIds: string[] }>;
     affordances: Array<{ id: string; type: string; targetElementId?: string; description: string; requiresConfirmation: boolean }>;
     promptInjectionDetected: boolean;
+    /**
+     * Post-17.9. Sanitized, bounded display facts. Content only — no tab id,
+     * document URL, page generation or timestamp, which stay device-local in
+     * the companion `SemanticObservation`.
+     */
+    facts?: import('../semanticObservation/types').SanitizedSemanticFact[];
+    /**
+     * POST-17.10 Step 10.2 (G2) — the user's DECLARED destination.
+     *
+     * Projected here so this view stays FAITHFUL to the payload it was built
+     * from. Before Step 10.2 this projection silently dropped the declaration,
+     * which meant the module that documents itself as "the ONE minimization code
+     * path every provider uses" disagreed with `minimizeAgentContext`, which
+     * forwards `semantic_context` wholesale. Two model-facing representations
+     * of the same context, differing on exactly the field that tells the model
+     * where the user asked to go.
+     *
+     * The value is passed through by reference and never widened, narrowed or
+     * recomputed here: minimization removes detections, it does not reinterpret
+     * a user declaration. It is also the same data the production backend path
+     * already receives, so projecting it adds no new egress channel.
+     */
+    declaredDestination?: import('../hierarchicalPlanning/hierarchicalTypes').DeclaredDestinationConstraint;
   };
 }
 
@@ -278,6 +301,15 @@ export function minimizeAgentContext(
     ocr_metrics: payload.ocr_metrics ? { ...payload.ocr_metrics } : null,
     ...(payload.page_type ? { page_type: payload.page_type } : {}),
     ...(payload.semantic_context ? { semantic_context: payload.semantic_context } : {}),
+    //
+    // Post-17.9. The OCR observation's precedents apply: this is carried through
+    // minimization because goal verification reads it, and it is stripped at the
+    // single egress boundary because it is device-local provenance. Minimization
+    // still only ever REMOVES detections — this field is passed through, never
+    // widened, and it introduces no new provider text channel (the facts
+    // themselves travel inside `semantic_context`, which minimization already
+    // forwards).
+    ...(payload.semanticObservation ? { semanticObservation: payload.semanticObservation } : {}),
   };
 
   // ── Privacy firewall: refuse to hand out anything that fails the scan ──────
@@ -401,6 +433,16 @@ export function buildModelFacingContext(
         entities: payload.semantic_context.entities,
         affordances: payload.semantic_context.affordances,
         promptInjectionDetected: payload.semantic_context.promptInjectionDetected,
+        // Post-17.9. Sanitized, bounded display facts, so the reasoner can read
+        // a displayed value instead of guessing at one. Already M8-screened and
+        // bounded upstream; this projection only NARROWS (content only — no tab
+        // id, document URL, generation or timestamp) and adds no new channel.
+        facts: payload.semantic_context.facts,
+        // POST-17.10 Step 10.2 (G2). Read straight from the typed interface, so
+        // this projection cannot drift from the payload again: if the field is
+        // declared on `SanitizedSemanticContext`, omitting it here is a type
+        // error rather than a silent semantic loss.
+        declaredDestination: payload.semantic_context.declaredDestination,
       }
     } : {}),
   };

@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-09-30T17:33:28.916Z",
+  "work": "Safe multi-step end-to-end through the complete agent pipeline",
+  "evidencePolicy": "Metadata, gate verdicts and URLs only. No raw values are read, logged or persisted.",
+  "inputs": {
+    "dashboardOrigin": "http://localhost:5173",
+    "targetOrigin": "http://localhost:4174",
+    "task": "http://localhost:4174/search.html find information about the store catalog",
+    "reasoner": "REAL (groq)"
+  },
+  "environment": {
+    "fixtureRoot": 200,
+    "fixtureCatalog": 200,
+    "dashboard": 200,
+    "backend": 200,
+    "reasoner": "groq",
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "extensionLoaded": true
+  },
+  "boundaries": {
+    "tabsBefore": [
+      {
+        "id": 311784773,
+        "origin": "null"
+      },
+      {
+        "id": 311784774,
+        "origin": "http://localhost:5173"
+      }
+    ],
+    "dashboardTabId": 311784774,
+    "targetTabOpenBefore": false,
+    "tabsAfter": [
+      {
+        "id": 311784773,
+        "origin": "null",
+        "pathname": "blank",
+        "active": false
+      },
+      {
+        "id": 311784774,
+        "origin": "http://localhost:5173",
+        "pathname": "/",
+        "active": true
+      }
+    ],
+    "targetTabId": null,
+    "finalTargetPathname": null
+  },
+  "provider": {
+    "calls": 0,
+    "responsesReceived": 0,
+    "m5Passed": 0,
+    "dispatches": 0,
+    "dispatchesCompleted": 0,
+    "criticRuns": 0,
+    "containmentDenied": 0,
+    "perceptionCycles": 0,
+    "trace": [
+      "[AgentTrace] service worker START_TASK received {\"taskLength\":\"74\"}",
+      "TARGET_RESOLUTION_STARTED",
+      "TARGET_TAB_CANDIDATES {\"0\":\"Object\",\"1\":\"Object\"}",
+      "TARGET_TAB_FAILED: no eligible tab found {\"failureCode\":\"DESTINATION_REQUIRED\"}",
+      "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\"}",
+      "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}",
+      "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790789625157\"}",
+      "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790789625157\",\"targetFound\":\"false\",\"tabId\":\"undefined\",\"urlOrigin\":\"\"}",
+      "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790789640157\"}",
+      "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790789640157\",\"targetFound\":\"false\",\"tabId\":\"undefined\",\"urlOrigin\":\"\"}",
+      "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790789655157\"}",
+      "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790789655157\",\"targetFound\":\"false\",\"tabId\":\"undefined\",\"urlOrigin\":\"\"}",
+      "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790789670157\"}",
+      "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790789670157\",\"targetFound\":\"false\",\"tabId\":\"undefined\",\"urlOrigin\":\"\"}",
+      "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790789685157\"}",
+      "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790789685157\",\"targetFound\":\"false\",\"tabId\":\"undefined\",\"urlOrigin\":\"\"}",
+      "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790789700157\"}",
+      "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790789700157\",\"targetFound\":\"false\",\"tabId\":\"undefined\",\"urlOrigin\":\"\"}"
+    ]
+  },
+  "steps": [],
+  "goalVerification": {
+    "trace": [],
+    "goalStatus": null,
+    "stepOutcomes": []
+  },
+  "outcome": {
+    "envelopeCount": 2,
+    "envelopeStatuses": [
+      "FAILED@0",
+      "FAILED@0"
+    ],
+    "finalStatus": "FAILED",
+    "finalGoalStatus": null,
+    "finalReason": "No target web tab is open and no destination could be determined from the task. Name a site explicitly (for example \"open https://example.com\" or \"open google and search for cats\"), or open the page y",
+    "finalUrl": null
+  },
+  "verdict": "FAILED"
+}

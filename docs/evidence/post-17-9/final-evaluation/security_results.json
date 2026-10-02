@@ -1,0 +1,99 @@
+{
+  "audit": "FINAL POST-17.9 EVALUATION / RELEASE AUDIT",
+  "timestamp": "2026-09-29",
+  "head": "85e9790",
+  "headNote": "M8 phone work committed and pushed. Semantic-observation work is still UNCOMMITTED and is the subject of finding P1-01.",
+
+  "architecture": {
+    "gateOrderVerifiedInProductionCode": true,
+    "order": [
+      "groundProposedTarget (agentLoop.ts:1139)",
+      "validateAction / M5 (agentLoop.ts:1211)",
+      "reviewProposedAction / Security Critic (agentLoop.ts:1337)",
+      "assessActionRisk + verifySemanticAction (agentLoop.ts:1476)",
+      "user confirmation gate (agentLoop.ts:1558)",
+      "evaluateContainment (agentLoop.ts:1694)",
+      "executeAction / dispatch (agentLoop.ts:1753)",
+      "verifyActionEffect (agentLoop.ts:2013)",
+      "verifyTaskGoal (agentLoop.ts:2824)"
+    ],
+    "successOnlyFromObservedEvidence": true,
+    "notes": [
+      "navigationDestination is documented in StepRecord as an INTENT, not an observation, and goal verification reads step.url (the observed tab URL) instead.",
+      "executionSuccess is dispatch state only; it is not read as goal evidence.",
+      "RetainedAction replaces type/select values with valueLength before any retention.",
+      "M5 screens action.reason for PII before authorization, so retained free text cannot smuggle a raw value."
+    ]
+  },
+
+  "recovery": {
+    "verdict": "SOUND",
+    "checks": {
+      "recoveryProposesOnly": true,
+      "reEntersGrounding": "agentLoop.ts:1226 re-runs groundProposedTarget on the healed action",
+      "reEntersM5": "agentLoop.ts:1232 re-runs validateAction on the healed action",
+      "cannotAuthorizeItself": true,
+      "cannotFabricateSuccess": true,
+      "cannotBypassContainment": true
+    }
+  },
+
+  "privacy": {
+    "method": "Live serialization audit. Synthetic RFC 2606 PII was pushed through the REAL production serializers and the emitted bytes inspected. Not a keyword grep.",
+    "pathsAudited": [
+      "scanDOM detections",
+      "minimizeAgentContext payload + modelView",
+      "buildBrowserWorldModel",
+      "buildSemanticObservation facts + toSanitizedFacts (model-facing)",
+      "sanitizeRetainedAction (type/select/click)",
+      "validateAction reason screening",
+      "scanForRawSensitiveValues violation records",
+      "AgentTaskState including steps[]"
+    ],
+    "rawPiiOutbound": {
+      "email": "blocked",
+      "phone": "blocked",
+      "credit_card": "blocked",
+      "password": "blocked",
+      "pan_in_prose": "LEAK — see P1-01",
+      "person_name_in_prose": "LEAK — see P1-01",
+      "address_in_prose": "LEAK — see P1-01",
+      "account_number_in_prose": "LEAK — see P1-01",
+      "otp_in_prose": "LEAK — see P1-01"
+    }
+  },
+
+  "findings": [
+    {
+      "id": "P1-01",
+      "severity": "P1",
+      "title": "Prose-embedded PII reaches the provider through the new semantic-facts channel",
+      "status": "PROVEN, UNFIXED — blocks committing the semantic-observation work",
+      "introducedBy": "post-17.9 semantic observation (UNCOMMITTED)",
+      "preExistingComponent": "The world model already held this text, but the world model is NEVER egressed, so no provider exposure existed before this channel.",
+      "rootCause": "rawValueScanner applies ANCHORED whole-value shapes (isValidPAN = /^[A-Z]{5}[0-9]{4}[A-Z]$/, BARE_DIGIT_RUN = /^[\\d\\s-]{9,}$/, isValidLuhn on 13-19 digits). PII embedded in prose does not match any anchored shape, so the re-screen passes it. Measured: '<PAN>' -> [pan] but 'PAN <PAN> on file' -> []. '1234567890' -> [account_number] but 'Account number <10-DIGITS>' -> [].",
+      "proof": "scratch/p1_proof.test.ts — the literal strings appear in JSON.stringify(minimizeAgentContext(...).payload), the exact object POSTed to the provider.",
+      "whyNotCaughtEarlier": "The G5 test proved facts are a strict SUBSET of world-model text, which is true. It did not establish that the subset is itself PII-free in prose.",
+      "exactRemediationRequired": [
+        "1. Add a PROSE-EMBEDDED scan to the fact re-screen in extension/src/semanticObservation/factExtraction.ts screenFact(): apply each sensitive shape to SUBSTRINGS of the candidate, not the whole string (PAN / Luhn / labelled account / labelled OTP / address).",
+        "2. Reuse the existing F-09 person-name heuristic shape rather than inventing a new name rule, and apply it to fact displayText; drop the fact on a match.",
+        "3. Prefer a WORD-LEVEL extraction (label + adjacent value) so the fact carries 'Price: 24' and not the whole surrounding paragraph, which reduces the exposed surface structurally rather than only by filtering.",
+        "4. Add a regression test that asserts no fact's displayText or displayValue matches any prose-embedded PII shape, and that the minimized payload contains none.",
+        "5. Re-run the real-reasoner PROVEN_REAL run afterwards; the multi-step proof depends on this channel."
+      ],
+      "notDoneBecause": "The audit instruction is to prove a P0/P1 and report the exact remediation rather than silently make a large architectural change. Options 1-3 are a design decision for the maintainer.",
+      "blastRadiusIfUnfixed": "No released exposure: the work is uncommitted. Committing it as-is would introduce the first provider-visible free-text PII path in the product."
+    }
+  ],
+
+  "knownLimitationsNotTreatedAsDefects": [
+    "General open-web autonomous browsing",
+    "Authenticated sites",
+    "Cross-origin iframe complexity",
+    "OCR autonomous reasoning limitations",
+    "Provider rate limits",
+    "US/non-Indian bare phone-number recall (deliberate precision/recall trade)",
+    "actionValidator [6-9] rule (action authorization, not page PII discovery)",
+    "Model/provider latency"
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "work": "POST-17.10 step 8 — production decomposer + production goal tracker over the real Step 8 Chrome capture",
+  "provenance": {
+    "observation": "PROVEN_REAL — rebuilt production extension, real Chrome tab, real configured reasoner",
+    "decomposer": "PROVEN_REAL — production module, executed on the real user task",
+    "tracker": "PROVEN_REAL — production module, executed on the real captured observation",
+    "inBrowserE2E": "PARTIAL. The real agent selected the destination subgoal, executed a real action, and the production tracker correctly refused to complete it on the page it reached. It never reached the catalog, so no in-browser destination MATCH exists."
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "extensionLoaded": true,
+    "extensionLoadResult": "{\"id\":\"ihbbhmifbgfcibhjhcafakdkcppkccaf\"}"
+  },
+  "planning": {
+    "task": "open the store catalog at http://localhost:4174",
+    "taskCategory": "GENERIC_INTERACTION",
+    "goalDeclaration": {
+      "kind": "DECLARED",
+      "role": {
+        "provenance": "EXPLICIT_PAGE_ROLE",
+        "acceptablePageTypes": [
+          "LISTING"
+        ]
+      },
+      "entryUrl": {
+        "provenance": "USER_ENTRY_SITE",
+        "origin": "http://localhost:4174",
+        "path": "/",
+        "rawUrl": "http://localhost:4174"
+      }
+    },
+    "normalizerAgreement": true,
+    "subgoals": [
+      {
+        "id": "goal-mur6vl1q-44t8g-sg1",
+        "category": "NAVIGATE",
+        "conditionType": "DESTINATION_VERIFIED",
+        "carriesDestination": true,
+        "state": "READY",
+        "prerequisites": []
+      },
+      {
+        "id": "goal-mur6vl1q-44t8g-sg2",
+        "category": "LOCATE",
+        "conditionType": "AFFORDANCE_AVAILABLE",
+        "carriesDestination": false,
+        "state": "PENDING",
+        "prerequisites": [
+          "goal-mur6vl1q-44t8g-sg1"
+        ]
+      },
+      {
+        "id": "goal-mur6vl1q-44t8g-sg3",
+        "category": "SELECT",
+        "conditionType": "STATE_CHANGED",
+        "carriesDestination": false,
+        "state": "PENDING",
+        "prerequisites": [
+          "goal-mur6vl1q-44t8g-sg2"
+        ]
+      },
+      {
+        "id": "goal-mur6vl1q-44t8g-sg4",
+        "category": "VERIFY",
+        "conditionType": "STATE_CHANGED",
+        "carriesDestination": false,
+        "state": "PENDING",
+        "prerequisites": [
+          "goal-mur6vl1q-44t8g-sg3"
+        ]
+      }
+    ],
+    "destinationSubgoal": {
+      "id": "goal-mur6vl1q-44t8g-sg1",
+      "category": "NAVIGATE",
+      "conditionType": "DESTINATION_VERIFIED",
+      "state": "READY",
+      "destination": {
+        "kind": "DECLARED",
+        "role": {
+          "provenance": "EXPLICIT_PAGE_ROLE",
+          "acceptablePageTypes": [
+            "LISTING"
+          ]
+        },
+        "entryUrl": {
+          "provenance": "USER_ENTRY_SITE",
+          "origin": "http://localhost:4174",
+          "path": "/",
+          "rawUrl": "http://localhost:4174"
+        }
+      },
+      "targetEntity": null,
+      "expectedValue": null
+    },
+    "targetTabProvisionedBy": "production targetResolver",
+    "providerCalls": 4,
+    "productionSubgoalTrace": [
+      "[AgentTrace] subgoal NOT completed — no observed evidence Object"
+    ]
+  },
+  "decisions": [
+    {
+      "label": "agent-end-of-run",
+      "agentDirected": true,
+      "url": "http://localhost:4174/search.html",
+      "pageType": "UNKNOWN",
+      "confidence": 0.1,
+      "pageGeneration": 9,
+      "subgoalWouldComplete": false,
+      "reason": "Subgoal goal-mur6vl1q-44t8g-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+    },
+    {
+      "label": "fixture-catalog-results-html",
+      "agentDirected": false,
+      "url": "http://localhost:4174/results.html",
+      "pageType": "LISTING",
+      "confidence": 0.99,
+      "pageGeneration": 11,
+      "subgoalWouldComplete": true,
+      "reason": "Observed page identity LISTING at confidence 0.99 is one of the declared roles [LISTING]."
+    },
+    {
+      "label": "fixture-product-html",
+      "agentDirected": false,
+      "url": "http://localhost:4174/product.html",
+      "pageType": "UNKNOWN",
+      "confidence": 0.1,
+      "pageGeneration": 13,
+      "subgoalWouldComplete": false,
+      "reason": "Subgoal goal-mur6vl1q-44t8g-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+    }
+  ],
+  "controls": {
+    "wrongDestination": {
+      "description": "declared CHECKOUT vs the REAL catalog observation",
+      "verdict": {
+        "kind": "MISMATCH",
+        "reason": "Observed page identity LISTING at confidence 0.99 is not one of the declared roles [CHECKOUT].",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "MISMATCH",
+            "reason": "Observed page identity LISTING at confidence 0.99 is not one of the declared roles [CHECKOUT]."
+          },
+          "url": null
+        }
+      }
+    },
+    "unknownDestination": {
+      "description": "declared LISTING vs the REAL agent-reached page",
+      "verdict": {
+        "kind": "UNKNOWN",
+        "reason": "The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "UNKNOWN",
+            "reason": "The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+          },
+          "url": null
+        }
+      }
+    },
+    "exactUrlMismatch": {
+      "description": "declared destination URL \"/\" vs the REAL /results.html",
+      "verdict": {
+        "kind": "MISMATCH",
+        "reason": "Observed URL http://localhost:4174/results.html differs from the declared destination http://localhost:4174/.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": null,
+          "url": {
+            "channel": "url",
+            "kind": "MISMATCH",
+            "reason": "Observed URL http://localhost:4174/results.html differs from the declared destination http://localhost:4174/."
+          }
+        }
+      }
+    },
+    "staleObservation": {
+      "description": "the REAL catalog observation (gen 11) verified at the REAL current generation (gen 13)",
+      "verdict": {
+        "kind": "UNKNOWN",
+        "reason": "Observation belongs to page generation 11 but verification is running at generation 13; a stale document cannot verify a destination.",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "UNKNOWN",
+            "reason": "Observation belongs to page generation 11 but verification is running at generation 13; a stale document cannot verify a destination."
+          },
+          "url": null
+        }
+      }
+    },
+    "productionDeclarationOnRealCatalog": {
+      "description": "the production subgoal declaration vs the REAL catalog observation",
+      "verdict": {
+        "kind": "MATCH",
+        "reason": "Observed page identity LISTING at confidence 0.99 is one of the declared roles [LISTING].",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "MATCH",
+            "reason": "Observed page identity LISTING at confidence 0.99 is one of the declared roles [LISTING]."
+          },
+          "url": null
+        }
+      }
+    },
+    "declarationImmutability": {
+      "unchanged": true
+    },
+    "entryUrlIsNotADestinationConstraint": {
+      "description": "the declaration carries entryUrl \"/\"; the REAL catalog is \"/results.html\" and still matches on ROLE",
+      "declarationHasUrl": false,
+      "declarationHasEntryUrl": true
+    }
+  }
+}

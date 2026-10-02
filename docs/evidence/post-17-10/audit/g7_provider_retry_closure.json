@@ -1,0 +1,106 @@
+{
+  "artifact": "POST-17.10 Step 10.6 (G7) — bounded provider rate-limit retry",
+  "head": "b677654",
+  "committed": false,
+  "pushed": false,
+  "verdict": "G7 OPEN — PROVIDER BLOCKER (real-browser retry engagement unproven)",
+
+  "defects_found_and_fixed": [
+    {
+      "id": "D1",
+      "file": "backend/app/reasoner.py",
+      "defect": "ReasoningError carried no Retry-After, so the provider's own published back-off was known only as text inside the error message.",
+      "fix": "Added a `retry_after` field populated verbatim from the upstream response header at the three 429 sites.",
+      "classification_changed": "none — retryable is still decided by the pre-existing sites; a rate limit remains non-retryable at the backend layer."
+    },
+    {
+      "id": "D2",
+      "file": "backend/app/routes/agent.py",
+      "defect": "When the primary was rate-limited and the fallback then failed, the route reported `error_kind: fallback_err.kind` and a hardcoded `retryable: False`. The primary's rate limit survived only inside a human-readable `reason` string, where no client parses it.",
+      "fix": "Report `error_kind: rate_limit` and `retryable: true` truthfully, and relay the provider's Retry-After header — but ONLY when the provider actually emitted one. Absent header keeps the previous behaviour exactly.",
+      "proved": "Live probe: status=503, retry-after='4', kind='rate_limit', retryable=True."
+    },
+    {
+      "id": "D3",
+      "file": "backend/app/main.py",
+      "defect": "Retry-After is NOT a CORS-safelisted response header. The extension's cross-origin fetch could not read it, so retryAfterMs was always undefined and the step correctly failed closed. This is why D2 appeared to have no effect in a real browser despite working in isolation.",
+      "fix": "CORSMiddleware expose_headers=['Retry-After'].",
+      "proved": "Live response now carries `access-control-expose-headers: Retry-After`.",
+      "security": "Exposes a timing header only. Access-Control-Allow-Credentials stays False and the origin regex stays localhost-only, so the local boundary is unchanged."
+    }
+  ],
+
+  "production_files_changed": [
+    "backend/app/reasoner.py",
+    "backend/app/routes/agent.py",
+    "backend/app/main.py",
+    "extension/src/agent/backendAgentProvider.ts",
+    "extension/src/agent/goalVerifier.ts (from the immediately preceding G7 GoalVerifier task)"
+  ],
+
+  "extension_change": {
+    "file": "extension/src/agent/backendAgentProvider.ts",
+    "change": "parseError now takes the locally-parsed, clamped retryAfterMs; the final rate_limit guard sets `retryable = typeof retryAfterMs === 'number'`.",
+    "note": "agentLoop.ts needed NO change: requestActionWithBoundedRetry already reads retryAfterMs, clamps with Math.min(hint, 30_000) and bounds attempts by providerRetries."
+  },
+
+  "tests": {
+    "added": "tests/step10_6_providerRateLimitRetry.test.ts — 12 tests covering all 10 required cases plus a clamp control and a no-duplicate-dispatch control. No real waiting: fake timers drive the Retry-After wait.",
+    "focused": "12 passed",
+    "full_extension": "137 files / 2226 tests passed",
+    "backend": "572 passed",
+    "typescript": "exit 0",
+    "builds": "extension exit 0, frontend exit 0",
+    "diff_check": "clean"
+  },
+
+  "mutation": {
+    "matrix": "scratch/g7_retry_mutation_matrix.mjs",
+    "tally": { "KILLED": 6, "SURVIVED": 0, "INVALID": 0, "EQUIVALENT": 2 },
+    "killed": ["R1 remove Retry-After handling", "R2 retry on a bare 429", "R3 drop the rate_limit guard", "R5 remove the Retry-After clamp", "R6 accept a negative Retry-After", "R8 treat a failed retry as success"],
+    "equivalent": [
+      {
+        "id": "R4",
+        "desc": "bypass the retry bound",
+        "proof": "attempts are already bounded by `for (let attempt = 0; attempt <= this.providerRetries; attempt++)`; the inner `attempt >= this.providerRetries` break is redundant defence-in-depth and cannot change behaviour."
+      },
+      {
+        "id": "R7",
+        "desc": "remove the loop-side delay clamp",
+        "proof": "parseRetryAfter already clamps to MAX_HONOURED_RETRY_AFTER_MS, which IS 30000 — the identical bound. The loop-side Math.min(hint, 30_000) can never fire."
+      }
+    ],
+    "prior_matrices": "Step 10.4 18/1/0 unchanged; Step 10.6 GoalVerifier 9 KILLED unchanged."
+  },
+
+  "security_audit": {
+    "unchanged": [
+      "extension/src/planning/destinationVerifier.ts",
+      "extension/src/planning/destinationNormalizer.ts",
+      "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "extension/src/hierarchicalPlanning/taskDecomposer.ts",
+      "extension/src/agent/securityCritic.ts",
+      "extension/src/agent/actionValidator.ts",
+      "extension/src/agent/agentLoop.ts",
+      "backend/app/security.py"
+    ],
+    "m5_privacy_firewall": "unchanged; the retry happens before any BrowserAction exists",
+    "containment": "unchanged",
+    "fail_closed": "a rate limit with no valid Retry-After is still non-retryable with zero retries",
+    "no_duplicate_side_effects": "PROVEN by test: N provider failures produce zero browser dispatches, because a provider failure returns no BrowserAction to dispatch",
+    "no_new_pii_egress": "no new telemetry or payload fields; Retry-After is a timing header carrying no context, PII or gate decision"
+  },
+
+  "real_chrome_execution": {
+    "runs_6_7_8": "all identical: FAILED at step 3, 5 provider requests, statuses [200,200,200,200,503], final URL /search.html",
+    "deterministic_progress": "/ -> /search.html -> pageState form_incomplete -> form_complete",
+    "destinationVerifier": "UNKNOWN on the search page (correct: the page is unclassified, so it can neither confirm nor deny)",
+    "destination_subgoal": "IN_PROGRESS — correctly not completed",
+    "goalVerifier": "NOT_REACHED",
+    "final_task_result": "FAILED",
+    "label": "PROVEN_REAL for every stage up to form completion; NOT_REACHED for DestinationVerifier MATCH, subgoal completion, planner progression and GoalVerifier SUCCESS"
+  },
+
+  "remaining_blocker": "The real-browser retry engagement is unproven. Each layer is individually proven: the backend emits status=503 + Retry-After + kind=rate_limit + retryable=true; the CORS layer exposes the header; the built extension bundle contains the new classification rule (`kind==='rate_limit' && (retryable = typeof retryAfterMs === 'number')`); and the loop already bounds and honours retryAfterMs. Ruled out so far: missing bundle rebuild (verified in dist), duplicate chunk breaking `instanceof ProviderError` (only one chunk defines both), and a stale backend process (confirmed the live process emits the new header). The next diagnostic is to instrument the service worker's parseError result (kind, retryable, retryAfterMs) during a real run.",
+  "g7_closure_condition_not_met": true
+}

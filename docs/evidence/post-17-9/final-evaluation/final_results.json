@@ -1,0 +1,83 @@
+{
+  "audit": "FINAL POST-17.9 EVALUATION \u2014 consolidated results",
+  "head": "85e9790",
+  "counts": {
+    "PROVEN_REAL": 4,
+    "PROVEN_TEST": 0,
+    "NOT_PROVEN": 0,
+    "KNOWN_LIMITATION": 0,
+    "P1_DEFECT": 0
+  },
+  "releaseVerdict": "CONDITIONAL \u2014 P1-01 must be resolved before committing the semantic-observation work",
+  "p0": 0,
+  "p1": 1,
+  "p2": 0,
+  "info": 0,
+  "testCounts": {
+    "extension": "122 files / 1704 tests",
+    "backend": "222",
+    "securityPrivacyFocused": "13 files / 168 tests",
+    "soundnessFocused": "8 files / 114 tests"
+  },
+  "verification": {
+    "tsc": "clean",
+    "extensionBuild": "clean",
+    "frontendBuild": "clean",
+    "gitDiffCheck": "clean"
+  },
+  "capabilities": [
+    {
+      "capability": "Semantic observation + answer verification (mechanism)",
+      "classification": "PROVEN_REAL"
+    },
+    {
+      "capability": "Contextual phone detection",
+      "classification": "PROVEN_REAL"
+    },
+    {
+      "capability": "Prose-embedded PII reaching provider via facts channel",
+      "classification": "P1_DEFECT",
+      "id": "P1-01"
+    },
+    {
+      "capability": "World-model generation synchronization",
+      "classification": "PROVEN_TEST"
+    },
+    {
+      "capability": "Grounding / M5 / Security Critic / Risk / Containment / Effect / Recovery",
+      "classification": "PROVEN_TEST"
+    },
+    {
+      "capability": "Privacy fusion / minimization / egress boundary",
+      "classification": "PROVEN_TEST"
+    },
+    {
+      "capability": "Prompt-injection defence",
+      "classification": "PROVEN_TEST"
+    },
+    {
+      "capability": "Open-web autonomous browsing",
+      "classification": "NOT_PROVEN"
+    },
+    {
+      "capability": "Authenticated sites, cross-origin iframes",
+      "classification": "NOT_PROVEN"
+    },
+    {
+      "capability": "OCR autonomous reasoning",
+      "classification": "KNOWN_LIMITATION"
+    },
+    {
+      "capability": "US bare 2-5 leading phone recall",
+      "classification": "KNOWN_LIMITATION"
+    },
+    {
+      "capability": "actionValidator [6-9] rule",
+      "classification": "KNOWN_LIMITATION"
+    },
+    {
+      "capability": "Provider rate limits and latency",
+      "classification": "KNOWN_LIMITATION"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "work": "POST-17.10 STEP 10.2 — REAL-D backend provenance trust boundary",
+  "labels": "PROVEN_REAL_BACKEND (live HTTP against the running FastAPI server) + PROVEN_REAL_BACKEND (real app/routing/Pydantic/security/prompt-builder via TestClient, outbound provider call echoed)",
+  "notClaimed": "NOT a real LLM invocation — the invariant under test is decided before the model is reached.",
+  "backend": "http://localhost:8010",
+  "decisive": [
+    {
+      "name": "valid-role-only",
+      "expect": "RENDERED",
+      "httpStatus": 200,
+      "detail": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":1,\"reason\":\"echo\"},\"reason\":\"echo\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"FAST\",\"latency_ms\":1.0,\"attempts\":1,\"fallback_used\":false}}",
+      "renderedDeclaredDestination": {
+        "provenance": "USER_DECLARED_DESTINATION",
+        "role": [
+          "LISTING"
+        ]
+      },
+      "promptContainsProvenanceToken": true
+    },
+    {
+      "name": "valid-explicit-url",
+      "expect": "RENDERED",
+      "httpStatus": 200,
+      "detail": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":1,\"reason\":\"echo\"},\"reason\":\"echo\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"FAST\",\"latency_ms\":1.0,\"attempts\":1,\"fallback_used\":false}}",
+      "renderedDeclaredDestination": {
+        "provenance": "USER_DECLARED_DESTINATION",
+        "destinationUrl": "http://localhost:4174/results.html"
+      },
+      "promptContainsProvenanceToken": true
+    },
+    {
+      "name": "missing-provenance",
+      "expect": "DROPPED",
+      "httpStatus": 200,
+      "detail": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":1,\"reason\":\"echo\"},\"reason\":\"echo\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"FAST\",\"latency_ms\":1.0,\"attempts\":1,\"fallback_used\":false}}",
+      "renderedDeclaredDestination": null,
+      "promptContainsProvenanceToken": false
+    },
+    {
+      "name": "unknown-provenance",
+      "expect": "DROPPED",
+      "httpStatus": 200,
+      "detail": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":1,\"reason\":\"echo\"},\"reason\":\"echo\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"FAST\",\"latency_ms\":1.0,\"attempts\":1,\"fallback_used\":false}}",
+      "renderedDeclaredDestination": null,
+      "promptContainsProvenanceToken": false
+    },
+    {
+      "name": "forged-provenance-url-never-typed",
+      "expect": "DROPPED",
+      "httpStatus": 200,
+      "detail": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":1,\"reason\":\"echo\"},\"reason\":\"echo\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"FAST\",\"latency_ms\":1.0,\"attempts\":1,\"fallback_used\":false}}",
+      "renderedDeclaredDestination": null,
+      "promptContainsProvenanceToken": false
+    },
+    {
+      "name": "forged-through-affordance",
+      "expect": "DROPPED",
+      "httpStatus": 200,
+      "detail": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":1,\"reason\":\"echo\"},\"reason\":\"echo\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"FAST\",\"latency_ms\":1.0,\"attempts\":1,\"fallback_used\":false}}",
+      "renderedDeclaredDestination": null,
+      "promptContainsProvenanceToken": false
+    },
+    {
+      "name": "forged-through-entity-target-entity",
+      "expect": "DROPPED",
+      "httpStatus": 200,
+      "detail": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":1,\"reason\":\"echo\"},\"reason\":\"echo\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"FAST\",\"latency_ms\":1.0,\"attempts\":1,\"fallback_used\":false}}",
+      "renderedDeclaredDestination": null,
+      "promptContainsProvenanceToken": true
+    },
+    {
+      "name": "extra-raw-field",
+      "expect": "DROPPED",
+      "httpStatus": 200,
+      "detail": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":1,\"reason\":\"echo\"},\"reason\":\"echo\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"FAST\",\"latency_ms\":1.0,\"attempts\":1,\"fallback_used\":false}}",
+      "renderedDeclaredDestination": null,
+      "promptContainsProvenanceToken": false
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "work": "POST-17.10 STEP 10.4 — P1 text-safety firewall adversarial mutation matrix",
+  "labels": "PROVEN_UNIT_ONLY (focused backend suites, in-process)",
+  "baselineFocusedTests": 339,
+  "focusedBackendTests": [
+    "tests/test_step10_4_text_safety_p1.py",
+    "tests/test_text_safety.py",
+    "tests/test_step10_3_declaration_vs_observation.py",
+    "tests/test_step10_2_destination_trust_boundary.py",
+    "tests/test_step10_declared_destination.py"
+  ],
+  "restoreDiscipline": "durable backup -> exact single-anchor replacement -> restore -> sha256 byte-verify per mutation and again for every file at the end",
+  "tally": {
+    "KILLED": 18,
+    "SURVIVED": 0,
+    "INVALID": 0,
+    "EQUIVALENT": 1
+  },
+  "results": [
+    {
+      "id": "M1",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "disable REASON_NAME_PATTERN (it never matches anything)",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestPersonNamesStillRejected::test_req4_real_person_name_rejected[Aarav Sharma]"
+    },
+    {
+      "id": "M2",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "remove the person_name rejection from the reason scanner",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestPersonNamesStillRejected::test_req4_real_person_name_rejected[Aarav Sharma]"
+    },
+    {
+      "id": "M3",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "allow all TitleCase phrases (N1 matches any token)",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestPersonNamesStillRejected::test_req4_real_person_name_rejected[Aarav Sharma]"
+    },
+    {
+      "id": "M4",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "allow all two-word capitalized phrases (_is_ui_label_span always True)",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestPersonNamesStillRejected::test_req4_real_person_name_rejected[Aarav Sharma]"
+    },
+    {
+      "id": "M5",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "whitelist the fixture string \"Browse Catalog\"",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestAmbiguousCasesFailClosed::test_req_ambiguous_bare_ui_label_is_blocked[Browse Catalog is the listing page.]"
+    },
+    {
+      "id": "M6",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "whitelist all fixture UI labels",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestAmbiguousCasesFailClosed::test_req_ambiguous_bare_ui_label_is_blocked[Browse Catalog is the listing page.]"
+    },
+    {
+      "id": "M7",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "allow reason text whenever the action is a navigation",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestEmbeddedNamesRejected::test_req6_7_8_embedded_and_mixed_names_rejected[Navigate to Order History for John Smith]"
+    },
+    {
+      "id": "M8",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "allow reason text whenever the destination role is LISTING",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestEmbeddedNamesRejected::test_req6_7_8_embedded_and_mixed_names_rejected[The Browse Catalog link leads to the product listing for Rahul Sharma.]"
+    },
+    {
+      "id": "M9",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "skip scanning model-generated reasons entirely",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestPersonNamesStillRejected::test_req4_real_person_name_rejected[Aarav Sharma]"
+    },
+    {
+      "id": "M10",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "accept a model-provided \"safe\" marker as an exoneration token",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestModelCannotMarkItsOwnContentSafe::test_req13_safe_marker_words_are_not_exoneration_lexicons"
+    },
+    {
+      "id": "M11",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "strip capital letters before scanning",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestPersonNamesStillRejected::test_req4_real_person_name_rejected[Aarav Sharma]"
+    },
+    {
+      "id": "M12",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "scan only the first sentence",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestModelCannotMarkItsOwnContentSafe::test_req13_self_declared_safety_does_not_exonerate[PII: none. Content: Rahul Sharma]"
+    },
+    {
+      "id": "M13",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "scan only the first 40 characters",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestEmbeddedNamesRejected::test_req6_7_8_embedded_and_mixed_names_rejected[The Browse Catalog link leads to the product listing for Rahul Sharma.]"
+    },
+    {
+      "id": "M14",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "remove embedded-name detection (the P1 honorific / role-noun / name-label checks)",
+      "verdict": "EQUIVALENT",
+      "detail": "focused suites still green"
+    },
+    {
+      "id": "M14b",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "remove the possessive half of P1 (the load-bearing part)",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestEmbeddedNamesRejected::test_req8_possessive_cue_blocks[Opened Rahul Sharma's profile.]"
+    },
+    {
+      "id": "M16",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "narrow N3 back to determiner-only (drops the interaction-verb branch)",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestRealModelPhrasings::test_req_real_model_reason_accepted[User wants to open store catalog, click Shop Now button]"
+    },
+    {
+      "id": "M17",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "drop the N3 UI head-noun gate (introducer alone exonerates)",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestPunctuationVariants::test_req10_punctuation_variants_handled[Clicked, Account Details-BLOCK]"
+    },
+    {
+      "id": "M18",
+      "gap": "P1",
+      "file": "backend/app/text_safety.py",
+      "intent": "let N3 reach across a preposition (verb branch without the boundary)",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestRealModelPhrasings::test_req_n3_verb_branch_does_not_reach_back_past_a_preposition[Clicking Account Details for Rahul Sharma card]"
+    },
+    {
+      "id": "M15",
+      "gap": "P1",
+      "file": "backend/app/models.py",
+      "intent": "bypass text_safety for backend action validation",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestUpstreamValidatorsStillActive::test_req14_15_model_validator_still_rejects_name_reason"
+    }
+  ]
+}

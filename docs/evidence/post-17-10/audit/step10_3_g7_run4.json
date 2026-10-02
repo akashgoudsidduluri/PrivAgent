@@ -1,0 +1,246 @@
+{
+  "work": "POST-17.10 STEP 10 AUDIT — real production provider-egress capture",
+  "labels": "PROVEN_REAL_CHROME (bytes on the wire) / PROVEN_REAL_BACKEND (backend response)",
+  "inputs": {
+    "task": "open the store catalog",
+    "userSuppliedUrlInTask": null,
+    "startUrl": "http://localhost:4174/",
+    "keptExistingTabs": true,
+    "targetOrigin": "http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "reasoningRequests": [
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 503,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/\",\"timestamp\":1790944661027,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-login-cta\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":441,\"y\":297,\"width\":186,\"height\":43},\"length\":15,\"source\":\"dom_attribute\",\"selector\":\"#btn-login-cta\",\"is_partially_visible\":false},{\"id\":\"btn-shop-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":648,\"y\":296,\"width\":191,\"height\":45},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-shop-now\",\"is_partially_visible\":false},{\"id\":\"brand-link\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"#brand-link\",\"is_partially_visible\":false}],\"total_elements_scanned\":18,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"landing\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":2,\"entities\":[],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\",\"error_kind\":\"invalid_action\",\"retryable\":false}}"
+    }
+  ],
+  "analysis": {
+    "provisionedTab": {
+      "id": 1169202792,
+      "url": "http://localhost:4174/"
+    },
+    "perRequest": [
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 503,
+        "bytes": 2286,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\",\"error_kind\":\"invalid_action\",\"retryable\":false}}"
+      }
+    ],
+    "summary": {
+      "totalApiRequests": 1,
+      "requestsCarryingDeclaredDestination": 1,
+      "anyRoleOnlyRequest": true,
+      "anyUrlCarryingRequest": false,
+      "anyForbiddenKeyInDeclaration": false,
+      "anyUnexpectedStringLeafInDeclaration": true,
+      "anyForbiddenKeyInWholePayload": true
+    },
+    "statesWithActionResult": []
+  },
+  "loopLogs": [
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":2,\"entityCount\":0,\"affordanceCount\":1}",
+    "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-muqy7klo-lu5p6-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Reach the destination declared in the user request\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":1,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":1,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\"}"
+  ],
+  "rawLogs": [
+    "TARGET_RESOLUTION_STARTED",
+    "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}",
+    "[AgentTrace] service worker START_TASK received {\"taskLength\":22}",
+    "TARGET_TAB_CANDIDATES [{\"id\":1169202790,\"origin\":\"null\"},{\"id\":1169202791,\"origin\":\"http://localhost:5173\"},{\"id\":1169202792,\"origin\":\"http://localhost:4174\"}]",
+    "[AgentTrace] containment scope established {\"established\":true,\"rootHost\":\"localhost\",\"tabId\":1169202792}",
+    "TARGET_TAB_SELECTED {\"tabId\":1169202792,\"origin\":\"http://localhost:4174\",\"reason\":\"Selected active web tab.\"}",
+    "[AgentTrace] target resolved {\"tabId\":1169202792}",
+    "[AgentTrace] first progress emitted",
+    "TARGET_TAB_READY {\"tabId\":1169202792}",
+    "[AgentTrace] target content script ready {\"tabId\":1169202792}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PERCEPTION\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"RUNNING\",\"currentStep\":0,\"reason\":\"Target tab discovered and ready. Starting visual privacy perception...\"}",
+    "[AgentTrace] agent loop started",
+    "[AgentTrace] perception started",
+    "[AgentTrace] long-horizon state {\"restoreStatus\":\"FRESH_NO_RECORD\",\"detail\":null,\"actionCount\":0,\"recoveryCount\":0,\"consecutiveNoProgress\":0,\"totalNoProgress\":0}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":0}",
+    "[AgentTrace] harness cycle {\"cycle\":1,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":1,\"url\":\"http://localhost:4174/\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":6,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":3,\"regionsConsidered\":3,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":1,\"contextUrl\":\"http://localhost:4174/\",\"worldModelId\":\"wm-g2-muqy7kmc-qpmb\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":11,\"privacyFindingsCount\":6}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":2,\"entityCount\":0,\"affordanceCount\":1}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-muqy7klo-lu5p6-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Reach the destination declared in the user request\"}",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[\"NEW_PAGE\"],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":0,\"actions\":0,\"loop\":false,\"stalled\":false}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":1,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\"}",
+    "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\"}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":1,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\"}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790944670953\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790944670953\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790944670953\",\"targetFound\":true,\"tabId\":1169202792,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790944670953\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790944685953\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790944685953\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790944685953\",\"targetFound\":true,\"tabId\":1169202792,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790944685953\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790944700953\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790944700953\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790944700953\",\"targetFound\":true,\"tabId\":1169202792,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790944700953\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790944715953\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790944715953\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790944715953\",\"targetFound\":true,\"tabId\":1169202792,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790944715953\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790944730953\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790944730953\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790944730953\",\"targetFound\":true,\"tabId\":1169202792,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790944730953\",\"targetFound\":true}"
+  ],
+  "observations": [
+    {
+      "url": "http://localhost:4174/",
+      "semanticPageType": "UNKNOWN",
+      "semanticConfidence": 0.1,
+      "semanticPageGeneration": 3
+    }
+  ],
+  "reportedStates": [
+    {
+      "status": "RUNNING",
+      "goalStatus": null,
+      "currentStep": 0,
+      "lastActionResult": null,
+      "completedSteps": null,
+      "failureCategories": null,
+      "lastFailureCategory": null,
+      "subgoalStates": null,
+      "subgoalConditions": null
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 0,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-muqy7klo-lu5p6-sg1": "READY",
+        "goal-muqy7klo-lu5p6-sg2": "PENDING",
+        "goal-muqy7klo-lu5p6-sg3": "PENDING",
+        "goal-muqy7klo-lu5p6-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-muqy7klo-lu5p6-sg1": "DESTINATION_VERIFIED",
+        "goal-muqy7klo-lu5p6-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-muqy7klo-lu5p6-sg3": "STATE_CHANGED",
+        "goal-muqy7klo-lu5p6-sg4": "STATE_CHANGED"
+      }
+    },
+    {
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "currentStep": 1,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-muqy7klo-lu5p6-sg1": "IN_PROGRESS",
+        "goal-muqy7klo-lu5p6-sg2": "PENDING",
+        "goal-muqy7klo-lu5p6-sg3": "PENDING",
+        "goal-muqy7klo-lu5p6-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-muqy7klo-lu5p6-sg1": "DESTINATION_VERIFIED",
+        "goal-muqy7klo-lu5p6-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-muqy7klo-lu5p6-sg3": "STATE_CHANGED",
+        "goal-muqy7klo-lu5p6-sg4": "STATE_CHANGED"
+      }
+    },
+    {
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "currentStep": 1,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-muqy7klo-lu5p6-sg1": "IN_PROGRESS",
+        "goal-muqy7klo-lu5p6-sg2": "PENDING",
+        "goal-muqy7klo-lu5p6-sg3": "PENDING",
+        "goal-muqy7klo-lu5p6-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-muqy7klo-lu5p6-sg1": "DESTINATION_VERIFIED",
+        "goal-muqy7klo-lu5p6-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-muqy7klo-lu5p6-sg3": "STATE_CHANGED",
+        "goal-muqy7klo-lu5p6-sg4": "STATE_CHANGED"
+      }
+    }
+  ]
+}

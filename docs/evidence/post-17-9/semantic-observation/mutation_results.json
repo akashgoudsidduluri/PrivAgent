@@ -1,0 +1,87 @@
+[
+  {
+    "mutant": "M1",
+    "description": "remove the semantic-evidence requirement: fabricate a matching fact when none was observed",
+    "caught": false,
+    "failing_tests": 0,
+    "passed_tests": 0,
+    "killed_by": "",
+    "classification": "EQUIVALENT MUTANT (survives alone). Fabricating a fact is only observable when the value-identity check is ALSO removed; killed by M1+M7. Defense in depth: two independent checks must both fail before a value can be invented."
+  },
+  {
+    "mutant": "M1+M7",
+    "description": "fabricated fact AND no value-identity check: invent a value when nothing was observed",
+    "caught": true,
+    "failing_tests": 2,
+    "killed_by": "Post-17.9 \u00a7E \u2014 SECURITY CASES 9/10: privacy and injection on the text channel > CASE 10. injection-shaped page text is data, never evidence and never an instruction 25ms;Post-17.9 \u00a7I \u2014 determinism > I7. a fact sharing the key but not the value cannot certify 9ms"
+  },
+  {
+    "mutant": "M2",
+    "description": "accept stale semantic evidence: drop the observation age check",
+    "caught": true,
+    "failing_tests": 1,
+    "passed_tests": 55,
+    "killed_by": "Post-17.9 \u00a7C \u2014 SECURITY CASES 4/5/6/12: provenance and freshness > CASE 4. stale observation (past the TTL) \u2192 rejected 22ms"
+  },
+  {
+    "mutant": "M3",
+    "description": "accept wrong-page evidence: drop the document-identity check",
+    "caught": true,
+    "failing_tests": 2,
+    "passed_tests": 54,
+    "killed_by": "Post-17.9 \u00a7C \u2014 SECURITY CASES 4/5/6/12: provenance and freshness > CASE 12. navigation invalidates previous semantic evidence 29ms;Post-17.9 \u00a7H \u2014 the real, unmodified fixture > H2b. a reading from another document is never reused for this one 116ms"
+  },
+  {
+    "mutant": "M4",
+    "description": "accept a model claim alone (survives alone; killed only in the M4+M7 compound)",
+    "caught": false,
+    "failing_tests": 0,
+    "passed_tests": 0,
+    "killed_by": "",
+    "classification": "EQUIVALENT MUTANT (survives alone). Accepting the model's claim is only observable when the value-identity check is ALSO removed; killed by M4+M7."
+  },
+  {
+    "mutant": "M5",
+    "description": "remove the M8 raw-value re-screen: keep a fact that failed the privacy scan",
+    "caught": true,
+    "failing_tests": 1,
+    "passed_tests": 55,
+    "killed_by": "Post-17.9 \u00a7E \u2014 SECURITY CASES 9/10: privacy and injection on the text channel > CASE 9b. the re-screen drops a PII fact even if it reaches extraction 45ms"
+  },
+  {
+    "mutant": "M6",
+    "description": "remove the ambiguity guard: a listing with several values certifies 'the' value anyway",
+    "caught": true,
+    "failing_tests": 2,
+    "passed_tests": 54,
+    "killed_by": "Post-17.9 \u00a7H \u2014 the real, unmodified fixture > H3. REGRESSION: the catalog listing cannot certify the product-page goal 123ms;Post-17.9 \u00a7I \u2014 determinism > I4. AMBIGUITY GUARD: two candidate values on one page never certify 19ms"
+  },
+  {
+    "mutant": "M7",
+    "description": "accept a fact that shares the key but not the observed value",
+    "caught": false,
+    "failing_tests": 0,
+    "passed_tests": 0,
+    "killed_by": "",
+    "classification": "EQUIVALENT MUTANT (survives alone). Dropping the value-identity check is masked by selectReportedFact, which today only returns an observed fact. Load-bearing as the second of two independent checks, proven by the M1+M7 and M4+M7 compounds."
+  },
+  {
+    "mutant": "M4+M7",
+    "description": "model-claim substitution AND no value-identity check: a model's claim certifies the goal on its own",
+    "caught": true,
+    "failing_tests": 1,
+    "killed_by": "Post-17.9 \u00a7I \u2014 determinism > I7. a fact sharing the key but not the value cannot certify 19ms"
+  },
+  {
+    "restored_byte_identical": true
+  },
+  {
+    "summary": {
+      "total_mutants": 9,
+      "killed_individually": 4,
+      "equivalent_mutants_surviving_alone": 3,
+      "killed_only_in_compound": 2,
+      "honesty_note": "M1, M4 and M7 each survive in isolation because another check masks them. They are reported as equivalent mutants, NOT as passes. The compounds M1+M7 and M4+M7 are killed, which is what demonstrates the two checks together close the hole."
+    }
+  }
+]

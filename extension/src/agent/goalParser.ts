@@ -57,7 +57,7 @@ export function extractTaskConstraints(task: string): StructuredConstraints {
   }
 
   // Currency
-  if (task.includes('₹') || lower.includes('rs') || lower.includes('inr')) {
+  if (task.includes('₹') || /\brs\b/.test(lower) || lower.includes('inr')) {
     constraints.currency = '₹';
   } else if (task.includes('$') || lower.includes('usd')) {
     constraints.currency = '$';

@@ -11,9 +11,14 @@
  *  - Strictly adheres to the M8 privacy/sanitization boundary.
  */
 
-import { HighLevelGoal, Subgoal } from './hierarchicalTypes';
+import {
+  HighLevelGoal,
+  Subgoal,
+  DeclaredDestinationConstraint,
+} from './hierarchicalTypes';
 import { AgentContextPayload, AgentDetection } from '../privacy/types';
 import { assertSanitizedContextSafe } from '../agent/privacyPolicy';
+import type { DestinationDeclaration } from '../planning/destinationNormalizer';
 
 export interface PlannerContextResult {
   contextPayload: AgentContextPayload;
@@ -23,6 +28,41 @@ export interface PlannerContextResult {
 }
 
 export const TARGET_PLANNER_CONTEXT_BUDGET_BYTES = 2048;
+
+/**
+ * POST-17.10 Step 10 — project a readonly user destination declaration into the
+ * typed shape the reasoner receives.
+ *
+ * Every input is user-derived. `declaration` is a `DestinationDeclaration`
+ * produced once by `normalizeDestination(userPrompt)` and carried read-only on
+ * the subgoal, so there is no channel by which an observation, a page type, an
+ * affordance, an action URL, an execution result or model output could reach
+ * this function. The projection below is total and total-only: when there is no
+ * DECLARED destination it returns `undefined`, and no amount of page state can
+ * make it return anything else.
+ *
+ * `AMBIGUOUS` and `UNSUPPORTED` yield `undefined` by design. Ambiguity is never
+ * resolved into a destination on the agent's behalf, and an unmapped noun is
+ * never guessed at.
+ */
+export function toDeclaredDestinationConstraint(
+  declaration: DestinationDeclaration | undefined
+): DeclaredDestinationConstraint | undefined {
+  if (!declaration || declaration.kind !== 'DECLARED') return undefined;
+
+  const role = declaration.role?.acceptablePageTypes;
+  const constraint: {
+    -readonly [K in keyof DeclaredDestinationConstraint]: DeclaredDestinationConstraint[K];
+  } = {
+    provenance: 'USER_DECLARED_DESTINATION',
+    ...(role && role.length > 0 ? { role: [...role] } : {}),
+    // Verbatim declared origin+path. Never normalised, never extended with a
+    // query, and never derived from `entryUrl`.
+    ...(declaration.url ? { destinationUrl: `${declaration.url.origin}${declaration.url.path}` } : {}),
+    ...(declaration.entryUrl ? { entryUrl: `${declaration.entryUrl.origin}${declaration.entryUrl.path}` } : {}),
+  };
+  return constraint as DeclaredDestinationConstraint;
+}
 
 export class PlannerContextBuilder {
   /**
@@ -51,9 +91,55 @@ export class PlannerContextBuilder {
     );
 
     // 3. Assemble initial context
+    //
+    // POST-17.10 Step 10: when the active subgoal carries a user-declared
+    // destination, it travels with the reasoning request as TYPED data.
+    //
+    // This is the planner→reasoner boundary, and Step 9 proved the destination
+    // was absent from it. It is added to `semantic_context`, which the backend
+    // accepts as a free dictionary (`AgentContextPayload.semantic_context:
+    // Optional[Dict[str, Any]]`), so no provider schema change is required and
+    // the egress contract is otherwise byte-identical.
+    //
+    // POST-17.10 Step 10.3 (G5) — PROPAGATION SCOPE vs COMPLETION SCOPE.
+    //
+    // These were the same scope, and that was wrong. Reading only
+    // `activeSubgoal.destination` made the user's declared destination vanish
+    // from the model boundary on every turn in which a DIFFERENT subgoal was
+    // active — the Step 10 case-B capture carried it on 2 of 7 requests. The
+    // constraint is not a property of a subgoal; it is the user's standing
+    // intent for the WHOLE task, which is exactly what
+    // `HighLevelGoal.destinationDeclaration` holds, readonly and derived from
+    // `rawUserPrompt` alone.
+    //
+    // So the declaration is now propagated from the GOAL, on every turn.
+    //
+    // COMPLETION scope is deliberately NOT changed. `Subgoal.destination`
+    // remains the only thing `GoalProgressTracker.verifySubgoalCondition`
+    // reads, so a MATCH still completes exactly the subgoal that owns that
+    // declaration and nothing else. Widening what the MODEL is told cannot
+    // complete anything — it is not an authority — which is why this is safe
+    // and why the two scopes had to be separated rather than one of them
+    // abandoned.
+    //
+    // `activeSubgoal?.destination` is retained as a fallback only, so a caller
+    // that supplies a subgoal without a goal still gets a typed constraint.
+    const declaredDestination = toDeclaredDestinationConstraint(
+      goal.destinationDeclaration ?? activeSubgoal?.destination
+    );
+    const semanticContext = baseContext.semantic_context;
+
     const currentContext: AgentContextPayload = {
       ...baseContext,
       detections: rankedDetections,
+      ...(semanticContext && declaredDestination
+        ? {
+            semantic_context: {
+              ...semanticContext,
+              declaredDestination,
+            },
+          }
+        : {}),
       ...(memoryHints ? { memory_hints: { ...memoryHints } } : {})
     };
 

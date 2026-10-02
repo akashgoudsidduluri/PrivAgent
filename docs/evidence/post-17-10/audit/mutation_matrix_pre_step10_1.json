@@ -1,0 +1,214 @@
+{
+  "results": {
+    "M1": {
+      "id": "M1",
+      "invariant": "the role-only destination reaches the provider context",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4b. PlannerContextBuilder puts it on semantic_context of the request context 11ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4c. the role-only constraint crosses the 2 KB planner budget rather than being trimmed 15ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W14a. role-only never produces a destination URL at any layer 1ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W21a. the provider is still told the declaration at the same boundary 39ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W4 — the typed role reaches the reasoning / action-selection boundary > W4b. PlannerContextBuilder puts it on semantic_context of the request context | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W4 — the typed role reaches the reasoning / action-selection boundary > W4c. the role-only constraint crosses the 2 KB planner budget rather than being trimmed | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W14/W15 — no URL is invented, and entry stays separate > W14a. role-only never produces a destination URL at any layer | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W21a. the provider is still told the declaration at the same boundary",
+      "restoreVerified": true,
+      "seconds": 2.7
+    },
+    "M2": {
+      "id": "M2",
+      "invariant": "a bare role never acquires a URL",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4a. toDeclaredDestinationConstraint projects role + provenance and NO url 10ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4b. PlannerContextBuilder puts it on semantic_context of the request context 4ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4d. the constraint survives the privacy firewall on its way out 5ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8. model output cannot rewrite the declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W9. action.url cannot rewrite the declaration 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W14a. role-only never produces a destination URL at any layer 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W14b. the fixture route appears nowhere in the production source 15ms | × A · W14/W15 — no URL is invented, and entry stays separate > W15a. the entry URL is carried but is never a destination constraint 1ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W21a. the provider is still told the declaration at the same boundary 53ms",
+      "restoreVerified": true,
+      "seconds": 2.6
+    },
+    "M3": {
+      "id": "M3",
+      "invariant": "the declaration is never derived from the observation",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W5–W10 — no other channel may create or rewrite the declaration > W5b. neither targetEntity nor a model-proposed action reaches the boundary 14ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W6. an affordance cannot create or rewrite the declaration 2ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W7b. an OBSERVED listing page creates no declaration at the boundary 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration 1ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W5b. neither targetEntity nor a model-proposed action reaches the boundary | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W6. an affordance cannot create or rewrite the declaration | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W7b. an OBSERVED listing page creates no declaration at the boundary | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration",
+      "restoreVerified": true,
+      "seconds": 2.5
+    },
+    "M4": {
+      "id": "M4",
+      "invariant": "targetEntity is not a substitute for a typed declaration",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W5–W10 — no other channel may create or rewrite the declaration > W5b. neither targetEntity nor a model-proposed action reaches the boundary 13ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W5b. neither targetEntity nor a model-proposed action reaches the boundary",
+      "restoreVerified": true,
+      "seconds": 2.6
+    },
+    "M5": {
+      "id": "M5",
+      "invariant": "affordances are not a substitute for a typed declaration",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W5–W10 — no other channel may create or rewrite the declaration > W5b. neither targetEntity nor a model-proposed action reaches the boundary 9ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W6. an affordance cannot create or rewrite the declaration 2ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W7b. an OBSERVED listing page creates no declaration at the boundary 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration 1ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W5b. neither targetEntity nor a model-proposed action reaches the boundary | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W6. an affordance cannot create or rewrite the declaration | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W7b. an OBSERVED listing page creates no declaration at the boundary | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration",
+      "restoreVerified": true,
+      "seconds": 2.3
+    },
+    "M6": {
+      "id": "M6",
+      "invariant": "model output cannot create or rewrite the declaration",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W5–W10 — no other channel may create or rewrite the declaration > W5b. neither targetEntity nor a model-proposed action reaches the boundary 11ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W5b. neither targetEntity nor a model-proposed action reaches the boundary",
+      "restoreVerified": true,
+      "seconds": 2.7
+    },
+    "M7": {
+      "id": "M7",
+      "invariant": "entryUrl is never promoted to destinationUrl",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4a. toDeclaredDestinationConstraint projects role + provenance and NO url 11ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4b. PlannerContextBuilder puts it on semantic_context of the request context 4ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4d. the constraint survives the privacy firewall on its way out 6ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8. model output cannot rewrite the declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W9. action.url cannot rewrite the declaration 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W14a. role-only never produces a destination URL at any layer 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W15a. the entry URL is carried but is never a destination constraint 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W15b. a declaration naming ONLY an entry site verifies as UNKNOWN, never MATCH 1ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W21a. the provider is still told the declaration at the same boundary 38ms",
+      "restoreVerified": true,
+      "seconds": 2.6
+    },
+    "M8": {
+      "id": "M8",
+      "invariant": "a role-only declaration is not satisfied by merely arriving somewhere (action.url standing in for the declaration)",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts tests/destinationVerifier.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × B · W30 — authority boundaries > W30c. the destination verifier is not modified by Step 10 10ms | × page role > DECLARED[CHECKOUT] × LISTING 0.99 current → MISMATCH 13ms | × combined URL + page-role declarations > URL MATCH + ROLE MISMATCH → MISMATCH 1ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W30 — authority boundaries > W30c. the destination verifier is not modified by Step 10 | tests/destinationVerifier.test.ts > page role > DECLARED[CHECKOUT] × LISTING 0.99 current → MISMATCH | tests/destinationVerifier.test.ts > combined URL + page-role declarations > URL MATCH + ROLE MISMATCH → MISMATCH",
+      "restoreVerified": true,
+      "seconds": 3.4
+    },
+    "M9a": {
+      "id": "M9a",
+      "invariant": "executionSuccess / dispatch state cannot complete a destination subgoal",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W5–W10 — no other channel may create or rewrite the declaration > W10b. executionSuccess:true cannot satisfy a destination the page contradicts 11ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W10c. a model-proposed URL never lands in the declaration, even on success 20ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W20c. a model-proposed navigate does not complete the destination on SUCCESS either 14ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W23. MISMATCH leaves the destination incomplete 7ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W24. UNKNOWN leaves the destination incomplete 10ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W25. a STALE observation is refused 1ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W25b. a STALE fresh-perception is refused at the loop level too 2ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W27. a WRONG destination url remains a mismatch 1ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W10b. executionSuccess:true cannot satisfy a destination the page contradicts | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W10c. a model-proposed URL never lands in the declaration, even on success",
+      "restoreVerified": true,
+      "seconds": 2.6
+    },
+    "M9b": {
+      "id": "M9b",
+      "invariant": "PRESERVED EQUIVALENT: provenance literal type erasure (DestinationProvenance = string)",
+      "file": "extension/src/hierarchicalPlanning/hierarchicalTypes.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "EQUIVALENT",
+      "evidence": "suite still passed: 47 passed (47)",
+      "restoreVerified": true,
+      "seconds": 2.7
+    },
+    "M10": {
+      "id": "M10",
+      "invariant": "UNKNOWN never counts as already satisfied",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W10c. a model-proposed URL never lands in the declaration, even on success 13ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W20c. a model-proposed navigate does not complete the destination on SUCCESS either 51ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W25. a STALE observation is refused 1ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W25b. a STALE fresh-perception is refused at the loop level too 3ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W10c. a model-proposed URL never lands in the declaration, even on success | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W20c. a model-proposed navigate does not complete the destination on SUCCESS either | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W23–W27 — every non-MATCH outcome stays a failure > W25. a STALE observation is refused | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W23–W27 — every non-MATCH outcome stays a failure > W25b. a STALE fresh-perception is refused at the loop level too",
+      "restoreVerified": true,
+      "seconds": 2.9
+    },
+    "M11": {
+      "id": "M11",
+      "invariant": "MISMATCH never counts as already satisfied",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W5–W10 — no other channel may create or rewrite the declaration > W10b. executionSuccess:true cannot satisfy a destination the page contradicts 11ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W23. MISMATCH leaves the destination incomplete 7ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W24. UNKNOWN leaves the destination incomplete 11ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W27. a WRONG destination url remains a mismatch 1ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W10b. executionSuccess:true cannot satisfy a destination the page contradicts | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W23–W27 — every non-MATCH outcome stays a failure > W23. MISMATCH leaves the destination incomplete | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W23–W27 — every non-MATCH outcome stays a failure > W24. UNKNOWN leaves the destination incomplete | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W23–W27 — every non-MATCH outcome stays a failure > W27. a WRONG destination url remains a mismatch",
+      "restoreVerified": true,
+      "seconds": 2.9
+    },
+    "M12": {
+      "id": "M12",
+      "invariant": "a stale observation never counts as already satisfied",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × B · W23–W27 — every non-MATCH outcome stays a failure > W25. a STALE observation is refused 17ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W25b. a STALE fresh-perception is refused at the loop level too 5ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W23–W27 — every non-MATCH outcome stays a failure > W25. a STALE observation is refused | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W23–W27 — every non-MATCH outcome stays a failure > W25b. a STALE fresh-perception is refused at the loop level too",
+      "restoreVerified": true,
+      "seconds": 2.9
+    },
+    "M13": {
+      "id": "M13",
+      "invariant": "ACTION_NO_EFFECT is never converted into action success",
+      "file": "extension/src/agent/agentLoop.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × D · W31/W32 — causality: ACTION_NO_EFFECT is never action success > W31. a no-effect action the page answers MISMATCH stays unsuccessful and completes nothing 17ms | × D · W31/W32 — causality: ACTION_NO_EFFECT is never action success > W31. a no-effect action the page answers UNKNOWN stays unsuccessful and completes nothing 4ms | × D · W31/W32 — causality: ACTION_NO_EFFECT is never action success > W31. a no-effect action the page answers STALE stays unsuccessful and completes nothing 6ms | × D · W31/W32 — causality: ACTION_NO_EFFECT is never action success > W32b. no code path turns ACTION_NO_EFFECT into a completedSteps entry 5ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > D · W31/W32 — causality: ACTION_NO_EFFECT is never action success > W31. a no-effect action the page answers MISMATCH stays unsuccessful and completes nothing | tests/destinationPropagationAndAlreadySatisfied.test.ts > D · W31/W32 — causality: ACTION_NO_EFFECT is never action success > W31. a no-effect action the page answers UNKNOWN stays unsuccessful and completes nothing | tests/destinationPropagationAndAlreadySatisfied.test.ts > D · W31/W32 — causality: ACTION_NO_EFFECT is never action success > W31. a no-effect action the page answers STALE stays unsuccessful and completes nothing | tests/destinationPropagationAndAlreadySatisfied.test.ts > D · W31/W32 — causality: ACTION_NO_EFFECT is never action success > W32b. no code path turns ACTION_NO_EFFECT into a completedSteps entry",
+      "restoreVerified": true,
+      "seconds": 2.9
+    },
+    "M14": {
+      "id": "M14",
+      "invariant": "the already-at-destination verdict needs a FRESH perception",
+      "file": "extension/src/agent/agentLoop.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W20b. the completion needs the FRESH page, not the cycle page 54ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W20b. the completion needs the FRESH page, not the cycle page",
+      "restoreVerified": true,
+      "seconds": 2.6
+    },
+    "M15": {
+      "id": "M15",
+      "invariant": "destinationVerifier is the sole destination authority (bypass it entirely)",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts tests/destinationVerifier.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W5–W10 — no other channel may create or rewrite the declaration > W10b. executionSuccess:true cannot satisfy a destination the page contradicts 10ms | × A · W14/W15 — no URL is invented, and entry stays separate > W15b. a declaration naming ONLY an entry site verifies as UNKNOWN, never MATCH 2ms | × B · W17–W22 — no transition, fresh observation, MATCH, completion > W17. the declaration and the observed page agree on the exact destination URL 1ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W10c. a model-proposed URL never lands in the declaration, even on success 4ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W20c. a model-proposed navigate does not complete the destination on SUCCESS either 8ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W23. MISMATCH leaves the destination incomplete 10ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W24. UNKNOWN leaves the destination incomplete 14ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W25. a STALE observation is refused 1ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W25b. a STALE fresh-perception is refused at the loop level too 3ms | × B · W23–W27 — every non-MATCH outcome stays a failure > W26. an OLD page generation is refused 1ms",
+      "restoreVerified": true,
+      "seconds": 3.6
+    },
+    "M16": {
+      "id": "M16",
+      "invariant": "only a genuine USER_DECLARED_DESTINATION reaches the model",
+      "file": "backend/app/reasoner.py",
+      "suite": "backend (pytest)",
+      "classification": "KILLED",
+      "evidence": "failing tests: FAILED tests/test_step10_declared_destination.py::test_a_forged_or_provenanceless_declaration_is_not_rendered[forged0] - KeyError: 'provenance' | FAILED tests/test_step10_declared_destination.py::test_a_forged_or_provenanceless_declaration_is_not_rendered[forged1] - assert 'declaredDestination' not in 'User task: ... object now.' | FAILED tests/test_step10_declared_destination.py::test_a_forged_or_provenanceless_declaration_is_not_rendered[forged2] - assert 'declaredDestination' not in 'User task: ... object now.'",
+      "restoreVerified": true,
+      "seconds": 1.3
+    },
+    "M17": {
+      "id": "M17",
+      "invariant": "the backend cannot fabricate a user destination",
+      "file": "backend/app/reasoner.py",
+      "suite": "backend (pytest)",
+      "classification": "KILLED",
+      "evidence": "failing tests: FAILED tests/test_step10_declared_destination.py::test_a_forged_or_provenanceless_declaration_is_not_rendered[forged0] - assert 'declaredDestination' not in 'User task: ... object now.' | FAILED tests/test_step10_declared_destination.py::test_a_forged_or_provenanceless_declaration_is_not_rendered[forged1] - assert 'declaredDestination' not in 'User task: ... object now.' | FAILED tests/test_step10_declared_destination.py::test_a_forged_or_provenanceless_declaration_is_not_rendered[forged2] - assert 'declaredDestination' not in 'User task: ... object now.' | FAILED tests/test_step10_declared_destination.py::test_a_forged_or_provenanceless_declaration_is_not_rendered[not-a-dict] - assert 'declaredDestination' not in 'User task: ... object now.' | FAILED tests/test_step10_declared_destination.py::test_a_forged_or_provenanceless_declaration_is_not_rendered[None] - assert 'declaredDestination' not in 'User task: ... object now.'",
+      "restoreVerified": true,
+      "seconds": 1.3
+    },
+    "M18": {
+      "id": "M18",
+      "invariant": "page-derived text can never ride inside the destination field",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4a. toDeclaredDestinationConstraint projects role + provenance and NO url 9ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4b. PlannerContextBuilder puts it on semantic_context of the request context 4ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4c. the role-only constraint crosses the 2 KB planner budget rather than being trimmed 13ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4d. the constraint survives the privacy firewall on its way out 3ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W5. a targetEntity cannot stand in for a role declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8. model output cannot rewrite the declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W9. action.url cannot rewrite the declaration 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W14a. role-only never produces a destination URL at any layer 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W15a. the entry URL is carried but is never a destination constraint 1ms",
+      "restoreVerified": true,
+      "seconds": 2.6
+    },
+    "M19": {
+      "id": "M19",
+      "invariant": "the role constraint is carried, not just the URL",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4a. toDeclaredDestinationConstraint projects role + provenance and NO url 11ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4b. PlannerContextBuilder puts it on semantic_context of the request context 4ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4d. the constraint survives the privacy firewall on its way out 6ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W21a. the provider is still told the declaration at the same boundary 50ms | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W4 — the typed role reaches the reasoning / action-selection boundary > W4a. toDeclaredDestinationConstraint projects role + provenance and NO url | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W4 — the typed role reaches the reasoning / action-selection boundary > W4b. PlannerContextBuilder puts it on semantic_context of the request context | tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W4 — the typed role reaches the reasoning / action-selection boundary > W4d. the constraint survives the privacy firewall on its way out | tests/destinationPropagationAndAlreadySatisfied.test.ts > B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W21a. the provider is still told the declaration at the same boundary",
+      "restoreVerified": true,
+      "seconds": 3
+    },
+    "M20": {
+      "id": "M20",
+      "invariant": "entryUrl and destinationUrl never collapse",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "suite": "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+      "classification": "KILLED",
+      "evidence": "failing tests: × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4a. toDeclaredDestinationConstraint projects role + provenance and NO url 12ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4b. PlannerContextBuilder puts it on semantic_context of the request context 4ms | × A · W4 — the typed role reaches the reasoning / action-selection boundary > W4d. the constraint survives the privacy firewall on its way out 7ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8. model output cannot rewrite the declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W8b. a previous navigate action cannot rewrite the declaration 1ms | × A · W5–W10 — no other channel may create or rewrite the declaration > W9. action.url cannot rewrite the declaration 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W14a. role-only never produces a destination URL at any layer 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W15a. the entry URL is carried but is never a destination constraint 1ms | × A · W14/W15 — no URL is invented, and entry stays separate > W15b. a declaration naming ONLY an entry site verifies as UNKNOWN, never MATCH 1ms | × B · W20–W22 — loop: a no-effect action completes the destination on an observed MATCH > W21a. the provider is still told the declaration at the same boundary 41ms",
+      "restoreVerified": true,
+      "seconds": 2.8
+    }
+  }
+}

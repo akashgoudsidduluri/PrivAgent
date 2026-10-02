@@ -1103,10 +1103,39 @@ export class AgentLoop {
       // bounded retry wraps ONLY retryable provider/transport failures)
       this.state.currentStep++;
       let action: BrowserAction;
+      //
+      // POST-17.10 Step 9 — DETERMINISTIC DESTINATION NAVIGATION.
+      //
+      // Step 9's audit found that a destination subgoal had no deterministic
+      // action path at all: every action came from the reasoner, which is never
+      // told the destination (its egress payload is `{task, context,
+      // previousActions}` — the typed declaration and the subgoal never cross
+      // that boundary). So the browser went wherever the model guessed.
+      //
+      // When the user named the destination as a URL, that URL is not a guess.
+      // It is proposed here verbatim, and the provider is not consulted for it.
+      // This is a NAVIGATION CONSTRAINT, not an arrival claim: the action still
+      // passes M5, the security critic, the privacy policy, risk/confirmation,
+      // containment and effect verification below, and the subgoal completes
+      // only if `verifyDestination` confirms it on a FRESH observation.
+      //
+      // A ROLE-ONLY declaration returns null and falls through to the model
+      // exactly as before. A semantic destination has no URL, and inventing one
+      // — or guessing the site's internal paths — would be both a fabrication
+      // and a fixture special-case.
+      const deterministicDestination = OneActionPlanner.proposeDestinationNavigation(activeSubgoal);
       try {
-        console.info('[AgentTrace] requesting reasoning');
-        action = await this.requestActionWithBoundedRetry(task, context);
-        console.info('[AgentTrace] reasoning response received');
+        if (deterministicDestination) {
+          action = deterministicDestination;
+          console.info('[AgentTrace] destination navigation proposed deterministically', {
+            subgoalId: activeSubgoal?.id,
+            url: (deterministicDestination as { url?: string }).url,
+          });
+        } else {
+          console.info('[AgentTrace] requesting reasoning');
+          action = await this.requestActionWithBoundedRetry(task, context);
+          console.info('[AgentTrace] reasoning response received');
+        }
 
         // Enforce the One-Action Proposal constraint: exactly ONE atomic action from allowlist
         const singleActionCheck = OneActionPlanner.validateSingleActionProposal(action);
@@ -2022,6 +2051,73 @@ export class AgentLoop {
           status: effectResult.status,
           details: effectResult.details,
         });
+
+        //
+        // POST-17.10 Step 10 — ALREADY-AT-DESTINATION.
+        //
+        // `ACTION_NO_EFFECT` means the ACTION changed nothing. It is not a
+        // claim about whether the task's destination is already satisfied, and
+        // it is certainly not a success.
+        //
+        // The Step 9 real run hit exactly this: the target resolver had already
+        // provisioned the destination URL, the deterministic navigator then
+        // navigated to that same URL, no transition occurred, and the run was
+        // failed into recovery — even though the browser was sitting on the
+        // declared destination the whole time.
+        //
+        // So: when the active subgoal is a DESTINATION subgoal, take a FRESH
+        // perception and ask the destination verifier. Only an observed MATCH
+        // completes it, and the completion is credited to the observation, not
+        // to the action. Any other verdict falls through to the unchanged
+        // ACTION_NO_EFFECT failure and recovery path below.
+        //
+        // This does not weaken Effect Verification. Its verdict stays exactly
+        // as reported, its failure record is still written when the destination
+        // is NOT satisfied, and it can never itself complete a subgoal.
+        if (activeSubgoal?.destination && this.subgoalGraph) {
+          let freshContext: AgentContextPayload | undefined;
+          try {
+            const fresh = this.normalizePerceptionResult(await this.callbacks.perceivePage());
+            if (fresh) {
+              freshContext = fresh.context;
+              if (fresh.worldModel) {
+                this.state.currentPageGeneration = fresh.worldModel.page.pageGeneration;
+              }
+            }
+          } catch (perceiveErr) {
+            console.warn('[AgentTrace] already-at-destination re-perception failed', {
+              reason: String(perceiveErr).slice(0, 160),
+            });
+          }
+
+          if (freshContext) {
+            const destinationCheck = GoalProgressTracker.verifySubgoalCondition(activeSubgoal, {
+              context: freshContext,
+              pageGeneration: this.state.currentPageGeneration ?? 0,
+            });
+            if (destinationCheck.satisfied) {
+              console.info('[AgentTrace] destination already satisfied — no transition needed', {
+                subgoalId: activeSubgoal.id,
+                evidence: destinationCheck.reason,
+              });
+              this.subgoalGraph.completeSubgoal(activeSubgoal.id);
+              this.state.subgoalGraphData = this.subgoalGraph.toData();
+              // The no-effect verdict is recorded truthfully; the recovery
+              // escalation is simply not warranted once the destination itself
+              // is independently proven.
+              this.state.lastActionResult = {
+                success: false,
+                error: 'ACTION_NO_EFFECT (destination already satisfied per verifier)',
+              };
+              continue;
+            }
+            console.info('[AgentTrace] no transition and destination NOT satisfied', {
+              subgoalId: activeSubgoal.id,
+              reason: destinationCheck.reason,
+            });
+          }
+        }
+
         this.state.lastActionResult = { success: false, error: effectResult.details || 'ACTION_NO_EFFECT' };
         this.state.retryCount++;
         this.state.failureCount++;

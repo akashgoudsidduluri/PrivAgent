@@ -1,0 +1,972 @@
+{
+  "work": "POST-17.10 STEP 10 AUDIT — real production provider-egress capture",
+  "labels": "PROVEN_REAL_CHROME (bytes on the wire) / PROVEN_REAL_BACKEND (backend response)",
+  "inputs": {
+    "task": "open the store catalog",
+    "userSuppliedUrlInTask": null,
+    "startUrl": "http://localhost:4174/",
+    "keptExistingTabs": true,
+    "targetOrigin": "http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "reasoningRequests": [
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/\",\"timestamp\":1790965179526,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-login-cta\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":441,\"y\":297,\"width\":186,\"height\":43},\"length\":15,\"source\":\"dom_attribute\",\"selector\":\"#btn-login-cta\",\"is_partially_visible\":false},{\"id\":\"btn-shop-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":648,\"y\":296,\"width\":191,\"height\":45},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-shop-now\",\"is_partially_visible\":false},{\"id\":\"brand-link\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"#brand-link\",\"is_partially_visible\":false}],\"total_elements_scanned\":18,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"landing\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":2,\"entities\":[],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"btn-shop-now\",\"reason\":\"Scroll down to reveal the store catalog listing section below the hero banner.\"},\"reason\":\"Scroll down to reveal the store catalog listing section below the hero banner.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":712.4,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "status": 200,
+      "requestBody": "{\"action\":{\"action\":\"click\",\"target\":\"btn-shop-now\",\"reason\":\"Scroll down to reveal the store catalog listing section below the hero banner.\"},\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/\",\"timestamp\":1790965179526,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-login-cta\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":441,\"y\":297,\"width\":186,\"height\":43},\"length\":15,\"source\":\"dom_attribute\",\"selector\":\"#btn-login-cta\",\"is_partially_visible\":false},{\"id\":\"btn-shop-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":648,\"y\":296,\"width\":191,\"height\":45},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-shop-now\",\"is_partially_visible\":false},{\"id\":\"brand-link\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"#brand-link\",\"is_partially_visible\":false}],\"total_elements_scanned\":18,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"landing\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":2,\"entities\":[],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"semanticObservation\":{\"state\":\"OBSERVED\",\"provenance\":{\"tabId\":374582623,\"documentUrl\":\"http://localhost:4174/\",\"pageGeneration\":2,\"observedAt\":1790965179547,\"source\":\"WORLD_MODEL_TEXT_REGIONS\"},\"facts\":[{\"id\":\"fact-text-region-1\",\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-1\",\"bbox\":[130,157,1020,51],\"confidence\":0.95,\"pageGeneration\":2,\"untrusted\":false},{\"id\":\"fact-text-region-2\",\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-2\",\"bbox\":[340,224,600,40],\"confidence\":0.9,\"pageGeneration\":2,\"untrusted\":false},{\"id\":\"fact-text-region-3\",\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-3\",\"bbox\":[24,717,1232,16],\"confidence\":0.9,\"pageGeneration\":2,\"untrusted\":false}],\"droppedSensitiveCount\":0,\"quarantinedInjectionCount\":0,\"regionsConsidered\":3,\"latencyMs\":1},\"ocr_observation\":{\"state\":\"NOT_APPLICABLE\",\"provenance\":null,\"completedAt\":null,\"totalTokensScanned\":0,\"sensitiveRegionsCount\":0,\"safeRegionsCount\":0,\"ocrLatencyMs\":0,\"failureReason\":\"DOM extraction sufficient; OCR not required for DOM-only cycle\"},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"model_role\":\"SAFETY\"}",
+      "responseBody": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790965180921,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_incomplete\",\"pageGeneration\":4,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\",\"[Working] STEP_1_RESULT: {  \\\"action\\\": \\\"click\\\",  \\\"success\\\": true,  \\\"subgoalId\\\": \\\"goal-murafcs0-ionu1-sg1\\\",  \\\"target\\\": \\\"btn-shop-now\\\" }\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[{\"action\":\"click\",\"target\":\"btn-shop-now\",\"reason\":\"Scroll down to reveal the store catalog listing section below the hero banner.\"}],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"type\",\"target\":\"input-search-query\",\"text\":\"products\",\"reason\":\"Enter a broad catalog query into the search field to reach the product listing page.\"},\"reason\":\"Enter a broad catalog query into the search field to reach the product listing page.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":481.9,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "status": 200,
+      "requestBody": "{\"action\":{\"action\":\"type\",\"target\":\"input-search-query\",\"text\":\"products\",\"reason\":\"Enter a broad catalog query into the search field to reach the product listing page.\"},\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790965180921,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_incomplete\",\"pageGeneration\":4,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"semanticObservation\":{\"state\":\"OBSERVED\",\"provenance\":{\"tabId\":374582623,\"documentUrl\":\"http://localhost:4174/search.html\",\"pageGeneration\":4,\"observedAt\":1790965180936,\"source\":\"WORLD_MODEL_TEXT_REGIONS\"},\"facts\":[{\"id\":\"fact-text-region-1\",\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-1\",\"bbox\":[373,158,534,28],\"confidence\":0.95,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-2\",\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-2\",\"bbox\":[24,717,1232,16],\"confidence\":0.9,\"pageGeneration\":4,\"untrusted\":false}],\"droppedSensitiveCount\":0,\"quarantinedInjectionCount\":0,\"regionsConsidered\":2,\"latencyMs\":0},\"ocr_observation\":{\"state\":\"NOT_APPLICABLE\",\"provenance\":null,\"completedAt\":null,\"totalTokensScanned\":0,\"sensitiveRegionsCount\":0,\"safeRegionsCount\":0,\"ocrLatencyMs\":0,\"failureReason\":\"DOM extraction sufficient; OCR not required for DOM-only cycle\"},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\",\"[Working] STEP_1_RESULT: {  \\\"action\\\": \\\"click\\\",  \\\"success\\\": true,  \\\"subgoalId\\\": \\\"goal-murafcs0-ionu1-sg1\\\",  \\\"target\\\": \\\"btn-shop-now\\\" }\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"model_role\":\"SAFETY\"}",
+      "responseBody": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 503,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790965181976,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_complete\",\"pageGeneration\":5,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 1,  \\\"actionsTaken\\\": 1,  \\\"recoveryAttempts\\\": 0 }\",\"[Working] STEP_1_RESULT: {  \\\"action\\\": \\\"click\\\",  \\\"success\\\": true,  \\\"subgoalId\\\": \\\"goal-murafcs0-ionu1-sg1\\\",  \\\"target\\\": \\\"btn-shop-now\\\" }\",\"[Working] STEP_2_RESULT: {  \\\"action\\\": \\\"type\\\",  \\\"success\\\": true,  \\\"target\\\": \\\"input-search-query\\\" }\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[{\"action\":\"click\",\"target\":\"btn-shop-now\",\"reason\":\"Scroll down to reveal the store catalog listing section below the hero banner.\"},{\"action\":\"type\",\"target\":\"input-search-query\",\"text\":\"products\",\"reason\":\"Enter a broad catalog query into the search field to reach the product listing page.\"}],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"http_client_error\",\"retryable\":false}}"
+    }
+  ],
+  "analysis": {
+    "provisionedTab": {
+      "id": 374582623,
+      "url": "http://localhost:4174/"
+    },
+    "perRequest": [
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 2286,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"btn-shop-now\",\"reason\":\"Scroll down to reveal the store catalog listing section below the hero banner.\"},\"reason\":\"Scroll down to reveal the store catalog listing section below the hero banner.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":712.4,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/review",
+        "status": 200,
+        "bytes": 3999,
+        "topLevelKeys": [
+          "action",
+          "task",
+          "context",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 3481,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"type\",\"target\":\"input-search-query\",\"text\":\"products\",\"reason\":\"Enter a broad catalog query into the search field to reach the product listing page.\"},\"reason\":\"Enter a broad catalog query into the search field to reach the product listing page.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":481.9,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/review",
+        "status": 200,
+        "bytes": 4725,
+        "topLevelKeys": [
+          "action",
+          "task",
+          "context",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "text",
+          "label"
+        ],
+        "responsePreview": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 503,
+        "bytes": 3751,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "text",
+          "label"
+        ],
+        "responsePreview": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"http_client_error\",\"retryable\":false}}"
+      }
+    ],
+    "summary": {
+      "totalApiRequests": 5,
+      "requestsCarryingDeclaredDestination": 5,
+      "anyRoleOnlyRequest": true,
+      "anyUrlCarryingRequest": false,
+      "anyForbiddenKeyInDeclaration": false,
+      "anyUnexpectedStringLeafInDeclaration": true,
+      "anyForbiddenKeyInWholePayload": true
+    },
+    "statesWithActionResult": [
+      {
+        "status": "IN_PROGRESS",
+        "goalStatus": "IN_PROGRESS",
+        "currentStep": 1,
+        "lastActionResult": {
+          "success": true
+        },
+        "completedSteps": [
+          "click: Click element btn-shop-now"
+        ],
+        "failureCategories": [],
+        "lastFailureCategory": null,
+        "subgoalStates": {
+          "goal-murafcs0-ionu1-sg1": "IN_PROGRESS",
+          "goal-murafcs0-ionu1-sg2": "PENDING",
+          "goal-murafcs0-ionu1-sg3": "PENDING",
+          "goal-murafcs0-ionu1-sg4": "PENDING"
+        },
+        "subgoalConditions": {
+          "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+          "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+          "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+          "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+        },
+        "planningEngineState": "SUBGOAL_SELECTION",
+        "highLevelGoalId": "goal-murafcs0-ionu1",
+        "currentUrl": "http://localhost:4174/",
+        "pageType": "landing",
+        "reason": null,
+        "subgoalVerificationHistory": [
+          {
+            "subgoalId": "goal-murafcs0-ionu1-sg1",
+            "satisfied": false,
+            "reason": "Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+          }
+        ],
+        "destinationSubgoalStates": {
+          "goal-murafcs0-ionu1-sg1": {
+            "state": "IN_PROGRESS",
+            "destination": {
+              "kind": "DECLARED",
+              "role": {
+                "provenance": "EXPLICIT_PAGE_ROLE",
+                "acceptablePageTypes": [
+                  "LISTING"
+                ]
+              }
+            },
+            "cond": "DESTINATION_VERIFIED"
+          }
+        }
+      },
+      {
+        "status": "IN_PROGRESS",
+        "goalStatus": "IN_PROGRESS",
+        "currentStep": 2,
+        "lastActionResult": {
+          "success": true
+        },
+        "completedSteps": [
+          "click: Click element btn-shop-now",
+          "type: Type text into element input-search-query"
+        ],
+        "failureCategories": [],
+        "lastFailureCategory": null,
+        "subgoalStates": {
+          "goal-murafcs0-ionu1-sg1": "IN_PROGRESS",
+          "goal-murafcs0-ionu1-sg2": "PENDING",
+          "goal-murafcs0-ionu1-sg3": "PENDING",
+          "goal-murafcs0-ionu1-sg4": "PENDING"
+        },
+        "subgoalConditions": {
+          "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+          "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+          "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+          "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+        },
+        "planningEngineState": "SUBGOAL_SELECTION",
+        "highLevelGoalId": "goal-murafcs0-ionu1",
+        "currentUrl": "http://localhost:4174/search.html",
+        "pageType": "search",
+        "reason": null,
+        "subgoalVerificationHistory": [
+          {
+            "subgoalId": "goal-murafcs0-ionu1-sg1",
+            "satisfied": false,
+            "reason": "Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+          }
+        ],
+        "destinationSubgoalStates": {
+          "goal-murafcs0-ionu1-sg1": {
+            "state": "IN_PROGRESS",
+            "destination": {
+              "kind": "DECLARED",
+              "role": {
+                "provenance": "EXPLICIT_PAGE_ROLE",
+                "acceptablePageTypes": [
+                  "LISTING"
+                ]
+              }
+            },
+            "cond": "DESTINATION_VERIFIED"
+          }
+        }
+      },
+      {
+        "status": "FAILED",
+        "goalStatus": "FAILED",
+        "currentStep": 3,
+        "lastActionResult": {
+          "success": true
+        },
+        "completedSteps": [
+          "click: Click element btn-shop-now",
+          "type: Type text into element input-search-query"
+        ],
+        "failureCategories": [],
+        "lastFailureCategory": null,
+        "subgoalStates": {
+          "goal-murafcs0-ionu1-sg1": "IN_PROGRESS",
+          "goal-murafcs0-ionu1-sg2": "PENDING",
+          "goal-murafcs0-ionu1-sg3": "PENDING",
+          "goal-murafcs0-ionu1-sg4": "PENDING"
+        },
+        "subgoalConditions": {
+          "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+          "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+          "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+          "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+        },
+        "planningEngineState": "SUBGOAL_SELECTION",
+        "highLevelGoalId": "goal-murafcs0-ionu1",
+        "currentUrl": "http://localhost:4174/search.html",
+        "pageType": "search",
+        "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.",
+        "subgoalVerificationHistory": [
+          {
+            "subgoalId": "goal-murafcs0-ionu1-sg1",
+            "satisfied": false,
+            "reason": "Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+          }
+        ],
+        "destinationSubgoalStates": {
+          "goal-murafcs0-ionu1-sg1": {
+            "state": "IN_PROGRESS",
+            "destination": {
+              "kind": "DECLARED",
+              "role": {
+                "provenance": "EXPLICIT_PAGE_ROLE",
+                "acceptablePageTypes": [
+                  "LISTING"
+                ]
+              }
+            },
+            "cond": "DESTINATION_VERIFIED"
+          }
+        }
+      },
+      {
+        "status": "FAILED",
+        "goalStatus": "FAILED",
+        "currentStep": 3,
+        "lastActionResult": {
+          "success": true
+        },
+        "completedSteps": [
+          "click: Click element btn-shop-now",
+          "type: Type text into element input-search-query"
+        ],
+        "failureCategories": [],
+        "lastFailureCategory": null,
+        "subgoalStates": {
+          "goal-murafcs0-ionu1-sg1": "IN_PROGRESS",
+          "goal-murafcs0-ionu1-sg2": "PENDING",
+          "goal-murafcs0-ionu1-sg3": "PENDING",
+          "goal-murafcs0-ionu1-sg4": "PENDING"
+        },
+        "subgoalConditions": {
+          "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+          "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+          "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+          "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+        },
+        "planningEngineState": "SUBGOAL_SELECTION",
+        "highLevelGoalId": "goal-murafcs0-ionu1",
+        "currentUrl": "http://localhost:4174/search.html",
+        "pageType": "search",
+        "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.",
+        "subgoalVerificationHistory": [
+          {
+            "subgoalId": "goal-murafcs0-ionu1-sg1",
+            "satisfied": false,
+            "reason": "Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+          }
+        ],
+        "destinationSubgoalStates": {
+          "goal-murafcs0-ionu1-sg1": {
+            "state": "IN_PROGRESS",
+            "destination": {
+              "kind": "DECLARED",
+              "role": {
+                "provenance": "EXPLICIT_PAGE_ROLE",
+                "acceptablePageTypes": [
+                  "LISTING"
+                ]
+              }
+            },
+            "cond": "DESTINATION_VERIFIED"
+          }
+        }
+      }
+    ]
+  },
+  "loopLogs": [
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":2,\"entityCount\":0,\"affordanceCount\":1}",
+    "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-murafcs0-ionu1-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Reach the destination declared in the user request\"}",
+    "[AgentTrace] subgoal NOT completed — no observed evidence {\"subgoalId\":\"goal-murafcs0-ionu1-sg1\",\"category\":\"NAVIGATE\",\"reason\":\"Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_incomplete\",\"pageGeneration\":4,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_complete\",\"pageGeneration\":5,\"entityCount\":1,\"affordanceCount\":5}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":3,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":3,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}"
+  ],
+  "rawLogs": [
+    "TARGET_RESOLUTION_STARTED",
+    "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}",
+    "[AgentTrace] service worker START_TASK received {\"taskLength\":22}",
+    "TARGET_TAB_CANDIDATES [{\"id\":374582621,\"origin\":\"null\"},{\"id\":374582622,\"origin\":\"http://localhost:5173\"},{\"id\":374582623,\"origin\":\"http://localhost:4174\"}]",
+    "[AgentTrace] containment scope established {\"established\":true,\"rootHost\":\"localhost\",\"tabId\":374582623}",
+    "TARGET_TAB_SELECTED {\"tabId\":374582623,\"origin\":\"http://localhost:4174\",\"reason\":\"Selected active web tab.\"}",
+    "[AgentTrace] target resolved {\"tabId\":374582623}",
+    "[AgentTrace] first progress emitted",
+    "TARGET_TAB_READY {\"tabId\":374582623}",
+    "[AgentTrace] target content script ready {\"tabId\":374582623}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PERCEPTION\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"RUNNING\",\"currentStep\":0,\"reason\":\"Target tab discovered and ready. Starting visual privacy perception...\"}",
+    "[AgentTrace] agent loop started",
+    "[AgentTrace] perception started",
+    "[AgentTrace] long-horizon state {\"restoreStatus\":\"FRESH_NO_RECORD\",\"detail\":null,\"actionCount\":0,\"recoveryCount\":0,\"consecutiveNoProgress\":0,\"totalNoProgress\":0}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":0}",
+    "[AgentTrace] harness cycle {\"cycle\":1,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":1,\"url\":\"http://localhost:4174/\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":6,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":3,\"regionsConsidered\":3,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":1,\"contextUrl\":\"http://localhost:4174/\",\"worldModelId\":\"wm-g2-murafcsm-wns3\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":11,\"privacyFindingsCount\":6}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":2,\"entityCount\":0,\"affordanceCount\":1}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-murafcs0-ionu1-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Reach the destination declared in the user request\"}",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[\"NEW_PAGE\"],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":0,\"actions\":0,\"loop\":false,\"stalled\":false}",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] action passed privacy policy",
+    "[AgentTrace] requesting safety review",
+    "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}",
+    "[AgentTrace] action passed safety review",
+    "[AgentTrace] executeAction started",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"targeted\",\"url\":\"http://localhost:4174/\",\"scrollY\":0,\"domElementCount\":34,\"openModalsCount\":0,\"targetValueLength\":0}",
+    "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:localhost\"}",
+    "[AgentTrace] executeAction response received",
+    "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
+    "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) {\"phase\":\"targeted\",\"url\":\"http://localhost:4174/search.html\",\"tabStatus\":\"loading\"}",
+    "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED {\"status\":\"URL_NAVIGATION_OBSERVED\",\"details\":\"Click on 'btn-shop-now' triggered page navigation to 'http://localhost:4174/search.html'.\"}",
+    "[AgentTrace] M6 next step",
+    "[AgentTrace] subgoal NOT completed — no observed evidence {\"subgoalId\":\"goal-murafcs0-ionu1-sg1\",\"category\":\"NAVIGATE\",\"reason\":\"Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":1}",
+    "[AgentTrace] perception started",
+    "[AgentTrace] harness cycle {\"cycle\":2,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":3,\"url\":\"http://localhost:4174/\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":2,\"regionsConsidered\":2,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":3,\"contextUrl\":\"http://localhost:4174/search.html\",\"worldModelId\":\"wm-g4-murafdvd-fitn\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":10,\"privacyFindingsCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_incomplete\",\"pageGeneration\":4,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[\"NEW_PAGE\",\"NEW_ENTITY\"],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":1,\"actions\":1,\"loop\":false,\"stalled\":false}",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] action passed privacy policy",
+    "[AgentTrace] requesting safety review",
+    "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}",
+    "[AgentTrace] action passed safety review",
+    "[AgentTrace] executeAction started",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"targeted\",\"url\":\"http://localhost:4174/search.html\",\"scrollY\":0,\"domElementCount\":35,\"openModalsCount\":0,\"targetValueLength\":0}",
+    "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:localhost\"}",
+    "[AgentTrace] executeAction response received",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"targeted\",\"url\":\"http://localhost:4174/search.html\",\"scrollY\":0,\"domElementCount\":35,\"openModalsCount\":0,\"targetValueLength\":8}",
+    "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED {\"status\":\"VALUE_STATE_CHANGED\",\"details\":\"Type action registered value change in target 'input-search-query' (length: 8).\"}",
+    "[AgentTrace] M6 next step",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":2}",
+    "[AgentTrace] perception started",
+    "[AgentTrace] harness cycle {\"cycle\":3,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":5,\"url\":\"http://localhost:4174/search.html\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":2,\"regionsConsidered\":2,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":5,\"contextUrl\":\"http://localhost:4174/search.html\",\"worldModelId\":\"wm-g5-murafeoo-h5kz\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":10,\"privacyFindingsCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_complete\",\"pageGeneration\":5,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":1,\"actions\":2,\"loop\":false,\"stalled\":false}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":3,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}",
+    "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\"}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":3,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790965189159\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790965189159\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790965189159\",\"targetFound\":true,\"tabId\":374582623,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790965189159\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790965204159\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790965204159\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790965204159\",\"targetFound\":true,\"tabId\":374582623,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790965204159\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790965219159\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790965219159\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790965219159\",\"targetFound\":true,\"tabId\":374582623,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790965219159\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790965234159\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790965234159\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790965234159\",\"targetFound\":true,\"tabId\":374582623,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790965234159\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790965249159\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790965249159\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790965249159\",\"targetFound\":true,\"tabId\":374582623,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790965249159\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790965264159\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790965264159\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790965264159\",\"targetFound\":true,\"tabId\":374582623,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790965264159\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790965279159\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790965279159\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790965279159\",\"targetFound\":true,\"tabId\":374582623,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790965279159\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790965294159\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790965294159\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790965294159\",\"targetFound\":true,\"tabId\":374582623,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790965294159\",\"targetFound\":true}"
+  ],
+  "observations": [
+    {
+      "url": "http://localhost:4174/search.html",
+      "semanticPageType": "UNKNOWN",
+      "semanticConfidence": 0.1,
+      "semanticPageGeneration": 6
+    }
+  ],
+  "reportedStates": [
+    {
+      "status": "RUNNING",
+      "goalStatus": null,
+      "currentStep": 0,
+      "lastActionResult": null,
+      "completedSteps": null,
+      "failureCategories": null,
+      "lastFailureCategory": null,
+      "subgoalStates": null,
+      "subgoalConditions": null,
+      "planningEngineState": null,
+      "highLevelGoalId": null,
+      "currentUrl": "http://localhost:4174/",
+      "pageType": null,
+      "reason": "Target tab discovered and ready. Starting visual privacy perception...",
+      "subgoalVerificationHistory": null,
+      "destinationSubgoalStates": null
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 0,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-murafcs0-ionu1-sg1": "READY",
+        "goal-murafcs0-ionu1-sg2": "PENDING",
+        "goal-murafcs0-ionu1-sg3": "PENDING",
+        "goal-murafcs0-ionu1-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+        "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+        "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "SUBGOAL_SELECTION",
+      "highLevelGoalId": "goal-murafcs0-ionu1",
+      "currentUrl": "http://localhost:4174/",
+      "pageType": "unknown",
+      "reason": null,
+      "subgoalVerificationHistory": [],
+      "destinationSubgoalStates": {
+        "goal-murafcs0-ionu1-sg1": {
+          "state": "READY",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 1,
+      "lastActionResult": {
+        "success": true
+      },
+      "completedSteps": [
+        "click: Click element btn-shop-now"
+      ],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-murafcs0-ionu1-sg1": "IN_PROGRESS",
+        "goal-murafcs0-ionu1-sg2": "PENDING",
+        "goal-murafcs0-ionu1-sg3": "PENDING",
+        "goal-murafcs0-ionu1-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+        "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+        "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "SUBGOAL_SELECTION",
+      "highLevelGoalId": "goal-murafcs0-ionu1",
+      "currentUrl": "http://localhost:4174/",
+      "pageType": "landing",
+      "reason": null,
+      "subgoalVerificationHistory": [
+        {
+          "subgoalId": "goal-murafcs0-ionu1-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ],
+      "destinationSubgoalStates": {
+        "goal-murafcs0-ionu1-sg1": {
+          "state": "IN_PROGRESS",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 2,
+      "lastActionResult": {
+        "success": true
+      },
+      "completedSteps": [
+        "click: Click element btn-shop-now",
+        "type: Type text into element input-search-query"
+      ],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-murafcs0-ionu1-sg1": "IN_PROGRESS",
+        "goal-murafcs0-ionu1-sg2": "PENDING",
+        "goal-murafcs0-ionu1-sg3": "PENDING",
+        "goal-murafcs0-ionu1-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+        "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+        "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "SUBGOAL_SELECTION",
+      "highLevelGoalId": "goal-murafcs0-ionu1",
+      "currentUrl": "http://localhost:4174/search.html",
+      "pageType": "search",
+      "reason": null,
+      "subgoalVerificationHistory": [
+        {
+          "subgoalId": "goal-murafcs0-ionu1-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ],
+      "destinationSubgoalStates": {
+        "goal-murafcs0-ionu1-sg1": {
+          "state": "IN_PROGRESS",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    },
+    {
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "currentStep": 3,
+      "lastActionResult": {
+        "success": true
+      },
+      "completedSteps": [
+        "click: Click element btn-shop-now",
+        "type: Type text into element input-search-query"
+      ],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-murafcs0-ionu1-sg1": "IN_PROGRESS",
+        "goal-murafcs0-ionu1-sg2": "PENDING",
+        "goal-murafcs0-ionu1-sg3": "PENDING",
+        "goal-murafcs0-ionu1-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+        "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+        "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "SUBGOAL_SELECTION",
+      "highLevelGoalId": "goal-murafcs0-ionu1",
+      "currentUrl": "http://localhost:4174/search.html",
+      "pageType": "search",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.",
+      "subgoalVerificationHistory": [
+        {
+          "subgoalId": "goal-murafcs0-ionu1-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ],
+      "destinationSubgoalStates": {
+        "goal-murafcs0-ionu1-sg1": {
+          "state": "IN_PROGRESS",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    },
+    {
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "currentStep": 3,
+      "lastActionResult": {
+        "success": true
+      },
+      "completedSteps": [
+        "click: Click element btn-shop-now",
+        "type: Type text into element input-search-query"
+      ],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-murafcs0-ionu1-sg1": "IN_PROGRESS",
+        "goal-murafcs0-ionu1-sg2": "PENDING",
+        "goal-murafcs0-ionu1-sg3": "PENDING",
+        "goal-murafcs0-ionu1-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-murafcs0-ionu1-sg1": "DESTINATION_VERIFIED",
+        "goal-murafcs0-ionu1-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-murafcs0-ionu1-sg3": "STATE_CHANGED",
+        "goal-murafcs0-ionu1-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "SUBGOAL_SELECTION",
+      "highLevelGoalId": "goal-murafcs0-ionu1",
+      "currentUrl": "http://localhost:4174/search.html",
+      "pageType": "search",
+      "reason": "Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.",
+      "subgoalVerificationHistory": [
+        {
+          "subgoalId": "goal-murafcs0-ionu1-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-murafcs0-ionu1-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ],
+      "destinationSubgoalStates": {
+        "goal-murafcs0-ionu1-sg1": {
+          "state": "IN_PROGRESS",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    }
+  ]
+}

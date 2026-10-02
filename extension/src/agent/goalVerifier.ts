@@ -27,6 +27,15 @@
 import { AgentContextPayload, AgentDetection } from '../privacy/types';
 import { AgentTaskState, CandidateProductItem, StructuredConstraints, TaskStatus } from './agentState';
 import { isSameDocumentIdentity, MAX_OCR_OBSERVATION_AGE_MS, OCRObservation } from '../ocr/ocrObservationContract';
+import { GoalProgressTracker } from '../hierarchicalPlanning/goalProgressTracker';
+import type { Subgoal } from '../hierarchicalPlanning/hierarchicalTypes';
+import {
+  SemanticObservation,
+  SemanticFact,
+  evidenceFacts,
+  factMatchesTaskWording,
+  isSemanticObservationFresh,
+} from '../semanticObservation';
 
 export interface GoalVerificationResult {
   satisfied: boolean;
@@ -206,6 +215,33 @@ const RESEARCH_STOPWORDS = new Set([
  *   1. the goal asks for MULTIPLE items ("find the director, producers and ...")
  *   2. the goal expects MULTIPLE pages / a synthesis of what was inspected.
  */
+/**
+ * Selects the single display fact a reporting goal is asking for.
+ *
+ * Whole-word key matching alone is not sufficient, and the fixture proves why:
+ * "Open the store **catalog** at ..., open the first product listed, and
+ * report the **price** shown on its product page" contains the word "catalog",
+ * so a page whose heading is simply `Catalog` produces a matching fact that has
+ * nothing to do with what the user asked to be told.
+ *
+ * A goal that asks the agent to REPORT something wants a VALUE. So a candidate
+ * that actually carries a parsed display value is preferred over one that only
+ * repeats a word the user used, and a value-less text fact is accepted only
+ * when nothing better was observed (a goal like "report the product name").
+ *
+ * Ties are broken by document order — the first such fact the page displayed.
+ * Injection-shaped facts never reach this function: `evidenceFacts` has already
+ * excluded them.
+ */
+function selectReportedFact(observation: SemanticObservation, task: string): SemanticFact | null {
+  const candidates = evidenceFacts(observation).filter((fact) => factMatchesTaskWording(fact, task));
+  if (candidates.length === 0) return null;
+  const withValue = candidates.find(
+    (fact) => fact.displayValue !== null && String(fact.displayValue).length > 0
+  );
+  return withValue ?? candidates[0]!;
+}
+
 function extractResearchItems(task: string): string[] | null {
   const lower = task.toLowerCase();
   // Exclude goals owned by the stronger, earlier rules. `product` is matched on
@@ -592,6 +628,77 @@ export function verifyTaskGoal(
     return { satisfied: false, status: 'IN_PROGRESS' };
   }
 
+  // ── 2c. Read-only display-fact goals (post-17.9) ───────────────────────────
+  //
+  // A goal that asks the agent to REPORT something the page displays ("...and
+  // report the price shown on its product page") has no action that can
+  // complete it and no interactive element that names it, so before this rule
+  // it could never be certified at all.
+  //
+  // The evidence is a SEMANTIC OBSERVATION, and only that. Deliberately:
+  //   * nothing here reads the model's claim, its reason, or any action;
+  //   * the observation must be OBSERVED, on THIS target tab, in the SAME
+  //     document, within the observation TTL, and not from a future page
+  //     generation;
+  //   * injection-shaped display text is excluded by `evidenceFacts`, so page
+  //     text can never promote itself into evidence;
+  //   * the fact's key must appear as a whole word in the USER'S OWN task text.
+  //
+  // The AMBIGUITY PROVISION keeps this sound rather than merely permissive. It
+  // was found by running the real reasoner against the real fixture, where the
+  // naive version of this rule returned SUCCESS while the tab was still on the
+  // catalog listing: that listing shows the SAME "Price: 24" as the product
+  // page, plus a second price, so a single fact read there certified a goal
+  // whose wording asks for the price "on its product page".
+  //
+  // The governing idea is that "the price" is only determined when the observed
+  // page shows exactly ONE candidate for that key. A listing that displays
+  // several values has not yet told the agent WHICH item is meant, so it is
+  // not evidence of a particular value. This is a statement about the evidence,
+  // not about the task's wording, and it needs no site-specific knowledge.
+  //
+  // Fail closed: no observation, a stale one, or an ambiguous one leaves the
+  // verdict exactly as every other rule would have left it.
+  const reportIntent = /\b(?:report|tell\s+me|read|state|say|what\s+is|what's|whats|display|show\s+me)\b/i;
+  if (reportIntent.test(task)) {
+    const observation = (context as { semanticObservation?: SemanticObservation }).semanticObservation;
+    const currentUrlForFact = context.url || state.currentUrl || '';
+    if (
+      observation &&
+      isSemanticObservationFresh(
+        observation,
+        state.targetTabId,
+        currentUrlForFact,
+        state.currentPageGeneration ?? 0
+      )
+    ) {
+      const matched = selectReportedFact(observation, task);
+      if (matched) {
+        // Fail closed when the page shows more than one candidate for this key,
+        // so a listing can never certify "the" value.
+        const candidates = evidenceFacts(observation).filter((f) => f.key === matched.key);
+        // The selected fact must BE one of the observed candidates. Checking the
+        // count alone is not enough: a fact that merely shares the key could
+        // carry a value that was never observed, which is how a model's own
+        // claim would otherwise be able to pose as a reading.
+        const observed = candidates.find(
+          (f) => f.displayText === matched.displayText && f.displayValue === matched.displayValue
+        );
+        if (candidates.length === 1 && observed) {
+          return {
+            satisfied: true,
+            status: 'SUCCESS',
+            reason:
+              `Display fact verified from fresh authoritative observation: ` +
+              `'${observed.label || observed.key}' is '${observed.displayText}' ` +
+              `(source ${observed.source}, page generation ${observed.pageGeneration}, ` +
+              `sole candidate for '${observed.key}' on the observed page).`,
+          };
+        }
+      }
+    }
+  }
+
   // ── 3. Shopping / Product Search & Constraint Verification ─────────────────
   const isShoppingTask =
     state.taskConstraints?.maxPrice !== undefined ||
@@ -835,5 +942,186 @@ export function verifyTaskGoal(
     }
   }
 
+  // ── 7. Declared-destination navigation goals (POST-17.10 G7) ────────────────
+  const destinationGoal = verifyDeclaredDestinationGoal(state, context);
+  if (destinationGoal) {
+    return destinationGoal;
+  }
+
   return { satisfied: false, status: 'IN_PROGRESS' };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// POST-17.10 G7 — DECLARED-DESTINATION GOALS
+// ══════════════════════════════════════════════════════════════════════════════
+//
+// WHAT THE DEFECT WAS
+// ───────────────────
+// `verifyTaskGoal` had six task-shape branches: generic search, login,
+// multi-page research, shopping/constraints, banking, single-step demo goals
+// and OCR perception goals. A task whose only requirement is to REACH a page
+// the user named — "open the store catalog" — matches none of them: it
+// contains no `search`, `login`, `shopping`, `product`, `bag`, `details`,
+// `scroll`, `account number` or `canvas` token, and carries no
+// maxPrice/size/color constraint. It therefore reached the catch-all
+// `IN_PROGRESS` under EVERY browser state.
+//
+// The consequence was a permanent fail-closed hole rather than a fail-open
+// one. The rest of the architecture already knew how to prove the task was
+// done: `decomposeTask` emits a `DESTINATION_VERIFIED` subgoal carrying the
+// user's typed declaration, and `GoalProgressTracker.verifySubgoalCondition`
+// completes it only when `verifyDestination` returns MATCH on a FRESH
+// observation. Nothing connected that completion to TASK success, so the task
+// could never terminate successfully however correctly the agent navigated.
+// Verified empirically: `verifyTaskGoal` returned the identical
+// `IN_PROGRESS` for a correct LISTING@0.99 observation and for wrong-page,
+// low-confidence and stale observations alike — proof that the failure was
+// structural and not evidence-related.
+//
+// WHAT THIS IS NOT
+// ────────────────
+// This branch does NOT re-implement destination matching. It deliberately has
+// no URL comparison, no page-role comparison, no confidence floor, no
+// freshness test, no destination normalization and no UNKNOWN/MISMATCH
+// semantics of its own. Every one of those already has exactly one owner —
+// `verifyDestination`, the sole arrival authority — and duplicating any of
+// them here would create a second, weaker answer to the same question and let
+// the two drift apart.
+//
+// The authority chain is followed, not shortened:
+//
+//     verifyTaskGoal
+//        └─> GoalProgressTracker.verifySubgoalCondition
+//               └─> verifyDestination            (sole arrival authority)
+//
+// A subgoal is only ever marked COMPLETED behind that chain: both
+// `SubgoalGraph.completeSubgoal` call sites in the loop are gated on
+// `verifySubgoalCondition(...).satisfied`. So "the subgoal is COMPLETED" is
+// not dispatch state, not a model claim and not a planner guess — it is
+// DestinationVerifier's MATCH, recorded by the existing architecture.
+//
+// This branch re-runs that same chain against the CURRENT observation before
+// certifying, so completion can never be certified from a stale graph alone.
+//
+// FAIL-CLOSED
+// ───────────
+// Returns `null` (meaning "not a declared-destination goal; other rules
+// apply") only when the plan carries no destination subgoal at all. Every
+// other outcome — missing graph, incomplete destination, FAILED destination, a
+// re-check that no longer matches, or an outstanding requirement — is
+// `IN_PROGRESS`. Nothing here can manufacture SUCCESS.
+
+/**
+ * Whether a subgoal asserts an INDEPENDENT requirement of the user's task,
+ * as opposed to the decomposer's own navigation mechanism.
+ *
+ * The two exclusions are both the decomposer's OWN explicit markers, not an
+ * invention here:
+ *
+ *  - `AFFORDANCE_AVAILABLE` with no `expectedValue` is documented in
+ *    `taskDecomposer` as "KNOWN-UNVERIFIABLE, DELIBERATELY UNCHANGED" and is
+ *    refused by `GoalProgressTracker` for want of a named affordance. It is
+ *    an existence claim the sanitized context cannot express, so it can never
+ *    complete and must not gate task success. A NAMED affordance IS a real
+ *    requirement and does gate.
+ *  - `STATE_CHANGED` is the decomposer's generic "means" condition for its
+ *    LOCATE/SELECT/VERIFY scaffolding chain. `GoalProgressTracker` documents it
+ *    as needing a prior observation to be provable at all.
+ *
+ * `CUSTOM` counts as a requirement: it has no observation-backed
+ * implementation, so a plan carrying one cannot be certified complete.
+ */
+function isOutstandingTaskRequirement(subgoal: Subgoal): boolean {
+  const cond = subgoal.verificationCondition;
+  if (!cond) return false;
+  if (cond.type === 'DESTINATION_VERIFIED') return false;
+  if (cond.type === 'AFFORDANCE_AVAILABLE') {
+    return String(cond.expectedValue ?? '').trim().length > 0;
+  }
+  if (cond.type === 'STATE_CHANGED') return false;
+  return true;
+}
+
+/**
+ * Certify a declared-destination navigation goal, or return `null` when this
+ * task is not one.
+ *
+ * `null` means ONLY "the plan declares no destination subgoal", i.e. this is
+ * not the rule that governs the task. Every other path is fail-closed.
+ */
+function verifyDeclaredDestinationGoal(
+  state: AgentTaskState,
+  context: AgentContextPayload
+): GoalVerificationResult | null {
+  const graphData = state.subgoalGraphData;
+  if (!graphData?.subgoals) return null;
+
+  const subgoals = Object.values(graphData.subgoals);
+  const destinationSubgoals = subgoals.filter(
+    (sg) =>
+      sg.destination?.kind === 'DECLARED' &&
+      sg.verificationCondition?.type === 'DESTINATION_VERIFIED'
+  );
+  if (destinationSubgoals.length === 0) return null;
+
+  const notYet = (reason: string): GoalVerificationResult => ({
+    satisfied: false,
+    status: 'IN_PROGRESS',
+    reason,
+  });
+
+  // More than one declared destination is not a shape the decomposer produces;
+  // refuse rather than pick one.
+  if (destinationSubgoals.length > 1) {
+    return notYet(
+      `Plan declares ${destinationSubgoals.length} destination subgoals; a declared-destination task is not certifiable from an ambiguous plan.`
+    );
+  }
+
+  const destinationSubgoal = destinationSubgoals[0]!;
+
+  // PENDING / READY / IN_PROGRESS / FAILED all fail closed. Only an
+  // evidence-backed COMPLETE counts — never dispatch, never a model claim.
+  if (destinationSubgoal.state !== 'COMPLETED') {
+    return notYet(
+      `Destination subgoal ${destinationSubgoal.id} is ${destinationSubgoal.state}, so the declared destination is not proven reached.`
+    );
+  }
+
+  // Re-run the authority chain on the CURRENT observation. This is what makes a
+  // stale or superseded graph insufficient on its own.
+  const recheck = GoalProgressTracker.verifySubgoalCondition(destinationSubgoal, {
+    context,
+    previous: undefined,
+    pageGeneration: state.currentPageGeneration ?? 0,
+    userConfirmedActionIds: state.confirmedActionIds ?? [],
+  });
+  if (!recheck.satisfied) {
+    return notYet(
+      `Declared destination not confirmed on the current observation: ${recheck.reason}`
+    );
+  }
+
+  // A reached destination is not a finished task while the user asked for
+  // more. Any outstanding requirement blocks certification.
+  const outstanding = subgoals.filter(
+    (sg) =>
+      sg.id !== destinationSubgoal.id &&
+      sg.state !== 'COMPLETED' &&
+      sg.state !== 'SKIPPED' &&
+      isOutstandingTaskRequirement(sg)
+  );
+  if (outstanding.length > 0) {
+    return notYet(
+      `Declared destination is reached, but ${outstanding.length} required subgoal(s) remain outstanding: ${outstanding
+        .map((sg) => `${sg.id} (${sg.verificationCondition?.type})`)
+        .join(', ')}.`
+    );
+  }
+
+  return {
+    satisfied: true,
+    status: 'SUCCESS',
+    reason: `Declared destination goal verified by the destination verifier: ${recheck.reason}`,
+  };
 }

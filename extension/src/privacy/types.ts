@@ -276,6 +276,18 @@ export interface AgentContextPayload {
   semantic_groups?: SemanticGroupMetadata[];
   memory_hints?: import('../memory/memoryRetriever').MemoryHints;
   semantic_context?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
+  /**
+   * Post-17.9. LOCAL ONLY — stripped at the egress boundary, exactly like
+   * `ocr_observation` above.
+   *
+   * This is the provenance record for the sanitized semantic facts that travel
+   * inside `semantic_context`: which target tab, which document, which page
+   * generation and when. Goal verification must consult it to decide whether a
+   * fact still describes the live page; the reasoner has no use for it, and it
+   * is a device-local fact of exactly the class Phase 17.1 (C6) established
+   * should not cross the boundary. The wire schema is unchanged by its absence.
+   */
+  semanticObservation?: import('../semanticObservation/types').SemanticObservation;
 }
 
 /**

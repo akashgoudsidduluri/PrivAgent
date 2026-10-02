@@ -1,0 +1,256 @@
+{
+  "work": "POST-17.10 STEP 10.2 — G2/G3/G4 targeted mutation matrix",
+  "labels": "PROVEN_UNIT_ONLY (extension suites + in-process backend suites)",
+  "focusedExtensionSuites": [
+    "tests/step10_2_destinationTrustBoundary.test.ts",
+    "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+    "tests/destinationNormalizer.test.ts",
+    "tests/destinationProducerWiring.test.ts",
+    "tests/destinationVerifier.test.ts",
+    "tests/classificationDestinationGap.test.ts",
+    "tests/destinationNavigationIntent.test.ts",
+    "tests/contextMinimizer.test.ts",
+    "tests/taskDecomposer.test.ts"
+  ],
+  "focusedBackendTests": [
+    "tests/test_step10_2_destination_trust_boundary.py",
+    "tests/test_step10_declared_destination.py"
+  ],
+  "tally": {
+    "KILLED": 29
+  },
+  "results": [
+    {
+      "id": "G2-01",
+      "gap": "G2",
+      "file": "extension/src/privacy/contextMinimizer.ts",
+      "intent": "remove the declaration from the model-facing projection",
+      "verdict": "KILLED",
+      "detail": "× G2 — explicit URL survives the production model-facing path > B3 · both model-facing projections now agree (the divergence that was G2) 13ms"
+    },
+    {
+      "id": "G2-02",
+      "gap": "G2",
+      "file": "extension/src/privacy/contextMinimizer.ts",
+      "intent": "model-facing view substitutes the ENTRY url for the destination",
+      "verdict": "KILLED",
+      "detail": "× G2 — explicit URL survives the production model-facing path > B6 · the role+entryUrl declaration keeps BOTH fields distinct in BOTH projections 13ms"
+    },
+    {
+      "id": "G2-03",
+      "gap": "G2",
+      "file": "extension/src/privacy/contextMinimizer.ts",
+      "intent": "model-facing view drops the role channel",
+      "verdict": "KILLED",
+      "detail": "× G2 — explicit URL survives the production model-facing path > B3 · both model-facing projections now agree (the divergence that was G2) 12ms"
+    },
+    {
+      "id": "G2-04",
+      "gap": "G2",
+      "file": "extension/src/privacy/contextMinimizer.ts",
+      "intent": "minimization stops forwarding semantic_context wholesale (production path regression)",
+      "verdict": "KILLED",
+      "detail": "× G2 — role-only declaration survives the production model-facing path > A2 · it survives planner → minimized payload → production egress bytes 12ms"
+    },
+    {
+      "id": "G2-05",
+      "gap": "G2",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "planner stops injecting the declaration into the model-facing context",
+      "verdict": "KILLED",
+      "detail": "× G2 — role-only declaration survives the production model-facing path > A2 · it survives planner → minimized payload → production egress bytes 14ms"
+    },
+    {
+      "id": "G2-06",
+      "gap": "G2",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "declaration synthesised for a subgoal that has none (undeclared task becomes declared)",
+      "verdict": "KILLED",
+      "detail": "× A · W5–W10 — no other channel may create or rewrite the declaration > W6. an affordance cannot create or rewrite the declaration 20ms"
+    },
+    {
+      "id": "G3-01",
+      "gap": "G3",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "destinationUrl → entryUrl (the user URL lands in the wrong field)",
+      "verdict": "KILLED",
+      "detail": "× G2 — explicit URL survives the production model-facing path > B2 · it survives the complete production path byte-for-byte 12ms"
+    },
+    {
+      "id": "G3-02",
+      "gap": "G3",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "entryUrl → destinationUrl",
+      "verdict": "KILLED",
+      "detail": "× G2 — explicit URL survives the production model-facing path > B6 · the role+entryUrl declaration keeps BOTH fields distinct in BOTH projections 13ms"
+    },
+    {
+      "id": "G3-03",
+      "gap": "G3",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "drop destinationUrl entirely during serialization",
+      "verdict": "KILLED",
+      "detail": "× G2 — explicit URL survives the production model-facing path > B2 · it survives the complete production path byte-for-byte 11ms"
+    },
+    {
+      "id": "G3-04",
+      "gap": "G3",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "destinationUrl replaced by the CURRENT page url",
+      "verdict": "KILLED",
+      "detail": "× G2 — role-only declaration survives the production model-facing path > A2 · it survives planner → minimized payload → production egress bytes 15ms"
+    },
+    {
+      "id": "G3-05",
+      "gap": "G3",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "a role-only declaration acquires a fabricated URL",
+      "verdict": "KILLED",
+      "detail": "× A · W4 — the typed role reaches the reasoning / action-selection boundary > W4a. toDeclaredDestinationConstraint projects role + provenance and NO url 13ms"
+    },
+    {
+      "id": "G3-06",
+      "gap": "G3",
+      "file": "extension/src/planning/destinationNormalizer.ts",
+      "intent": "the URL is re-bound to the first role construct (the Step 10.2 regression itself)",
+      "verdict": "KILLED",
+      "detail": "× G3 — CASE A/B/C/D: the entry/destination contract > CASE D · explicit URL + role: BOTH constraints are represented independently 11ms"
+    },
+    {
+      "id": "G3-07",
+      "gap": "G3",
+      "file": "extension/src/planning/destinationNormalizer.ts",
+      "intent": "a URL claimed as a destination is ALSO attached as an entry url",
+      "verdict": "KILLED",
+      "detail": "× explicit URL channel > a user URL alone declares the URL channel only 12ms"
+    },
+    {
+      "id": "G3-08",
+      "gap": "G3",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "URL comparison weakened to SUBSTRING",
+      "verdict": "KILLED",
+      "detail": "× G3 — destination verification cannot be satisfied by an entry URL > G3-V5 · exact matching was NOT weakened: no substring, hostname or prefix escape 10ms"
+    },
+    {
+      "id": "G3-09",
+      "gap": "G3",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "URL comparison weakened to HOSTNAME-ONLY",
+      "verdict": "KILLED",
+      "detail": "× URL destination > a query string cannot turn /search.html into /catalog 11ms"
+    },
+    {
+      "id": "G3-10",
+      "gap": "G3",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "URL comparison weakened to PATH-PREFIX",
+      "verdict": "KILLED",
+      "detail": "× URL destination > /catalog does not match /catalogue 14ms"
+    },
+    {
+      "id": "G3-11",
+      "gap": "G3",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "entryUrl becomes a verifiable destination channel",
+      "verdict": "KILLED",
+      "detail": "× Step 6 — entry URL separation > F: entryUrl + LISTING role verifies against the real LISTING page -> MATCH 11ms"
+    },
+    {
+      "id": "G4-01",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "remove provenance validation entirely",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert False"
+    },
+    {
+      "id": "G4-02",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "accept ANY provenance literal",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert False"
+    },
+    {
+      "id": "G4-03",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "accept any provenance that merely CONTAINS the token (case/prefix escape)",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert False"
+    },
+    {
+      "id": "G4-04",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop the closed-key allowlist (declaration may carry arbitrary fields)",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert False"
+    },
+    {
+      "id": "G4-05",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop the closed role vocabulary",
+      "verdict": "KILLED",
+      "detail": "E           AssertionError: UNKNOWN"
+    },
+    {
+      "id": "G4-06",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop URL attestation against the trusted channel",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert False"
+    },
+    {
+      "id": "G4-07",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop the marker-POSITION check (page channels may carry a declaration)",
+      "verdict": "KILLED",
+      "detail": "E           AssertionError: entities"
+    },
+    {
+      "id": "G4-08",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "accept ERROR/UNKNOWN as declarable page roles",
+      "verdict": "KILLED",
+      "detail": "E           AssertionError: UNKNOWN"
+    },
+    {
+      "id": "G4-09",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "alias the caller's objects instead of copying (rewritable after validation)",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert {'provenance'..., 'CHECKOUT']} == {'provenance'...: ['LISTING']}"
+    },
+    {
+      "id": "G4-10",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop the \"must assert something\" rule (empty declaration rendered)",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert False"
+    },
+    {
+      "id": "G4-11",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "URL query/fragment stripped instead of refused (identity smuggling)",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert False"
+    },
+    {
+      "id": "G4-12",
+      "gap": "G4",
+      "file": "backend/app/reasoner.py",
+      "intent": "URL attestation degrades to a PREFIX containment check",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert False"
+    }
+  ]
+}

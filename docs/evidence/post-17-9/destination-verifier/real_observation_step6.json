@@ -1,0 +1,146 @@
+{
+  "work": "POST-17.10 step 5 — real Chrome capture of the production destination observation",
+  "evidencePolicy": "Metadata only: URL, semantic page type, confidence, page generation, counts. No page text, no element labels, no values, no model output is recorded.",
+  "inputs": {
+    "task": "open the store catalog at http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173",
+    "targetOrigin": "http://localhost:4174"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "extensionLoaded": true,
+    "extensionLoadResult": "{\"id\":\"ihbbhmifbgfcibhjhcafakdkcppkccaf\"}"
+  },
+  "boundaries": {
+    "targetTab": {
+      "id": 428613125,
+      "url": "http://localhost:4174/",
+      "status": "complete"
+    },
+    "dashboardTabId": "348E0610CFBB5FE0EED6DEA296CDEE9A",
+    "targetTabId": 428613125
+  },
+  "observations": [
+    {
+      "label": "agent-reached-page",
+      "capturedAt": "2026-10-01T12:57:43.926Z",
+      "ok": true,
+      "url": "http://localhost:4174/",
+      "worldModelOrigin": "http://localhost:4174",
+      "worldModelTitle": null,
+      "worldModelPageType": "landing",
+      "worldModelPageGeneration": 3,
+      "semanticPageType": "UNKNOWN",
+      "semanticConfidence": 0.1,
+      "semanticPageState": "populated",
+      "semanticPageGeneration": 3,
+      "entityCount": 0,
+      "affordanceTypes": [
+        "SCROLL"
+      ],
+      "workflow": {
+        "flowType": "GENERAL_BROWSING",
+        "currentStage": "INITIAL"
+      },
+      "totalElementsScanned": 18,
+      "sensitiveDetected": 0
+    },
+    {
+      "label": "catalog-results-html",
+      "capturedAt": "2026-10-01T12:57:46.954Z",
+      "ok": true,
+      "url": "http://localhost:4174/results.html",
+      "worldModelOrigin": "http://localhost:4174",
+      "worldModelTitle": null,
+      "worldModelPageType": "listing",
+      "worldModelPageGeneration": 5,
+      "semanticPageType": "LISTING",
+      "semanticConfidence": 0.99,
+      "semanticPageState": "results_available",
+      "semanticPageGeneration": 5,
+      "entityCount": 4,
+      "affordanceTypes": [
+        "SCROLL"
+      ],
+      "workflow": {
+        "flowType": "SHOPPING",
+        "currentStage": "LISTING_VIEWED"
+      },
+      "totalElementsScanned": 52,
+      "sensitiveDetected": 0
+    },
+    {
+      "label": "product-html",
+      "capturedAt": "2026-10-01T12:57:49.981Z",
+      "ok": true,
+      "url": "http://localhost:4174/product.html",
+      "worldModelOrigin": "http://localhost:4174",
+      "worldModelTitle": null,
+      "worldModelPageType": "unknown",
+      "worldModelPageGeneration": 7,
+      "semanticPageType": "UNKNOWN",
+      "semanticConfidence": 0.1,
+      "semanticPageState": "populated",
+      "semanticPageGeneration": 7,
+      "entityCount": 0,
+      "affordanceTypes": [
+        "SELECT_RESULT",
+        "ADD_TO_CART",
+        "BUY_NOW",
+        "SELECT_RESULT",
+        "SCROLL"
+      ],
+      "workflow": {
+        "flowType": "GENERAL_BROWSING",
+        "currentStage": "INITIAL"
+      },
+      "totalElementsScanned": 31,
+      "sensitiveDetected": 0
+    }
+  ],
+  "agentRun": {
+    "lastEnvelope": null,
+    "semanticCompletions": [
+      "Object"
+    ],
+    "trace": [
+      "[AgentTrace] service worker START_TASK received Object",
+      "TARGET_RESOLUTION_STARTED",
+      "TARGET_TAB_CANDIDATES Array(2)",
+      "TARGET_TAB_PROVISIONED Object",
+      "[AgentTrace] target tab provisioned Object",
+      "TARGET_TAB_READY Object",
+      "[AgentTrace] containment scope established Object",
+      "TARGET_TAB_SELECTED Object",
+      "[AgentTrace] target resolved Object",
+      "TARGET_TAB_READY Object",
+      "[AgentTrace] target content script ready Object",
+      "[AgentTrace] first progress emitted",
+      "[AgentTrace] output screen Object",
+      "[AgentTrace] agent loop started",
+      "[AgentTrace] long-horizon state Object",
+      "[AgentTrace] output screen Object",
+      "[AgentTrace] harness cycle Object",
+      "[AgentTrace] perception started Object",
+      "[AgentTrace] perception started",
+      "[AgentTrace] multimodal perception complete Object",
+      "[AgentTrace] semantic observation Object",
+      "[AgentLoop] perception completed",
+      "[AgentTrace] perception complete Object",
+      "[AgentTrace] multimodal perception complete Object",
+      "[AgentTrace] semantic understanding complete Object",
+      "[AgentTrace] subgoal selected Object",
+      "[AgentTrace] long-horizon update Object",
+      "[AgentTrace] requesting reasoning",
+      "[AgentTrace] output screen Object",
+      "[AgentTrace] M6 failed Object",
+      "[AgentTrace] M6 failed Object",
+      "[AgentTrace] terminal progress emitted Object",
+      "[AgentTrace] output screen Object"
+    ],
+    "providerCalls": 1
+  },
+  "limitations": [
+    "The destination verifier is NOT wired into the extension bundle, so it could not be invoked from inside the browser. The OBSERVATION recorded here is real production browser output; the verdict is computed afterwards by executing the real production verifyDestination() in Node against that captured observation. This is a scope consequence of Step 4 (\"producers remain unwired\"), not a fabrication."
+  ]
+}

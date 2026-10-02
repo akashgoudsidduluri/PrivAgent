@@ -25,6 +25,7 @@ import { projectAgentOutput, screenAgentOutput, describeOutputScreen } from '../
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput, SanitizedSemanticContext } from '../semanticUnderstanding';
+import { buildSemanticObservation, toSanitizedFacts } from '../semanticObservation';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 import { coordinateMultimodalPerception, enrichWorldModelWithMultimodalPerception } from '../visualPerception/multimodalCoordinator';
 import { OffscreenOCREngine } from '../ocr/offscreenOcrClient';
@@ -843,9 +844,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.warn('[PrivAgent SW] multimodal coordination skipped:', multiErr);
               }
 
+              //
+              // POST-17.9. Semantic observation.
+              //
+              // Built only from data the privacy pipeline has ALREADY sanitized
+              // (the world model's M8-screened text regions), stamped with this
+              // tab's authoritative identity, and attached to the context. The
+              // sanitized FACTS ride inside the existing `semantic_context`
+              // envelope, so the reasoner gains no new text channel; the
+              // PROVENANCE stays device-local, is what goal verification needs, and
+              // is stripped at the egress boundary.
+              //
+              // Evidence only: nothing downstream of perception authorizes on it.
+              let tabDocumentUrl: string | null = null;
+              try {
+                const tabForObservation = await chrome.tabs.get(targetTabId);
+                tabDocumentUrl =
+                  tabForObservation?.url || (tabForObservation as { pendingUrl?: string })?.pendingUrl || null;
+              } catch {
+                tabDocumentUrl = null;
+              }
+              const semanticObservation = buildSemanticObservation({
+                worldModel,
+                semanticContext,
+                tabId: targetTabId,
+                documentUrl: tabDocumentUrl,
+                pageGeneration: worldModel?.page.pageGeneration ?? 1,
+              });
+              if (semanticContext && semanticObservation.facts.length > 0) {
+                semanticContext.facts = toSanitizedFacts(semanticObservation.facts);
+              }
+              console.info('[AgentTrace] semantic observation', {
+                state: semanticObservation.state,
+                facts: semanticObservation.facts.length,
+                regionsConsidered: semanticObservation.regionsConsidered,
+                droppedSensitive: semanticObservation.droppedSensitiveCount,
+                quarantinedInjection: semanticObservation.quarantinedInjectionCount,
+                latencyMs: semanticObservation.latencyMs,
+              });
+
               console.info('[ServiceWorker] response forwarded');
               const built = buildAgentPayload(scanRes.report, visualReport, semanticContext);
               if (!built) return null;
+              built.semanticObservation = semanticObservation;
 
               const minimized = minimizeAgentContext(built, { task });
               //
@@ -1198,7 +1239,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           maxSteps: 10,
           maxRetries: 2,
           delayBetweenStepsMs: 500,
-          providerRetries: 0,
+          // PHASE 17.10 Step 10.6 (G7).
+          //
+          // This was 0, which made the ENTIRE bounded provider-retry path
+          // unreachable on the production service-worker loop — the only loop
+          // the autonomous agent actually runs. `requestActionWithBoundedRetry`
+          // checks `attempt >= this.providerRetries` BEFORE any delay, so a
+          // budget of 0 breaks on the first attempt and no rate limit could ever
+          // be retried here, whatever the provider classification or the
+          // Retry-After the backend relayed. A real G7 run confirmed it:
+          // `[G7_RETRY_LOOP] {"providerRetries":0,"willRetry":false}`.
+          //
+          // 2 is the value the popup loop already uses for the same provider
+          // path. It stays strictly bounded: total provider calls remain
+          // ≤ maxSteps × (1 + providerRetries) = 10 × 3 = 30, and the retry
+          // branch is still gated on `err.retryable`, which a rate limit only
+          // becomes when the provider published a Retry-After. Nothing else
+          // about the loop changes: no classification, no delay policy, no
+          // back-off guessing, and no authority.
+          //
+          // `providerRetryDelayMs` is deliberately left at its existing default:
+          // this change does not introduce a back-off for a rate limit that
+          // arrives WITHOUT a Retry-After — that case still fails closed.
+          providerRetries: 2,
           targetTabId,
           containmentScope,
           harness: new AgentHarness(),

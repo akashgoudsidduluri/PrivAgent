@@ -137,6 +137,56 @@ export class OneActionPlanner {
   }
 
   /**
+   * POST-17.10 Step 9 — deterministic navigation for an EXPLICITLY DECLARED
+   * destination URL.
+   *
+   * Step 9's audit found that 100% of actions come from the reasoner: this class
+   * had no production caller at all, and `proposeSubgoalAction` returns `null`
+   * for any NAVIGATE subgoal, so a destination subgoal could only ever be
+   * "reached" by whatever URL the model happened to guess.
+   *
+   * When the user named the destination as a URL — "open
+   * http://localhost:4174/results.html" — that URL is not a guess, and letting
+   * the model re-derive it is strictly worse. This proposes it verbatim.
+   *
+   * DELIBERATE LIMITS — this must not become a way to invent a URL:
+   *
+   *  - It fires ONLY when the declaration carries `url` (an EXPLICIT destination
+   *    URL the user typed). A `role`-only declaration has NO url and returns
+   *    `null`, so a role destination can never be "navigated to" by fabricating
+   *    a path. Reaching a LISTING page is a discovery problem, not a URL
+   *    problem, and it stays with the reasoner.
+   *  - It ignores `entryUrl` entirely. The entry site is where the browser
+   *    STARTS; turning it into a destination URL is exactly the conflation
+   *    Steps 5–8 removed.
+   *  - It normalizes nothing and appends nothing. The declared
+   *    origin+path is what the verifier will later compare exactly, so proposing
+   *    anything else would make arrival unverifiable.
+   *  - It proposes an action. It does NOT assert arrival. Completion remains
+   *    `verifyDestination`'s exclusive decision on a fresh observation.
+   *
+   * `reason` is device-local metadata for the local gates; it never reaches the
+   * reasoner. It begins with an action verb so the same prose heuristic that
+   * gates model-emitted reasons cannot over-block it.
+   */
+  public static proposeDestinationNavigation(subgoal: Subgoal | undefined): BrowserAction | null {
+    if (!subgoal) return null;
+    if (subgoal.expectedActionType !== 'navigate') return null;
+
+    const declaration = subgoal.destination;
+    if (!declaration || declaration.kind !== 'DECLARED') return null;
+
+    const declared = declaration.url;
+    if (!declared) return null;
+
+    return {
+      action: 'navigate',
+      url: `${declared.origin}${declared.path}`,
+      reason: `Navigating to the destination URL declared in the user request for subgoal ${subgoal.id}.`,
+    };
+  }
+
+  /**
    * Generates a candidate action proposal for a given subgoal when deterministic rules apply.
    */
   public static proposeSubgoalAction(

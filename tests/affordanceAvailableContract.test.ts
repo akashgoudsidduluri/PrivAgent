@@ -20,8 +20,19 @@
  * The condition is now the seventh type to require a NAMED affordance that is
  * actually observed, and an unnamed `AFFORDANCE_AVAILABLE` fails closed like
  * its six siblings. The two decomposer producers that CAN be named are wired
- * (`ENTER_QUERY`); the two that would need destination ontology or an
- * "existence" observation are left deliberately unchanged and documented.
+ * (`ENTER_QUERY`).
+ *
+ * POST-17.10 Step 7 then resolved the OTHER producer properly rather than by
+ * inventing an affordance name. "Navigate to commerce catalog or store front"
+ * is a DESTINATION claim, and the destination-intent contract now exists: when
+ * the user declared a destination, that subgoal carries it as TYPED metadata
+ * (`Subgoal.destination`) and its condition becomes `DESTINATION_VERIFIED`,
+ * which `verifyDestination` alone can satisfy. It is no longer an
+ * `AFFORDANCE_AVAILABLE` producer at all, so it drops out of
+ * `affordanceConditions` — and it is STILL not provable by affordances, by
+ * dispatch success, or by navigation. The remaining producer, GENERIC LOCATE
+ * "Controls identified", is an EXISTENCE claim rather than a destination one
+ * and is deliberately STILL unnamed and unverifiable.
  *
  * Every assertion is written so that a mutation restoring the old behaviour
  * makes it fail. See scratch/mutation_affordance_contract.mjs.
@@ -324,18 +335,45 @@ describe('decomposer producers', () => {
     expect(verify(search!, withAffordances(['ENTER_QUERY', 'SUBMIT_SEARCH'])).satisfied).toBe(true);
   });
 
-  it('8c. the two DESTINATION/EXISTENCE producers are left unnamed and unverifiable', () => {
-    // Deliberately unchanged, pending the destination-intent design. They must
-    // NOT be given a fabricated named affordance, and must not be proven.
-    const nav = affordanceConditions(ecommerce()).find((s) => s.category === 'NAVIGATE');
+  it('8c. the DESTINATION producer is typed, and the EXISTENCE producer is still unnamed', () => {
+    // ── The destination producer, now properly typed ───────────────────────
+    const nav = ecommerce().subgoals.find((s) => s.category === 'NAVIGATE')!;
     expect(nav).toBeDefined();
-    expect(nav!.verificationCondition!.expectedValue ?? '').toBe('');
-    expect(verify(nav!, withAffordances(['SCROLL'])).satisfied).toBe(false);
+    // It is no longer an AFFORDANCE_AVAILABLE producer at all: it never got a
+    // fabricated affordance name, it got a destination declaration instead.
+    expect(affordanceConditions(ecommerce()).some((s) => s.category === 'NAVIGATE')).toBe(false);
+    expect(nav.verificationCondition!.type).toBe('DESTINATION_VERIFIED');
+    // The role travels in the typed field, NOT in the generic string field.
+    expect(nav.verificationCondition!.expectedValue ?? '').toBe('');
+    expect(nav.targetEntity ?? '').toBe('');
+    expect(nav.destination).toBeDefined();
+    expect(nav.destination!.kind).toBe('DECLARED');
+    expect((nav.destination as { role?: { acceptablePageTypes: string[] } }).role!.acceptablePageTypes).toEqual([
+      'LISTING',
+    ]);
+    // An affordance set still proves nothing about it.
+    expect(verify(nav, withAffordances(['SCROLL'])).satisfied).toBe(false);
 
+    // ── The existence producer: deliberately STILL unnamed ─────────────────
+    // "Controls identified" is an EXISTENCE claim, not a destination one. No
+    // first-class existence observation exists yet, so it must NOT be given a
+    // fabricated named affordance, and must not be proven.
     const locate = affordanceConditions(generic()).find((s) => s.category === 'LOCATE');
     expect(locate).toBeDefined();
     expect(locate!.verificationCondition!.expectedValue ?? '').toBe('');
     expect(verify(locate!, withAffordances(['SCROLL'])).satisfied).toBe(false);
+  });
+
+  it('8c2. with NO user declaration the destination producer reverts to the unchanged fail-closed condition', () => {
+    // Step 7 must not have bought the producer a completion it did not have.
+    // A prompt with no destination-bearing construct must still produce the
+    // original unnamed, unsatisfiable `AFFORDANCE_AVAILABLE` condition.
+    const bare = decomposeTask('buy a product on this site', { currentUrl: `${ORIGIN}/` });
+    const nav = affordanceConditions(bare).find((s) => s.category === 'NAVIGATE');
+    expect(nav).toBeDefined();
+    expect(nav!.verificationCondition!.expectedValue ?? '').toBe('');
+    expect(nav!.destination).toBeUndefined();
+    expect(verify(nav!, withAffordances(['SCROLL', 'ADD_TO_CART', 'ENTER_QUERY'])).satisfied).toBe(false);
   });
 
   it('8d. SCROLL is never used as a stand-in for an existence claim', () => {

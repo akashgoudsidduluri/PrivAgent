@@ -45,6 +45,22 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Accept"],
+    # POST-17.10 Step 10.6 (G7). `Retry-After` is NOT a CORS-safelisted
+    # response header, so a cross-origin `fetch` from the extension (origin
+    # `chrome-extension://…` → `http://127.0.0.1:8010`) CANNOT read it unless
+    # the server names it here.
+    #
+    # This is why the bounded rate-limit retry did not engage in a real
+    # browser run even though the backend was demonstrably emitting the header
+    # and the provider was demonstrably classifying it correctly: the header
+    # existed, but the browser withheld it, so the extension saw `undefined`
+    # and failed closed exactly as designed.
+    #
+    # Exposing a timing header grants no authority and carries no payload: it
+    # reveals nothing about credentials, context, PII or any gate decision.
+    # `Access-Control-Allow-Credentials` remains False and the origin regex
+    # remains localhost-only, so the local boundary is unchanged.
+    expose_headers=["Retry-After"],
     max_age=600,
 )
 

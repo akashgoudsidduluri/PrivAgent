@@ -1,0 +1,721 @@
+{
+  "work": "POST-17.10 STEP 10 AUDIT — real production provider-egress capture",
+  "labels": "PROVEN_REAL_CHROME (bytes on the wire) / PROVEN_REAL_BACKEND (backend response)",
+  "inputs": {
+    "task": "open the store catalog",
+    "userSuppliedUrlInTask": null,
+    "startUrl": "http://localhost:4174/search.html",
+    "keptExistingTabs": true,
+    "targetOrigin": "http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "reasoningRequests": [
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790876242093,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_incomplete\",\"pageGeneration\":2,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation or catalog links.\"},\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation or catalog links.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":663.7,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "status": 200,
+      "requestBody": "{\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation or catalog links.\"},\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790876242093,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_incomplete\",\"pageGeneration\":2,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"semanticObservation\":{\"state\":\"OBSERVED\",\"provenance\":{\"tabId\":1858079924,\"documentUrl\":\"http://localhost:4174/search.html\",\"pageGeneration\":2,\"observedAt\":1790876242122,\"source\":\"WORLD_MODEL_TEXT_REGIONS\"},\"facts\":[{\"id\":\"fact-text-region-1\",\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-1\",\"bbox\":[373,158,534,28],\"confidence\":0.95,\"pageGeneration\":2,\"untrusted\":false},{\"id\":\"fact-text-region-2\",\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-2\",\"bbox\":[24,717,1232,16],\"confidence\":0.9,\"pageGeneration\":2,\"untrusted\":false}],\"droppedSensitiveCount\":0,\"quarantinedInjectionCount\":0,\"regionsConsidered\":2,\"latencyMs\":1},\"ocr_observation\":{\"state\":\"NOT_APPLICABLE\",\"provenance\":null,\"completedAt\":null,\"totalTokensScanned\":0,\"sensitiveRegionsCount\":0,\"safeRegionsCount\":0,\"ocrLatencyMs\":0,\"failureReason\":\"DOM extraction sufficient; OCR not required for DOM-only cycle\"},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"model_role\":\"SAFETY\"}",
+      "responseBody": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790876243426,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_incomplete\",\"pageGeneration\":5,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}]},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 1,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: NO_EFFECT, Context: search, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\"},\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":480.4,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "status": 200,
+      "requestBody": "{\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\"},\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790876243426,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_incomplete\",\"pageGeneration\":5,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}]},\"semanticObservation\":{\"state\":\"OBSERVED\",\"provenance\":{\"tabId\":1858079924,\"documentUrl\":\"http://localhost:4174/search.html\",\"pageGeneration\":5,\"observedAt\":1790876243440,\"source\":\"WORLD_MODEL_TEXT_REGIONS\"},\"facts\":[{\"id\":\"fact-text-region-1\",\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-1\",\"bbox\":[373,158,534,28],\"confidence\":0.95,\"pageGeneration\":5,\"untrusted\":false},{\"id\":\"fact-text-region-2\",\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-2\",\"bbox\":[24,717,1232,16],\"confidence\":0.9,\"pageGeneration\":5,\"untrusted\":false}],\"droppedSensitiveCount\":0,\"quarantinedInjectionCount\":0,\"regionsConsidered\":2,\"latencyMs\":0},\"ocr_observation\":{\"state\":\"NOT_APPLICABLE\",\"provenance\":null,\"completedAt\":null,\"totalTokensScanned\":0,\"sensitiveRegionsCount\":0,\"safeRegionsCount\":0,\"ocrLatencyMs\":0,\"failureReason\":\"DOM extraction sufficient; OCR not required for DOM-only cycle\"},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 1,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: NO_EFFECT, Context: search, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\"],\"userPreferences\":[]}},\"model_role\":\"SAFETY\"}",
+      "responseBody": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790876244522,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_incomplete\",\"pageGeneration\":7,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}]},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 3,  \\\"failedSubgoals\\\": 1,  \\\"discoveries\\\": 1,  \\\"actionsTaken\\\": 1,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: NO_EFFECT, Context: search, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\",\"[Past Failure] Type: NO_EFFECT, Context: search, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\"},\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":457.5,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "status": 200,
+      "requestBody": "{\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\"},\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/search.html\",\"timestamp\":1790876244522,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-search-submit\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":315,\"width\":534,\"height\":39},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-search-submit\",\"is_partially_visible\":false},{\"id\":\"input-search-query\",\"type\":\"input\",\"confidence\":0.95,\"bbox\":{\"x\":373,\"y\":234,\"width\":534,\"height\":45},\"length\":35,\"source\":\"dom_attribute\",\"selector\":\"#input-search-query\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":19,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"search\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"form_incomplete\",\"pageGeneration\":7,\"entities\":[{\"id\":\"form-search\",\"type\":\"Form\",\"label\":\"Data Entry Form\",\"confidence\":0.93,\"actionIds\":[\"input-search-query\",\"btn-search-submit\"],\"safeAttributes\":{\"fieldCount\":2,\"requiresAuthentication\":false,\"hasSubmitAction\":true}}],\"affordances\":[{\"id\":\"affordance-enter_query-1\",\"type\":\"ENTER_QUERY\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Input search keyword query into query bar\"},{\"id\":\"affordance-submit_search-2\",\"type\":\"SUBMIT_SEARCH\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Execute and submit search query\"},{\"id\":\"affordance-fill_field-3\",\"type\":\"FILL_FIELD\",\"targetElementId\":\"input-search-query\",\"requiresConfirmation\":false,\"description\":\"Enter text data into form input field\"},{\"id\":\"affordance-submit_form-4\",\"type\":\"SUBMIT_FORM\",\"targetElementId\":\"btn-search-submit\",\"requiresConfirmation\":false,\"description\":\"Submit completed form information to server\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}]},\"semanticObservation\":{\"state\":\"OBSERVED\",\"provenance\":{\"tabId\":1858079924,\"documentUrl\":\"http://localhost:4174/search.html\",\"pageGeneration\":7,\"observedAt\":1790876244542,\"source\":\"WORLD_MODEL_TEXT_REGIONS\"},\"facts\":[{\"id\":\"fact-text-region-1\",\"key\":\"search product catalog\",\"label\":\"Search Product Catalog\",\"displayText\":\"Search Product Catalog\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-1\",\"bbox\":[373,158,534,28],\"confidence\":0.95,\"pageGeneration\":7,\"untrusted\":false},{\"id\":\"fact-text-region-2\",\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-2\",\"bbox\":[24,717,1232,16],\"confidence\":0.9,\"pageGeneration\":7,\"untrusted\":false}],\"droppedSensitiveCount\":0,\"quarantinedInjectionCount\":0,\"regionsConsidered\":2,\"latencyMs\":0},\"ocr_observation\":{\"state\":\"NOT_APPLICABLE\",\"provenance\":null,\"completedAt\":null,\"totalTokensScanned\":0,\"sensitiveRegionsCount\":0,\"safeRegionsCount\":0,\"ocrLatencyMs\":0,\"failureReason\":\"DOM extraction sufficient; OCR not required for DOM-only cycle\"},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 3,  \\\"failedSubgoals\\\": 1,  \\\"discoveries\\\": 1,  \\\"actionsTaken\\\": 1,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: NO_EFFECT, Context: search, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\",\"[Past Failure] Type: NO_EFFECT, Context: search, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\"],\"userPreferences\":[]}},\"model_role\":\"SAFETY\"}",
+      "responseBody": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+    }
+  ],
+  "analysis": {
+    "provisionedTab": {
+      "id": 1858079924,
+      "url": "http://localhost:4174/search.html"
+    },
+    "perRequest": [
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 3016,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation or catalog links.\"},\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation or catalog links.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":663.7,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/review",
+        "status": 200,
+        "bytes": 4412,
+        "topLevelKeys": [
+          "action",
+          "task",
+          "context",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 3220,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\"},\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":480.4,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/review",
+        "status": 200,
+        "bytes": 4625,
+        "topLevelKeys": [
+          "action",
+          "task",
+          "context",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 3326,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\"},\"reason\":\"The store catalog link is not visible in the current viewport; scrolling down may reveal navigation links or catalog sections.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":457.5,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/review",
+        "status": 200,
+        "bytes": 4731,
+        "topLevelKeys": [
+          "action",
+          "task",
+          "context",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/search.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+      }
+    ],
+    "summary": {
+      "totalApiRequests": 6,
+      "requestsCarryingDeclaredDestination": 2,
+      "anyRoleOnlyRequest": true,
+      "anyUrlCarryingRequest": false,
+      "anyForbiddenKeyInDeclaration": false,
+      "anyUnexpectedStringLeafInDeclaration": true,
+      "anyForbiddenKeyInWholePayload": true
+    },
+    "statesWithActionResult": [
+      {
+        "status": "IN_PROGRESS",
+        "goalStatus": "IN_PROGRESS",
+        "currentStep": 1,
+        "lastActionResult": {
+          "success": false,
+          "error": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "completedSteps": [],
+        "failureCategories": [
+          "ACTION_NO_EFFECT"
+        ],
+        "lastFailureCategory": "ACTION_NO_EFFECT",
+        "subgoalStates": {
+          "goal-mupth47q-tn2gw-sg1": "FAILED",
+          "goal-mupth47q-tn2gw-sg2": "PENDING",
+          "goal-mupth47q-tn2gw-sg3": "PENDING",
+          "goal-mupth47q-tn2gw-sg4": "PENDING"
+        },
+        "subgoalConditions": {
+          "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+          "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+          "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+          "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+        }
+      },
+      {
+        "status": "IN_PROGRESS",
+        "goalStatus": "IN_PROGRESS",
+        "currentStep": 2,
+        "lastActionResult": {
+          "success": false,
+          "error": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "completedSteps": [],
+        "failureCategories": [
+          "ACTION_NO_EFFECT",
+          "ACTION_NO_EFFECT"
+        ],
+        "lastFailureCategory": "ACTION_NO_EFFECT",
+        "subgoalStates": {
+          "goal-mupth47q-tn2gw-sg1": "FAILED",
+          "goal-mupth47q-tn2gw-sg2": "PENDING",
+          "goal-mupth47q-tn2gw-sg3": "PENDING",
+          "goal-mupth47q-tn2gw-sg4": "PENDING"
+        },
+        "subgoalConditions": {
+          "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+          "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+          "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+          "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+        }
+      },
+      {
+        "status": "IN_PROGRESS",
+        "goalStatus": "IN_PROGRESS",
+        "currentStep": 3,
+        "lastActionResult": {
+          "success": false,
+          "error": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "completedSteps": [],
+        "failureCategories": [
+          "ACTION_NO_EFFECT",
+          "ACTION_NO_EFFECT",
+          "ACTION_NO_EFFECT"
+        ],
+        "lastFailureCategory": "ACTION_NO_EFFECT",
+        "subgoalStates": {
+          "goal-mupth47q-tn2gw-sg1": "FAILED",
+          "goal-mupth47q-tn2gw-sg2": "PENDING",
+          "goal-mupth47q-tn2gw-sg3": "PENDING",
+          "goal-mupth47q-tn2gw-sg4": "PENDING"
+        },
+        "subgoalConditions": {
+          "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+          "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+          "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+          "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+        }
+      },
+      {
+        "status": "FAILED",
+        "goalStatus": "FAILED",
+        "currentStep": 3,
+        "lastActionResult": {
+          "success": false,
+          "error": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "completedSteps": [],
+        "failureCategories": [
+          "ACTION_NO_EFFECT",
+          "ACTION_NO_EFFECT",
+          "ACTION_NO_EFFECT",
+          "RECOVERY_EXHAUSTED"
+        ],
+        "lastFailureCategory": "RECOVERY_EXHAUSTED",
+        "subgoalStates": {
+          "goal-mupth47q-tn2gw-sg1": "FAILED",
+          "goal-mupth47q-tn2gw-sg2": "PENDING",
+          "goal-mupth47q-tn2gw-sg3": "PENDING",
+          "goal-mupth47q-tn2gw-sg4": "PENDING"
+        },
+        "subgoalConditions": {
+          "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+          "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+          "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+          "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+        }
+      }
+    ]
+  },
+  "loopLogs": [
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_incomplete\",\"pageGeneration\":2,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-mupth47q-tn2gw-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Reach the destination declared in the user request\"}",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] no transition and destination NOT satisfied {\"subgoalId\":\"goal-mupth47q-tn2gw-sg1\",\"reason\":\"Subgoal goal-mupth47q-tn2gw-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] recovery decision {\"code\":\"ACTION_NO_EFFECT\",\"strategy\":\"REPERCEIVE\",\"attempt\":1,\"reason\":\"Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 3.\"}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_incomplete\",\"pageGeneration\":5,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] recovery decision {\"code\":\"ACTION_NO_EFFECT\",\"strategy\":\"REPERCEIVE\",\"attempt\":1,\"reason\":\"Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 5.\"}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_incomplete\",\"pageGeneration\":7,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Recovery limit exceeded (2 retries). Action produced no observable effect: Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Recovery limit exceeded (2 retries). Action produced no observable effect: Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}"
+  ],
+  "rawLogs": [
+    "TARGET_RESOLUTION_STARTED",
+    "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}",
+    "[AgentTrace] service worker START_TASK received {\"taskLength\":22}",
+    "TARGET_TAB_CANDIDATES [{\"id\":1858079922,\"origin\":\"null\"},{\"id\":1858079923,\"origin\":\"http://localhost:5173\"},{\"id\":1858079924,\"origin\":\"http://localhost:4174\"}]",
+    "[AgentTrace] first progress emitted",
+    "[AgentTrace] containment scope established {\"established\":true,\"rootHost\":\"localhost\",\"tabId\":1858079924}",
+    "TARGET_TAB_SELECTED {\"tabId\":1858079924,\"origin\":\"http://localhost:4174\",\"reason\":\"Selected active web tab.\"}",
+    "[AgentTrace] target resolved {\"tabId\":1858079924}",
+    "TARGET_TAB_READY {\"tabId\":1858079924}",
+    "[AgentTrace] target content script ready {\"tabId\":1858079924}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PERCEPTION\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"RUNNING\",\"currentStep\":0,\"reason\":\"Target tab discovered and ready. Starting visual privacy perception...\"}",
+    "[AgentTrace] agent loop started",
+    "[AgentTrace] perception started",
+    "[AgentTrace] long-horizon state {\"restoreStatus\":\"FRESH_NO_RECORD\",\"detail\":null,\"actionCount\":0,\"recoveryCount\":0,\"consecutiveNoProgress\":0,\"totalNoProgress\":0}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":0}",
+    "[AgentTrace] harness cycle {\"cycle\":1,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":1,\"url\":\"http://localhost:4174/search.html\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":2,\"regionsConsidered\":2,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":1,\"contextUrl\":\"http://localhost:4174/search.html\",\"worldModelId\":\"wm-g2-mupth48d-kcw2\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":10,\"privacyFindingsCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_incomplete\",\"pageGeneration\":2,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-mupth47q-tn2gw-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Reach the destination declared in the user request\"}",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[\"NEW_PAGE\"],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":1,\"actions\":0,\"loop\":false,\"stalled\":false}",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] action passed privacy policy",
+    "[AgentTrace] requesting safety review",
+    "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}",
+    "[AgentTrace] action passed safety review",
+    "[AgentTrace] executeAction started",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://localhost:4174/search.html\",\"scrollY\":0,\"domElementCount\":35,\"openModalsCount\":0,\"targetValueLength\":null}",
+    "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:localhost\"}",
+    "[AgentTrace] executeAction response received",
+    "[AgentTrace] perception started",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://localhost:4174/search.html\",\"scrollY\":0,\"domElementCount\":35,\"openModalsCount\":0,\"targetValueLength\":null}",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":2,\"regionsConsidered\":2,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] no transition and destination NOT satisfied {\"subgoalId\":\"goal-mupth47q-tn2gw-sg1\",\"reason\":\"Subgoal goal-mupth47q-tn2gw-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
+    "[AgentTrace] perception started",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"RECOVERY\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":1}",
+    "[AgentTrace] recovery decision {\"code\":\"ACTION_NO_EFFECT\",\"strategy\":\"REPERCEIVE\",\"attempt\":1,\"reason\":\"Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 3.\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":2,\"regionsConsidered\":2,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] perception started",
+    "[AgentTrace] harness cycle {\"cycle\":2,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":5,\"url\":\"http://localhost:4174/search.html\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":2,\"regionsConsidered\":2,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":5,\"contextUrl\":\"http://localhost:4174/search.html\",\"worldModelId\":\"wm-g5-mupth59e-9yx3\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":10,\"privacyFindingsCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_incomplete\",\"pageGeneration\":5,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":3,\"discoveries\":1,\"actions\":1,\"loop\":false,\"stalled\":false}",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] action passed privacy policy",
+    "[AgentTrace] requesting safety review",
+    "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}",
+    "[AgentTrace] action passed safety review",
+    "[AgentTrace] executeAction started",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://localhost:4174/search.html\",\"scrollY\":0,\"domElementCount\":35,\"openModalsCount\":0,\"targetValueLength\":null}",
+    "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:localhost\"}",
+    "[AgentTrace] executeAction response received",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://localhost:4174/search.html\",\"scrollY\":0,\"domElementCount\":35,\"openModalsCount\":0,\"targetValueLength\":null}",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
+    "[AgentTrace] perception started",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"RECOVERY\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":2}",
+    "[AgentTrace] recovery decision {\"code\":\"ACTION_NO_EFFECT\",\"strategy\":\"REPERCEIVE\",\"attempt\":1,\"reason\":\"Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 5.\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":2,\"regionsConsidered\":2,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] perception started",
+    "[AgentTrace] harness cycle {\"cycle\":3,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":7,\"url\":\"http://localhost:4174/search.html\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":2,\"regionsConsidered\":2,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":7,\"contextUrl\":\"http://localhost:4174/search.html\",\"worldModelId\":\"wm-g7-mupth63u-hb66\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":10,\"privacyFindingsCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"form_incomplete\",\"pageGeneration\":7,\"entityCount\":1,\"affordanceCount\":5}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":3,\"discoveries\":1,\"actions\":2,\"loop\":false,\"stalled\":false}",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] action passed privacy policy",
+    "[AgentTrace] requesting safety review",
+    "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}",
+    "[AgentTrace] action passed safety review",
+    "[AgentTrace] executeAction started",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://localhost:4174/search.html\",\"scrollY\":0,\"domElementCount\":35,\"openModalsCount\":0,\"targetValueLength\":null}",
+    "[AgentTrace] executeAction response received",
+    "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:localhost\"}",
+    "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://localhost:4174/search.html\",\"scrollY\":0,\"domElementCount\":35,\"openModalsCount\":0,\"targetValueLength\":null}",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"RECOVERY\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":3}",
+    "[AgentTrace] M6 failed {\"reason\":\"Recovery limit exceeded (2 retries). Action produced no observable effect: Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Recovery limit exceeded (2 retries). Action produced no observable effect: Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\"}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":3,\"reason\":\"Recovery limit exceeded (2 retries). Action produced no observable effect: Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790876251546\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790876251546\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790876251546\",\"targetFound\":true,\"tabId\":1858079924,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790876251546\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790876266546\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790876266546\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790876266546\",\"targetFound\":true,\"tabId\":1858079924,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790876266546\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790876281547\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790876281547\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790876281547\",\"targetFound\":true,\"tabId\":1858079924,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790876281547\",\"targetFound\":true}"
+  ],
+  "observations": [
+    {
+      "url": "http://localhost:4174/search.html",
+      "semanticPageType": "UNKNOWN",
+      "semanticConfidence": 0.1,
+      "semanticPageGeneration": 8
+    }
+  ],
+  "reportedStates": [
+    {
+      "status": "RUNNING",
+      "goalStatus": null,
+      "currentStep": 0,
+      "lastActionResult": null,
+      "completedSteps": null,
+      "failureCategories": null,
+      "lastFailureCategory": null,
+      "subgoalStates": null,
+      "subgoalConditions": null
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 0,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-mupth47q-tn2gw-sg1": "READY",
+        "goal-mupth47q-tn2gw-sg2": "PENDING",
+        "goal-mupth47q-tn2gw-sg3": "PENDING",
+        "goal-mupth47q-tn2gw-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+        "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+        "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+      }
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 1,
+      "lastActionResult": {
+        "success": false,
+        "error": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+      },
+      "completedSteps": [],
+      "failureCategories": [
+        "ACTION_NO_EFFECT"
+      ],
+      "lastFailureCategory": "ACTION_NO_EFFECT",
+      "subgoalStates": {
+        "goal-mupth47q-tn2gw-sg1": "FAILED",
+        "goal-mupth47q-tn2gw-sg2": "PENDING",
+        "goal-mupth47q-tn2gw-sg3": "PENDING",
+        "goal-mupth47q-tn2gw-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+        "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+        "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+      }
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 2,
+      "lastActionResult": {
+        "success": false,
+        "error": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+      },
+      "completedSteps": [],
+      "failureCategories": [
+        "ACTION_NO_EFFECT",
+        "ACTION_NO_EFFECT"
+      ],
+      "lastFailureCategory": "ACTION_NO_EFFECT",
+      "subgoalStates": {
+        "goal-mupth47q-tn2gw-sg1": "FAILED",
+        "goal-mupth47q-tn2gw-sg2": "PENDING",
+        "goal-mupth47q-tn2gw-sg3": "PENDING",
+        "goal-mupth47q-tn2gw-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+        "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+        "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+      }
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 3,
+      "lastActionResult": {
+        "success": false,
+        "error": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+      },
+      "completedSteps": [],
+      "failureCategories": [
+        "ACTION_NO_EFFECT",
+        "ACTION_NO_EFFECT",
+        "ACTION_NO_EFFECT"
+      ],
+      "lastFailureCategory": "ACTION_NO_EFFECT",
+      "subgoalStates": {
+        "goal-mupth47q-tn2gw-sg1": "FAILED",
+        "goal-mupth47q-tn2gw-sg2": "PENDING",
+        "goal-mupth47q-tn2gw-sg3": "PENDING",
+        "goal-mupth47q-tn2gw-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+        "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+        "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+      }
+    },
+    {
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "currentStep": 3,
+      "lastActionResult": {
+        "success": false,
+        "error": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+      },
+      "completedSteps": [],
+      "failureCategories": [
+        "ACTION_NO_EFFECT",
+        "ACTION_NO_EFFECT",
+        "ACTION_NO_EFFECT",
+        "RECOVERY_EXHAUSTED"
+      ],
+      "lastFailureCategory": "RECOVERY_EXHAUSTED",
+      "subgoalStates": {
+        "goal-mupth47q-tn2gw-sg1": "FAILED",
+        "goal-mupth47q-tn2gw-sg2": "PENDING",
+        "goal-mupth47q-tn2gw-sg3": "PENDING",
+        "goal-mupth47q-tn2gw-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-mupth47q-tn2gw-sg1": "DESTINATION_VERIFIED",
+        "goal-mupth47q-tn2gw-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-mupth47q-tn2gw-sg3": "STATE_CHANGED",
+        "goal-mupth47q-tn2gw-sg4": "STATE_CHANGED"
+      }
+    }
+  ]
+}

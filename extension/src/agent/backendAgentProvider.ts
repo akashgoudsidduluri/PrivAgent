@@ -118,10 +118,19 @@ export class BackendAgentProvider implements AgentProvider {
     // device-local fact Phase 17.1 (C6) established should not cross the
     // boundary, and stripping it is strictly privacy-TIGHTENING: less leaves
     // the device than before. Nothing in the reasoner depends on it.
+    //
+    // Post-17.9. `semanticObservation` is stripped for the same reason, and it
+    // is the same class of fact: the tab id, document URL, page generation and
+    // timestamp that let goal verification decide whether a sanitized display
+    // fact still describes the live page. It carries provenance, not content —
+    // the sanitized facts the reasoner may use travel inside `semantic_context`,
+    // which is unaffected. Stripping is strictly privacy-TIGHTENING: less leaves
+    // the device than before, and the wire schema is byte-identical.
     const {
       viewportObservable: _vo,
       viewportSource: _vs,
       ocr_observation: _ocrObs,
+      semanticObservation: _semObs,
       ...egressContext
     } = context;
 
@@ -159,8 +168,8 @@ export class BackendAgentProvider implements AgentProvider {
       clearTimeout(timer);
 
       if (!resp.ok) {
-        const { detail, kind, retryable } = await this.parseError(resp);
         const retryAfterMs = parseRetryAfter(resp.headers?.get?.('retry-after'));
+        const { detail, kind, retryable } = await this.parseError(resp, retryAfterMs);
         throw new ProviderError(`Backend agent endpoint failed: ${detail}`, kind, {
           retryable,
           status: resp.status,
@@ -295,7 +304,7 @@ export class BackendAgentProvider implements AgentProvider {
       if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) throw new ProviderError('Backend unavailable.', 'network', { retryable: true });
       throw new ProviderError(`[BackendAgentProvider] ${msg}`, 'unknown');
     }
-  }  private async parseError(resp: Response): Promise<{ detail: string; kind: ProviderErrorKind; retryable: boolean }>
+  }  private async parseError(resp: Response, retryAfterMs?: number): Promise<{ detail: string; kind: ProviderErrorKind; retryable: boolean }>
   {
     let detail = `HTTP ${resp.status}`;
     let kind: ProviderErrorKind = 'http_error';
@@ -325,7 +334,10 @@ export class BackendAgentProvider implements AgentProvider {
       kind = 'auth';
     } else if (resp.status === 429) {
       kind = 'rate_limit';
-      retryable = false; // M7 hotfix: rate limits are never retried
+      // M7 hotfix, narrowed in Step 10.6 (G7): a rate limit is still never
+      // retried on a guess. Whether it is retryable is decided by the SINGLE
+      // rule below, which requires the provider's own published Retry-After.
+      retryable = false;
     } else if (resp.status >= 500 && !structuredKindFound) {
       // Backend 5xx without a structured body is a transient server-side
       // failure — retryable. A structured error_kind from the body is
@@ -334,13 +346,27 @@ export class BackendAgentProvider implements AgentProvider {
       retryable = true;
     }
 
-    // M7 hotfix — defense in depth: the extension NEVER trusts a remote
-    // `retryable` flag for rate limiting. Even if the backend/compat layer
-    // reports error_kind=rate_limit with retryable=true (or a 429 body is
-    // absent), the step fails closed with ZERO retries so that a
-    // rate-limited free-tier pool cannot be multiplied by M6 retries.
+    // M7 hotfix, retained and STRENGTHENED — defense in depth: the extension
+    // NEVER trusts a remote `retryable` flag for rate limiting. Even if the
+    // backend reports error_kind=rate_limit with retryable=true, that flag alone
+    // is IGNORED. The value assigned here is derived ONLY from the local,
+    // already-clamped parse of the provider's own Retry-After header — never
+    // from the remote body.
+    //
+    // POST-17.10 Step 10.6 (G7). A rate limit that arrives WITH a valid
+    // Retry-After is TRANSIENT by the provider's own account: it published the
+    // exact interval at which it will serve the next request. Honouring that
+    // interval is RESPECTING the limit, not bypassing it — the alternative is
+    // either failing closed on a request the provider has said will succeed,
+    // or hammering the pool with unspaced retries.
+    //
+    // The bounds are unchanged and all live upstream in the loop: retries are
+    // capped by `providerRetries`, the delay is clamped by `parseRetryAfter`
+    // here and again by `Math.min(hint, 30_000)` in `AgentLoop`, and a rate
+    // limit with NO valid Retry-After stays exactly as before — non-retryable,
+    // zero retries, fail closed.
     if (kind === 'rate_limit') {
-      retryable = false;
+      retryable = typeof retryAfterMs === 'number';
     }
 
     return { detail, kind, retryable };

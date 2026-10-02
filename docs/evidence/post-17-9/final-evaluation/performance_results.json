@@ -1,0 +1,30 @@
+{
+  "audit": "FINAL POST-17.9 EVALUATION — performance",
+  "note": "Local decision-path latency and provider RTT are measured and reported SEPARATELY. They are never combined.",
+
+  "localDecisionPath": {
+    "unit": "milliseconds",
+    "source": "docs/evidence/post-17-9/semantic-observation/performance_results.json and docs/evidence/post-17-9/m8-phone-detection/performance_results.json (measured on this machine, jsdom/Node, real production functions)",
+    "world_model_build": { "p50": 12.717, "p95": 23.858, "scope": "realistic fixture page" },
+    "semantic_observation": { "p50": 0.013, "p95": 0.051, "scope": "realistic fixture page" },
+    "semantic_observation_adversarial": { "p50": 0.091, "p95": 0.158, "scope": "30 regions, long text, injection + PII candidates" },
+    "observe_then_verify_end_to_end": { "p50": 0.079, "p95": 0.168, "scope": "observation + goal verification" },
+    "contextual_phone_rule_alone": { "p50": 0.0004, "p95": 0.0009 },
+    "raw_value_scanner_after_phone_fix": { "p50": 0.003, "p95": 0.0052 },
+    "phone_fix_overhead_p95": 0.0048
+  },
+
+  "publishedBaseline": {
+    "localDecisionCycleLatency": { "p50_ms": 45, "p95_ms": 88, "scope": "perception, grounding, M5, effect verification (README, pre-existing)" },
+    "note": "Reported as published by the project; NOT re-measured in this audit."
+  },
+
+  "providerRtt": {
+    "unit": "milliseconds, measured separately from local latency",
+    "semanticObservationRun": { "n": 3, "min": 472, "p50": 472, "p90": 472, "max": 472, "provider": "groq openai/gpt-oss-20b" },
+    "priorRun": { "n": 1, "rtt_ms": 472 },
+    "note": "Free-tier provider. Rate limiting (HTTP 429/503) has been observed in earlier runs and is handled fail-closed."
+  },
+
+  "verdict": "Local path cost is dominated by the pre-existing world-model build; both post-17.9 additions are <1ms at p95. Provider RTT dominates end-to-end task time by two to three orders of magnitude and is reported separately."
+}

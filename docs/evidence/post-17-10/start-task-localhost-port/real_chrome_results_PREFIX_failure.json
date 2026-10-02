@@ -1,0 +1,123 @@
+{
+  "timestamp": "2026-09-30T01:37:08.476Z",
+  "work": "START_TASK localhost-port target resolution — real Chrome diagnostic",
+  "evidencePolicy": "Metadata, booleans and counts only. No page content or PII values are recorded.",
+  "environment": {
+    "realChrome": true,
+    "stubbedTargetPath": false,
+    "reasonerInvoked": false,
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "extensionLoaded": true
+  },
+  "inputs": {
+    "dashboardOrigin": "http://localhost:5173",
+    "requestedTargetOrigin": "http://localhost:4174",
+    "task": "open http://localhost:4174 and fill the contact form",
+    "targetTabOpenBeforeStartTask": false
+  },
+  "boundaries": {
+    "dashboardServed": {
+      "status": 200,
+      "ok": true
+    },
+    "targetFixtureServed": {
+      "status": 200,
+      "ok": true
+    },
+    "dashboardTabUrl": "http://localhost:5173/",
+    "tabsBeforeStartTask": [
+      {
+        "id": 1781966521,
+        "origin": "null",
+        "port": ""
+      },
+      {
+        "id": 1781966522,
+        "origin": "http://localhost:5173",
+        "port": "5173"
+      }
+    ],
+    "dashboardTabId": 1781966522,
+    "targetTabOpenBeforeStartTask": false,
+    "tabsAfterStartTask": [
+      {
+        "id": 1781966521,
+        "origin": "null",
+        "active": false,
+        "status": "complete"
+      },
+      {
+        "id": 1781966522,
+        "origin": "http://localhost:5173",
+        "active": true,
+        "status": "complete"
+      }
+    ],
+    "targetTabId": null,
+    "resolvedTargetUrl": null,
+    "dashboardTabStillOnDashboard": true,
+    "noArbitraryTabSelected": true,
+    "resolver": {
+      "started": true,
+      "candidates": "TARGET_TAB_CANDIDATES {\"0\":\"Object\",\"1\":\"Object\"}",
+      "failureLine": "TARGET_TAB_FAILED: no eligible tab found {\"failureCode\":\"DESTINATION_REQUIRED\"}",
+      "selected": null,
+      "provisioned": null,
+      "ready": null
+    },
+    "containment": {
+      "logged": false
+    },
+    "agentLoop": {
+      "constructed": false,
+      "perceptionEntered": false,
+      "targetResolvedMarker": false,
+      "contentScriptReadyMarker": false
+    }
+  },
+  "perception": {},
+  "outcome": {
+    "progressEnvelopes": [
+      {
+        "status": "FAILED",
+        "currentStep": 0,
+        "maxSteps": 10,
+        "stepCount": 0,
+        "targetTabId": null,
+        "currentUrl": null,
+        "reason": "No target web tab is open and no destination could be determined from the task. Name a site explicitly (for example \"open https://example.com\" or \"open google and search for cats\"), or open the page you want PrivAgent to work with.",
+        "hasInteraction": false
+      },
+      {
+        "status": "FAILED",
+        "currentStep": 0,
+        "maxSteps": 10,
+        "stepCount": 0,
+        "targetTabId": null,
+        "currentUrl": null,
+        "reason": "No target web tab is open and no destination could be determined from the task. Name a site explicitly (for example \"open https://example.com\" or \"open google and search for cats\"), or open the page you want PrivAgent to work with.",
+        "hasInteraction": true
+      }
+    ],
+    "envelopeCount": 2,
+    "firstEnvelopeStatus": "FAILED",
+    "firstEnvelopeCurrentStep": 0,
+    "firstEnvelopeStepCount": 0,
+    "anyStep0TerminalFailed": true,
+    "reachedStepOne": false,
+    "finalStatus": "FAILED",
+    "finalReason": "No target web tab is open and no destination could be determined from the task. Name a site explicitly (for example \"open https://example.com\" or \"open google and search for cats\"), or open the page you want PrivAgent to work with.",
+    "reportedTargetTabId": null,
+    "reasonerReached": false,
+    "actionDispatched": false,
+    "agentTraceLines": [
+      "[AgentTrace] service worker START_TASK received {\"taskLength\":\"52\"}",
+      "TARGET_RESOLUTION_STARTED",
+      "TARGET_TAB_CANDIDATES {\"0\":\"Object\",\"1\":\"Object\"}",
+      "TARGET_TAB_FAILED: no eligible tab found {\"failureCode\":\"DESTINATION_REQUIRED\"}",
+      "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\"}",
+      "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
+    ]
+  },
+  "verdict": "NOT_PROVEN"
+}

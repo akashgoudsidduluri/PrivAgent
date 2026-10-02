@@ -1,0 +1,168 @@
+{
+  "work": "POST-17.10 STEP 10.5 — G7 destination chain mutation matrix",
+  "labels": "PROVEN_UNIT_ONLY",
+  "focusedBackendTests": [
+    "tests/test_step10_5_destination_navigation.py",
+    "tests/test_step10_3_declaration_vs_observation.py",
+    "tests/test_step10_2_destination_trust_boundary.py",
+    "tests/test_step10_declared_destination.py",
+    "tests/test_text_safety.py",
+    "tests/test_step10_4_text_safety_p1.py"
+  ],
+  "focusedExtensionTests": [
+    "tests/step10_3_destinationScoping.test.ts",
+    "tests/step10_3_roleOnlyControls.test.ts",
+    "tests/destinationVerifier.test.ts",
+    "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+    "tests/destinationNormalizer.test.ts",
+    "tests/destinationNavigationIntent.test.ts",
+    "tests/classificationDestinationGap.test.ts",
+    "tests/destinationProducerWiring.test.ts"
+  ],
+  "restoreDiscipline": "durable backup -> single exact-anchor replacement -> restore -> sha256 byte-verify per mutation and for every file at the end",
+  "tally": {
+    "KILLED": 20
+  },
+  "results": [
+    {
+      "id": "M1",
+      "file": "backend/app/reasoner.py",
+      "intent": "remove destination context from the model prompt",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestRoleOnlyContract::test_destination_url_stays_absent"
+    },
+    {
+      "id": "M2",
+      "file": "backend/app/reasoner.py",
+      "intent": "let the model choose the destination role",
+      "verdict": "KILLED",
+      "detail": ""
+    },
+    {
+      "id": "M3",
+      "file": "backend/app/reasoner.py",
+      "intent": "allow the model to declare arrival complete",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_it_preserves_verifier_authority"
+    },
+    {
+      "id": "M4",
+      "file": "backend/app/reasoner.py",
+      "intent": "hardcode the fixture listing path into the prompt",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestNoFixtureKnowledgeLeaksIntoProduction::test_no_fixture_string_appears_in_a_rendered_prompt[results.htm"
+    },
+    {
+      "id": "M5",
+      "file": "backend/app/reasoner.py",
+      "intent": "tell the model any page will do",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_it_names_the_declared_role"
+    },
+    {
+      "id": "M6",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "let UNKNOWN be declared as a destination",
+      "verdict": "KILLED",
+      "detail": "AssertionError: expected 'MISMATCH' to be 'UNKNOWN' // Object.is equality"
+    },
+    {
+      "id": "M7",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "remove the confidence floor",
+      "verdict": "KILLED",
+      "detail": "AssertionError: expected true to be false // Object.is equality"
+    },
+    {
+      "id": "M8",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "intent": "MISMATCH/UNKNOWN also complete the destination subgoal",
+      "verdict": "KILLED",
+      "detail": "AssertionError: expected true to be false // Object.is equality"
+    },
+    {
+      "id": "M9",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "intent": "skip the verifier: trust the declaration instead",
+      "verdict": "KILLED",
+      "detail": "AssertionError: expected true to be false // Object.is equality"
+    },
+    {
+      "id": "M10",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "the observation rewrites the declared destination",
+      "verdict": "KILLED",
+      "detail": "AssertionError: expected { …(2) } to be undefined"
+    },
+    {
+      "id": "M11",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop the declaration from the prompt on later turns",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_the_instruction_is_rendered"
+    },
+    {
+      "id": "M12",
+      "file": "backend/app/reasoner.py",
+      "intent": "remove the role-only constraint from the model prompt",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_it_forbids_inventing_a_url"
+    },
+    {
+      "id": "M13",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "skip the freshness / generation check",
+      "verdict": "KILLED",
+      "detail": "AssertionError: expected 'Page classification is stamped genera…' to match /different document/i"
+    },
+    {
+      "id": "M14",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "intent": "a destination subgoal with NO declaration is marked satisfied",
+      "verdict": "KILLED",
+      "detail": "AssertionError: expected true to be false // Object.is equality"
+    },
+    {
+      "id": "M15",
+      "file": "backend/app/reasoner.py",
+      "intent": "bypass the text-safety reason scan",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_4_text_safety_p1.py::TestUpstreamValidatorsStillActive::test_req14_15_reasoner_scan_point_still_rejects"
+    },
+    {
+      "id": "M16",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop the stated reason-length limit",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_it_states_the_enforced_reason_length_limit"
+    },
+    {
+      "id": "M17",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop the submit-after-fill instruction",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_it_tells_the_model_to_act_not_to_re_read"
+    },
+    {
+      "id": "M18",
+      "file": "backend/app/reasoner.py",
+      "intent": "drop the query-form route instruction",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_it_communicates_the_query_form_route"
+    },
+    {
+      "id": "M19",
+      "file": "backend/app/reasoner.py",
+      "intent": "remove the independent-verification statement",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_it_preserves_verifier_authority"
+    },
+    {
+      "id": "M20",
+      "file": "backend/app/reasoner.py",
+      "intent": "skip the whole-reason field limit enforcement",
+      "verdict": "KILLED",
+      "detail": "FAILED tests/test_step10_5_destination_navigation.py::TestModelFacingInstruction::test_the_enforced_reason_length_limit_is_actually_enforced"
+    }
+  ]
+}

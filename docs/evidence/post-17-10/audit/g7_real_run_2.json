@@ -1,0 +1,41 @@
+{
+  "work": "POST-17.10 STEP 10 AUDIT — real production provider-egress capture",
+  "labels": "PROVEN_REAL_CHROME (bytes on the wire) / PROVEN_REAL_BACKEND (backend response)",
+  "inputs": {
+    "task": "open the store catalog",
+    "userSuppliedUrlInTask": null,
+    "startUrl": "http://localhost:4174/",
+    "keptExistingTabs": false,
+    "targetOrigin": "http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "reasoningRequests": [],
+  "analysis": {},
+  "loopLogs": [
+    "TARGET_TAB_FAILED: no eligible tab found {\"failureCode\":\"DESTINATION_REQUIRED\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":0,\"reason\":\"No target web tab is open and no destination could be determined from the task. Name a site explicitly (for example \\\"open https://example.com\\\" or \\\"open google and search for cats\\\"), or open the page you want PrivAgent to work with.\"}"
+  ],
+  "rawLogs": [
+    "TARGET_RESOLUTION_STARTED",
+    "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}",
+    "[AgentTrace] service worker START_TASK received {\"taskLength\":22}",
+    "TARGET_TAB_CANDIDATES [{\"id\":1204792663,\"origin\":\"null\"},{\"id\":1204792664,\"origin\":\"http://localhost:5173\"}]",
+    "TARGET_TAB_FAILED: no eligible tab found {\"failureCode\":\"DESTINATION_REQUIRED\"}",
+    "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\"}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":0,\"reason\":\"No target web tab is open and no destination could be determined from the task. Name a site explicitly (for example \\\"open https://example.com\\\" or \\\"open google and search for cats\\\"), or open the page you want PrivAgent to work with.\"}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790964928030\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790964928030\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790964928030\",\"targetFound\":false,\"urlOrigin\":\"\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790964928030\",\"targetFound\":false}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1790964943030\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1790964943030\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1790964943030\",\"targetFound\":false,\"urlOrigin\":\"\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1790964943030\",\"targetFound\":false}"
+  ],
+  "observations": [],
+  "error": "target resolver never provisioned a tab"
+}

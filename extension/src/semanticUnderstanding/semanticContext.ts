@@ -47,6 +47,18 @@ const KNOWN_INJECTION_PATTERNS = [
 ];
 
 /**
+ * True when a piece of DISPLAYED TEXT matches a known prompt-injection pattern.
+ *
+ * Exported for the semantic-observation path, which labels such facts
+ * `untrusted`. The text is still reasoned about as PAGE DATA: it is never an
+ * agent instruction, and it is never usable as goal evidence.
+ */
+export function isInjectionShapedText(text: string): boolean {
+  if (!text) return false;
+  return KNOWN_INJECTION_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+/**
  * Scans webpage text for hostile prompt-injection attempts.
  * Quarantines any detected strings as untrusted webpage evidence.
  */

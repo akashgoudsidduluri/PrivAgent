@@ -1,0 +1,313 @@
+{
+  "work": "POST-17.10 step 6 — real normalizer + real verifier over a fresh real Chrome capture, with entry URL separated from destination URL",
+  "provenance": {
+    "observation": "PROVEN_REAL — captured from the freshly built, unpacked-loaded extension in a real Chrome tab",
+    "normalizer": "PROVEN_REAL — production module, executed on the real user task",
+    "verifier": "PROVEN_REAL — production module, executed on the real observation",
+    "caveat": "The verifier is not wired into the bundle (producers intentionally unwired), so it is executed in Node against the captured observation rather than inside the browser process. The observation is real; the call site is not yet production."
+  },
+  "results": {
+    "agentReachedPage": {
+      "observation": {
+        "label": "agent-reached-page",
+        "capturedAt": "2026-10-01T12:57:43.926Z",
+        "ok": true,
+        "url": "http://localhost:4174/",
+        "worldModelOrigin": "http://localhost:4174",
+        "worldModelTitle": null,
+        "worldModelPageType": "landing",
+        "worldModelPageGeneration": 3,
+        "semanticPageType": "UNKNOWN",
+        "semanticConfidence": 0.1,
+        "semanticPageState": "populated",
+        "semanticPageGeneration": 3,
+        "entityCount": 0,
+        "affordanceTypes": [
+          "SCROLL"
+        ],
+        "workflow": {
+          "flowType": "GENERAL_BROWSING",
+          "currentStage": "INITIAL"
+        },
+        "totalElementsScanned": 18,
+        "sensitiveDetected": 0
+      },
+      "verdict": {
+        "kind": "UNKNOWN",
+        "reason": "The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "UNKNOWN",
+            "reason": "The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+          },
+          "url": null
+        }
+      }
+    },
+    "catalogPage_combined": {
+      "observation": {
+        "label": "catalog-results-html",
+        "capturedAt": "2026-10-01T12:57:46.954Z",
+        "ok": true,
+        "url": "http://localhost:4174/results.html",
+        "worldModelOrigin": "http://localhost:4174",
+        "worldModelTitle": null,
+        "worldModelPageType": "listing",
+        "worldModelPageGeneration": 5,
+        "semanticPageType": "LISTING",
+        "semanticConfidence": 0.99,
+        "semanticPageState": "results_available",
+        "semanticPageGeneration": 5,
+        "entityCount": 4,
+        "affordanceTypes": [
+          "SCROLL"
+        ],
+        "workflow": {
+          "flowType": "SHOPPING",
+          "currentStage": "LISTING_VIEWED"
+        },
+        "totalElementsScanned": 52,
+        "sensitiveDetected": 0
+      },
+      "verdict": {
+        "kind": "MATCH",
+        "reason": "Observed page identity LISTING at confidence 0.99 is one of the declared roles [LISTING].",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "MATCH",
+            "reason": "Observed page identity LISTING at confidence 0.99 is one of the declared roles [LISTING]."
+          },
+          "url": null
+        }
+      }
+    },
+    "step5_conflatedContractOnSameObservation": {
+      "note": "Step 5 treated the entry URL as the destination URL and correctly reported MISMATCH against this same real observation. The separation must NOT weaken that rejection, so it is re-asserted here on the same observation.",
+      "verdict": {
+        "kind": "MISMATCH",
+        "reason": "Observed URL http://localhost:4174/results.html differs from the declared destination http://localhost:4174/.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "MATCH",
+            "reason": "Observed page identity LISTING at confidence 0.99 is one of the declared roles [LISTING]."
+          },
+          "url": {
+            "channel": "url",
+            "kind": "MISMATCH",
+            "reason": "Observed URL http://localhost:4174/results.html differs from the declared destination http://localhost:4174/."
+          }
+        }
+      }
+    },
+    "observationCannotRewriteDeclaration": {
+      "declarationBefore": {
+        "kind": "DECLARED",
+        "role": {
+          "provenance": "EXPLICIT_PAGE_ROLE",
+          "acceptablePageTypes": [
+            "LISTING"
+          ]
+        },
+        "entryUrl": {
+          "provenance": "USER_ENTRY_SITE",
+          "origin": "http://localhost:4174",
+          "path": "/",
+          "rawUrl": "http://localhost:4174"
+        }
+      },
+      "declarationAfter": {
+        "kind": "DECLARED",
+        "role": {
+          "provenance": "EXPLICIT_PAGE_ROLE",
+          "acceptablePageTypes": [
+            "LISTING"
+          ]
+        },
+        "entryUrl": {
+          "provenance": "USER_ENTRY_SITE",
+          "origin": "http://localhost:4174",
+          "path": "/",
+          "rawUrl": "http://localhost:4174"
+        }
+      },
+      "unchanged": true,
+      "destinationUrlStillAbsent": true
+    },
+    "negativeControl_checkoutVsRealListing": {
+      "verdict": {
+        "kind": "MISMATCH",
+        "reason": "Observed page identity LISTING at confidence 0.99 is not one of the declared roles [CHECKOUT].",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "MISMATCH",
+            "reason": "Observed page identity LISTING at confidence 0.99 is not one of the declared roles [CHECKOUT]."
+          },
+          "url": null
+        }
+      }
+    },
+    "explicitDestinationUrl": {
+      "declaration": {
+        "kind": "DECLARED",
+        "url": {
+          "provenance": "USER_URL",
+          "origin": "http://localhost:4174",
+          "path": "/results.html",
+          "rawUrl": "http://localhost:4174/results.html"
+        }
+      },
+      "onRealCatalog": {
+        "kind": "MATCH",
+        "reason": "Observed URL http://localhost:4174/results.html equals the declared destination exactly.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": null,
+          "url": {
+            "channel": "url",
+            "kind": "MATCH",
+            "reason": "Observed URL http://localhost:4174/results.html equals the declared destination exactly."
+          }
+        }
+      },
+      "onRealProductPage": {
+        "kind": "MISMATCH",
+        "reason": "Observed URL http://localhost:4174/product.html differs from the declared destination http://localhost:4174/results.html.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": null,
+          "url": {
+            "channel": "url",
+            "kind": "MISMATCH",
+            "reason": "Observed URL http://localhost:4174/product.html differs from the declared destination http://localhost:4174/results.html."
+          }
+        }
+      }
+    },
+    "negativeControl_realUnknownLanding": {
+      "verdict": {
+        "kind": "UNKNOWN",
+        "reason": "The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "UNKNOWN",
+            "reason": "The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+          },
+          "url": null
+        }
+      }
+    },
+    "staleness": {
+      "staleObservation": {
+        "label": "catalog-results-html",
+        "capturedAt": "2026-10-01T12:57:46.954Z",
+        "ok": true,
+        "url": "http://localhost:4174/results.html",
+        "worldModelOrigin": "http://localhost:4174",
+        "worldModelTitle": null,
+        "worldModelPageType": "listing",
+        "worldModelPageGeneration": 5,
+        "semanticPageType": "LISTING",
+        "semanticConfidence": 0.99,
+        "semanticPageState": "results_available",
+        "semanticPageGeneration": 5,
+        "entityCount": 4,
+        "affordanceTypes": [
+          "SCROLL"
+        ],
+        "workflow": {
+          "flowType": "SHOPPING",
+          "currentStage": "LISTING_VIEWED"
+        },
+        "totalElementsScanned": 52,
+        "sensitiveDetected": 0
+      },
+      "currentObservation": {
+        "label": "product-html",
+        "capturedAt": "2026-10-01T12:57:49.981Z",
+        "ok": true,
+        "url": "http://localhost:4174/product.html",
+        "worldModelOrigin": "http://localhost:4174",
+        "worldModelTitle": null,
+        "worldModelPageType": "unknown",
+        "worldModelPageGeneration": 7,
+        "semanticPageType": "UNKNOWN",
+        "semanticConfidence": 0.1,
+        "semanticPageState": "populated",
+        "semanticPageGeneration": 7,
+        "entityCount": 0,
+        "affordanceTypes": [
+          "SELECT_RESULT",
+          "ADD_TO_CART",
+          "BUY_NOW",
+          "SELECT_RESULT",
+          "SCROLL"
+        ],
+        "workflow": {
+          "flowType": "GENERAL_BROWSING",
+          "currentStage": "INITIAL"
+        },
+        "totalElementsScanned": 31,
+        "sensitiveDetected": 0
+      },
+      "verdict": {
+        "kind": "UNKNOWN",
+        "reason": "Observation belongs to page generation 5 but verification is running at generation 7; a stale document cannot verify a destination.",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "UNKNOWN",
+            "reason": "Observation belongs to page generation 5 but verification is running at generation 7; a stale document cannot verify a destination."
+          },
+          "url": null
+        }
+      }
+    }
+  },
+  "task": "open the store catalog at http://localhost:4174",
+  "declaration": {
+    "kind": "DECLARED",
+    "role": {
+      "provenance": "EXPLICIT_PAGE_ROLE",
+      "acceptablePageTypes": [
+        "LISTING"
+      ]
+    },
+    "entryUrl": {
+      "provenance": "USER_ENTRY_SITE",
+      "origin": "http://localhost:4174",
+      "path": "/",
+      "rawUrl": "http://localhost:4174"
+    }
+  },
+  "boundary": {
+    "observationKeys": [
+      "pageGeneration",
+      "semantic",
+      "url"
+    ],
+    "semanticKeys": [
+      "confidence",
+      "pageGeneration",
+      "pageType"
+    ],
+    "carriesForbiddenField": [],
+    "declarationKeys": [
+      "entryUrl",
+      "kind",
+      "role"
+    ],
+    "roleIsMetadataOnly": true,
+    "verdictCarriesPageText": false
+  }
+}

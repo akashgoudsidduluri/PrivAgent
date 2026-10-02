@@ -1,0 +1,174 @@
+{
+  "work": "POST-17.10 STEP 10.3 — G5/G6/G7/G8 targeted mutation matrix",
+  "labels": "PROVEN_UNIT_ONLY (focused extension suites + in-process backend suites)",
+  "focusedExtensionSuites": [
+    "tests/step10_3_destinationScoping.test.ts",
+    "tests/step10_3_roleOnlyControls.test.ts",
+    "tests/step10_2_destinationTrustBoundary.test.ts",
+    "tests/destinationPropagationAndAlreadySatisfied.test.ts",
+    "tests/destinationNormalizer.test.ts",
+    "tests/destinationVerifier.test.ts",
+    "tests/destinationProducerWiring.test.ts",
+    "tests/classificationDestinationGap.test.ts",
+    "tests/destinationNavigationIntent.test.ts",
+    "tests/contextMinimizer.test.ts",
+    "tests/taskDecomposer.test.ts"
+  ],
+  "focusedBackendTests": [
+    "tests/test_step10_3_declaration_vs_observation.py",
+    "tests/test_step10_2_destination_trust_boundary.py",
+    "tests/test_step10_declared_destination.py"
+  ],
+  "tally": {
+    "KILLED": 17,
+    "EQUIVALENT": 1
+  },
+  "results": [
+    {
+      "id": "G5-01",
+      "gap": "G5",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "intent": "destination MISMATCH completes the subgoal anyway",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/classificationDestinationGap.test.ts > W4/W5 · explicit checkout and form destinations > W4c. it completes on a real CHECKOUT observation and not on LISTING"
+    },
+    {
+      "id": "G5-02",
+      "gap": "G5",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "intent": "UNKNOWN also completes the destination subgoal",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/classificationDestinationGap.test.ts > W4/W5 · explicit checkout and form destinations > W4c. it completes on a real CHECKOUT observation and not on LISTING"
+    },
+    {
+      "id": "G5-03",
+      "gap": "G5",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "intent": "a STALE observation is accepted (generation check dropped)",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/destinationNavigationIntent.test.ts > W4-W7/W17/W18 · navigation never becomes completion > W17. a stale observation cannot complete, even at the declared URL"
+    },
+    {
+      "id": "G5-04",
+      "gap": "G5",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "intent": "a subgoal with NO declaration is treated as satisfied (arbitrary completion)",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/destinationNavigationIntent.test.ts > W8-W11 · no shortcut can create or satisfy a destination > W8. targetEntity cannot substitute for the declaration"
+    },
+    {
+      "id": "G5-05",
+      "gap": "G5",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "declaration propagation reads the ACTIVE SUBGOAL again (re-opens the G5 gap)",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/step10_3_destinationScoping.test.ts > G5-S4 · the model-facing declaration follows the ACTIVE subgoal > a goal with NO declaration injects none, whatever subgoal is active"
+    },
+    {
+      "id": "G5-06",
+      "gap": "G5",
+      "file": "extension/src/hierarchicalPlanning/plannerContextBuilder.ts",
+      "intent": "declaration is injected for a goal that declared NONE (undeclared task becomes declared)",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/destinationPropagationAndAlreadySatisfied.test.ts > A · W5–W10 — no other channel may create or rewrite the declaration > W6. an affordance cannot create or rewrite the declaration"
+    },
+    {
+      "id": "G6-01",
+      "gap": "G6",
+      "file": "backend/app/reasoner.py",
+      "intent": "the declaration is rendered back INSIDE the observed-state block (re-opens G6)",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: assert 'declaredDestination' not in {'pageType': 'LISTING', 'declaredDestination': {'provenance': 'USER_DECLARED_DESTINATION', 'role': ['LISTING']}}"
+    },
+    {
+      "id": "G6-02",
+      "gap": "G6",
+      "file": "backend/app/reasoner.py",
+      "intent": "the declaration block is dropped entirely (model never told the destination)",
+      "verdict": "KILLED",
+      "detail": "E       assert None == {'provenance': 'USER_DECLARED_DESTINATION', 'role': ['LISTING']}"
+    },
+    {
+      "id": "G6-03",
+      "gap": "G6",
+      "file": "backend/app/reasoner.py",
+      "intent": "the separation labels are removed (declaration presented as observation)",
+      "verdict": "KILLED",
+      "detail": "E       assert None == {'provenance': 'USER_DECLARED_DESTINATION', 'role': ['LISTING']}"
+    },
+    {
+      "id": "G6-04",
+      "gap": "G6",
+      "file": "backend/app/reasoner.py",
+      "intent": "the declaration is labelled as PROOF OF ARRIVAL",
+      "verdict": "KILLED",
+      "detail": "E       assert 'observation, not user intent' in 'User task: \"open the store catalog\"\\n\\nCurrent page URL: http://localhost:4174/\\n\\nSemantic Understanding (on-device ...f the task needs an element, scroll to find it; do not guess an ID.\\n\\nRespond with the single JSON action object now.'"
+    },
+    {
+      "id": "G6-05",
+      "gap": "G6",
+      "file": "backend/app/reasoner.py",
+      "intent": "observed state is relabelled as user intent",
+      "verdict": "KILLED",
+      "detail": "E       AssertionError: the observed-state block must still be rendered"
+    },
+    {
+      "id": "G7-01",
+      "gap": "G7",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "UNKNOWN becomes MATCH",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/destinationVerifier.test.ts > page role > an ERROR page cannot be declared as a destination either"
+    },
+    {
+      "id": "G7-02",
+      "gap": "G7",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "the confidence floor is removed (low confidence => MATCH)",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/destinationProducerWiring.test.ts > W3 · only MATCH completes a destination subgoal > W3e. a low-confidence LISTING below the shared floor does not complete"
+    },
+    {
+      "id": "G7-03",
+      "gap": "G7",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "the staleness check is removed (stale observation => MATCH)",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/destinationNavigationIntent.test.ts > W4-W7/W17/W18 · navigation never becomes completion > W17. a stale observation cannot complete, even at the declared URL"
+    },
+    {
+      "id": "G7-04",
+      "gap": "G7",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "the CURRENT URL alone satisfies a role-only declaration",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/destinationProducerWiring.test.ts > W0 · the canonical prompt plans a destination subgoal without changing category > W0e. the destination subgoal completes only on the real catalog observation"
+    },
+    {
+      "id": "G7-05",
+      "gap": "G7",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "intent": "the wrong page role no longer MISMATCHes (positive contrary evidence ignored)",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/destinationNavigationIntent.test.ts > W4-W7/W17/W18 · navigation never becomes completion > W6. MISMATCH cannot complete"
+    },
+    {
+      "id": "G7-06",
+      "gap": "G7",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "intent": "a destination subgoal completes WITHOUT consulting the verifier",
+      "verdict": "KILLED",
+      "detail": "FAIL  tests/classificationDestinationGap.test.ts > W4/W5 · explicit checkout and form destinations > W4c. it completes on a real CHECKOUT observation and not on LISTING"
+    },
+    {
+      "id": "G8-01",
+      "gap": "G8",
+      "kind": "test-file",
+      "file": "backend/tests/test_step10_declared_destination.py",
+      "expectEquivalent": true,
+      "intent": "restore the misleading name AND the duplicate body (expected EQUIVALENT)",
+      "verdict": "EQUIVALENT",
+      "detail": "88 passed in 0.20s"
+    }
+  ]
+}

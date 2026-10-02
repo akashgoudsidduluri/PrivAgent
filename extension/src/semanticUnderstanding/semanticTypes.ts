@@ -220,6 +220,39 @@ export interface SanitizedSemanticContext {
   };
   promptInjectionDetected: boolean;
   injectionEvidence?: string[];
+  /**
+   * Post-17.9. Sanitized, bounded display facts observed on the page — a
+   * displayed price, for example.
+   *
+   * These ride inside this ALREADY-EXISTING envelope, which the service worker
+   * already forwards and the backend schema already accepts, so the reasoner
+   * gains no new text channel. Content only: tab id, document URL, page
+   * generation and timestamps stay on the device in the companion
+   * `SemanticObservation`, which is stripped at the egress boundary.
+   */
+  facts?: import('../semanticObservation/types').SanitizedSemanticFact[];
+  /**
+   * POST-17.10 Step 10.2 (G2) — the USER's declared destination.
+   *
+   * This field is the reason it is declared HERE rather than added ad hoc at
+   * each call site. Until it existed on this interface, the declaration could
+   * only reach the model boundary through an unchecked cast, so every
+   * allowlist projection of `semantic_context` was free to drop it silently —
+   * and `buildModelFacingContext` did exactly that. The type system is the only
+   * thing that makes "a projection cannot lose the declaration" a structural
+   * property instead of a review convention.
+   *
+   * It is USER-DERIVED and nothing else. `buildSemanticUnderstanding` — the
+   * only producer of this interface from a page — must never populate it: it is
+   * attached downstream by `PlannerContextBuilder` from a declaration that was
+   * parsed out of the user's own prompt. No DOM, URL, page type, entity,
+   * affordance, observation, action or model output participates.
+   *
+   * Typed as a reference rather than a copy so this module keeps no ownership of
+   * the declaration: there is exactly one definition of the constraint shape,
+   * and adding a field to it is a change the verifier and the reasoner both see.
+   */
+  declaredDestination?: import('../hierarchicalPlanning/hierarchicalTypes').DeclaredDestinationConstraint;
   goalRelevance?: {
     matchedEntitiesCount: number;
     matchedAffordancesCount: number;

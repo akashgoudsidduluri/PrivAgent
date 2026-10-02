@@ -1,0 +1,88 @@
+{
+  "work": "STEP 10.5 — G7 real agent-directed destination closure",
+  "canonicalTask": "open the store catalog",
+  "headline": "The navigation blocker (N2) is FIXED and proven on the real runtime: run 2 executed the complete real route and produced a genuine LISTING@0.99 observation. G7 is nevertheless still OPEN because the run needs a FOURTH provider call and the configured Groq tier serves three per minute with no usable fallback. DestinationVerifier MATCH, subgoal completion, planner progression and GoalVerifier were therefore never reached inside a live run.",
+  "g7Status": "OPEN",
+  "labels": {
+    "realRun": "PROVEN_REAL — Chrome 153.0.8010.12, production extension/dist, live backend :8010, real Groq, real fixture :4174",
+    "verifierOnCapturedObservation": "PROVEN_UNIT_ONLY — the production verifier run against the observation a real run actually captured",
+    "negativeControls": "PROVEN_UNIT_ONLY"
+  },
+  "rootCauseClassification": {
+    "N1_model_lacked_destination_intent": { "status": "DISPROVEN", "evidence": "declaredDestination={provenance:USER_DECLARED_DESTINATION, role:[LISTING]} present in 100% of captured request bodies across every run, on every turn including turns where a different subgoal was active." },
+    "N2_model_ignored_destination_intent": { "status": "PROVEN then FIXED", "before": "Step 10.4 run: on search.html the model received role=[LISTING] plus an ENTER_QUERY affordance and replied 'No catalog or listing link is visible on the current search page; scrolling down may reveal...' then scrolled -> ACTION_NO_EFFECT.", "fix": "Part 6: a positive, role-parameterised navigation instruction added to the model-facing declaration block in backend/app/reasoner.py. No authority, no URL, no fixture knowledge.", "after": "Run 2 executed click btn-shop-now -> type 'all' into input-search-query -> click btn-search-submit, reaching results.html." },
+    "N3_model_lacked_destination_affordance": { "status": "DISPROVEN", "evidence": "On search.html the payload carried detections [btn-search-submit, input-search-query, inter-link-1] and affordances [ENTER_QUERY, SUBMIT_SEARCH, FILL_FIELD, SUBMIT_FORM, SCROLL]. On / the Browse Catalog link was present as detection btn-shop-now." },
+    "N4_planner_failed_to_act_on_destination_role": { "status": "DISPROVEN", "evidence": "The planner correctly selected sg1 (NAVIGATE / DESTINATION_VERIFIED) every run and correctly REFUSED to complete it while the page was UNKNOWN. It never mis-completed." },
+    "N5_targetResolver_selected_wrong_target": { "status": "DISPROVEN", "evidence": "The click on btn-shop-now produced the correct navigation to /search.html in every run where it was issued." },
+    "N6_fixture_exposes_ambiguous_navigation": { "status": "DISPROVEN", "evidence": "Fixture audit: / has <a id=btn-shop-now href=search.html>Browse Catalog</a>; /search.html has <button id=btn-search-submit>Search Catalog</button> whose form navigates to results.html?q=...; /results.html carries 4 product-card elements and classifies LISTING@0.99 via the production classifier. The route is two hops of real observable affordances." },
+    "N7_provider_or_model_limitation": { "status": "PROVEN — UNRESOLVED, the binding blocker", "evidence": "Groq returns HTTP 429 with an explicit budget message: 'Rate limit reached for model openai/gpt-oss-20b ... on tokens per minute (TPM): Limit 8000, Used 6505, Requested 2372'. Measured: limit 8000 TPM, each agent call requests ~2200-2600 prompt tokens, therefore exactly 3 calls fit per minute. The G7 chain needs 4 (click, type, submit, verify). The configured fallback OpenRouter fails with HTTP 402 'Insufficient credits. This account never purchased credits.' NVIDIA times out after 30s. MAX_LLM_ATTEMPTS=1, so there is no retry." },
+    "N8_action_execution_defect": { "status": "DISPROVEN", "evidence": "Every issued action executed correctly; completedSteps showed click, type and click all landing." },
+    "N9_observation_or_classification_defect": { "status": "DISPROVEN", "evidence": "The production classifier returns LISTING@0.99 on the real /results.html DOM (verified with the real classifier against the live fixture), UNKNOWN@0.1 on / and on /search.html. All correct." }
+  },
+  "navigationDataflow": {
+    "userPrompt": "open the store catalog",
+    "declaration": { "provenance": "USER_DECLARED_DESTINATION", "role": ["LISTING"], "destinationUrl": "ABSENT", "entryUrl": "ABSENT" },
+    "modelContext": "USER DECLARED DESTINATION block rendered in its own section (G6), followed by the new HOW TO ACT ON THIS DECLARATION instruction (Step 10.5). Contains no URL, no path, no brand and no fixture control label — asserted by a parametrized leak test over 13 strings.",
+    "modelResponse": [
+      "Clicking the 'Shop Now' button to navigate to the store catalog listing page.",
+      "Enter a broad catalog query into the search field to reach the product listing page.",
+      "Submit the search form to retrieve the product catalog listing"
+    ],
+    "action": "click btn-shop-now -> type 'all' into input-search-query -> click btn-search-submit",
+    "targetResolution": "correct; no target rewrite observed",
+    "executedUrl": "http://localhost:4174/ -> http://localhost:4174/search.html -> http://localhost:4174/results.html?q=all",
+    "observation": { "url": "http://localhost:4174/results.html", "pageType": "LISTING", "confidence": 0.99, "pageGeneration": 8 },
+    "verifier": "PROVEN_UNIT_ONLY: the production destinationVerifier returns {kind: MATCH, decisiveChannel: pageRole} for exactly that observation against the role-only declaration."
+  },
+  "realRuns": [
+    { "run": 1, "outcome": "click -> scroll", "terminalCause": "model navigation (pre-fix), ACTION_NO_EFFECT" },
+    { "run": 2, "outcome": "click -> type -> submit -> results.html LISTING@0.99 gen8", "terminalCause": "4th provider call HTTP 429 (rate_limit)", "significance": "THE definitive run: complete correct real route, genuine LISTING observation" },
+    { "run": 3, "outcome": "click -> rejected", "terminalCause": "model reason exceeded the 300-char field limit; FIXED by stating the enforced limit in the prompt" },
+    { "run": 4, "outcome": "rejected at step 1", "terminalCause": "model proposed target affordance-scroll-1 (a semantic affordance id, not a DOM id); correctly refused by target grounding, HTTP 422" },
+    { "run": 5, "outcome": "click -> type", "terminalCause": "3rd provider call HTTP 429" },
+    { "run": 6, "outcome": "rejected at step 1", "terminalCause": "affordance id target refused, HTTP 422" },
+    { "run": 7, "outcome": "click", "terminalCause": "2nd provider call HTTP 429" },
+    { "run": 8, "outcome": "click -> type", "terminalCause": "3rd provider call HTTP 429" },
+    { "run": 9, "outcome": "click -> refused", "terminalCause": "HTTP 502 action policy refusal of the model's proposal" }
+  ],
+  "providerCapacityAudit": {
+    "primary": "groq / openai/gpt-oss-20b (served model observed; the STRONG role maps to gpt-oss-120b)",
+    "callsPerStep": 1,
+    "callsAccounting": "Per agent step the extension calls POST /api/v1/agent/action (REAL provider call) and POST /api/v1/agent/review (LOCAL DETERMINISTIC — returns {'safe': true, 'reason': 'Safety review passed (deterministic).'}). So there is ONE provider call per step, not two. A Step 10.4 statement of 'two provider calls per step' was WRONG and is corrected here.",
+    "retries": "MAX_LLM_ATTEMPTS = 1 — no retry amplification.",
+    "duplicateCalls": "none observed",
+    "measuredLimit": { "requests": "1000 per window (not binding)", "tokensPerMinute": 8000, "perCallPromptTokens": "2200-2600", "callsPerMinuteAvailable": 3, "callsNeededForG7": 4, "retryAfter": "2-17s" },
+    "fallback": { "openrouter": "configured and reachable, but HTTP 402 'Insufficient credits. This account never purchased credits.'", "nvidia": "configured, times out after 30s" },
+    "rootCause": "TEST-ENVIRONMENT CAPACITY — a free-tier TPM budget of 8000 with ~2400 tokens per agent prompt mathematically admits 3 calls, and the chain needs 4.",
+    "productionImpact": "Any multi-step agent task needing 4+ provider calls inside one minute terminates with a fail-closed 503. This is not a destination defect."
+  },
+  "additionalFindingsNotFixed": [
+    { "finding": "The agent loop treats a retryable:true HTTP 422 (unknown_target) as terminal instead of recovering via the REPERCEIVE strategy it already has.", "why": "Pre-existing failure-recovery gap, not a destination issue; fixing it would change agentLoop recovery behaviour, which is outside Step 10.5's scope.", "observed": "runs 4 and 6" },
+    { "finding": "MODEL_NAVIGATION variance: the model sometimes proposes a semantic affordance id as an action target (affordance-scroll-1), which target grounding correctly refuses.", "why": "Model variance, not a production defect. The refusal is correct fail-closed behaviour.", "observed": "runs 4, 6" },
+    { "finding": "The prompt never stated the 300-character reason limit that _enforce_field_limits already enforces.", "why": "FIXED in Step 10.5 by stating the existing limit. MAX_REASON_CHARS was NOT raised and the validator was NOT weakened.", "observed": "run 3" }
+  ],
+  "g7Acceptance": {
+    "realProductionChrome": true,
+    "productionExtensionDist": true,
+    "liveBackend": true,
+    "realProvider": true,
+    "canonicalPrompt": true,
+    "roleOnlyDeclarationPreserved": true,
+    "destinationUrlAbsent": true,
+    "modelReceivedDestinationConstraint": true,
+    "realModelSelectedAction": true,
+    "actionExecuted": true,
+    "chromeNavigated": true,
+    "destinationPageReachedThroughRealAgentBehaviour": true,
+    "freshObservationProduced": true,
+    "pageTypeIsListing": true,
+    "confidenceMeetsFloor": true,
+    "observationIsFresh": true,
+    "destinationVerifierMatch": false,
+    "destinationSubgoalCompleted": false,
+    "plannerProgressedNormally": false,
+    "goalVerifierReached": false,
+    "goalVerifierAcceptedSuccess": false,
+    "verdict": "G7 OPEN — the first eleven are PROVEN_REAL, the last five are NOT_REACHED. The chain stops one provider call short."
+  }
+}

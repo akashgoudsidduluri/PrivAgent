@@ -1,0 +1,134 @@
+{
+  "work": "STEP 10.2 REAL-E / REAL-F",
+  "files": [
+    {
+      "file": "step10_2_real_A_role_only.json",
+      "task": "open the store catalog",
+      "expectedFromPromptAlone": {
+        "provenance": "USER_DECLARED_DESTINATION",
+        "role": [
+          "LISTING"
+        ]
+      },
+      "chromeVersion": "Chrome/153.0.8010.12",
+      "requests": 1,
+      "blocksObserved": [
+        {
+          "provenance": "USER_DECLARED_DESTINATION",
+          "role": [
+            "LISTING"
+          ]
+        }
+      ],
+      "observedContextUrls": [
+        "http://localhost:4174/"
+      ],
+      "actionUrls": [],
+      "urlsTheUserDidNotType": [
+        "http://localhost:4174/"
+      ]
+    },
+    {
+      "file": "step10_2_real_B_explicit_url.json",
+      "task": "open http://localhost:4174/results.html",
+      "expectedFromPromptAlone": {
+        "provenance": "USER_DECLARED_DESTINATION",
+        "destinationUrl": "http://localhost:4174/results.html"
+      },
+      "chromeVersion": "Chrome/153.0.8010.12",
+      "requests": 6,
+      "blocksObserved": [
+        {
+          "provenance": "USER_DECLARED_DESTINATION",
+          "destinationUrl": "http://localhost:4174/results.html"
+        }
+      ],
+      "observedContextUrls": [
+        "http://localhost:4174/results.html",
+        "http://localhost:4174/results.html",
+        "http://localhost:4174/results.html",
+        "http://localhost:4174/results.html",
+        "http://localhost:4174/results.html",
+        "http://localhost:4174/results.html"
+      ],
+      "actionUrls": [],
+      "urlsTheUserDidNotType": []
+    },
+    {
+      "file": "step10_2_real_C_entry_url.json",
+      "task": "open the store catalog at http://localhost:4174/results.html",
+      "expectedFromPromptAlone": {
+        "provenance": "USER_DECLARED_DESTINATION",
+        "role": [
+          "LISTING"
+        ],
+        "entryUrl": "http://localhost:4174/results.html"
+      },
+      "chromeVersion": "Chrome/153.0.8010.12",
+      "requests": 3,
+      "blocksObserved": [
+        {
+          "provenance": "USER_DECLARED_DESTINATION",
+          "role": [
+            "LISTING"
+          ],
+          "entryUrl": "http://localhost:4174/results.html"
+        },
+        {
+          "provenance": "USER_DECLARED_DESTINATION",
+          "role": [
+            "LISTING"
+          ],
+          "entryUrl": "http://localhost:4174/results.html"
+        }
+      ],
+      "observedContextUrls": [
+        "http://localhost:4174/results.html",
+        "http://localhost:4174/results.html",
+        "http://localhost:4174/results.html"
+      ],
+      "actionUrls": [],
+      "urlsTheUserDidNotType": []
+    },
+    {
+      "file": "step10_2_real_F_action_url.json",
+      "task": "open http://localhost:4174/search.html",
+      "expectedFromPromptAlone": {
+        "provenance": "USER_DECLARED_DESTINATION",
+        "destinationUrl": "http://localhost:4174/search.html"
+      },
+      "chromeVersion": "Chrome/153.0.8010.12",
+      "requests": 7,
+      "blocksObserved": [
+        {
+          "provenance": "USER_DECLARED_DESTINATION",
+          "destinationUrl": "http://localhost:4174/search.html"
+        }
+      ],
+      "observedContextUrls": [
+        "http://localhost:4174/",
+        "http://localhost:4174/search.html",
+        "http://localhost:4174/search.html",
+        "http://localhost:4174/search.html",
+        "http://localhost:4174/search.html",
+        "http://localhost:4174/search.html",
+        "http://localhost:4174/search.html"
+      ],
+      "actionUrls": [
+        "http://localhost:4174/search.html",
+        "http://localhost:4174/search.html",
+        "http://localhost:4174/search.html"
+      ],
+      "urlsTheUserDidNotType": [
+        "http://localhost:4174/"
+      ]
+    }
+  ],
+  "violations": [],
+  "summary": {
+    "files": 4,
+    "requestsInspected": 17,
+    "declarationBlocksObserved": 5,
+    "violations": 0
+  }
+}

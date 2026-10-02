@@ -50,6 +50,7 @@
 import { HighLevelGoal, Subgoal, SubgoalVerificationCondition } from './hierarchicalTypes';
 import { SubgoalGraph } from './subgoalGraph';
 import { AgentContextPayload } from '../privacy/types';
+import { verifyDestination, type DestinationObservation } from '../planning/destinationVerifier';
 
 export interface ProgressEvaluation {
   percentComplete: number;
@@ -326,6 +327,70 @@ export class GoalProgressTracker {
           proven
             ? `User confirmation was recorded for ${confirmed.length} action(s).`
             : `No confirmed user action has been recorded for this subgoal.`
+        );
+      }
+
+      case 'DESTINATION_VERIFIED': {
+        // POST-17.10 Step 7. The ONLY path by which a destination subgoal can
+        // complete, and it is observation-only.
+        //
+        // Note what is NOT read here. `SubgoalObservation` carries no
+        // executionSuccess, no action, no action URL, no navigation
+        // destination, no previous action, no affordance set and no model
+        // output — those are not fields of the type, so they cannot be
+        // consulted even by accident. The destination subgoal completes on a
+        // MATCH and on nothing else.
+        const declaration = subgoal.destination;
+
+        if (!declaration || declaration.kind !== 'DECLARED') {
+          // Fail closed. A destination condition with no typed, user-derived
+          // declaration has nothing to verify. An AMBIGUOUS or UNSUPPORTED
+          // declaration lands here too: ambiguity is never resolved into a
+          // destination on the agent's behalf.
+          return verdict(
+            false,
+            `Subgoal ${subgoal.id} declares DESTINATION_VERIFIED but carries no user-derived destination declaration, so its completion cannot be proven.`
+          );
+        }
+
+        const classification = semantic;
+        if (!classification) {
+          return verdict(
+            false,
+            `No sanitized page classification is available to verify subgoal ${subgoal.id} against the declared destination.`
+          );
+        }
+
+        // Freshness is the verifier's existing page-generation semantics, not a
+        // new one. The OBSERVED generation is the generation the sanitized
+        // classification was captured at; `observation.pageGeneration` is the
+        // generation the browser is at NOW. When the two differ the
+        // classification describes a document that no longer exists, and
+        // `verifyDestination` returns UNKNOWN rather than a verdict.
+        const observedGeneration = Number(classification.pageGeneration);
+        const destinationObservation: DestinationObservation = {
+          url: currentUrl,
+          pageGeneration: observedGeneration,
+          semantic: {
+            pageType: classification.pageType,
+            confidence: classification.confidence,
+            pageGeneration: observedGeneration,
+          },
+        };
+
+        const result = verifyDestination({
+          declaration,
+          observation: destinationObservation,
+          currentPageGeneration: observation.pageGeneration,
+        });
+
+        // Only MATCH satisfies. MISMATCH and UNKNOWN both leave the subgoal
+        // incomplete, and UNKNOWN is never converted to either of the others.
+        return verdict(
+          result.kind === 'MATCH',
+          result.kind === 'MATCH'
+            ? result.reason
+            : `Subgoal ${subgoal.id} destination not confirmed (${result.kind}): ${result.reason}`
         );
       }
 

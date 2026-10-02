@@ -1,0 +1,42 @@
+{
+  "work": "POST-17.10 step 9 — phase 1 navigation audit: the real reasoner request and response behind the wrong destination",
+  "inputs": {
+    "task": "open the store catalog at http://localhost:4174",
+    "targetOrigin": "http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "reasoningRequests": [
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": null,
+      "requestBody": "{\"task\":\"open the store catalog at http://localhost:4174\",\"context\":{\"url\":\"http://localhost:4174/\",\"timestamp\":1790865769517,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-login-cta\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":441,\"y\":297,\"width\":186,\"height\":43},\"length\":15,\"source\":\"dom_attribute\",\"selector\":\"#btn-login-cta\",\"is_partially_visible\":false},{\"id\":\"btn-shop-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":648,\"y\":296,\"width\":191,\"height\":45},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-shop-now\",\"is_partially_visible\":false},{\"id\":\"brand-link\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"#brand-link\",\"is_partially_visible\":false}],\"total_elements_scanned\":11,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"landing\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":1,\"entities\":[],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}]},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog at http://localhost:4174\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\",\"error_kind\":\"invalid_action\",\"retryable\":false}}"
+    }
+  ],
+  "subgoalTrace": [
+    "[AgentTrace] subgoal selected Object"
+  ],
+  "observations": [
+    {
+      "url": "http://localhost:4174/",
+      "semanticPageType": "UNKNOWN",
+      "semanticConfidence": 0.1,
+      "semanticPageGeneration": 3
+    }
+  ],
+  "findings": {
+    "provisionedTab": {
+      "id": 1235930926,
+      "url": "http://localhost:4174/"
+    },
+    "destinationReachedModel": {
+      "containsListing": false,
+      "containsDestinationWord": false,
+      "containsActiveSubgoal": false,
+      "promptExcerpt": ""
+    }
+  }
+}

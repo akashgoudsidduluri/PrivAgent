@@ -1,0 +1,262 @@
+{
+  "work": "POST-17.10 step 9 — production planning decision and Phase 7 failure controls over the real Chrome capture",
+  "provenance": {
+    "observation": "PROVEN_REAL — rebuilt production extension, real Chrome tab, real configured reasoner",
+    "navigator": "PROVEN_REAL — production OneActionPlanner.proposeDestinationNavigation",
+    "inBrowserE2E": "PARTIAL. The deterministic navigator fired in a real browser with ZERO provider calls and the real observation of the agent-directed run is the declared destination at LISTING @ 0.99. However Effect Verification reported ACTION_NO_EFFECT (the tab was already at that URL, provisioned there by the target resolver), the run went to recovery and terminated, so the destination subgoal completion line and an in-browser verifier verdict were never reached."
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "extensionLoaded": true,
+    "extensionLoadResult": "{\"id\":\"ihbbhmifbgfcibhjhcafakdkcppkccaf\"}"
+  },
+  "runs": [
+    {
+      "name": "explicit-destination-url",
+      "task": "open http://localhost:4174/results.html and buy the first product listed",
+      "taskCategory": "ECOMMERCE_SEARCH",
+      "goalDeclaration": {
+        "kind": "DECLARED",
+        "url": {
+          "provenance": "USER_URL",
+          "origin": "http://localhost:4174",
+          "path": "/results.html",
+          "rawUrl": "http://localhost:4174/results.html"
+        }
+      },
+      "destinationSubgoal": {
+        "id": "goal-mur6vjpg-ree2l-sg1",
+        "conditionType": "DESTINATION_VERIFIED",
+        "state": "READY"
+      },
+      "deterministicProposal": {
+        "action": "navigate",
+        "url": "http://localhost:4174/results.html"
+      },
+      "providerWasConsulted": false,
+      "deterministicNavigationFired": true,
+      "subgoalCompleted": false,
+      "subgoalNotCompleted": false,
+      "actionNoEffect": true,
+      "targetTabProvisionedBy": "production targetResolver",
+      "targetTabUrl": "http://localhost:4174/results.html",
+      "providerCalls": 0,
+      "decisions": [
+        {
+          "label": "agent-end-of-run",
+          "agentDirected": true,
+          "url": "http://localhost:4174/results.html",
+          "pageType": "LISTING",
+          "confidence": 0.99,
+          "pageGeneration": 3,
+          "subgoalWouldComplete": true,
+          "reason": "Observed URL http://localhost:4174/results.html equals the declared destination exactly."
+        },
+        {
+          "label": "fixture-catalog-results-html",
+          "agentDirected": false,
+          "url": "http://localhost:4174/results.html",
+          "pageType": "LISTING",
+          "confidence": 0.99,
+          "pageGeneration": 5,
+          "subgoalWouldComplete": true,
+          "reason": "Observed URL http://localhost:4174/results.html equals the declared destination exactly."
+        },
+        {
+          "label": "fixture-product-html",
+          "agentDirected": false,
+          "url": "http://localhost:4174/product.html",
+          "pageType": "UNKNOWN",
+          "confidence": 0.1,
+          "pageGeneration": 7,
+          "subgoalWouldComplete": false,
+          "reason": "Subgoal goal-mur6vjpg-ree2l-sg1 destination not confirmed (MISMATCH): Observed URL http://localhost:4174/product.html differs from the declared destination http://localhost:4174/results.html."
+        }
+      ]
+    },
+    {
+      "name": "canonical-role-only",
+      "task": "open the store catalog at http://localhost:4174",
+      "taskCategory": "GENERIC_INTERACTION",
+      "goalDeclaration": {
+        "kind": "DECLARED",
+        "role": {
+          "provenance": "EXPLICIT_PAGE_ROLE",
+          "acceptablePageTypes": [
+            "LISTING"
+          ]
+        },
+        "entryUrl": {
+          "provenance": "USER_ENTRY_SITE",
+          "origin": "http://localhost:4174",
+          "path": "/",
+          "rawUrl": "http://localhost:4174"
+        }
+      },
+      "destinationSubgoal": {
+        "id": "goal-mur6vjpn-iug36-sg1",
+        "conditionType": "DESTINATION_VERIFIED",
+        "state": "READY"
+      },
+      "deterministicProposal": null,
+      "providerWasConsulted": true,
+      "deterministicNavigationFired": false,
+      "subgoalCompleted": false,
+      "subgoalNotCompleted": false,
+      "actionNoEffect": false,
+      "targetTabProvisionedBy": "production targetResolver",
+      "targetTabUrl": "http://localhost:4174/",
+      "providerCalls": 1,
+      "decisions": [
+        {
+          "label": "agent-end-of-run",
+          "agentDirected": true,
+          "url": "http://localhost:4174/",
+          "pageType": "UNKNOWN",
+          "confidence": 0.1,
+          "pageGeneration": 3,
+          "subgoalWouldComplete": false,
+          "reason": "Subgoal goal-mur6vjpn-iug36-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        },
+        {
+          "label": "fixture-catalog-results-html",
+          "agentDirected": false,
+          "url": "http://localhost:4174/results.html",
+          "pageType": "LISTING",
+          "confidence": 0.99,
+          "pageGeneration": 5,
+          "subgoalWouldComplete": true,
+          "reason": "Observed page identity LISTING at confidence 0.99 is one of the declared roles [LISTING]."
+        },
+        {
+          "label": "fixture-product-html",
+          "agentDirected": false,
+          "url": "http://localhost:4174/product.html",
+          "pageType": "UNKNOWN",
+          "confidence": 0.1,
+          "pageGeneration": 7,
+          "subgoalWouldComplete": false,
+          "reason": "Subgoal goal-mur6vjpn-iug36-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ]
+    }
+  ],
+  "phase7Controls": {
+    "c1_agentReachedSearchPage": {
+      "description": "declared destination URL /results.html, real agent-reached landing page (UNKNOWN @ 0.10) — URL mismatch",
+      "observationLabel": "agent-end-of-run",
+      "agentDirected": true,
+      "verdict": {
+        "kind": "MISMATCH",
+        "reason": "Observed URL http://localhost:4174/ differs from the declared destination http://localhost:4174/results.html.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": null,
+          "url": {
+            "channel": "url",
+            "kind": "MISMATCH",
+            "reason": "Observed URL http://localhost:4174/ differs from the declared destination http://localhost:4174/results.html."
+          }
+        }
+      }
+    },
+    "c1b_roleOnlyAgentReachedUnknown": {
+      "description": "declared ROLE LISTING (canonical prompt), real agent-reached UNKNOWN @ 0.10 page — must be UNKNOWN, not MATCH",
+      "observationLabel": "agent-end-of-run",
+      "agentDirected": true,
+      "subgoalWouldComplete": false,
+      "verdict": {
+        "kind": "UNKNOWN",
+        "reason": "The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.",
+        "decisiveChannel": "pageRole",
+        "channels": {
+          "pageRole": {
+            "channel": "pageRole",
+            "kind": "UNKNOWN",
+            "reason": "The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+          },
+          "url": null
+        }
+      }
+    },
+    "c2_agentReachedUnknownPage": {
+      "description": "declared destination URL, real agent-reached UNKNOWN page",
+      "observationLabel": "agent-end-of-run",
+      "agentDirected": true,
+      "subgoalWouldComplete": false
+    },
+    "c3_agentReachedWrongPageType": {
+      "description": "declared LISTING, real product page (UNKNOWN @ 0.10)",
+      "agentDirected": false,
+      "subgoalWouldComplete": false
+    },
+    "c4_correctTypeStaleObservation": {
+      "description": "real LISTING observation verified at a newer generation",
+      "verdict": {
+        "kind": "UNKNOWN",
+        "reason": "Observation belongs to page generation 3 but verification is running at generation 7.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": null,
+          "url": {
+            "channel": "url",
+            "kind": "UNKNOWN",
+            "reason": "Observation belongs to page generation 3 but verification is running at generation 7."
+          }
+        }
+      },
+      "verdictAtOwnGeneration": "MATCH"
+    },
+    "c5_correctUrlStaleGeneration": {
+      "description": "declared destination URL, real catalog at generation 5 vs current 7",
+      "verdict": {
+        "kind": "UNKNOWN",
+        "reason": "Observation belongs to page generation 3 but verification is running at generation 7.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": null,
+          "url": {
+            "channel": "url",
+            "kind": "UNKNOWN",
+            "reason": "Observation belongs to page generation 3 but verification is running at generation 7."
+          }
+        }
+      },
+      "verdictAtOwnGeneration": "MATCH"
+    },
+    "c6_explicitWrongDestinationUrl": {
+      "description": "declared destination URL \"/\", real observed \"/results.html\"",
+      "verdict": {
+        "kind": "MISMATCH",
+        "reason": "Observed URL http://localhost:4174/results.html differs from the declared destination http://localhost:4174/.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": null,
+          "url": {
+            "channel": "url",
+            "kind": "MISMATCH",
+            "reason": "Observed URL http://localhost:4174/results.html differs from the declared destination http://localhost:4174/."
+          }
+        }
+      }
+    },
+    "c7_correctDestinationFresh": {
+      "description": "declared destination URL, real catalog at its own generation",
+      "agentDirected": true,
+      "verdict": {
+        "kind": "MATCH",
+        "reason": "Observed URL http://localhost:4174/results.html equals the declared destination exactly.",
+        "decisiveChannel": "url",
+        "channels": {
+          "pageRole": null,
+          "url": {
+            "channel": "url",
+            "kind": "MATCH",
+            "reason": "Observed URL http://localhost:4174/results.html equals the declared destination exactly."
+          }
+        }
+      },
+      "subgoalWouldComplete": true
+    }
+  }
+}

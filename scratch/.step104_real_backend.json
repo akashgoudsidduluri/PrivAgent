@@ -1,0 +1,92 @@
+{
+  "work": "STEP 10.4 Part 8 — real backend / real provider proof after the P1 remediation",
+  "task": "open the store catalog",
+  "endpoint": "http://127.0.0.1:8010/api/v1/agent/action",
+  "labels": "PROVEN_REAL (live FastAPI :8010, real Groq provider, real fixture detections)",
+  "calls": [
+    {
+      "run": 1,
+      "status": 200,
+      "ms": 1085,
+      "text": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"btn-shop-now\",\"reason\":\"Open store catalog by clicking the Shop Now button\"},\"reason\":\"Open store catalog by clicking the Shop Now button\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"STRONG\",\"latency_ms\":1021.0,\"attempts\":1,\"fallback_used\":false}}",
+      "parsed": {
+        "success": true,
+        "action": {
+          "action": "click",
+          "target": "btn-shop-now",
+          "reason": "Open store catalog by clicking the Shop Now button"
+        },
+        "reason": "Open store catalog by clicking the Shop Now button",
+        "telemetry": {
+          "provider": "groq",
+          "role": "STRONG",
+          "latency_ms": 1021,
+          "attempts": 1,
+          "fallback_used": false
+        }
+      },
+      "success": true,
+      "reason": "Open store catalog by clicking the Shop Now button",
+      "action": {
+        "action": "click",
+        "target": "btn-shop-now",
+        "reason": "Open store catalog by clicking the Shop Now button"
+      },
+      "rejectionReason": null,
+      "errorKind": null,
+      "retryable": null
+    },
+    {
+      "run": 2,
+      "status": 200,
+      "ms": 1086,
+      "text": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"btn-shop-now\",\"reason\":\"Click the Shop Now button to open the store catalog\"},\"reason\":\"Click the Shop Now button to open the store catalog\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"STRONG\",\"latency_ms\":1078.8,\"attempts\":1,\"fallback_used\":false}}",
+      "parsed": {
+        "success": true,
+        "action": {
+          "action": "click",
+          "target": "btn-shop-now",
+          "reason": "Click the Shop Now button to open the store catalog"
+        },
+        "reason": "Click the Shop Now button to open the store catalog",
+        "telemetry": {
+          "provider": "groq",
+          "role": "STRONG",
+          "latency_ms": 1078.8,
+          "attempts": 1,
+          "fallback_used": false
+        }
+      },
+      "success": true,
+      "reason": "Click the Shop Now button to open the store catalog",
+      "action": {
+        "action": "click",
+        "target": "btn-shop-now",
+        "reason": "Click the Shop Now button to open the store catalog"
+      },
+      "rejectionReason": null,
+      "errorKind": null,
+      "retryable": null
+    },
+    {
+      "run": 3,
+      "status": 503,
+      "ms": 935,
+      "text": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\",\"error_kind\":\"invalid_action\",\"retryable\":false}}",
+      "parsed": {
+        "detail": {
+          "success": false,
+          "reason": "Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).",
+          "error_kind": "invalid_action",
+          "retryable": false
+        }
+      },
+      "success": false,
+      "reason": null,
+      "action": null,
+      "rejectionReason": "Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).",
+      "errorKind": "invalid_action",
+      "retryable": false
+    }
+  ]
+}

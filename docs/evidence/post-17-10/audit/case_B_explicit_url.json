@@ -1,0 +1,523 @@
+{
+  "work": "POST-17.10 STEP 10 AUDIT — real production provider-egress capture",
+  "labels": "PROVEN_REAL_CHROME (bytes on the wire) / PROVEN_REAL_BACKEND (backend response)",
+  "inputs": {
+    "task": "open the store catalog at http://localhost:4174/results.html",
+    "userSuppliedUrlInTask": "http://localhost:4174/results.html",
+    "startUrl": "http://localhost:4174/",
+    "keptExistingTabs": true,
+    "targetOrigin": "http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "reasoningRequests": [
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog at http://localhost:4174/results.html\",\"context\":{\"url\":\"http://localhost:4174/\",\"timestamp\":1790872960873,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-login-cta\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":441,\"y\":297,\"width\":186,\"height\":43},\"length\":15,\"source\":\"dom_attribute\",\"selector\":\"#btn-login-cta\",\"is_partially_visible\":false},{\"id\":\"btn-shop-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":648,\"y\":296,\"width\":191,\"height\":45},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-shop-now\",\"is_partially_visible\":false},{\"id\":\"brand-link\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"#brand-link\",\"is_partially_visible\":false}],\"total_elements_scanned\":18,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"landing\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":2,\"entities\":[],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"],\"entryUrl\":\"http://localhost:4174/results.html\"}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog at http://localhost:4174/results.html\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"navigate\",\"url\":\"http://localhost:4174/results.html\",\"reason\":\"The user explicitly requested to open the store catalog at http://localhost:4174/results.html. The current page is the landing page. Navigating directly to the specified URL is the most direct and reliable way to accomplish the task.\"},\"reason\":\"The user explicitly requested to open the store catalog at http://localhost:4174/results.html. The current page is the landing page. Navigating directly to the specified URL is the most direct and reliable way to accomplish the task.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":565.0,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "status": 200,
+      "requestBody": "{\"action\":{\"action\":\"navigate\",\"url\":\"http://localhost:4174/results.html\",\"reason\":\"The user explicitly requested to open the store catalog at http://localhost:4174/results.html. The current page is the landing page. Navigating directly to the specified URL is the most direct and reliable way to accomplish the task.\"},\"task\":\"open the store catalog at http://localhost:4174/results.html\",\"context\":{\"url\":\"http://localhost:4174/\",\"timestamp\":1790872960873,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-login-cta\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":441,\"y\":297,\"width\":186,\"height\":43},\"length\":15,\"source\":\"dom_attribute\",\"selector\":\"#btn-login-cta\",\"is_partially_visible\":false},{\"id\":\"btn-shop-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":648,\"y\":296,\"width\":191,\"height\":45},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-shop-now\",\"is_partially_visible\":false},{\"id\":\"brand-link\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"#brand-link\",\"is_partially_visible\":false}],\"total_elements_scanned\":18,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"landing\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":2,\"entities\":[],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"],\"entryUrl\":\"http://localhost:4174/results.html\"}},\"semanticObservation\":{\"state\":\"OBSERVED\",\"provenance\":{\"tabId\":673733692,\"documentUrl\":\"http://localhost:4174/\",\"pageGeneration\":2,\"observedAt\":1790872960900,\"source\":\"WORLD_MODEL_TEXT_REGIONS\"},\"facts\":[{\"id\":\"fact-text-region-1\",\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-1\",\"bbox\":[130,157,1020,51],\"confidence\":0.95,\"pageGeneration\":2,\"untrusted\":false},{\"id\":\"fact-text-region-2\",\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-2\",\"bbox\":[340,224,600,40],\"confidence\":0.9,\"pageGeneration\":2,\"untrusted\":false},{\"id\":\"fact-text-region-3\",\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-3\",\"bbox\":[24,717,1232,16],\"confidence\":0.9,\"pageGeneration\":2,\"untrusted\":false}],\"droppedSensitiveCount\":0,\"quarantinedInjectionCount\":0,\"regionsConsidered\":3,\"latencyMs\":1},\"ocr_observation\":{\"state\":\"NOT_APPLICABLE\",\"provenance\":null,\"completedAt\":null,\"totalTokensScanned\":0,\"sensitiveRegionsCount\":0,\"safeRegionsCount\":0,\"ocrLatencyMs\":0,\"failureReason\":\"DOM extraction sufficient; OCR not required for DOM-only cycle\"},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog at http://localhost:4174/results.html\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"model_role\":\"SAFETY\"}",
+      "responseBody": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog at http://localhost:4174/results.html\",\"context\":{\"url\":\"http://localhost:4174/results.html\",\"timestamp\":1790872970140,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-view-blue-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":946,\"y\":406,\"width\":195,\"height\":43},\"length\":40,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-blue-bag\",\"is_partially_visible\":false},{\"id\":\"btn-view-office-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":408,\"y\":406,\"width\":195,\"height\":43},\"length\":43,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-office-bag\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":52,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"listing\",\"semantic_context\":{\"pageType\":\"LISTING\",\"confidence\":0.99,\"pageState\":\"results_available\",\"pageGeneration\":4,\"entities\":[{\"id\":\"product-xxl-black-baggy-bag-899\",\"type\":\"Product\",\"label\":\"XXL Black Baggy Travel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-qualifying-bag\"],\"safeAttributes\":{\"price\":899,\"size\":\"XXL\",\"color\":\"black\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-office-bag-1499\",\"type\":\"Product\",\"label\":\"Executive Leather Office Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-office-bag\"],\"safeAttributes\":{\"price\":1499,\"size\":\"L\",\"color\":\"black\",\"category\":\"bag\"}},{\"id\":\"product-red-bag-699\",\"type\":\"Product\",\"label\":\"Red Canvas Baggy Gym Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-red-bag\"],\"safeAttributes\":{\"price\":699,\"size\":\"S\",\"color\":\"red\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-blue-bag-950\",\"type\":\"Product\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-blue-bag\"],\"safeAttributes\":{\"price\":950,\"size\":\"XXL\",\"color\":\"blue\",\"style\":\"baggy\",\"category\":\"bag\"}}],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"SHOPPING\",\"currentStage\":\"LISTING_VIEWED\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search results\",\"label\":\"Search Results\",\"displayText\":\"Search Results\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"spacious lightweight travel duffel with\",\"label\":\"Spacious lightweight travel duffel with\",\"displayText\":\"Spacious lightweight travel duffel with\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"executive leather office bag\",\"label\":\"Executive Leather Office Bag\",\"displayText\":\"Executive Leather Office Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"premium full grain leather briefcase for\",\"label\":\"Premium full-grain leather briefcase for\",\"displayText\":\"Premium full-grain leather briefcase for\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"red canvas baggy gym bag\",\"label\":\"Red Canvas Baggy Gym Bag\",\"displayText\":\"Red Canvas Baggy Gym Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"compact canvas shoulder bag for gym gear\",\"label\":\"Compact canvas shoulder bag for gym gear\",\"displayText\":\"Compact canvas shoulder bag for gym gear\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl blue baggy duffel bag\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"displayText\":\"XXL Blue Baggy Duffel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"heavy duty oversized duffel bag in navy\",\"label\":\"Heavy-duty oversized duffel bag in navy\",\"displayText\":\"Heavy-duty oversized duffel bag in navy\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"price\",\"label\":\"price\",\"displayText\":\"price: 899\",\"displayValue\":899,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"size\",\"displayText\":\"size: XXL\",\"displayValue\":\"XXL\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"color\",\"displayText\":\"color: black\",\"displayValue\":\"black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"style\",\"displayText\":\"style: baggy\",\"displayValue\":\"baggy\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"category\",\"displayText\":\"category: bag\",\"displayValue\":\"bag\",\"valueKind\":\"text\",\"untrusted\":false}]},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog at http://localhost:4174/results.html\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\",\"[Working] STEP_1_RESULT: {  \\\"action\\\": \\\"navigate\\\",  \\\"success\\\": true,  \\\"subgoalId\\\": \\\"goal-muprises-6detm-sg1\\\" }\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[{\"action\":\"navigate\",\"url\":\"http://localhost:4174/results.html\",\"reason\":\"The user explicitly requested to open the store catalog at http://localhost:4174/results.html. The current page is the landing page. Navigating directly to the specified URL is the most direct and reliable way to accomplish the task.\"}],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to, and the catalog results are visible. Scrolling down will allow the user to view more of the catalog content and confirm the full list of products.\"},\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to, and the catalog results are visible. Scrolling down will allow the user to view more of the catalog content and confirm the full list of products.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":563.2,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "status": 200,
+      "requestBody": "{\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to, and the catalog results are visible. Scrolling down will allow the user to view more of the catalog content and confirm the full list of products.\"},\"task\":\"open the store catalog at http://localhost:4174/results.html\",\"context\":{\"url\":\"http://localhost:4174/results.html\",\"timestamp\":1790872970140,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-view-blue-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":946,\"y\":406,\"width\":195,\"height\":43},\"length\":40,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-blue-bag\",\"is_partially_visible\":false},{\"id\":\"btn-view-office-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":408,\"y\":406,\"width\":195,\"height\":43},\"length\":43,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-office-bag\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":52,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"listing\",\"semantic_context\":{\"pageType\":\"LISTING\",\"confidence\":0.99,\"pageState\":\"results_available\",\"pageGeneration\":4,\"entities\":[{\"id\":\"product-xxl-black-baggy-bag-899\",\"type\":\"Product\",\"label\":\"XXL Black Baggy Travel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-qualifying-bag\"],\"safeAttributes\":{\"price\":899,\"size\":\"XXL\",\"color\":\"black\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-office-bag-1499\",\"type\":\"Product\",\"label\":\"Executive Leather Office Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-office-bag\"],\"safeAttributes\":{\"price\":1499,\"size\":\"L\",\"color\":\"black\",\"category\":\"bag\"}},{\"id\":\"product-red-bag-699\",\"type\":\"Product\",\"label\":\"Red Canvas Baggy Gym Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-red-bag\"],\"safeAttributes\":{\"price\":699,\"size\":\"S\",\"color\":\"red\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-blue-bag-950\",\"type\":\"Product\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-blue-bag\"],\"safeAttributes\":{\"price\":950,\"size\":\"XXL\",\"color\":\"blue\",\"style\":\"baggy\",\"category\":\"bag\"}}],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"SHOPPING\",\"currentStage\":\"LISTING_VIEWED\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search results\",\"label\":\"Search Results\",\"displayText\":\"Search Results\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"spacious lightweight travel duffel with\",\"label\":\"Spacious lightweight travel duffel with\",\"displayText\":\"Spacious lightweight travel duffel with\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"executive leather office bag\",\"label\":\"Executive Leather Office Bag\",\"displayText\":\"Executive Leather Office Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"premium full grain leather briefcase for\",\"label\":\"Premium full-grain leather briefcase for\",\"displayText\":\"Premium full-grain leather briefcase for\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"red canvas baggy gym bag\",\"label\":\"Red Canvas Baggy Gym Bag\",\"displayText\":\"Red Canvas Baggy Gym Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"compact canvas shoulder bag for gym gear\",\"label\":\"Compact canvas shoulder bag for gym gear\",\"displayText\":\"Compact canvas shoulder bag for gym gear\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl blue baggy duffel bag\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"displayText\":\"XXL Blue Baggy Duffel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"heavy duty oversized duffel bag in navy\",\"label\":\"Heavy-duty oversized duffel bag in navy\",\"displayText\":\"Heavy-duty oversized duffel bag in navy\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"price\",\"label\":\"price\",\"displayText\":\"price: 899\",\"displayValue\":899,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"size\",\"displayText\":\"size: XXL\",\"displayValue\":\"XXL\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"color\",\"displayText\":\"color: black\",\"displayValue\":\"black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"style\",\"displayText\":\"style: baggy\",\"displayValue\":\"baggy\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"category\",\"displayText\":\"category: bag\",\"displayValue\":\"bag\",\"valueKind\":\"text\",\"untrusted\":false}]},\"semanticObservation\":{\"state\":\"OBSERVED\",\"provenance\":{\"tabId\":673733692,\"documentUrl\":\"http://localhost:4174/results.html\",\"pageGeneration\":4,\"observedAt\":1790872970166,\"source\":\"WORLD_MODEL_TEXT_REGIONS\"},\"facts\":[{\"id\":\"fact-text-region-1\",\"key\":\"search results\",\"label\":\"Search Results\",\"displayText\":\"Search Results\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-1\",\"bbox\":[114,93,201,28],\"confidence\":0.95,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-2\",\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-2\",\"bbox\":[139,178,195,40],\"confidence\":0.95,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-3\",\"key\":\"spacious lightweight travel duffel with\",\"label\":\"Spacious lightweight travel duffel with\",\"displayText\":\"Spacious lightweight travel duffel with\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-3\",\"bbox\":[139,338,195,48],\"confidence\":0.9,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-4\",\"key\":\"executive leather office bag\",\"label\":\"Executive Leather Office Bag\",\"displayText\":\"Executive Leather Office Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-4\",\"bbox\":[408,178,195,40],\"confidence\":0.95,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-5\",\"key\":\"premium full grain leather briefcase for\",\"label\":\"Premium full-grain leather briefcase for\",\"displayText\":\"Premium full-grain leather briefcase for\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-5\",\"bbox\":[408,338,195,48],\"confidence\":0.9,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-6\",\"key\":\"red canvas baggy gym bag\",\"label\":\"Red Canvas Baggy Gym Bag\",\"displayText\":\"Red Canvas Baggy Gym Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-6\",\"bbox\":[677,178,195,40],\"confidence\":0.95,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-7\",\"key\":\"compact canvas shoulder bag for gym gear\",\"label\":\"Compact canvas shoulder bag for gym gear\",\"displayText\":\"Compact canvas shoulder bag for gym gear\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-7\",\"bbox\":[677,338,195,48],\"confidence\":0.9,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-8\",\"key\":\"xxl blue baggy duffel bag\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"displayText\":\"XXL Blue Baggy Duffel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-8\",\"bbox\":[946,178,195,40],\"confidence\":0.95,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-9\",\"key\":\"heavy duty oversized duffel bag in navy\",\"label\":\"Heavy-duty oversized duffel bag in navy\",\"displayText\":\"Heavy-duty oversized duffel bag in navy\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-9\",\"bbox\":[946,338,195,32],\"confidence\":0.9,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-text-region-10\",\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-10\",\"bbox\":[24,717,1232,16],\"confidence\":0.9,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-price\",\"key\":\"price\",\"label\":\"price\",\"displayText\":\"price: 899\",\"displayValue\":899,\"valueKind\":\"numeric\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.9,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-size\",\"key\":\"size\",\"label\":\"size\",\"displayText\":\"size: XXL\",\"displayValue\":\"XXL\",\"valueKind\":\"text\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.8,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-color\",\"key\":\"color\",\"label\":\"color\",\"displayText\":\"color: black\",\"displayValue\":\"black\",\"valueKind\":\"text\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.8,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-style\",\"key\":\"style\",\"label\":\"style\",\"displayText\":\"style: baggy\",\"displayValue\":\"baggy\",\"valueKind\":\"text\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.8,\"pageGeneration\":4,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-category\",\"key\":\"category\",\"label\":\"category\",\"displayText\":\"category: bag\",\"displayValue\":\"bag\",\"valueKind\":\"text\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.8,\"pageGeneration\":4,\"untrusted\":false}],\"droppedSensitiveCount\":0,\"quarantinedInjectionCount\":0,\"regionsConsidered\":15,\"latencyMs\":1},\"ocr_observation\":{\"state\":\"NOT_APPLICABLE\",\"provenance\":null,\"completedAt\":null,\"totalTokensScanned\":0,\"sensitiveRegionsCount\":0,\"safeRegionsCount\":0,\"ocrLatencyMs\":0,\"failureReason\":\"DOM extraction sufficient; OCR not required for DOM-only cycle\"},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog at http://localhost:4174/results.html\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\",\"[Working] STEP_1_RESULT: {  \\\"action\\\": \\\"navigate\\\",  \\\"success\\\": true,  \\\"subgoalId\\\": \\\"goal-muprises-6detm-sg1\\\" }\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"model_role\":\"SAFETY\"}",
+      "responseBody": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog at http://localhost:4174/results.html\",\"context\":{\"url\":\"http://localhost:4174/results.html\",\"timestamp\":1790872971325,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-view-blue-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":946,\"y\":406,\"width\":195,\"height\":43},\"length\":40,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-blue-bag\",\"is_partially_visible\":false},{\"id\":\"btn-view-office-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":408,\"y\":406,\"width\":195,\"height\":43},\"length\":43,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-office-bag\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":52,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"listing\",\"semantic_context\":{\"pageType\":\"LISTING\",\"confidence\":0.99,\"pageState\":\"results_available\",\"pageGeneration\":6,\"entities\":[{\"id\":\"product-xxl-black-baggy-bag-899\",\"type\":\"Product\",\"label\":\"XXL Black Baggy Travel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-qualifying-bag\"],\"safeAttributes\":{\"price\":899,\"size\":\"XXL\",\"color\":\"black\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-office-bag-1499\",\"type\":\"Product\",\"label\":\"Executive Leather Office Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-office-bag\"],\"safeAttributes\":{\"price\":1499,\"size\":\"L\",\"color\":\"black\",\"category\":\"bag\"}},{\"id\":\"product-red-bag-699\",\"type\":\"Product\",\"label\":\"Red Canvas Baggy Gym Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-red-bag\"],\"safeAttributes\":{\"price\":699,\"size\":\"S\",\"color\":\"red\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-blue-bag-950\",\"type\":\"Product\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-blue-bag\"],\"safeAttributes\":{\"price\":950,\"size\":\"XXL\",\"color\":\"blue\",\"style\":\"baggy\",\"category\":\"bag\"}}],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"SHOPPING\",\"currentStage\":\"LISTING_VIEWED\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search results\",\"label\":\"Search Results\",\"displayText\":\"Search Results\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"spacious lightweight travel duffel with\",\"label\":\"Spacious lightweight travel duffel with\",\"displayText\":\"Spacious lightweight travel duffel with\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"executive leather office bag\",\"label\":\"Executive Leather Office Bag\",\"displayText\":\"Executive Leather Office Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"premium full grain leather briefcase for\",\"label\":\"Premium full-grain leather briefcase for\",\"displayText\":\"Premium full-grain leather briefcase for\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"red canvas baggy gym bag\",\"label\":\"Red Canvas Baggy Gym Bag\",\"displayText\":\"Red Canvas Baggy Gym Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"compact canvas shoulder bag for gym gear\",\"label\":\"Compact canvas shoulder bag for gym gear\",\"displayText\":\"Compact canvas shoulder bag for gym gear\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl blue baggy duffel bag\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"displayText\":\"XXL Blue Baggy Duffel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"heavy duty oversized duffel bag in navy\",\"label\":\"Heavy-duty oversized duffel bag in navy\",\"displayText\":\"Heavy-duty oversized duffel bag in navy\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"price\",\"label\":\"price\",\"displayText\":\"price: 899\",\"displayValue\":899,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"size\",\"displayText\":\"size: XXL\",\"displayValue\":\"XXL\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"color\",\"displayText\":\"color: black\",\"displayValue\":\"black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"style\",\"displayText\":\"style: baggy\",\"displayValue\":\"baggy\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"category\",\"displayText\":\"category: bag\",\"displayValue\":\"bag\",\"valueKind\":\"text\",\"untrusted\":false}]},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog at http://localhost:4174/results.html\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 4,  \\\"actionsTaken\\\": 1,  \\\"recoveryAttempts\\\": 0 }\",\"[Working] STEP_1_RESULT: {  \\\"action\\\": \\\"navigate\\\",  \\\"success\\\": true,  \\\"subgoalId\\\": \\\"goal-muprises-6detm-sg1\\\" }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: NO_EFFECT, Context: listing, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[{\"action\":\"navigate\",\"url\":\"http://localhost:4174/results.html\",\"reason\":\"The user explicitly requested to open the store catalog at http://localhost:4174/results.html. The current page is the landing page. Navigating directly to the specified URL is the most direct and reliable way to accomplish the task.\"}],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to and the search results are visible. Scrolling down will allow the user to inspect the full catalog and any additional products or content that may be lazy-loaded below the current viewport.\"},\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to and the search results are visible. Scrolling down will allow the user to inspect the full catalog and any additional products or content that may be lazy-loaded below the current viewport.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":631.1,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "status": 200,
+      "requestBody": "{\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to and the search results are visible. Scrolling down will allow the user to inspect the full catalog and any additional products or content that may be lazy-loaded below the current viewport.\"},\"task\":\"open the store catalog at http://localhost:4174/results.html\",\"context\":{\"url\":\"http://localhost:4174/results.html\",\"timestamp\":1790872971325,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-view-blue-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":946,\"y\":406,\"width\":195,\"height\":43},\"length\":40,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-blue-bag\",\"is_partially_visible\":false},{\"id\":\"btn-view-office-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":408,\"y\":406,\"width\":195,\"height\":43},\"length\":43,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-office-bag\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":52,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"listing\",\"semantic_context\":{\"pageType\":\"LISTING\",\"confidence\":0.99,\"pageState\":\"results_available\",\"pageGeneration\":6,\"entities\":[{\"id\":\"product-xxl-black-baggy-bag-899\",\"type\":\"Product\",\"label\":\"XXL Black Baggy Travel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-qualifying-bag\"],\"safeAttributes\":{\"price\":899,\"size\":\"XXL\",\"color\":\"black\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-office-bag-1499\",\"type\":\"Product\",\"label\":\"Executive Leather Office Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-office-bag\"],\"safeAttributes\":{\"price\":1499,\"size\":\"L\",\"color\":\"black\",\"category\":\"bag\"}},{\"id\":\"product-red-bag-699\",\"type\":\"Product\",\"label\":\"Red Canvas Baggy Gym Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-red-bag\"],\"safeAttributes\":{\"price\":699,\"size\":\"S\",\"color\":\"red\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-blue-bag-950\",\"type\":\"Product\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-blue-bag\"],\"safeAttributes\":{\"price\":950,\"size\":\"XXL\",\"color\":\"blue\",\"style\":\"baggy\",\"category\":\"bag\"}}],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"SHOPPING\",\"currentStage\":\"LISTING_VIEWED\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search results\",\"label\":\"Search Results\",\"displayText\":\"Search Results\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"spacious lightweight travel duffel with\",\"label\":\"Spacious lightweight travel duffel with\",\"displayText\":\"Spacious lightweight travel duffel with\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"executive leather office bag\",\"label\":\"Executive Leather Office Bag\",\"displayText\":\"Executive Leather Office Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"premium full grain leather briefcase for\",\"label\":\"Premium full-grain leather briefcase for\",\"displayText\":\"Premium full-grain leather briefcase for\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"red canvas baggy gym bag\",\"label\":\"Red Canvas Baggy Gym Bag\",\"displayText\":\"Red Canvas Baggy Gym Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"compact canvas shoulder bag for gym gear\",\"label\":\"Compact canvas shoulder bag for gym gear\",\"displayText\":\"Compact canvas shoulder bag for gym gear\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl blue baggy duffel bag\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"displayText\":\"XXL Blue Baggy Duffel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"heavy duty oversized duffel bag in navy\",\"label\":\"Heavy-duty oversized duffel bag in navy\",\"displayText\":\"Heavy-duty oversized duffel bag in navy\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"price\",\"label\":\"price\",\"displayText\":\"price: 899\",\"displayValue\":899,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"size\",\"displayText\":\"size: XXL\",\"displayValue\":\"XXL\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"color\",\"displayText\":\"color: black\",\"displayValue\":\"black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"style\",\"displayText\":\"style: baggy\",\"displayValue\":\"baggy\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"category\",\"displayText\":\"category: bag\",\"displayValue\":\"bag\",\"valueKind\":\"text\",\"untrusted\":false}]},\"semanticObservation\":{\"state\":\"OBSERVED\",\"provenance\":{\"tabId\":673733692,\"documentUrl\":\"http://localhost:4174/results.html\",\"pageGeneration\":6,\"observedAt\":1790872971347,\"source\":\"WORLD_MODEL_TEXT_REGIONS\"},\"facts\":[{\"id\":\"fact-text-region-1\",\"key\":\"search results\",\"label\":\"Search Results\",\"displayText\":\"Search Results\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-1\",\"bbox\":[114,93,201,28],\"confidence\":0.95,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-2\",\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-2\",\"bbox\":[139,178,195,40],\"confidence\":0.95,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-3\",\"key\":\"spacious lightweight travel duffel with\",\"label\":\"Spacious lightweight travel duffel with\",\"displayText\":\"Spacious lightweight travel duffel with\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-3\",\"bbox\":[139,338,195,48],\"confidence\":0.9,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-4\",\"key\":\"executive leather office bag\",\"label\":\"Executive Leather Office Bag\",\"displayText\":\"Executive Leather Office Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-4\",\"bbox\":[408,178,195,40],\"confidence\":0.95,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-5\",\"key\":\"premium full grain leather briefcase for\",\"label\":\"Premium full-grain leather briefcase for\",\"displayText\":\"Premium full-grain leather briefcase for\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-5\",\"bbox\":[408,338,195,48],\"confidence\":0.9,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-6\",\"key\":\"red canvas baggy gym bag\",\"label\":\"Red Canvas Baggy Gym Bag\",\"displayText\":\"Red Canvas Baggy Gym Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-6\",\"bbox\":[677,178,195,40],\"confidence\":0.95,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-7\",\"key\":\"compact canvas shoulder bag for gym gear\",\"label\":\"Compact canvas shoulder bag for gym gear\",\"displayText\":\"Compact canvas shoulder bag for gym gear\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-7\",\"bbox\":[677,338,195,48],\"confidence\":0.9,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-8\",\"key\":\"xxl blue baggy duffel bag\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"displayText\":\"XXL Blue Baggy Duffel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-8\",\"bbox\":[946,178,195,40],\"confidence\":0.95,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-9\",\"key\":\"heavy duty oversized duffel bag in navy\",\"label\":\"Heavy-duty oversized duffel bag in navy\",\"displayText\":\"Heavy-duty oversized duffel bag in navy\",\"displayValue\":null,\"valueKind\":\"text\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-9\",\"bbox\":[946,338,195,32],\"confidence\":0.9,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-text-region-10\",\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"source\":\"DOM_TEXT_REGION\",\"selector\":\"text-region-10\",\"bbox\":[24,717,1232,16],\"confidence\":0.9,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-price\",\"key\":\"price\",\"label\":\"price\",\"displayText\":\"price: 899\",\"displayValue\":899,\"valueKind\":\"numeric\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.9,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-size\",\"key\":\"size\",\"label\":\"size\",\"displayText\":\"size: XXL\",\"displayValue\":\"XXL\",\"valueKind\":\"text\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.8,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-color\",\"key\":\"color\",\"label\":\"color\",\"displayText\":\"color: black\",\"displayValue\":\"black\",\"valueKind\":\"text\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.8,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-style\",\"key\":\"style\",\"label\":\"style\",\"displayText\":\"style: baggy\",\"displayValue\":\"baggy\",\"valueKind\":\"text\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.8,\"pageGeneration\":6,\"untrusted\":false},{\"id\":\"fact-entity-product-xxl-black-baggy-bag-899-category\",\"key\":\"category\",\"label\":\"category\",\"displayText\":\"category: bag\",\"displayValue\":\"bag\",\"valueKind\":\"text\",\"source\":\"ENTITY_ATTRIBUTE\",\"confidence\":0.8,\"pageGeneration\":6,\"untrusted\":false}],\"droppedSensitiveCount\":0,\"quarantinedInjectionCount\":0,\"regionsConsidered\":15,\"latencyMs\":0},\"ocr_observation\":{\"state\":\"NOT_APPLICABLE\",\"provenance\":null,\"completedAt\":null,\"totalTokensScanned\":0,\"sensitiveRegionsCount\":0,\"safeRegionsCount\":0,\"ocrLatencyMs\":0,\"failureReason\":\"DOM extraction sufficient; OCR not required for DOM-only cycle\"},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog at http://localhost:4174/results.html\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 4,  \\\"actionsTaken\\\": 1,  \\\"recoveryAttempts\\\": 0 }\",\"[Working] STEP_1_RESULT: {  \\\"action\\\": \\\"navigate\\\",  \\\"success\\\": true,  \\\"subgoalId\\\": \\\"goal-muprises-6detm-sg1\\\" }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: NO_EFFECT, Context: listing, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\"],\"userPreferences\":[]}},\"model_role\":\"SAFETY\"}",
+      "responseBody": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 503,
+      "requestBody": "{\"task\":\"open the store catalog at http://localhost:4174/results.html\",\"context\":{\"url\":\"http://localhost:4174/results.html\",\"timestamp\":1790872972562,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-view-blue-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":946,\"y\":406,\"width\":195,\"height\":43},\"length\":40,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-blue-bag\",\"is_partially_visible\":false},{\"id\":\"btn-view-office-bag\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":408,\"y\":406,\"width\":195,\"height\":43},\"length\":43,\"source\":\"dom_attribute\",\"selector\":\"#btn-view-office-bag\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":52,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"listing\",\"semantic_context\":{\"pageType\":\"LISTING\",\"confidence\":0.99,\"pageState\":\"results_available\",\"pageGeneration\":8,\"entities\":[{\"id\":\"product-xxl-black-baggy-bag-899\",\"type\":\"Product\",\"label\":\"XXL Black Baggy Travel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-qualifying-bag\"],\"safeAttributes\":{\"price\":899,\"size\":\"XXL\",\"color\":\"black\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-office-bag-1499\",\"type\":\"Product\",\"label\":\"Executive Leather Office Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-office-bag\"],\"safeAttributes\":{\"price\":1499,\"size\":\"L\",\"color\":\"black\",\"category\":\"bag\"}},{\"id\":\"product-red-bag-699\",\"type\":\"Product\",\"label\":\"Red Canvas Baggy Gym Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-red-bag\"],\"safeAttributes\":{\"price\":699,\"size\":\"S\",\"color\":\"red\",\"style\":\"baggy\",\"category\":\"bag\"}},{\"id\":\"product-blue-bag-950\",\"type\":\"Product\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"confidence\":1,\"actionIds\":[\"btn-view-blue-bag\"],\"safeAttributes\":{\"price\":950,\"size\":\"XXL\",\"color\":\"blue\",\"style\":\"baggy\",\"category\":\"bag\"}}],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"SHOPPING\",\"currentStage\":\"LISTING_VIEWED\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"search results\",\"label\":\"Search Results\",\"displayText\":\"Search Results\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"spacious lightweight travel duffel with\",\"label\":\"Spacious lightweight travel duffel with\",\"displayText\":\"Spacious lightweight travel duffel with\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"executive leather office bag\",\"label\":\"Executive Leather Office Bag\",\"displayText\":\"Executive Leather Office Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"premium full grain leather briefcase for\",\"label\":\"Premium full-grain leather briefcase for\",\"displayText\":\"Premium full-grain leather briefcase for\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"red canvas baggy gym bag\",\"label\":\"Red Canvas Baggy Gym Bag\",\"displayText\":\"Red Canvas Baggy Gym Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"compact canvas shoulder bag for gym gear\",\"label\":\"Compact canvas shoulder bag for gym gear\",\"displayText\":\"Compact canvas shoulder bag for gym gear\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"xxl blue baggy duffel bag\",\"label\":\"XXL Blue Baggy Duffel Bag\",\"displayText\":\"XXL Blue Baggy Duffel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"heavy duty oversized duffel bag in navy\",\"label\":\"Heavy-duty oversized duffel bag in navy\",\"displayText\":\"Heavy-duty oversized duffel bag in navy\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"price\",\"label\":\"price\",\"displayText\":\"price: 899\",\"displayValue\":899,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"size\",\"displayText\":\"size: XXL\",\"displayValue\":\"XXL\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"color\",\"displayText\":\"color: black\",\"displayValue\":\"black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"style\",\"displayText\":\"style: baggy\",\"displayValue\":\"baggy\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"category\",\"displayText\":\"category: bag\",\"displayValue\":\"bag\",\"valueKind\":\"text\",\"untrusted\":false}]},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog at http://localhost:4174/results.html\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 4,  \\\"actionsTaken\\\": 2,  \\\"recoveryAttempts\\\": 0 }\",\"[Working] STEP_1_RESULT: {  \\\"action\\\": \\\"navigate\\\",  \\\"success\\\": true,  \\\"subgoalId\\\": \\\"goal-muprises-6detm-sg1\\\" }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: NO_EFFECT, Context: listing, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\",\"[Past Failure] Type: NO_EFFECT, Context: listing, Recovery Strategy: DYNAMIC_REPLANNING, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[{\"action\":\"navigate\",\"url\":\"http://localhost:4174/results.html\",\"reason\":\"The user explicitly requested to open the store catalog at http://localhost:4174/results.html. The current page is the landing page. Navigating directly to the specified URL is the most direct and reliable way to accomplish the task.\"}],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"http_client_error\",\"retryable\":false}}"
+    }
+  ],
+  "analysis": {
+    "provisionedTab": {
+      "id": 673733692,
+      "url": "http://localhost:4174/"
+    },
+    "perRequest": [
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 2410,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "entryUrl",
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": "http://localhost:4174/results.html",
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "entryUrl",
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog at http://localhost:4174/results.html",
+        "observedContextUrl": "http://localhost:4174/",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"navigate\",\"url\":\"http://localhost:4174/results.html\",\"reason\":\"The user explicitly requested to open the store catalog at http://localhost:4174/results.html. The current page is the landing page. Navigating directly to the specified URL is the most direct and reliable way to accomplish the task.\"},\"reason\":\"The user explicitly requested to open the store catalog at http://localhost:4174/results.html. The current page is the landing page. Navigating directly to the specified URL is the most direct and reliable way to accomplish the task.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":565.0,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/review",
+        "status": 200,
+        "bytes": 4300,
+        "topLevelKeys": [
+          "action",
+          "task",
+          "context",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "entryUrl",
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": "http://localhost:4174/results.html",
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "entryUrl",
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog at http://localhost:4174/results.html",
+        "observedContextUrl": "http://localhost:4174/",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 5723,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog at http://localhost:4174/results.html",
+        "observedContextUrl": "http://localhost:4174/results.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to, and the catalog results are visible. Scrolling down will allow the user to view more of the catalog content and confirm the full list of products.\"},\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to, and the catalog results are visible. Scrolling down will allow the user to view more of the catalog content and confirm the full list of products.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":563.2,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/review",
+        "status": 200,
+        "bytes": 10806,
+        "topLevelKeys": [
+          "action",
+          "task",
+          "context",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog at http://localhost:4174/results.html",
+        "observedContextUrl": "http://localhost:4174/results.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 5829,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog at http://localhost:4174/results.html",
+        "observedContextUrl": "http://localhost:4174/results.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"scroll\",\"direction\":\"down\",\"amount\":500,\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to and the search results are visible. Scrolling down will allow the user to inspect the full catalog and any additional products or content that may be lazy-loaded below the current viewport.\"},\"reason\":\"The user requested to open the store catalog at the specified URL. The page has already been navigated to and the search results are visible. Scrolling down will allow the user to inspect the full catalog and any additional products or content that may be lazy-loaded below the current viewport.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":631.1,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/review",
+        "status": 200,
+        "bytes": 10954,
+        "topLevelKeys": [
+          "action",
+          "task",
+          "context",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog at http://localhost:4174/results.html",
+        "observedContextUrl": "http://localhost:4174/results.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"safe\":true,\"reason\":\"Safety review passed (deterministic).\"}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 503,
+        "bytes": 5936,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts"
+        ],
+        "declaredDestination": {
+          "present": false
+        },
+        "task": "open the store catalog at http://localhost:4174/results.html",
+        "observedContextUrl": "http://localhost:4174/results.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"http_client_error\",\"retryable\":false}}"
+      }
+    ],
+    "summary": {
+      "totalApiRequests": 7,
+      "requestsCarryingDeclaredDestination": 2,
+      "anyRoleOnlyRequest": true,
+      "anyUrlCarryingRequest": false,
+      "anyForbiddenKeyInDeclaration": false,
+      "anyUnexpectedStringLeafInDeclaration": true,
+      "anyForbiddenKeyInWholePayload": true
+    }
+  },
+  "loopLogs": [
+    "[AgentTrace] subgoal selected Object",
+    "[AgentTrace] subgoal NOT completed — no observed evidence Object",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
+    "[AgentTrace] M6 failed Object",
+    "[AgentTrace] M6 failed Object"
+  ],
+  "rawLogs": [
+    "[ServiceWorker] message received Object",
+    "[AgentTrace] service worker START_TASK received Object",
+    "TARGET_RESOLUTION_STARTED",
+    "TARGET_TAB_CANDIDATES Array(3)",
+    "[AgentTrace] containment scope established Object",
+    "TARGET_TAB_SELECTED Object",
+    "[AgentTrace] target resolved Object",
+    "TARGET_TAB_READY Object",
+    "[AgentTrace] target content script ready Object",
+    "[AgentTrace] first progress emitted",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] agent loop started",
+    "[AgentTrace] long-horizon state Object",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] harness cycle Object",
+    "[AgentTrace] perception started Object",
+    "[AgentTrace] perception started",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic observation Object",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] perception complete Object",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic understanding complete Object",
+    "[AgentTrace] subgoal selected Object",
+    "[AgentTrace] long-horizon update Object",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] security critic Object",
+    "[AgentTrace] action passed privacy policy",
+    "[AgentTrace] requesting safety review",
+    "[AgentTrace] action passed safety review",
+    "[AgentTrace] executeAction started",
+    "[AgentTrace] effect snapshot observed Object",
+    "[AgentTrace] containment decision Object",
+    "[AgentTrace] executeAction response received",
+    "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs",
+    "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object",
+    "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object",
+    "[AgentTrace] subgoal NOT completed — no observed evidence Object",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] POST_NAVIGATION_SETTLE_START Object",
+    "[AgentTrace] onNavigationComplete Object",
+    "[PrivAgent SW] waitForTabLoad: timed out Object",
+    "[PrivAgent SW] onNavigationComplete: tab load timed out Object",
+    "[AgentTrace] POST_NAVIGATION_SETTLE_RESULT Object",
+    "[AgentTrace] M6 next step",
+    "[AgentTrace] harness cycle Object",
+    "[AgentTrace] perception started Object",
+    "[AgentTrace] perception started",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic observation Object",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] perception complete Object",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic understanding complete Object",
+    "[AgentTrace] long-horizon update Object",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] security critic Object",
+    "[AgentTrace] action passed privacy policy",
+    "[AgentTrace] requesting safety review",
+    "[AgentTrace] action passed safety review",
+    "[AgentTrace] executeAction started",
+    "[AgentTrace] effect snapshot observed Object",
+    "[AgentTrace] containment decision Object",
+    "[AgentTrace] executeAction response received",
+    "[AgentTrace] effect snapshot observed Object",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] recovery decision Object",
+    "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
+    "[AgentTrace] perception started",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic observation Object",
+    "[ServiceWorker] response forwarded",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+    "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+    "[AgentTrace] harness cycle Object",
+    "[AgentTrace] perception started Object",
+    "[AgentTrace] perception started",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic observation Object",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] perception complete Object",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic understanding complete Object",
+    "[AgentTrace] long-horizon update Object",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] security critic Object",
+    "[AgentTrace] action passed privacy policy",
+    "[AgentTrace] requesting safety review",
+    "[AgentTrace] action passed safety review",
+    "[AgentTrace] executeAction started",
+    "[AgentTrace] effect snapshot observed Object",
+    "[AgentTrace] containment decision Object",
+    "[AgentTrace] executeAction response received",
+    "[AgentTrace] effect snapshot observed Object",
+    "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] recovery decision Object",
+    "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)",
+    "[AgentTrace] perception started",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic observation Object",
+    "[ServiceWorker] response forwarded",
+    "[AgentTrace] harness cycle Object",
+    "[AgentTrace] perception started Object",
+    "[AgentTrace] perception started",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic observation Object",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] perception complete Object",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic understanding complete Object",
+    "[AgentTrace] long-horizon update Object",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] M6 failed Object",
+    "[AgentTrace] M6 failed Object",
+    "[AgentTrace] terminal progress emitted Object",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+    "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+    "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+    "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object"
+  ],
+  "observations": [
+    {
+      "url": "http://localhost:4174/results.html",
+      "semanticPageType": "LISTING",
+      "semanticConfidence": 0.99,
+      "semanticPageGeneration": 9
+    }
+  ]
+}

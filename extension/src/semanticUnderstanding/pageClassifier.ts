@@ -26,6 +26,13 @@ interface SignalMatch {
   evidence: string;
 }
 
+/**
+ * PHASE 17.6 / POST-17.10 — the single authoritative confidence floor for page
+ * classification. A classification below this is not a classification: it is
+ * collapsed to `UNKNOWN` with its evidence retained.
+ */
+export const MIN_PAGE_CLASSIFICATION_CONFIDENCE = 0.5;
+
 export function classifyPageSemantics(
   options: PageClassificationOptions = {}
 ): PageClassificationResult {
@@ -250,8 +257,14 @@ export function classifyPageSemantics(
     })
     .sort((a, b) => b.confidence - a.confidence);
 
-  // INVARIANT: Minimum confidence threshold for classification is 0.50
-  if (candidates.length === 0 || candidates[0]!.confidence < 0.50) {
+  // INVARIANT: Minimum confidence threshold for classification is 0.50.
+  //
+  // POST-17.10: extracted to an exported constant (behaviour-neutral — this is
+  // the same literal that was here before) so consumers that must reason about
+  // whether a classification is authoritative — such as the destination
+  // verifier — share THIS threshold instead of carrying a second copy that
+  // could drift from it.
+  if (candidates.length === 0 || candidates[0]!.confidence < MIN_PAGE_CLASSIFICATION_CONFIDENCE) {
     return {
       pageType: 'UNKNOWN',
       confidence: candidates[0]?.confidence ?? 0.1,

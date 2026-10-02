@@ -1,0 +1,113 @@
+{
+  "artifact": "POST-17.10 G7 — GoalVerifier declared-destination closure",
+  "head": "b677654",
+  "committed": false,
+  "pushed": false,
+  "verdict": "G7 OPEN — PROVIDER BLOCKER",
+
+  "root_cause": {
+    "file": "extension/src/agent/goalVerifier.ts",
+    "summary": "verifyTaskGoal had no branch for a declared-destination navigation goal. The canonical task 'open the store catalog' matched none of the six task-shape branches (no search/login/shopping/product/bag/details/scroll/account-number/canvas token, no maxPrice/size/color constraint) and reached the catch-all IN_PROGRESS under every browser state.",
+    "proved_structural": "verifyTaskGoal returned the identical IN_PROGRESS for a correct LISTING@0.99 gen-9 observation and for wrong-page ARTICLE, low-confidence 0.1 and stale-generation observations — the failure was evidence-independent.",
+    "not_a_fail_open_path": "It was a permanent fail-closed hole: DestinationVerifier MATCH could complete the subgoal but nothing connected that to task success, so the task could never terminate successfully."
+  },
+
+  "production_changes": [
+    {
+      "file": "extension/src/agent/goalVerifier.ts",
+      "change": "Added branch 7 (declared-destination navigation goals) plus helper verifyDeclaredDestinationGoal and isOutstandingTaskRequirement.",
+      "authority_preserved": "Adds no URL matching, page-role matching, confidence floor, freshness test, destination normalization or UNKNOWN/MISMATCH semantics. Delegates entirely: verifyTaskGoal -> GoalProgressTracker.verifySubgoalCondition -> verifyDestination. Re-runs that chain against the CURRENT observation, so a stale graph alone cannot certify. Returns null only when no destination subgoal exists; every other path is IN_PROGRESS."
+    },
+    {
+      "file": "backend/app/reasoner.py",
+      "change": "Added a target-namespace disambiguation paragraph rendered when the page carries affordances, stating affordance/entity ids are descriptive metadata and not valid targets.",
+      "justification": "Authorised by the task's SECONDARY ISSUES clause: the real G7 run proved it still required. Run 3 reproduced the defect live — Groq proposed target 'affordance-scroll-1', backend correctly refused with HTTP 422 unknown_target. The fix is generic prompt text naming no URL, path, affordance name or fixture selector.",
+      "authority_preserved": "Grounding unchanged. routes/agent.py still refuses any target absent from current detections; extension M5 re-validates independently."
+    }
+  ],
+
+  "tests": {
+    "added": "tests/step10_6_g7DestinationGoalVerifier.test.ts — 15 tests covering the 13 required cases plus no-graph and changed-observation controls. All plans built with production decomposeTask/SubgoalGraph; no destination logic duplicated.",
+    "focused": "155 passed (G7 destination 15, Step 10.5 negative controls 12, destinationVerifier 63, goalVerifier 4, providerRetryBound 8, containment 43, stage5 security pipeline 10)",
+    "full_extension": "136 files / 2214 tests passed (was 135 / 2199)",
+    "backend": "572 passed",
+    "typescript": "exit 0",
+    "builds": "extension exit 0, frontend exit 0",
+    "diff_check": "clean"
+  },
+
+  "mutation": {
+    "matrix": "scratch/g7_mutation_matrix.mjs",
+    "tally": { "KILLED": 9, "SURVIVED": 0, "INVALID": 0, "EQUIVALENT": 0 },
+    "mutants": [
+      { "id": "M1", "desc": "remove the declared-destination branch", "verdict": "KILLED", "failing": 7 },
+      { "id": "M2", "desc": "a declared destination alone produces SUCCESS", "verdict": "KILLED", "failing": 5 },
+      { "id": "M3", "desc": "allow PENDING / IN_PROGRESS destination subgoal", "verdict": "KILLED", "failing": 4 },
+      { "id": "M4", "desc": "allow UNKNOWN / MISMATCH to certify", "verdict": "KILLED", "failing": 8 },
+      { "id": "M5", "desc": "bypass destination verification, trust COMPLETED flag", "verdict": "KILLED", "failing": 5 },
+      { "id": "M6", "desc": "model/action claim certifies without completed subgoal", "verdict": "KILLED", "failing": 5 },
+      { "id": "M7", "desc": "remove consequential-subgoal protection", "verdict": "KILLED", "failing": 1 },
+      { "id": "M8", "desc": "bypass GoalProgressTracker, match destination locally", "verdict": "KILLED", "failing": 2 },
+      { "id": "M9", "desc": "treat decomposer KNOWN-UNVERIFIABLE scaffolding as a requirement", "verdict": "KILLED", "failing": 2 }
+    ],
+    "prior_matrices": "Step 10.4 unchanged at 18 KILLED / 1 EQUIVALENT / 0 SURVIVED (M14 pre-existing equivalent)."
+  },
+
+  "security": {
+    "destinationVerifier": "UNCHANGED (md5 18d99b99acb8cccd58019d7db667705d)",
+    "destinationNormalizer": "UNCHANGED",
+    "goalProgressTracker": "UNCHANGED",
+    "taskDecomposer": "UNCHANGED",
+    "agentLoop": "UNCHANGED",
+    "actionValidator": "UNCHANGED",
+    "securityCritic": "UNCHANGED",
+    "routes_agent": "UNCHANGED",
+    "security_py": "UNCHANGED",
+    "fail_closed": "preserved; the branch can only convert IN_PROGRESS to SUCCESS behind an existing DestinationVerifier MATCH",
+    "fixture_hardcoding": "none; the only string added to a prompt names no URL, path, affordance id or selector",
+    "pii_egress": "no change; label remains bounded by models.py validate_label_safety and is a pre-existing sanitized field"
+  },
+
+  "real_run": {
+    "harness": "scratch/g7_real_run.mjs (derived from scratch/step10_egress_capture.mjs, richer read-only progress shim)",
+    "environment": "production extension build, real Chrome (CDP), real backend :8010, real Groq openai/gpt-oss-20b, real fixture :4174",
+    "task": "open the store catalog",
+    "not_injected": ["/results.html", "results.html", "btn-shop-now", "btn-search-submit", "any fixture route or selector", "any manual action or observation"],
+    "runs": [
+      {
+        "run": 3,
+        "outcome": "FAILED step 1",
+        "cause": "model proposed target 'affordance-scroll-1' -> HTTP 422 unknown_target -> loop treated retryable 422 as terminal",
+        "significance": "reproduced Blocker C live; authorised the reasoner.py fix"
+      },
+      { "run": 4, "outcome": "FAILED step 3", "cause": "HTTP 503 groq rate_limit + openrouter http_client_error", "apiRequests": 5 },
+      { "run": 5, "outcome": "FAILED step 3", "cause": "HTTP 503 groq rate_limit + openrouter http_client_error", "apiRequests": 5 }
+    ],
+    "deterministic_progress": "/ -> /search.html ; pageState form_incomplete -> form_complete ; DestinationVerifier correctly returned UNKNOWN (page not classified) instead of a false MATCH",
+    "stages": {
+      "user_prompt": "PROVEN_REAL",
+      "declaration": "PROVEN_REAL",
+      "provider": "PROVEN_REAL",
+      "model": "PROVEN_REAL",
+      "browser_actions": "PROVEN_REAL",
+      "final_url": "PROVEN_REAL (/search.html)",
+      "observation": "PROVEN_REAL",
+      "destinationVerifier": "PROVEN_REAL (UNKNOWN on the search page)",
+      "destination_subgoal": "PROVEN_REAL (IN_PROGRESS, correctly not completed)",
+      "planner_progression": "NOT_REACHED",
+      "goalVerifier": "NOT_REACHED",
+      "final_task_result": "NOT_REACHED"
+    },
+    "note": "In the live run the task never reached the LISTING page, so DestinationVerifier never produced MATCH and the new GoalVerifier branch was never entered in a real loop."
+  },
+
+  "provider_capacity": {
+    "correction": "Step 10.5 recorded ~2400 prompt tokens and an 8000 TPM limit. Measured: PROMPT_CHARS=3216 (~807 tokens); the binding limit is requests-per-minute, and Groq publishes an explicit Retry-After (12s observed).",
+    "paced_probe": "5 calls at 13s spacing -> 4 OK, 1 transient 429 with Retry-After: 4s. 6 back-to-back calls -> 3 OK then 429.",
+    "live_status": "groq OK (400ms), openrouter 429, nvidia timeout 30s",
+    "loop_calls_needed": 4,
+    "conclusion": "The loop needs a 4th provider call to submit the search form; the free tier's RPM ceiling plus the dead fallback makes that call fail consistently in 2/2 real runs."
+  },
+
+  "remaining_blocker": "Provider capacity. Fixing it requires teaching the loop to honour the provider's published Retry-After for rate limits, which means a third production file (extension/src/agent/agentLoop.ts or backendAgentProvider.ts) — outside the authorised scope for this task."
+}

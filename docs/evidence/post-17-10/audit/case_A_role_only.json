@@ -1,0 +1,162 @@
+{
+  "work": "POST-17.10 STEP 10 AUDIT — real production provider-egress capture",
+  "labels": "PROVEN_REAL_CHROME (bytes on the wire) / PROVEN_REAL_BACKEND (backend response)",
+  "inputs": {
+    "task": "open the store catalog",
+    "userSuppliedUrlInTask": null,
+    "startUrl": "http://localhost:4174/",
+    "keptExistingTabs": true,
+    "targetOrigin": "http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "reasoningRequests": [
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 503,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/\",\"timestamp\":1790872869846,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-login-cta\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":441,\"y\":297,\"width\":186,\"height\":43},\"length\":15,\"source\":\"dom_attribute\",\"selector\":\"#btn-login-cta\",\"is_partially_visible\":false},{\"id\":\"btn-shop-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":648,\"y\":296,\"width\":191,\"height\":45},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-shop-now\",\"is_partially_visible\":false},{\"id\":\"brand-link\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"#brand-link\",\"is_partially_visible\":false}],\"total_elements_scanned\":18,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"landing\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":2,\"entities\":[],\"affordances\":[{\"id\":\"affordance-scroll-1\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"discover quality gear apparel\",\"label\":\"Discover Quality Gear & Apparel\",\"displayText\":\"Discover Quality Gear & Apparel\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"explore thousands of bags travel gear\",\"label\":\"Explore thousands of bags, travel gear,\",\"displayText\":\"Explore thousands of bags, travel gear,\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\",\"error_kind\":\"invalid_action\",\"retryable\":false}}"
+    }
+  ],
+  "analysis": {
+    "provisionedTab": {
+      "id": 1574707047,
+      "url": "http://localhost:4174/"
+    },
+    "perRequest": [
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 503,
+        "bytes": 2286,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: Model-emitted reason rejected by text-safety scan (rule=person_name).\",\"error_kind\":\"invalid_action\",\"retryable\":false}}"
+      }
+    ],
+    "summary": {
+      "totalApiRequests": 1,
+      "requestsCarryingDeclaredDestination": 1,
+      "anyRoleOnlyRequest": true,
+      "anyUrlCarryingRequest": false,
+      "anyForbiddenKeyInDeclaration": false,
+      "anyUnexpectedStringLeafInDeclaration": true,
+      "anyForbiddenKeyInWholePayload": true
+    }
+  },
+  "loopLogs": [
+    "[AgentTrace] subgoal selected Object",
+    "[AgentTrace] M6 failed Object",
+    "[AgentTrace] M6 failed Object"
+  ],
+  "rawLogs": [
+    "[ServiceWorker] message received Object",
+    "[AgentTrace] service worker START_TASK received Object",
+    "TARGET_RESOLUTION_STARTED",
+    "TARGET_TAB_CANDIDATES Array(3)",
+    "[AgentTrace] containment scope established Object",
+    "TARGET_TAB_SELECTED Object",
+    "[AgentTrace] target resolved Object",
+    "TARGET_TAB_READY Object",
+    "[AgentTrace] target content script ready Object",
+    "[AgentTrace] first progress emitted",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] agent loop started",
+    "[AgentTrace] long-horizon state Object",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] harness cycle Object",
+    "[AgentTrace] perception started Object",
+    "[AgentTrace] perception started",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic observation Object",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] perception complete Object",
+    "[AgentTrace] multimodal perception complete Object",
+    "[AgentTrace] semantic understanding complete Object",
+    "[AgentTrace] subgoal selected Object",
+    "[AgentTrace] long-horizon update Object",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[AgentTrace] M6 failed Object",
+    "[AgentTrace] M6 failed Object",
+    "[AgentTrace] terminal progress emitted Object",
+    "[AgentTrace] output screen Object",
+    "[ServiceWorker] response forwarded Object",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+    "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+    "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+    "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING Object",
+    "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+    "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT Object"
+  ],
+  "observations": [
+    {
+      "url": "http://localhost:4174/",
+      "semanticPageType": "UNKNOWN",
+      "semanticConfidence": 0.1,
+      "semanticPageGeneration": 3
+    }
+  ]
+}

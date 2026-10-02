@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 from typing import Dict, List, Any
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 from pydantic import ValidationError as PydanticValidationError
 
 from .. import config
@@ -40,6 +40,20 @@ from ..security import PayloadSecurityError, verify_payload_invariants
 
 router = APIRouter(prefix="/api/v1/agent", tags=["agent"])
 logger = logging.getLogger("privagent.agent")
+
+
+def _rate_limit_headers(err: ReasoningError) -> Dict[str, str]:
+    """POST-17.10 Step 10.6 (G7): relay the PROVIDER's own Retry-After.
+
+    Only a header the upstream provider actually emitted is relayed. Nothing
+    here invents a back-off, and an absent header produces no header — the
+    client then falls back to its own bounded delay. The value is passed
+    through verbatim; `parseRetryAfter` on the extension side is what clamps
+    and validates it.
+    """
+    if err.kind == "rate_limit" and err.retry_after:
+        return {"Retry-After": str(err.retry_after)}
+    return {}
 
 
 def _build_reasoner():
@@ -63,6 +77,7 @@ def _build_reasoner():
 async def generate_action(
     request: Request,
     body: AgentActionRequest,
+    response: Response,
 ) -> AgentActionResponse:
     """
     Agent Reasoning endpoint (M7).
@@ -172,25 +187,53 @@ async def generate_action(
                     fallback_err.kind,
                     fallback_err,
                 )
+                # POST-17.10 Step 10.6 (G7) — HONEST RATE-LIMIT REPORTING.
+                #
+                # The defect: this reported `error_kind: fallback_err.kind` and a
+                # hardcoded `retryable: False`. When the PRIMARY was rate-limited
+                # and the fallback then also failed, the client was told only
+                # that the FALLBACK failed — a classification the client cannot
+                # distinguish from a permanent error. The primary's rate limit
+                # survived only inside a human-readable `reason` string, where
+                # no client is expected to parse it.
+                #
+                # The fix changes the REPORT, never the classification rules: a
+                # rate limit is still refused by this layer (zero speculative
+                # actions are produced, the response is still a failure), but it
+                # is now labelled truthfully and the provider's own Retry-After
+                # is relayed so the client can wait the published interval
+                # instead of guessing or hammering the pool. A rate limit
+                # WITHOUT a Retry-After stays exactly as before — non-retryable,
+                # no header, fail closed.
+                rate_limited = err.kind == "rate_limit" and bool(err.retry_after)
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    headers=_rate_limit_headers(err),
                     detail={
                         "success": False,
                         "reason": f"Reasoning unavailable: {primary_name} ({err.kind}) and fallback {fallback_name} ({fallback_err.kind}) failed.",
-                        "error_kind": fallback_err.kind,
-                        "retryable": False,
+                        "error_kind": "rate_limit" if rate_limited else fallback_err.kind,
+                        "retryable": rate_limited,
                     },
                 )
         else:
             logger.warning("Reasoning failed (%s): %s", err.kind, err)
             # Fail closed — never fabricate an action from detections.
+            #
+            # POST-17.10 Step 10.6 (G7): a rate limit that carries the
+            # provider's own Retry-After is TRANSIENT, and is reported as such
+            # with that header relayed. Every other kind is reported exactly as
+            # before. Nothing here converts a failure into a success: the
+            # status is still 503 and no action is produced.
+            rate_limited = err.kind == "rate_limit" and bool(err.retry_after)
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                headers=_rate_limit_headers(err),
                 detail={
                     "success": False,
                     "reason": f"Reasoning unavailable: {err}",
-                    "error_kind": err.kind,
-                    "retryable": err.retryable,
+                    "error_kind": "rate_limit" if rate_limited else err.kind,
+                    "retryable": rate_limited,
                 },
             )
 
@@ -287,18 +330,44 @@ async def generate_action(
         # (`raw: %s`). It is model-authored text and may contain a value the model
         # saw, i.e. PII, which then landed in the backend log permanently. The
         # error COUNT and the exception are still logged; the payload is not.
+        #
+        # PHASE 17.10 (D1): these are NOT all structural failures. Pydantic raises
+        # this one exception type for BOTH a malformed payload (unknown enum,
+        # extra_forbidden, wrong JSON type) and a well-formed action that our own
+        # `validate_action_shape` POLICY refused (PII-shaped `type.text`, a field
+        # that does not belong to the action type, a missing required field, a key
+        # outside the allowlist, a non-http navigate URL).
+        #
+        # Reporting the second kind as "invalid action structure" was factually
+        # wrong and made a deliberate, CORRECT privacy refusal look like a provider
+        # malfunction. `validate_action_shape` surfaces as root-level `value_error`
+        # entries (type "value_error", empty loc); genuine schema faults carry
+        # specific types such as `extra_forbidden` / `enum` / `int_parsing`.
+        policy_refusal = bool(err.errors()) and all(
+            e.get("type") == "value_error" and not e.get("loc") for e in err.errors()
+        )
         logger.warning(
-            "Reasoner produced schema-invalid action (%d validation errors): %s",
+            "Reasoner action refused by action validation (%d error(s), policy_refusal=%s): %s",
             err.error_count(),
+            policy_refusal,
             err,
         )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={
                 "success": False,
-                "reason": "Reasoner produced an invalid action structure.",
+                # A policy refusal is deterministic: the same task and context
+                # produce the same refusal, so retrying it can never help. The
+                # loop must treat it as a final refusal rather than a transport
+                # fault. Only a genuinely malformed payload stays retryable.
+                "reason": (
+                    "Reasoner produced a well-formed action that PrivAgent's action "
+                    "policy refused (e.g. it proposed typing sensitive content)."
+                    if policy_refusal
+                    else "Reasoner produced an invalid action structure."
+                ),
                 "error_kind": "invalid_action",
-                "retryable": True,
+                "retryable": not policy_refusal,
             },
         )
 

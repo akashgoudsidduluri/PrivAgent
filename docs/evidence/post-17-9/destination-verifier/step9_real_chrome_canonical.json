@@ -1,0 +1,145 @@
+{
+  "work": "POST-17.10 step 9 — real Chrome E2E capture of the destination producer wiring (production extension, real reasoner)",
+  "evidencePolicy": "Metadata only: URL, semantic page type, confidence, page generation, counts, and the production planner trace lines. No page text, no element labels, no values, no model output, no PII.",
+  "evidencePolicyNote": "agentDirected=false observations were reached by a harness navigation and are labelled CONTROLLED_FIXTURE_PROVEN, never as the agent having arrived there.",
+  "inputs": {
+    "dashboardOrigin": "http://localhost:5173",
+    "targetOrigin": "http://localhost:4174"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "extensionLoaded": true,
+    "extensionLoadResult": "{\"id\":\"ihbbhmifbgfcibhjhcafakdkcppkccaf\"}"
+  },
+  "runs": [
+    {
+      "key": "canonical",
+      "task": "open the store catalog at http://localhost:4174",
+      "targetTab": {
+        "provisionedBy": "production targetResolver",
+        "id": 433563668,
+        "url": "http://localhost:4174/",
+        "status": "complete"
+      },
+      "observations": [
+        {
+          "label": "agent-end-of-run",
+          "capturedAt": "2026-10-01T15:32:49.480Z",
+          "ok": true,
+          "url": "http://localhost:4174/",
+          "worldModelPageType": "landing",
+          "worldModelPageGeneration": 3,
+          "semanticPageType": "UNKNOWN",
+          "semanticConfidence": 0.1,
+          "semanticPageState": "populated",
+          "semanticPageGeneration": 3,
+          "entityCount": 0,
+          "affordanceTypes": [
+            "SCROLL"
+          ],
+          "totalElementsScanned": 18,
+          "sensitiveDetected": 0,
+          "agentDirected": true
+        },
+        {
+          "label": "fixture-catalog-results-html",
+          "capturedAt": "2026-10-01T15:32:52.525Z",
+          "ok": true,
+          "url": "http://localhost:4174/results.html",
+          "worldModelPageType": "listing",
+          "worldModelPageGeneration": 5,
+          "semanticPageType": "LISTING",
+          "semanticConfidence": 0.99,
+          "semanticPageState": "results_available",
+          "semanticPageGeneration": 5,
+          "entityCount": 4,
+          "affordanceTypes": [
+            "SCROLL"
+          ],
+          "totalElementsScanned": 52,
+          "sensitiveDetected": 0,
+          "agentDirected": false
+        },
+        {
+          "label": "fixture-product-html",
+          "capturedAt": "2026-10-01T15:32:55.571Z",
+          "ok": true,
+          "url": "http://localhost:4174/product.html",
+          "worldModelPageType": "unknown",
+          "worldModelPageGeneration": 7,
+          "semanticPageType": "UNKNOWN",
+          "semanticConfidence": 0.1,
+          "semanticPageState": "populated",
+          "semanticPageGeneration": 7,
+          "entityCount": 0,
+          "affordanceTypes": [
+            "SELECT_RESULT",
+            "ADD_TO_CART",
+            "BUY_NOW",
+            "SELECT_RESULT",
+            "SCROLL"
+          ],
+          "totalElementsScanned": 31,
+          "sensitiveDetected": 0,
+          "agentDirected": false
+        }
+      ],
+      "productionTrace": {
+        "subgoalLines": [],
+        "planningStateLines": [],
+        "goalVerifyLines": [],
+        "traceSample": [
+          "[AgentTrace] service worker START_TASK received Object",
+          "TARGET_RESOLUTION_STARTED",
+          "TARGET_TAB_CANDIDATES Array(2)",
+          "TARGET_TAB_PROVISIONED Object",
+          "[AgentTrace] target tab provisioned Object",
+          "TARGET_TAB_READY Object",
+          "[AgentTrace] containment scope established Object",
+          "TARGET_TAB_SELECTED Object",
+          "[AgentTrace] target resolved Object",
+          "TARGET_TAB_READY Object",
+          "[AgentTrace] target content script ready Object",
+          "[AgentTrace] first progress emitted",
+          "[AgentTrace] output screen Object",
+          "[AgentTrace] agent loop started",
+          "[AgentTrace] long-horizon state Object",
+          "[AgentTrace] output screen Object",
+          "[AgentTrace] harness cycle Object",
+          "[AgentTrace] perception started Object",
+          "[AgentTrace] perception started",
+          "[AgentTrace] multimodal perception complete Object",
+          "[AgentTrace] semantic observation Object",
+          "[AgentTrace] perception complete Object",
+          "[AgentTrace] multimodal perception complete Object",
+          "[AgentTrace] semantic understanding complete Object",
+          "[AgentTrace] subgoal selected Object",
+          "[AgentTrace] long-horizon update Object",
+          "[AgentTrace] requesting reasoning",
+          "[AgentTrace] output screen Object",
+          "[AgentTrace] M6 failed Object",
+          "[AgentTrace] M6 failed Object",
+          "[AgentTrace] terminal progress emitted Object",
+          "[AgentTrace] output screen Object",
+          "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+          "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+          "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+          "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+          "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+          "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+          "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+          "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+          "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+          "[SW][PING] TARGET_RESOLUTION_RESULT Object",
+          "[SW][PING] TARGET_RESOLUTION_STARTED Object",
+          "[SW][PING] TARGET_RESOLUTION_RESULT Object"
+        ]
+      },
+      "providerCalls": 1,
+      "lastEnvelope": null
+    }
+  ],
+  "limitations": [
+    "The service worker exposes no state read-out for the planner, so the production subgoal record is read from the loop's own [AgentTrace] console output rather than from its internal graph object."
+  ]
+}

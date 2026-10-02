@@ -1,0 +1,84 @@
+{
+  "work": "STEP 10.4 — G7 real-chain status AFTER the P1 text-safety remediation",
+  "canonicalTask": "open the store catalog",
+  "p1Status": "CLOSED",
+  "g7Status": "OPEN",
+  "headline": "The P1 is remediated on the real runtime: 10/10 real Groq model actions accepted, 0 person_name rejections across 3 real Chrome runs. G7 is NOT closed — the chain now dies further along, for two unrelated reasons.",
+  "p1Proof": {
+    "labels": "PROVEN_REAL (live FastAPI :8010, real Groq openai/gpt-oss-20b, production extension dist/, real Chrome 153.0.8010.12)",
+    "directBackendProbes": {
+      "beforeRemediation": "HTTP 503, error_kind=invalid_action, rule=person_name (5/5 Step 10.3 runs)",
+      "afterRemediation": "HTTP 200 x3, success=true, real action {action: click, target: btn-shop-now}"
+    },
+    "realChromeRuns": [
+      {
+        "run": 1,
+        "apiRequests": 5,
+        "httpStatuses": [200, 200, 200, 200, 503],
+        "firstReasonAccepted": "Click the 'Shop Now' button to open the store catalog listing.",
+        "personNameRejections": 0
+      },
+      {
+        "run": 2,
+        "apiRequests": 7,
+        "httpStatuses": [200, 200, 200, 200, 200, 200, 503],
+        "firstReasonAccepted": "Click the 'Shop Now' button to open the store catalog listing page.",
+        "personNameRejections": 0
+      }
+    ],
+    "totalRealModelActionsAccepted": 10,
+    "totalPersonNameRejections": 0
+  },
+  "g7Chain": [
+    { "stage": "user prompt received",            "status": "PROVEN_REAL",  "detail": "serviceWorker START_TASK 'open the store catalog'" },
+    { "stage": "role-only declaration produced",   "status": "PROVEN_REAL",  "detail": "declaredDestination={provenance:USER_DECLARED_DESTINATION, role:[LISTING]}, destinationUrl null, present in every request body (5/5 and 7/7)" },
+    { "stage": "declaration reaches backend",      "status": "PROVEN_REAL",  "detail": "context.semantic_context.declaredDestination in the real /api/v1/agent/action body" },
+    { "stage": "real model action accepted",       "status": "PROVEN_REAL",  "detail": "HTTP 200 {action: click, target: btn-shop-now}" },
+    { "stage": "real agent-directed action",       "status": "PROVEN_REAL",  "detail": "completedSteps: ['click: Click element btn-shop-now'], lastActionResult.success true" },
+    { "stage": "real Chrome navigation",           "status": "PROVEN_REAL",  "detail": "tab moved http://localhost:4174/ -> http://localhost:4174/search.html" },
+    { "stage": "fresh observation",                "status": "PROVEN_REAL",  "detail": "pageGeneration 7 (run 1) / 9 (run 2), pageState form_incomplete, entityCount 1, affordanceCount 5" },
+    { "stage": "pageType = LISTING",               "status": "NOT_REACHED",  "detail": "observed pageType=UNKNOWN confidence=0.10 — CORRECT: /search.html is an empty search form with no listing content. The agent navigated to the search page, not the results page." },
+    { "stage": "confidence >= 0.5 floor",         "status": "NOT_REACHED",  "detail": "observed confidence 0.10" },
+    { "stage": "DestinationVerifier MATCH",        "status": "NOT_REACHED",  "detail": "never received a LISTING observation" },
+    { "stage": "destination subgoal completed",    "status": "NOT_REACHED",  "detail": "sg1 remained IN_PROGRESS; sg2-sg4 PENDING" },
+    { "stage": "planner progression",              "status": "PARTIAL",      "detail": "loop advanced to step 3 (run 1) / step 4 (run 2) and issued further real actions, but never past the destination subgoal" },
+    { "stage": "GoalVerifier",                     "status": "NOT_REACHED",  "detail": "goal never reached completion" }
+  ],
+  "blockers": [
+    {
+      "class": "provider / rate limit",
+      "exact": "HTTP 503 {\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"http_client_error\",\"retryable\":false}",
+      "detail": "The Groq free tier allows ~3 requests/minute. The agent loop issues TWO provider calls per step (a STRONG reasoner call and a SAFETY review call), so the loop exhausts the budget by step 2-3 and then fails closed. The configured fallback provider has no working credential.",
+      "when": "terminal failure in both real runs",
+      "isThisTheP1": false,
+      "note": "This is a DIFFERENT blocker from Step 10.3. The Step 10.3 blocker was rule=person_name from text_safety. This one is upstream of text_safety entirely and is environmental."
+    },
+    {
+      "class": "task / navigation choice (NOT a verifier defect)",
+      "exact": "The model clicks 'Shop Now', which lands on /search.html, then reasons 'No catalog or listing link is visible on the current search page' and scrolls.",
+      "detail": "/search.html is an empty search FORM. It classifies SEARCH/UNKNOWN, not LISTING. The real LISTING page is /results.html (4 product-card elements). The agent never navigates there, so the DestinationVerifier correctly never returns MATCH. The verifier behaved correctly at every step; it simply was never given a listing page.",
+      "when": "present in both real runs",
+      "isThisTheP1": false,
+      "note": "Recorded, NOT fixed. Routing the agent from /search.html to /results.html would mean changing the prompt, the fixture, or the planner — all outside Step 10.4's scope, and none of them is a text-safety concern."
+    },
+    {
+      "class": "fixture (correct behaviour, not a defect)",
+      "exact": "scroll -> ACTION_NO_EFFECT 'Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.'",
+      "detail": "The empty search form has nothing below the fold, so the scroll produced no movement and effect verification failed closed. This is the M10 observer working as designed.",
+      "when": "runs 1 and 2",
+      "isThisTheP1": false
+    }
+  ],
+  "negativeControls": {
+    "labels": "PROVEN_UNIT_ONLY",
+    "wrongRole": "MISMATCH — tests/step10_3_roleOnlyControls.test.ts",
+    "unknownPage": "UNKNOWN — tests/step10_3_roleOnlyControls.test.ts",
+    "staleObservation": "UNKNOWN — tests/step10_3_roleOnlyControls.test.ts",
+    "alreadyAtDestination": "requires the verifier (G1 semantics preserved) — tests/step10_3_roleOnlyControls.test.ts",
+    "actionNoEffect": "remains action failure, not destination success — observed PROVEN_REAL in both runs",
+    "modelClaimsDestination": "cannot override the verifier — tests/step10_3_roleOnlyControls.test.ts",
+    "personNameReason": "rejected — backend/tests/test_step10_4_text_safety_p1.py (HTTP path via parse_model_action)",
+    "personNameInNavigationProse": "rejected — backend/tests/test_step10_4_text_safety_p1.py"
+  },
+  "honesty": "The P1 is closed and that is proven on the real runtime. G7 is NOT closed: a successful HTTP response is not G7 proof, and the chain never reached a LISTING observation, a verifier MATCH, a subgoal completion or the GoalVerifier. No text-safety rule was weakened to try to get there, and the residual false negatives this step found in the pre-existing rule (ASCII-only shape, lower-case names) were recorded rather than silently widened."
+}
