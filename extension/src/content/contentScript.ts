@@ -295,6 +295,48 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
     return false;
   }
 
+  if (message.type === 'PRIVAGENT_SEMANTIC_REQUEST') {
+    //
+    // G7 REPAIR 2 — semantic rebuild at the DOM owner.
+    //
+    // The service worker cannot classify a page on its own: `classifyPageSemantics`
+    // reads live DOM signals that do not exist in a worker context, so a
+    // worker-side rebuild collapses page types that rest on them (dashboard
+    // tables, checkout controls, settings panels) to UNKNOWN. This runs the
+    // SAME production `buildSemanticUnderstanding`, in the SAME content-script
+    // context, with the SAME `root: document` the normal scan path uses — so
+    // there is still exactly one classifier and one threshold.
+    //
+    // It deliberately does NOT re-scan. No `performPrivacyScan` call happens
+    // here, so `currentPageGeneration` is untouched and the caller's world
+    // model reference stays valid. The requested generation is echoed through
+    // so the caller can reject a response that describes a different document.
+    //
+    // The result is the same already-sanitized payload the scan path returns;
+    // `createSanitizedSemanticContext` runs the M8 raw-value firewall itself
+    // and throws on violation, and the service worker re-checks it on arrival.
+    console.info('[ContentScript] semantic rebuild requested', { pageGeneration: message.pageGeneration });
+    try {
+      const rebuilt = buildSemanticUnderstanding({
+        worldModel: lastWorldModel ?? undefined,
+        root: document,
+        pageGeneration: message.pageGeneration,
+      });
+      sendResponse({
+        type: 'PRIVAGENT_SEMANTIC_RESPONSE',
+        semanticUnderstanding: rebuilt,
+        semanticContext: rebuilt.sanitizedContext,
+      });
+    } catch (semErr) {
+      console.warn('[ContentScript] semantic rebuild failed:', semErr instanceof Error ? semErr.message : String(semErr));
+      sendResponse({
+        type: 'PRIVAGENT_SEMANTIC_RESPONSE',
+        error: semErr instanceof Error ? semErr.message : String(semErr),
+      });
+    }
+    return false;
+  }
+
   if (message.type === 'PRIVAGENT_SET_REDACTION_MODE') {
     currentMode = message.mode;
     if (lastReport) {

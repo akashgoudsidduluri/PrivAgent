@@ -925,6 +925,115 @@ export class AgentLoop {
         }
       }
 
+      // G7 REPAIR 1 — DESTINATION SUBGOAL RE-EVALUATION.
+      //
+      // A destination subgoal is selected ONCE, while the browser is still on
+      // the entry page, and `startSubgoal` moves it to IN_PROGRESS.
+      // `getReadySubgoals` only ever returns READY/PENDING subgoals, so from
+      // the next cycle onward the selector above reports NEEDS_REPLAN and
+      // `activeSubgoal` is undefined — which means the verification guard at
+      // the end of this iteration can never run again. The destination was
+      // therefore proven once, BEFORE arrival, and never re-checked once the
+      // browser actually reached it. That is the G7 blocker.
+      //
+      // This restores ONLY the missing re-check. It grants no new completion
+      // authority:
+      //
+      //  - The subgoal found here is still decided by the SAME
+      //    `GoalProgressTracker.verifySubgoalCondition` → `verifyDestination`
+      //    chain, reading the CURRENT sanitized observation. This is not
+      //    evidence of arrival; it is only a reason to ask again.
+      //  - Nothing here reads `execResult`, the action, `action.url`, a
+      //    navigation destination, previous actions, affordances or model
+      //    output. A successful dispatch cannot make a destination subgoal
+      //    complete.
+      //  - `completeSubgoal` is still called only when that chain returns
+      //    MATCH. MISMATCH and UNKNOWN both leave it IN_PROGRESS.
+      //  - Freshness is untouched — it is still the verifier's existing
+      //    page-generation semantics.
+      let destinationRevisitSubgoal: Subgoal | undefined;
+      if (this.subgoalGraph) {
+        const revisit = SubgoalSelector.selectDestinationSubgoalForRevisit({
+          graph: this.subgoalGraph,
+          currentUrl: context.url || this.state.currentUrl || '',
+          currentGeneration: semanticContext?.pageGeneration,
+          previousUrl: previousObservation?.url,
+          previousGeneration: previousObservation?.semantic_context?.pageGeneration,
+        });
+        if (revisit.status === 'REVISIT' && revisit.selectedSubgoal) {
+          destinationRevisitSubgoal = revisit.selectedSubgoal;
+          console.info('[AgentTrace] destination subgoal eligible for re-verification', {
+            subgoalId: destinationRevisitSubgoal.id,
+            reason: revisit.reason,
+          });
+        }
+      }
+
+      // G7 REPAIR 1 (continued) — RE-VERIFY FROM THE OBSERVATION, HERE.
+      //
+      // The verdict is requested at this point, immediately after the fresh
+      // perception and BEFORE any action is proposed or dispatched, rather than
+      // in the end-of-cycle verification block.
+      //
+      // Why the placement matters. The end-of-cycle block is gated on
+      // `execResult.success`, which is DISPATCH state about the action that
+      // happened to run this cycle. Deciding the destination from that gate
+      // would make arrival provable only by whatever the agent happened to do
+      // afterwards — the exact inversion of "actions cause state changes;
+      // observations prove the state". In the real fixture the browser is at
+      // the destination, the page is correctly classified LISTING, and every
+      // subsequent scroll returns ACTION_NO_EFFECT at a scroll boundary; that
+      // recovery path skips the end-of-cycle block, so the destination was
+      // never actually put to the verifier. Deciding here removes that
+      // dependence entirely.
+      //
+      // This grants NO new authority. `GoalProgressTracker.verifySubgoalCondition`
+      // still reads only `context`, `previousObservation` and the observed page
+      // generation; it still refuses UNKNOWN, MISMATCH, a stale classification
+      // and a missing declaration; and `completeSubgoal` is still called only
+      // when it returns MATCH. The action for THIS cycle has not been chosen
+      // yet, so nothing here can be influenced by one.
+      if (destinationRevisitSubgoal && this.subgoalGraph) {
+        const revisitVerification = GoalProgressTracker.verifySubgoalCondition(
+          destinationRevisitSubgoal,
+          {
+            context,
+            previous: previousObservation,
+            pageGeneration: this.state.currentPageGeneration ?? 0,
+            userConfirmedActionIds: this.state.confirmedActionIds ?? [],
+          }
+        );
+        if (revisitVerification.satisfied) {
+          this.subgoalGraph.completeSubgoal(destinationRevisitSubgoal.id);
+          this.state.subgoalGraphData = this.subgoalGraph.toData();
+          console.info('[AgentTrace] subgoal completed', {
+            subgoalId: destinationRevisitSubgoal.id,
+            category: destinationRevisitSubgoal.category,
+            evidence: revisitVerification.reason,
+          });
+        } else {
+          console.info('[AgentTrace] subgoal NOT completed — no observed evidence', {
+            subgoalId: destinationRevisitSubgoal.id,
+            category: destinationRevisitSubgoal.category,
+            reason: revisitVerification.reason,
+          });
+          this.state.subgoalVerificationHistory = [
+            ...(this.state.subgoalVerificationHistory ?? []),
+            {
+              subgoalId: destinationRevisitSubgoal.id,
+              step: this.state.currentStep,
+              satisfied: false,
+              reason: revisitVerification.reason,
+              timestamp: Date.now(),
+            },
+          ].slice(-64);
+        }
+        // Only one subgoal may be proven per cycle. A destination that completes
+        // here releases the next subgoal, which ordinary selection picks up on
+        // the NEXT cycle.
+        destinationRevisitSubgoal = undefined;
+      }
+
       // ── Phase 9: long-horizon task state ─────────────────────────────────
       // Observes THIS task between successive perceptions: what has been
       // accomplished, whether the agent is still making progress, and whether
@@ -2419,6 +2528,13 @@ export class AgentLoop {
       // observed by Effect Verification. Making the subgoal bar HIGHER can only
       // make the agent do more work, never less, and it can never authorize an
       // action or assert task success. Goal Verification still owns that.
+      // The subgoal whose completion is PROVEN at the end of this cycle.
+      //
+      // This block is deliberately still keyed on `activeSubgoal` and still
+      // gated on `execResult.success`, exactly as it was before G7 Repair 1.
+      // The destination re-verification is NOT done here: it runs from the
+      // fresh observation above, before any action is dispatched, so that
+      // arrival is never decided by the effect of an action.
       if (execResult.success && activeSubgoal && this.subgoalGraph) {
         const subgoalVerification = GoalProgressTracker.verifySubgoalCondition(activeSubgoal, {
           context,

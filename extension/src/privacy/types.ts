@@ -138,6 +138,28 @@ export type ExtensionMessage =
       semanticContext?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
     }
   | { type: 'PRIVAGENT_SET_REDACTION_MODE'; mode: RedactionMode }
+  // G7 REPAIR 2 — SEMANTIC REBUILD AT THE DOM OWNER.
+  //
+  // Semantic page classification reads live DOM signals (product cards,
+  // headings, tables, checkout controls, settings panels). An MV3 service
+  // worker has no DOM, so when it must rebuild a semantic context on its own
+  // it cannot supply those signals and collapses page types that rest on them
+  // to UNKNOWN. This asks the ONE context that legitimately owns the DOM — the
+  // content script — to run the SAME `buildSemanticUnderstanding` with the same
+  // `root: document` the normal scan path uses.
+  //
+  // It is NOT a second classifier and it does NOT re-scan the page: no DOM scan
+  // runs, so `currentPageGeneration` is not incremented and the world-model
+  // reference the caller holds stays valid. The response carries the same
+  // already-sanitized artifacts the scan path returns, and the caller re-runs
+  // the identical generation and M8 raw-value checks it applies to those.
+  | { type: 'PRIVAGENT_SEMANTIC_REQUEST'; pageGeneration: number }
+  | {
+      type: 'PRIVAGENT_SEMANTIC_RESPONSE';
+      semanticUnderstanding?: import('../semanticUnderstanding/semanticTypes').SemanticUnderstandingOutput;
+      semanticContext?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
+      error?: string;
+    }
   | { type: 'PRIVAGENT_TOGGLE_REDACTION'; enabled: boolean }
   | { type: 'PRIVAGENT_GET_STATE' }
   | { type: 'PRIVAGENT_STATE_RESPONSE'; report: PrivacyScanReport | null; isRedactionActive: boolean }

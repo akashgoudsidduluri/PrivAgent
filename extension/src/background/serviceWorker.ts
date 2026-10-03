@@ -783,19 +783,78 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
               }
 
-              // Fallback / calibration: If semantic understanding was not provided by scan, build directly from live world model
+              // Fallback / calibration: If semantic understanding was not provided by scan, rebuild it
+              //
+              // G7 REPAIR 2. Semantic page classification reads LIVE DOM signals
+              // (product cards, headings, tables, checkout controls, settings
+              // panels). A service worker has no DOM, so `classifyPageSemantics`
+              // cannot see any of them here: `root` is absent and `document` is
+              // undefined in this context, which collapses page types that rest
+              // on those signals to UNKNOWN at the `0.1` no-signal default — even
+              // though the very same page classifies correctly through the
+              // content-script path.
+              //
+              // The fix is NOT a second classifier and NOT a threshold change.
+              // It is to rebuild the semantic context where the DOM actually
+              // lives: ask the content script to run the SAME production
+              // `buildSemanticUnderstanding` with the SAME `root: document` the
+              // scan path uses. The world-model-only build is retained strictly
+              // as a last resort, so a dead content script degrades the
+              // classification rather than removing it.
+              //
+              // The returned context is re-validated below exactly like a
+              // scan-provided one: same page generation, same M8 raw-value
+              // firewall. Nothing here can weaken the security boundary.
               if (!semanticUnderstanding && worldModel) {
+                const fallbackGeneration = worldModel.page.pageGeneration;
                 try {
-                  semanticUnderstanding = buildSemanticUnderstanding({
-                    worldModel,
-                    pageGeneration: worldModel.page.pageGeneration,
-                    userGoal: task,
-                  });
-                  semanticContext = semanticUnderstanding.sanitizedContext;
+                  const rebuilt = (await withTimeout(
+                    chrome.tabs.sendMessage(targetTabId, {
+                      type: 'PRIVAGENT_SEMANTIC_REQUEST',
+                      pageGeneration: fallbackGeneration,
+                    }),
+                    10000,
+                    'Semantic rebuild timed out (10s).'
+                  )) as {
+                    semanticUnderstanding?: SemanticUnderstandingOutput;
+                    semanticContext?: SanitizedSemanticContext;
+                    error?: string;
+                  } | null;
+
+                  if (!rebuilt?.semanticUnderstanding || !rebuilt.semanticContext) {
+                    throw new Error(
+                      `Content-script semantic rebuild unavailable${rebuilt?.error ? `: ${rebuilt.error}` : '.'}`
+                    );
+                  }
+                  if (rebuilt.semanticContext.pageGeneration !== fallbackGeneration) {
+                    throw new Error(
+                      'Semantic rebuild generation mismatch against the live world model.'
+                    );
+                  }
+                  const violations = scanForRawSensitiveValues(rebuilt.semanticContext);
+                  if (violations.length > 0) {
+                    throw new Error('Rebuilt semantic context failed M8 privacy firewall.');
+                  }
+
+                  semanticUnderstanding = rebuilt.semanticUnderstanding;
+                  semanticContext = rebuilt.semanticContext;
                 } catch (semErr) {
-                  console.warn('[PrivAgent SW] local semantic understanding build failed:', semErr instanceof Error ? semErr.message : String(semErr));
-                  semanticUnderstanding = undefined;
-                  semanticContext = undefined;
+                  console.warn(
+                    '[PrivAgent SW] content-script semantic rebuild unavailable, falling back to world-model-only build:',
+                    semErr instanceof Error ? semErr.message : String(semErr)
+                  );
+                  try {
+                    semanticUnderstanding = buildSemanticUnderstanding({
+                      worldModel,
+                      pageGeneration: fallbackGeneration,
+                      userGoal: task,
+                    });
+                    semanticContext = semanticUnderstanding.sanitizedContext;
+                  } catch (semErr2) {
+                    console.warn('[PrivAgent SW] local semantic understanding build failed:', semErr2 instanceof Error ? semErr2.message : String(semErr2));
+                    semanticUnderstanding = undefined;
+                    semanticContext = undefined;
+                  }
                 }
               }
 

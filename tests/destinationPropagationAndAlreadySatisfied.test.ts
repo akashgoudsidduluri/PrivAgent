@@ -970,8 +970,20 @@ describe('B · W20–W22 — loop: a no-effect action completes the destination 
   it('W21a. the provider is still told the declaration at the same boundary', async () => {
     // The same loop, the ROLE-ONLY task: the provider receives the typed
     // constraint. This is the end-to-end form of W4b.
+    //
+    // G7 Repair 1 note. `firstPage` is set to a NON-destination page on
+    // purpose. Since G7 Repair 1, a destination subgoal is re-verified from the
+    // fresh observation at the TOP of a cycle, before any action is requested;
+    // if the cycle-0 page were already the destination, the subgoal would
+    // complete there and the loop would have no provider call left to inspect.
+    // That would make this assertion vacuous rather than wrong — so the fixture
+    // now presents an entry page at the boundary, which is the situation the
+    // propagation property is actually about. The assertion itself is UNCHANGED:
+    // it still requires the declaration to reach the provider with
+    // USER_DECLARED_DESTINATION provenance, role ['LISTING'] and no URL.
     const run = await driveNoEffectLoop({
       task: CANONICAL,
+      firstPage: (generation) => classified(`${ORIGIN}/`, 'UNKNOWN', 0.1, generation),
       freshPage: (generation) =>
         classified(RESULTS, 'LISTING', 0.99, generation, ['CLICK', 'SCROLL']),
     });

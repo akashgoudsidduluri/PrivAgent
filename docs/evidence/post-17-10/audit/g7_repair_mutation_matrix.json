@@ -1,0 +1,128 @@
+{
+  "generatedAt": "2026-10-03T13:33:42.156Z",
+  "suites": [
+    "tests/step10_7_g7DestinationRevisit.test.ts",
+    "tests/step10_7_g7SemanticFallback.test.ts",
+    "tests/step10_6_g7DestinationGoalVerifier.test.ts",
+    "tests/step10_5_g7NegativeControls.test.ts",
+    "tests/destinationVerifier.test.ts",
+    "tests/subgoalSelector.test.ts",
+    "tests/subgoalGraph.test.ts"
+  ],
+  "summary": {
+    "killed": 11,
+    "survived": 0,
+    "equivalent": 1
+  },
+  "results": [
+    {
+      "id": "M1",
+      "description": "executionSuccess alone completes the destination (dispatch→complete shortcut)",
+      "file": "extension/src/agent/agentLoop.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (2 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M2",
+      "description": "action URL matching the destination completes the subgoal",
+      "file": "extension/src/agent/agentLoop.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (1 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M3",
+      "description": "stale observation accepted (freshness check removed)",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (5 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M4",
+      "description": "UNKNOWN classification treated as satisfying",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (9 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M5",
+      "description": "MISMATCH classification treated as satisfying",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (12 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M6",
+      "description": "missing destination declaration no longer fails closed",
+      "file": "extension/src/hierarchicalPlanning/goalProgressTracker.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (1 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M7",
+      "description": "wrong page role accepted (page-role channel ignored)",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (42 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M8",
+      "description": "low-confidence page role accepted (confidence gate removed)",
+      "file": "extension/src/planning/destinationVerifier.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (4 failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M9",
+      "description": "Repair 1 removed — the destination subgoal is never re-verified",
+      "file": "extension/src/agent/agentLoop.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (1 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M11",
+      "description": "revisit completes without consulting the verifier (eligibility alone completes)",
+      "file": "extension/src/agent/agentLoop.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (2 failed failed)",
+      "verdict": "KILLED"
+    },
+    {
+      "id": "M12",
+      "description": "stale observation accepted by the revisit path (pageGeneration forced to observed)",
+      "file": "extension/src/agent/agentLoop.ts",
+      "expectation": "EQUIVALENT",
+      "applied": true,
+      "outcome": "PASS",
+      "verdict": "EQUIVALENT",
+      "equivalenceProof": "The two expressions can only differ when `semanticContext` is undefined. When a worldModel IS present, agentLoop.ts:799 sets `state.currentPageGeneration = worldModel.page.pageGeneration`, and normalizePerceptionResult (agentLoop.ts:3026-3033) has already rejected any perception whose `semanticContext.pageGeneration !== worldModel.pageGeneration`. So the two are provably equal, and nothing between line 799 and the revisit block mutates the counter. When `semanticContext` is undefined (the `else` branch at agentLoop.ts:844), `verifySubgoalCondition` hits its `if (!classification) return verdict(false, ...)` branch and refuses, regardless of the generation number passed. No behaviour differs."
+    },
+    {
+      "id": "M10",
+      "description": "Repair 1 widened — ANY IN_PROGRESS subgoal becomes revisitable",
+      "file": "extension/src/hierarchicalPlanning/subgoalSelector.ts",
+      "expectation": "KILLED",
+      "applied": true,
+      "outcome": "KILLED (1 failed failed)",
+      "verdict": "KILLED"
+    }
+  ]
+}

@@ -1,0 +1,807 @@
+{
+  "work": "POST-17.10 STEP 10 AUDIT — real production provider-egress capture",
+  "labels": "PROVEN_REAL_CHROME (bytes on the wire) / PROVEN_REAL_BACKEND (backend response)",
+  "inputs": {
+    "task": "open the store catalog",
+    "userSuppliedUrlInTask": null,
+    "startUrl": "http://localhost:4174/product.html",
+    "keptExistingTabs": true,
+    "targetOrigin": "http://localhost:4174",
+    "dashboardOrigin": "http://localhost:5173"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "reasoningRequests": [
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/product.html\",\"timestamp\":1791034647242,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-add-to-cart\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":323,\"y\":503,\"width\":198,\"height\":43},\"length\":11,\"source\":\"dom_attribute\",\"selector\":\"#btn-add-to-cart\",\"is_partially_visible\":false},{\"id\":\"btn-buy-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":537,\"y\":503,\"width\":198,\"height\":43},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-buy-now\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":31,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"unknown\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":2,\"entities\":[],\"affordances\":[{\"id\":\"affordance-select_result-1\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-2-4\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Back to Results)\"},{\"id\":\"affordance-add_to_cart-2\",\"type\":\"ADD_TO_CART\",\"targetElementId\":\"btn-add-to-cart\",\"requiresConfirmation\":false,\"description\":\"Add selected product item to shopping cart\"},{\"id\":\"affordance-buy_now-3\",\"type\":\"BUY_NOW\",\"targetElementId\":\"btn-buy-now\",\"requiresConfirmation\":true,\"description\":\"Proceed directly to checkout purchase\"},{\"id\":\"affordance-select_result-4\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-2-7\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Return to Results)\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"Category\",\"displayText\":\"Category: Travel Bag\",\"displayValue\":\"Travel Bag\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"Size\",\"displayText\":\"Size: XXL (65 Liters Capacity)\",\"displayValue\":65,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"Color\",\"displayText\":\"Color: Matte Black\",\"displayValue\":\"Matte Black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"Style\",\"displayText\":\"Style: Baggy / Expandable\",\"displayValue\":\"Baggy / Expandable\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"status\",\"label\":\"Status\",\"displayText\":\"Status: In Stock (Ships in 24 hours)\",\"displayValue\":24,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\"],\"semanticHints\":[],\"failureHints\":[],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"inter-link-1\",\"reason\":\"Clicking the brand link to navigate to the store catalog listing page\"},\"reason\":\"Clicking the brand link to navigate to the store catalog listing page\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":497.3,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 422,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/product.html\",\"timestamp\":1791034648341,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-add-to-cart\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":323,\"y\":503,\"width\":198,\"height\":43},\"length\":11,\"source\":\"dom_attribute\",\"selector\":\"#btn-add-to-cart\",\"is_partially_visible\":false},{\"id\":\"btn-buy-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":537,\"y\":503,\"width\":198,\"height\":43},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-buy-now\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":31,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"unknown\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":3,\"entities\":[],\"affordances\":[{\"id\":\"affordance-select_result-1\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-3-4\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Back to Results)\"},{\"id\":\"affordance-add_to_cart-2\",\"type\":\"ADD_TO_CART\",\"targetElementId\":\"btn-add-to-cart\",\"requiresConfirmation\":false,\"description\":\"Add selected product item to shopping cart\"},{\"id\":\"affordance-buy_now-3\",\"type\":\"BUY_NOW\",\"targetElementId\":\"btn-buy-now\",\"requiresConfirmation\":true,\"description\":\"Proceed directly to checkout purchase\"},{\"id\":\"affordance-select_result-4\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-3-7\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Return to Results)\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"Category\",\"displayText\":\"Category: Travel Bag\",\"displayValue\":\"Travel Bag\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"Size\",\"displayText\":\"Size: XXL (65 Liters Capacity)\",\"displayValue\":65,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"Color\",\"displayText\":\"Color: Matte Black\",\"displayValue\":\"Matte Black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"Style\",\"displayText\":\"Style: Baggy / Expandable\",\"displayValue\":\"Baggy / Expandable\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"status\",\"label\":\"Status\",\"displayText\":\"Status: In Stock (Ships in 24 hours)\",\"displayValue\":24,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: POLICY_REJECTION, Context: product_detail, Recovery Strategy: NONE, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"detail\":{\"success\":false,\"reason\":\"Target 'wm-elem-3-4' does not exist in the current sanitized context. A fresh perception is required.\",\"error_kind\":\"unknown_target\",\"retryable\":true}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 503,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/product.html\",\"timestamp\":1791034648341,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-add-to-cart\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":323,\"y\":503,\"width\":198,\"height\":43},\"length\":11,\"source\":\"dom_attribute\",\"selector\":\"#btn-add-to-cart\",\"is_partially_visible\":false},{\"id\":\"btn-buy-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":537,\"y\":503,\"width\":198,\"height\":43},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-buy-now\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":31,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"unknown\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":3,\"entities\":[],\"affordances\":[{\"id\":\"affordance-select_result-1\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-3-4\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Back to Results)\"},{\"id\":\"affordance-add_to_cart-2\",\"type\":\"ADD_TO_CART\",\"targetElementId\":\"btn-add-to-cart\",\"requiresConfirmation\":false,\"description\":\"Add selected product item to shopping cart\"},{\"id\":\"affordance-buy_now-3\",\"type\":\"BUY_NOW\",\"targetElementId\":\"btn-buy-now\",\"requiresConfirmation\":true,\"description\":\"Proceed directly to checkout purchase\"},{\"id\":\"affordance-select_result-4\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-3-7\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Return to Results)\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"Category\",\"displayText\":\"Category: Travel Bag\",\"displayValue\":\"Travel Bag\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"Size\",\"displayText\":\"Size: XXL (65 Liters Capacity)\",\"displayValue\":65,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"Color\",\"displayText\":\"Color: Matte Black\",\"displayValue\":\"Matte Black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"Style\",\"displayText\":\"Style: Baggy / Expandable\",\"displayValue\":\"Baggy / Expandable\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"status\",\"label\":\"Status\",\"displayText\":\"Status: In Stock (Ships in 24 hours)\",\"displayValue\":24,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: POLICY_REJECTION, Context: product_detail, Recovery Strategy: NONE, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"rate_limit\",\"retryable\":true}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/product.html\",\"timestamp\":1791034648341,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-add-to-cart\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":323,\"y\":503,\"width\":198,\"height\":43},\"length\":11,\"source\":\"dom_attribute\",\"selector\":\"#btn-add-to-cart\",\"is_partially_visible\":false},{\"id\":\"btn-buy-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":537,\"y\":503,\"width\":198,\"height\":43},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-buy-now\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":31,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"unknown\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":3,\"entities\":[],\"affordances\":[{\"id\":\"affordance-select_result-1\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-3-4\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Back to Results)\"},{\"id\":\"affordance-add_to_cart-2\",\"type\":\"ADD_TO_CART\",\"targetElementId\":\"btn-add-to-cart\",\"requiresConfirmation\":false,\"description\":\"Add selected product item to shopping cart\"},{\"id\":\"affordance-buy_now-3\",\"type\":\"BUY_NOW\",\"targetElementId\":\"btn-buy-now\",\"requiresConfirmation\":true,\"description\":\"Proceed directly to checkout purchase\"},{\"id\":\"affordance-select_result-4\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-3-7\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Return to Results)\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"Category\",\"displayText\":\"Category: Travel Bag\",\"displayValue\":\"Travel Bag\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"Size\",\"displayText\":\"Size: XXL (65 Liters Capacity)\",\"displayValue\":65,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"Color\",\"displayText\":\"Color: Matte Black\",\"displayValue\":\"Matte Black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"Style\",\"displayText\":\"Style: Baggy / Expandable\",\"displayValue\":\"Baggy / Expandable\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"status\",\"label\":\"Status\",\"displayText\":\"Status: In Stock (Ships in 24 hours)\",\"displayValue\":24,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: POLICY_REJECTION, Context: product_detail, Recovery Strategy: NONE, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"inter-link-1\",\"reason\":\"Clicking the brand link to navigate to the store catalog listing page\"},\"reason\":\"Clicking the brand link to navigate to the store catalog listing page\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":505.6,\"attempts\":1,\"fallback_used\":false}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 503,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/product.html\",\"timestamp\":1791034660529,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-add-to-cart\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":323,\"y\":503,\"width\":198,\"height\":43},\"length\":11,\"source\":\"dom_attribute\",\"selector\":\"#btn-add-to-cart\",\"is_partially_visible\":false},{\"id\":\"btn-buy-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":537,\"y\":503,\"width\":198,\"height\":43},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-buy-now\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":31,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"unknown\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":4,\"entities\":[],\"affordances\":[{\"id\":\"affordance-select_result-1\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-4-4\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Back to Results)\"},{\"id\":\"affordance-add_to_cart-2\",\"type\":\"ADD_TO_CART\",\"targetElementId\":\"btn-add-to-cart\",\"requiresConfirmation\":false,\"description\":\"Add selected product item to shopping cart\"},{\"id\":\"affordance-buy_now-3\",\"type\":\"BUY_NOW\",\"targetElementId\":\"btn-buy-now\",\"requiresConfirmation\":true,\"description\":\"Proceed directly to checkout purchase\"},{\"id\":\"affordance-select_result-4\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-4-7\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Return to Results)\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"Category\",\"displayText\":\"Category: Travel Bag\",\"displayValue\":\"Travel Bag\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"Size\",\"displayText\":\"Size: XXL (65 Liters Capacity)\",\"displayValue\":65,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"Color\",\"displayText\":\"Color: Matte Black\",\"displayValue\":\"Matte Black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"Style\",\"displayText\":\"Style: Baggy / Expandable\",\"displayValue\":\"Baggy / Expandable\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"status\",\"label\":\"Status\",\"displayText\":\"Status: In Stock (Ships in 24 hours)\",\"displayValue\":24,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: POLICY_REJECTION, Context: product_detail, Recovery Strategy: NONE, Result: FAILURE\",\"[Past Failure] Type: POLICY_REJECTION, Context: product_detail, Recovery Strategy: NONE, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"rate_limit\",\"retryable\":true}}"
+    },
+    {
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "status": 200,
+      "requestBody": "{\"task\":\"open the store catalog\",\"context\":{\"url\":\"http://localhost:4174/product.html\",\"timestamp\":1791034660529,\"viewport\":{\"width\":1280,\"height\":757,\"scroll_x\":0,\"scroll_y\":0},\"screenshot_dimensions\":{\"width\":1280,\"height\":757},\"detections\":[{\"id\":\"btn-add-to-cart\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":323,\"y\":503,\"width\":198,\"height\":43},\"length\":11,\"source\":\"dom_attribute\",\"selector\":\"#btn-add-to-cart\",\"is_partially_visible\":false},{\"id\":\"btn-buy-now\",\"type\":\"button\",\"confidence\":0.95,\"bbox\":{\"x\":537,\"y\":503,\"width\":198,\"height\":43},\"length\":14,\"source\":\"dom_attribute\",\"selector\":\"#btn-buy-now\",\"is_partially_visible\":false},{\"id\":\"inter-link-1\",\"type\":\"link\",\"confidence\":0.95,\"bbox\":{\"x\":32,\"y\":16,\"width\":125,\"height\":28},\"length\":8,\"source\":\"dom_attribute\",\"selector\":\"a.brand\",\"is_partially_visible\":false}],\"total_elements_scanned\":31,\"sensitive_elements_detected\":0,\"sanitized_status\":\"sanitized_only\",\"ocr_metrics\":{\"regions_scanned\":0,\"sensitive_detected\":0,\"latency_ms\":0},\"page_type\":\"unknown\",\"semantic_context\":{\"pageType\":\"UNKNOWN\",\"confidence\":0.1,\"pageState\":\"populated\",\"pageGeneration\":4,\"entities\":[],\"affordances\":[{\"id\":\"affordance-select_result-1\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-4-4\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Back to Results)\"},{\"id\":\"affordance-add_to_cart-2\",\"type\":\"ADD_TO_CART\",\"targetElementId\":\"btn-add-to-cart\",\"requiresConfirmation\":false,\"description\":\"Add selected product item to shopping cart\"},{\"id\":\"affordance-buy_now-3\",\"type\":\"BUY_NOW\",\"targetElementId\":\"btn-buy-now\",\"requiresConfirmation\":true,\"description\":\"Proceed directly to checkout purchase\"},{\"id\":\"affordance-select_result-4\",\"type\":\"SELECT_RESULT\",\"targetElementId\":\"wm-elem-4-7\",\"requiresConfirmation\":false,\"description\":\"Navigate to search result candidate (Return to Results)\"},{\"id\":\"affordance-scroll-5\",\"type\":\"SCROLL\",\"requiresConfirmation\":false,\"description\":\"Scroll viewport downward to inspect additional lazy-loaded content\"}],\"workflow\":{\"flowType\":\"GENERAL_BROWSING\",\"currentStage\":\"INITIAL\"},\"promptInjectionDetected\":false,\"facts\":[{\"key\":\"xxl black baggy travel bag\",\"label\":\"XXL Black Baggy Travel Bag\",\"displayText\":\"XXL Black Baggy Travel Bag\",\"displayValue\":null,\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"category\",\"label\":\"Category\",\"displayText\":\"Category: Travel Bag\",\"displayValue\":\"Travel Bag\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"size\",\"label\":\"Size\",\"displayText\":\"Size: XXL (65 Liters Capacity)\",\"displayValue\":65,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"color\",\"label\":\"Color\",\"displayText\":\"Color: Matte Black\",\"displayValue\":\"Matte Black\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"style\",\"label\":\"Style\",\"displayText\":\"Style: Baggy / Expandable\",\"displayValue\":\"Baggy / Expandable\",\"valueKind\":\"text\",\"untrusted\":false},{\"key\":\"status\",\"label\":\"Status\",\"displayText\":\"Status: In Stock (Ships in 24 hours)\",\"displayValue\":24,\"valueKind\":\"numeric\",\"untrusted\":false},{\"key\":\"2026 apexcart demo shopping portal p\",\"label\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayText\":\"© 2026 ApexCart Demo Shopping Portal — P\",\"displayValue\":2026,\"valueKind\":\"numeric\",\"untrusted\":false}],\"declaredDestination\":{\"provenance\":\"USER_DECLARED_DESTINATION\",\"role\":[\"LISTING\"]}},\"memory_hints\":{\"workingMemory\":[\"[Working] INITIAL_GOAL: open the store catalog\",\"[Working] long-horizon-progress: {  \\\"completedSubgoals\\\": 0,  \\\"pendingSubgoals\\\": 4,  \\\"failedSubgoals\\\": 0,  \\\"discoveries\\\": 0,  \\\"actionsTaken\\\": 0,  \\\"recoveryAttempts\\\": 0 }\"],\"semanticHints\":[],\"failureHints\":[\"[Past Failure] Type: POLICY_REJECTION, Context: product_detail, Recovery Strategy: NONE, Result: FAILURE\",\"[Past Failure] Type: POLICY_REJECTION, Context: product_detail, Recovery Strategy: NONE, Result: FAILURE\"],\"userPreferences\":[]}},\"history\":[],\"model_role\":\"VISION\"}",
+      "responseBody": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"inter-link-1\",\"reason\":\"Clicking the brand link to navigate to the store catalog listing page.\"},\"reason\":\"Clicking the brand link to navigate to the store catalog listing page.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":670.3,\"attempts\":1,\"fallback_used\":false}}"
+    }
+  ],
+  "analysis": {
+    "provisionedTab": {
+      "id": 1370397062,
+      "url": "http://localhost:4174/product.html"
+    },
+    "perRequest": [
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 3496,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/product.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"inter-link-1\",\"reason\":\"Clicking the brand link to navigate to the store catalog listing page\"},\"reason\":\"Clicking the brand link to navigate to the store catalog listing page\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":497.3,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 422,
+        "bytes": 3785,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/product.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"detail\":{\"success\":false,\"reason\":\"Target 'wm-elem-3-4' does not exist in the current sanitized context. A fresh perception is required.\",\"error_kind\":\"unknown_target\",\"retryable\":true}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 503,
+        "bytes": 3785,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/product.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"rate_limit\",\"retryable\":true}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 3785,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/product.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"inter-link-1\",\"reason\":\"Clicking the brand link to navigate to the store catalog listing page\"},\"reason\":\"Clicking the brand link to navigate to the store catalog listing page\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":505.6,\"attempts\":1,\"fallback_used\":false}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 503,
+        "bytes": 3892,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/product.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"detail\":{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"rate_limit\",\"retryable\":true}}"
+      },
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "status": 200,
+        "bytes": 3892,
+        "topLevelKeys": [
+          "task",
+          "context",
+          "history",
+          "model_role"
+        ],
+        "hasSemanticContext": true,
+        "semanticContextKeys": [
+          "pageType",
+          "confidence",
+          "pageState",
+          "pageGeneration",
+          "entities",
+          "affordances",
+          "workflow",
+          "promptInjectionDetected",
+          "facts",
+          "declaredDestination"
+        ],
+        "declaredDestination": {
+          "present": true,
+          "topLevelKeys": [
+            "provenance",
+            "role"
+          ],
+          "roles": [
+            "LISTING"
+          ],
+          "destinationUrl": null,
+          "entryUrl": null,
+          "provenance": "USER_DECLARED_DESTINATION",
+          "allKeyPaths": [
+            "provenance",
+            "role"
+          ],
+          "forbiddenKeysPresent": [],
+          "unexpectedStringLeaves": [
+            {
+              "path": "role[0]",
+              "value": "LISTING"
+            }
+          ]
+        },
+        "task": "open the store catalog",
+        "observedContextUrl": "http://localhost:4174/product.html",
+        "previousActionCount": null,
+        "forbiddenKeysAnywhere": [
+          "label"
+        ],
+        "responsePreview": "{\"success\":true,\"action\":{\"action\":\"click\",\"target\":\"inter-link-1\",\"reason\":\"Clicking the brand link to navigate to the store catalog listing page.\"},\"reason\":\"Clicking the brand link to navigate to the store catalog listing page.\",\"telemetry\":{\"provider\":\"groq\",\"role\":\"VISION\",\"latency_ms\":670.3,\"attempts\":1,\"fallback_used\":false}}"
+      }
+    ],
+    "summary": {
+      "totalApiRequests": 6,
+      "requestsCarryingDeclaredDestination": 6,
+      "anyRoleOnlyRequest": true,
+      "anyUrlCarryingRequest": false,
+      "anyForbiddenKeyInDeclaration": false,
+      "anyUnexpectedStringLeafInDeclaration": true,
+      "anyForbiddenKeyInWholePayload": true
+    },
+    "statesWithActionResult": []
+  },
+  "loopLogs": [
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":2,\"entityCount\":0,\"affordanceCount\":5}",
+    "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Reach the destination declared in the user request\"}",
+    "[AgentTrace] destination subgoal eligible for re-verification {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"reason\":\"Destination subgoal \\\"goal-musfsaeo-d03b3-sg1\\\" remains unproven and the observed browser state has changed; it is eligible for re-verification against the current observation.\"}",
+    "[AgentTrace] subgoal NOT completed — no observed evidence {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"category\":\"NAVIGATE\",\"reason\":\"Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":3,\"entityCount\":0,\"affordanceCount\":5}",
+    "[AgentTrace] destination subgoal eligible for re-verification {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"reason\":\"Destination subgoal \\\"goal-musfsaeo-d03b3-sg1\\\" remains unproven and the observed browser state has changed; it is eligible for re-verification against the current observation.\"}",
+    "[AgentTrace] subgoal NOT completed — no observed evidence {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"category\":\"NAVIGATE\",\"reason\":\"Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":4,\"entityCount\":0,\"affordanceCount\":5}",
+    "[AgentTrace] destination subgoal eligible for re-verification {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"reason\":\"Destination subgoal \\\"goal-musfsaeo-d03b3-sg1\\\" remains unproven and the observed browser state has changed; it is eligible for re-verification against the current observation.\"}",
+    "[AgentTrace] subgoal NOT completed — no observed evidence {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"category\":\"NAVIGATE\",\"reason\":\"Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Security critic blocked actions repeatedly: Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Security critic blocked actions repeatedly: Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.\"}"
+  ],
+  "rawLogs": [
+    "TARGET_RESOLUTION_STARTED",
+    "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}",
+    "[AgentTrace] service worker START_TASK received {\"taskLength\":22}",
+    "TARGET_TAB_CANDIDATES [{\"id\":1370397060,\"origin\":\"null\"},{\"id\":1370397061,\"origin\":\"http://localhost:5173\"},{\"id\":1370397062,\"origin\":\"http://localhost:4174\"}]",
+    "[AgentTrace] containment scope established {\"established\":true,\"rootHost\":\"localhost\",\"tabId\":1370397062}",
+    "TARGET_TAB_SELECTED {\"tabId\":1370397062,\"origin\":\"http://localhost:4174\",\"reason\":\"Selected active web tab.\"}",
+    "[AgentTrace] target resolved {\"tabId\":1370397062}",
+    "[AgentTrace] first progress emitted",
+    "TARGET_TAB_READY {\"tabId\":1370397062}",
+    "[AgentTrace] target content script ready {\"tabId\":1370397062}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PERCEPTION\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"RUNNING\",\"currentStep\":0,\"reason\":\"Target tab discovered and ready. Starting visual privacy perception...\"}",
+    "[AgentTrace] agent loop started",
+    "[AgentTrace] perception started",
+    "[AgentTrace] long-horizon state {\"restoreStatus\":\"FRESH_NO_RECORD\",\"detail\":null,\"actionCount\":0,\"recoveryCount\":0,\"consecutiveNoProgress\":0,\"totalNoProgress\":0}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":0}",
+    "[AgentTrace] harness cycle {\"cycle\":1,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":1,\"url\":\"http://localhost:4174/product.html\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":7,\"regionsConsidered\":7,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":1,\"contextUrl\":\"http://localhost:4174/product.html\",\"worldModelId\":\"wm-g2-musfsafe-i2kx\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":12,\"privacyFindingsCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":2,\"entityCount\":0,\"affordanceCount\":5}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Reach the destination declared in the user request\"}",
+    "[AgentTrace] destination subgoal eligible for re-verification {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"reason\":\"Destination subgoal \\\"goal-musfsaeo-d03b3-sg1\\\" remains unproven and the observed browser state has changed; it is eligible for re-verification against the current observation.\"}",
+    "[AgentTrace] subgoal NOT completed — no observed evidence {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"category\":\"NAVIGATE\",\"reason\":\"Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[\"NEW_PAGE\"],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":0,\"actions\":0,\"loop\":false,\"stalled\":false}",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] security critic {\"verdict\":\"BLOCK\",\"code\":\"INJECTION_INFLUENCE\",\"findings\":[\"INJECTION_INFLUENCE\"]}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"VALIDATION\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":1}",
+    "[AgentTrace] perception started",
+    "[AgentTrace] harness cycle {\"cycle\":2,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":3,\"url\":\"http://localhost:4174/product.html\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":7,\"regionsConsidered\":7,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":3,\"contextUrl\":\"http://localhost:4174/product.html\",\"worldModelId\":\"wm-g3-musfsb9x-wbhd\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":12,\"privacyFindingsCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":3,\"entityCount\":0,\"affordanceCount\":5}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] destination subgoal eligible for re-verification {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"reason\":\"Destination subgoal \\\"goal-musfsaeo-d03b3-sg1\\\" remains unproven and the observed browser state has changed; it is eligible for re-verification against the current observation.\"}",
+    "[AgentTrace] subgoal NOT completed — no observed evidence {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"category\":\"NAVIGATE\",\"reason\":\"Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":0,\"actions\":0,\"loop\":false,\"stalled\":false}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791034656724\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791034656724\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791034656724\",\"targetFound\":true,\"tabId\":1370397062,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791034656724\",\"targetFound\":true}",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] security critic {\"verdict\":\"BLOCK\",\"code\":\"INJECTION_INFLUENCE\",\"findings\":[\"INJECTION_INFLUENCE\"]}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"VALIDATION\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":2}",
+    "[AgentTrace] perception started",
+    "[AgentTrace] harness cycle {\"cycle\":3,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:localhost\",\"withinScope\":true}",
+    "[AgentTrace] perception started {\"perceptionGeneration\":4,\"url\":\"http://localhost:4174/product.html\"}",
+    "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":5,\"ocrObservationState\":\"NOT_APPLICABLE\"}",
+    "[ServiceWorker] response forwarded",
+    "[AgentLoop] perception completed",
+    "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":7,\"regionsConsidered\":7,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}",
+    "[AgentTrace] perception complete {\"perceptionGeneration\":4,\"contextUrl\":\"http://localhost:4174/product.html\",\"worldModelId\":\"wm-g4-musfskoi-9gca\"}",
+    "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":12,\"privacyFindingsCount\":5}",
+    "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":4,\"entityCount\":0,\"affordanceCount\":5}",
+    "[AgentTrace] requesting reasoning",
+    "[AgentTrace] destination subgoal eligible for re-verification {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"reason\":\"Destination subgoal \\\"goal-musfsaeo-d03b3-sg1\\\" remains unproven and the observed browser state has changed; it is eligible for re-verification against the current observation.\"}",
+    "[AgentTrace] subgoal NOT completed — no observed evidence {\"subgoalId\":\"goal-musfsaeo-d03b3-sg1\",\"category\":\"NAVIGATE\",\"reason\":\"Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination.\"}",
+    "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":0,\"actions\":0,\"loop\":false,\"stalled\":false}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791034671725\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791034671725\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791034671725\",\"targetFound\":true,\"tabId\":1370397062,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791034671725\",\"targetFound\":true}",
+    "[AgentTrace] reasoning response received",
+    "[AgentTrace] action validated by M5",
+    "[AgentTrace] security critic {\"verdict\":\"BLOCK\",\"code\":\"INJECTION_INFLUENCE\",\"findings\":[\"INJECTION_INFLUENCE\"]}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"VALIDATION\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":3}",
+    "[AgentTrace] M6 failed {\"reason\":\"Security critic blocked actions repeatedly: Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.\"}",
+    "[AgentTrace] M6 failed {\"reason\":\"Security critic blocked actions repeatedly: Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.\"}",
+    "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\"}",
+    "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}",
+    "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":3,\"reason\":\"Security critic blocked actions repeatedly: Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.\"}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791034686724\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791034686724\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791034686724\",\"targetFound\":true,\"tabId\":1370397062,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791034686724\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791034701724\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791034701724\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791034701724\",\"targetFound\":true,\"tabId\":1370397062,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791034701724\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791034716724\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791034716724\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791034716724\",\"targetFound\":true,\"tabId\":1370397062,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791034716724\",\"targetFound\":true}",
+    "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791034731725\"}",
+    "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791034731725\"}",
+    "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791034731725\",\"targetFound\":true,\"tabId\":1370397062,\"urlOrigin\":\"http://localhost:4174\"}",
+    "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791034731725\",\"targetFound\":true}"
+  ],
+  "observations": [
+    {
+      "url": "http://localhost:4174/product.html",
+      "semanticPageType": "UNKNOWN",
+      "semanticConfidence": 0.1,
+      "semanticPageGeneration": 5
+    }
+  ],
+  "reportedStates": [
+    {
+      "status": "RUNNING",
+      "goalStatus": null,
+      "currentStep": 0,
+      "lastActionResult": null,
+      "completedSteps": null,
+      "failureCategories": null,
+      "lastFailureCategory": null,
+      "subgoalStates": null,
+      "subgoalConditions": null,
+      "planningEngineState": null,
+      "highLevelGoalId": null,
+      "currentUrl": "http://localhost:4174/product.html",
+      "pageType": null,
+      "reason": "Target tab discovered and ready. Starting visual privacy perception...",
+      "subgoalVerificationHistory": null,
+      "destinationSubgoalStates": null
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 0,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": "READY",
+        "goal-musfsaeo-d03b3-sg2": "PENDING",
+        "goal-musfsaeo-d03b3-sg3": "PENDING",
+        "goal-musfsaeo-d03b3-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-musfsaeo-d03b3-sg1": "DESTINATION_VERIFIED",
+        "goal-musfsaeo-d03b3-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-musfsaeo-d03b3-sg3": "STATE_CHANGED",
+        "goal-musfsaeo-d03b3-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "SUBGOAL_SELECTION",
+      "highLevelGoalId": "goal-musfsaeo-d03b3",
+      "currentUrl": "http://localhost:4174/product.html",
+      "pageType": "unknown",
+      "reason": null,
+      "subgoalVerificationHistory": [],
+      "destinationSubgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": {
+          "state": "READY",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 1,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": "IN_PROGRESS",
+        "goal-musfsaeo-d03b3-sg2": "PENDING",
+        "goal-musfsaeo-d03b3-sg3": "PENDING",
+        "goal-musfsaeo-d03b3-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-musfsaeo-d03b3-sg1": "DESTINATION_VERIFIED",
+        "goal-musfsaeo-d03b3-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-musfsaeo-d03b3-sg3": "STATE_CHANGED",
+        "goal-musfsaeo-d03b3-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "RISK_POLICY_CHECK",
+      "highLevelGoalId": "goal-musfsaeo-d03b3",
+      "currentUrl": "http://localhost:4174/product.html",
+      "pageType": "product_detail",
+      "reason": null,
+      "subgoalVerificationHistory": [
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ],
+      "destinationSubgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": {
+          "state": "IN_PROGRESS",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 2,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": "IN_PROGRESS",
+        "goal-musfsaeo-d03b3-sg2": "PENDING",
+        "goal-musfsaeo-d03b3-sg3": "PENDING",
+        "goal-musfsaeo-d03b3-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-musfsaeo-d03b3-sg1": "DESTINATION_VERIFIED",
+        "goal-musfsaeo-d03b3-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-musfsaeo-d03b3-sg3": "STATE_CHANGED",
+        "goal-musfsaeo-d03b3-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "RISK_POLICY_CHECK",
+      "highLevelGoalId": "goal-musfsaeo-d03b3",
+      "currentUrl": "http://localhost:4174/product.html",
+      "pageType": "product_detail",
+      "reason": null,
+      "subgoalVerificationHistory": [
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        },
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ],
+      "destinationSubgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": {
+          "state": "IN_PROGRESS",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    },
+    {
+      "status": "IN_PROGRESS",
+      "goalStatus": "IN_PROGRESS",
+      "currentStep": 3,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": "IN_PROGRESS",
+        "goal-musfsaeo-d03b3-sg2": "PENDING",
+        "goal-musfsaeo-d03b3-sg3": "PENDING",
+        "goal-musfsaeo-d03b3-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-musfsaeo-d03b3-sg1": "DESTINATION_VERIFIED",
+        "goal-musfsaeo-d03b3-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-musfsaeo-d03b3-sg3": "STATE_CHANGED",
+        "goal-musfsaeo-d03b3-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "RISK_POLICY_CHECK",
+      "highLevelGoalId": "goal-musfsaeo-d03b3",
+      "currentUrl": "http://localhost:4174/product.html",
+      "pageType": "product_detail",
+      "reason": null,
+      "subgoalVerificationHistory": [
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        },
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        },
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ],
+      "destinationSubgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": {
+          "state": "IN_PROGRESS",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    },
+    {
+      "status": "FAILED",
+      "goalStatus": "FAILED",
+      "currentStep": 3,
+      "lastActionResult": null,
+      "completedSteps": [],
+      "failureCategories": [],
+      "lastFailureCategory": null,
+      "subgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": "IN_PROGRESS",
+        "goal-musfsaeo-d03b3-sg2": "PENDING",
+        "goal-musfsaeo-d03b3-sg3": "PENDING",
+        "goal-musfsaeo-d03b3-sg4": "PENDING"
+      },
+      "subgoalConditions": {
+        "goal-musfsaeo-d03b3-sg1": "DESTINATION_VERIFIED",
+        "goal-musfsaeo-d03b3-sg2": "AFFORDANCE_AVAILABLE",
+        "goal-musfsaeo-d03b3-sg3": "STATE_CHANGED",
+        "goal-musfsaeo-d03b3-sg4": "STATE_CHANGED"
+      },
+      "planningEngineState": "RISK_POLICY_CHECK",
+      "highLevelGoalId": "goal-musfsaeo-d03b3",
+      "currentUrl": "http://localhost:4174/product.html",
+      "pageType": "product_detail",
+      "reason": "Security critic blocked actions repeatedly: Security Critic BLOCKED (INJECTION_INFLUENCE): Proposed action carries prompt-injection influence from untrusted page or model content.",
+      "subgoalVerificationHistory": [
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        },
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        },
+        {
+          "subgoalId": "goal-musfsaeo-d03b3-sg1",
+          "satisfied": false,
+          "reason": "Subgoal goal-musfsaeo-d03b3-sg1 destination not confirmed (UNKNOWN): The page is not classified (UNKNOWN at confidence 0.1); an unclassified page cannot confirm or deny a destination."
+        }
+      ],
+      "destinationSubgoalStates": {
+        "goal-musfsaeo-d03b3-sg1": {
+          "state": "IN_PROGRESS",
+          "destination": {
+            "kind": "DECLARED",
+            "role": {
+              "provenance": "EXPLICIT_PAGE_ROLE",
+              "acceptablePageTypes": [
+                "LISTING"
+              ]
+            }
+          },
+          "cond": "DESTINATION_VERIFIED"
+        }
+      }
+    }
+  ]
+}
