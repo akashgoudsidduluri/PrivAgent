@@ -6,6 +6,7 @@ import { buildAgentPayload, PrivacyScanReport, AgentContextPayload, VisualCaptur
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
 import { resolveTargetWebTab, isEligibleWebTab, isDashboardUrl } from './targetResolver';
+import { classifyIntent, refusalUserMessage } from '../agent/intentBoundary';
 import {
   establishContainmentScope,
   evaluateContainment,
@@ -522,6 +523,76 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.info('[AgentTrace] service worker START_TASK received', { taskLength: (message.task as string)?.length });
     const task = message.task as string;
     const dashboardTabId = sender.tab?.id || currentDashboardTabId;
+
+    // ── PHASE 18.7 / I-1: THE INTENT BOUNDARY ────────────────────────────
+    //
+    // Deterministic, local, no model call. It is placed HERE, before target
+    // resolution and before the active-task-ownership block, for two reasons
+    // that are both acceptance criteria rather than style:
+    //
+    //   * Target-tab provisioning runs in resolveTargetWebTab /
+    //     provisionTargetTab below. A gate placed inside AgentLoop would
+    //     therefore still have OPENED A TAB for "hi".
+    //   * Sitting before the ownership block means a casual message does not
+    //     supersede and halt a task that is genuinely running.
+    //
+    // A refusal costs zero provider calls and zero tab provisioning, and is
+    // reported truthfully as NEEDS_CLARIFICATION rather than as a failure.
+    const intentDecision = classifyIntent(task);
+    console.info('[AgentTrace] intent classified', {
+      intent: intentDecision.intent,
+      confidence: intentDecision.confidence,
+      requiresDestination: intentDecision.requiresDestination,
+      requiresEvidence: intentDecision.requiresEvidence,
+      admitsBrowserAutomation: intentDecision.admitsBrowserAutomation,
+      refusal: intentDecision.refusal ?? null,
+    });
+
+    if (!intentDecision.admitsBrowserAutomation) {
+      console.info('[AgentTrace] task not admitted by the intent boundary', {
+        intent: intentDecision.intent,
+        refusal: intentDecision.refusal ?? null,
+      });
+      const refusalReason = refusalUserMessage(intentDecision);
+      const refusalPayload = {
+        started: false,
+        success: false,
+        status: 'NEEDS_CLARIFICATION' as const,
+        intent: intentDecision.intent,
+        refusalCode: intentDecision.refusal ?? null,
+        reason: refusalReason,
+      };
+      // The message port MUST be answered before returning.
+      //
+      // This was found by REAL BROWSER testing, not by the unit suite: an early
+      // `return` without `sendResponse` leaves the port to close, and the
+      // dashboard — which is awaiting a reply — reports the task as FAILED with
+      // "The message port closed before a response was received." The gate was
+      // working (zero provider calls, zero tabs) while still telling the user a
+      // lie. A refusal has to be reported truthfully, not merely enforced.
+      try {
+        sendResponse(refusalPayload);
+      } catch {
+        /* port already closed */
+      }
+      // Fire-and-forget: this handler section is synchronous (the async task body
+      // begins later, after the ownership block), so `await` is not available
+      // here. `sendToDashboard` is a one-way push to the dashboard tab.
+      void sendToDashboard(
+        {
+          status: 'NEEDS_CLARIFICATION',
+          currentStep: 0,
+          maxSteps: 0,
+          task: typeof task === 'string' ? task : '',
+          steps: [],
+          intent: intentDecision.intent,
+          refusalCode: intentDecision.refusal ?? null,
+          reason: refusalReason,
+        },
+        dashboardTabId
+      );
+      return;
+    }
     if (sender.tab?.id) currentDashboardTabId = sender.tab.id;
 
     // ── Phase 18.1: Single Active Task Ownership ───────────────────────────

@@ -20,7 +20,25 @@ import { AgentDecisionTracer } from './decisionTrace';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { worldModelStore } from '../worldModel/worldModelStore';
 
-export type TaskStatus = 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'NEEDS_USER_CONFIRMATION' | 'STOPPED';
+/**
+ * PHASE 18.7 / I-1 — `NEEDS_CLARIFICATION` is ADDED for the intent boundary.
+ *
+ * A casual message ("hi") or an unresolvable request is neither a success nor a
+ * failure: nothing was attempted, so reporting `FAILED` would be untrue, and it
+ * is emphatically not `SUCCESS`. This is the one state the architecture
+ * document mandates for an intent-boundary refusal, and it exists so a refusal
+ * can be reported TRUTHFULLY without a provider round-trip.
+ *
+ * The five pre-existing states keep exactly their current semantics; this is
+ * purely additive. A9 extends this union further in a later step.
+ */
+export type TaskStatus =
+  | 'IN_PROGRESS'
+  | 'SUCCESS'
+  | 'FAILED'
+  | 'NEEDS_USER_CONFIRMATION'
+  | 'STOPPED'
+  | 'NEEDS_CLARIFICATION';
 
 export type PageCategory =
   | 'search'

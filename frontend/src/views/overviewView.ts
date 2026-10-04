@@ -237,7 +237,9 @@ export class OverviewView {
         state.status === 'RUNNING' ? 'badge-blue' :
         state.status === 'SUCCESS' ? 'badge-green' :
         state.status === 'FAILED' ? 'badge-red' :
-        state.status === 'NEEDS_USER_CONFIRMATION' ? 'badge-amber' : 'badge-gray'
+        state.status === 'NEEDS_USER_CONFIRMATION' ? 'badge-amber' :
+        // PHASE 18.7 / I-1 — a refused task is not a completed run.
+        state.status === 'NEEDS_CLARIFICATION' ? 'badge-amber' : 'badge-gray'
       }`;
     }
 

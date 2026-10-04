@@ -25,7 +25,16 @@ export type UIAgentStatus =
   | 'SUCCESS'
   | 'FAILED'
   | 'NEEDS_USER_CONFIRMATION'
-  | 'STOPPED';
+  | 'STOPPED'
+  /**
+   * PHASE 18.7 / I-1 — the task was refused by the intent boundary.
+   *
+   * This is TERMINAL, not a progress state: nothing was attempted, so neither
+   * `RUNNING` nor `FAILED` is truthful. It exists because the adapter maps any
+   * UNRECOGNISED status to `RUNNING`, which would otherwise have shown a
+   * refused "hi" as a task still executing browser actions.
+   */
+  | 'NEEDS_CLARIFICATION';
 
 export type PipelineStage =
   | 'IDLE'

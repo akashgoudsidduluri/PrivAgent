@@ -321,6 +321,12 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     else if (data.status === 'FAILED') status = 'FAILED';
     else if (data.status === 'STOPPED') status = 'STOPPED';
     else if (data.status === 'NEEDS_USER_CONFIRMATION') status = 'NEEDS_USER_CONFIRMATION';
+    // PHASE 18.7 / I-1. This mapping is EXHAUSTIVE-BY-DISPATCH, not by type:
+    // anything not listed here silently falls through to 'RUNNING'. A task
+    // refused by the intent boundary was therefore displayed as an actively
+    // executing browser session. Found by real-browser testing — the extension
+    // unit suite passes while the dashboard still shows a running task.
+    else if (data.status === 'NEEDS_CLARIFICATION') status = 'NEEDS_CLARIFICATION';
 
     // The stage MUST be derived before the watchdog is (re)armed. resetWatchdog()
     // chooses its window from `lastLifecycleStage`, so arming it first always
@@ -335,7 +341,12 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     }
     this.lastLifecycleStage = stage === 'IDLE' && status !== 'RUNNING' ? (status as PipelineStage) : stage;
 
-    if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED') {
+    // NEEDS_CLARIFICATION is TERMINAL: the intent boundary refused the task and
+    // nothing was attempted, so the watchdog must be disarmed exactly as it is
+    // for SUCCESS/FAILED/STOPPED. Leaving it armed would eventually fire a
+    // stall watchdog on a task that never started.
+    if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED'
+        || status === 'NEEDS_CLARIFICATION') {
       this.clearWatchdog();
     } else if (status === 'RUNNING') {
       this.resetWatchdog();
