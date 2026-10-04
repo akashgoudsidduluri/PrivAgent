@@ -734,9 +734,11 @@ window.addEventListener('message', (event) => {
         {
           type: 'PRIVAGENT_DASHBOARD_START_TASK',
           task,
+          runId: (event.data as any)?.runId,
           originUrl: window.location.href,
         },
         (response) => {
+          const runId = (event.data as any)?.runId;
           if (chrome.runtime.lastError) {
             console.warn('[PrivAgent] START_TASK error:', chrome.runtime.lastError.message);
             window.postMessage(
@@ -748,6 +750,7 @@ window.addEventListener('message', (event) => {
                   currentStep: 0,
                   maxSteps: 10,
                   task: task || '',
+                  runId,
                   steps: [],
                   reason: chrome.runtime.lastError.message || 'Failed to dispatch task to background service worker.',
                 },
@@ -764,6 +767,7 @@ window.addEventListener('message', (event) => {
                   currentStep: 0,
                   maxSteps: 10,
                   task: task || '',
+                  runId,
                   steps: [],
                   reason: response.reason || (response.started ? 'Task accepted by background service worker.' : 'Task failed.'),
                 },
@@ -776,6 +780,7 @@ window.addEventListener('message', (event) => {
     } else if (type === 'STOP_TASK') {
       chrome.runtime.sendMessage({
         type: 'PRIVAGENT_DASHBOARD_STOP_TASK',
+        runId: (event.data as any)?.runId,
       });
     } else if (type === 'CONFIRM_ACTION') {
       chrome.runtime.sendMessage({

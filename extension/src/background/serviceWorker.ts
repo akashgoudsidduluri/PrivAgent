@@ -36,6 +36,7 @@ import type { ViewportGeometry } from '../capture/coordinateMapper';
 
 // PrivAgent Background Service Worker (Manifest V3)
 let activeLoop: AgentLoop | null = null;
+let activeTaskRunId = 0;
 let currentDashboardTabId: number | null = null;
 const sharedOffscreenOcrEngine = new OffscreenOCREngine({ timeoutMs: 15_000 });
 
@@ -72,8 +73,9 @@ async function sendToDashboard(payload: any, preferredTabId?: number | null): Pr
   // `screenAgentOutput` fails closed. Neither can change what the agent does;
   // they only shape and filter what the user is shown.
   const rawPayload = payload && typeof payload === 'object' ? payload : {};
+  const runId = typeof rawPayload.runId === 'number' ? rawPayload.runId : activeTaskRunId;
   const screened = screenAgentOutput(projectAgentOutput(rawPayload as AgentTaskState));
-  const outbound = { ...rawPayload, interaction: screened.output };
+  const outbound = { ...rawPayload, runId, interaction: screened.output };
   console.info('[AgentTrace] output screen', {
     verdict: screened.verdict,
     audit: describeOutputScreen(screened),
@@ -522,10 +524,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const dashboardTabId = sender.tab?.id || currentDashboardTabId;
     if (sender.tab?.id) currentDashboardTabId = sender.tab.id;
 
+    // ── Phase 18.1: Single Active Task Ownership ───────────────────────────
+    activeTaskRunId++;
+    const currentRunId = typeof message.runId === 'number' ? message.runId : activeTaskRunId;
+    activeTaskRunId = currentRunId;
+    const taskOwnershipToken = currentRunId;
+
+    if (activeLoop) {
+      console.info('[PrivAgent SW] Halting and superseding previous active loop for new task run', {
+        supersededRunId: activeLoop.getRunId?.(),
+        newRunId: taskOwnershipToken,
+      });
+      activeLoop.stop(true); // silent stop: suppresses stale event emission
+      activeLoop = null;
+    }
+
     (async () => {
       try {
+        if (taskOwnershipToken !== activeTaskRunId) {
+          console.info('[PrivAgent SW] Task aborted before target resolution (superseded)', { taskOwnershipToken, activeTaskRunId });
+          return;
+        }
         console.info('TARGET_RESOLUTION_STARTED');
         const allTabs = await chrome.tabs.query({});
+        if (taskOwnershipToken !== activeTaskRunId) {
+          console.info('[PrivAgent SW] Task aborted after tabs query (superseded)', { taskOwnershipToken, activeTaskRunId });
+          return;
+        }
         const resolution = resolveTargetWebTab(
           allTabs,
           task,
@@ -547,6 +572,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         if ((!targetTab || !targetTab.id) && resolution.provisioning) {
           const provisioned = await provisionTargetTab(resolution.provisioning.url);
+          if (taskOwnershipToken !== activeTaskRunId) {
+            console.info('[PrivAgent SW] Task aborted after provisioning (superseded)', { taskOwnershipToken, activeTaskRunId });
+            return;
+          }
           if (provisioned) {
             targetTab = provisioned;
           } else {
@@ -558,7 +587,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           targetTab = null;
         }
 
+        if (taskOwnershipToken !== activeTaskRunId) {
+          console.info('[PrivAgent SW] Task aborted before target check (superseded)', { taskOwnershipToken, activeTaskRunId });
+          return;
+        }
+
         if (!targetTab || !targetTab.id) {
+          if (taskOwnershipToken !== activeTaskRunId) return;
           console.info('TARGET_TAB_FAILED: no eligible tab found', {
             failureCode: resolution.failureCode || null,
           });
@@ -585,6 +620,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               task,
               steps: [],
               reason: failReason,
+              runId: taskOwnershipToken,
             },
             dashboardTabId
           );
@@ -975,6 +1011,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           },
 
           executeAction: async (action: BrowserAction) => {
+            if (taskOwnershipToken !== activeTaskRunId || activeLoop?.isHalted()) {
+              console.warn('[PrivAgent SW] Suppressed action from superseded task loop', {
+                taskOwnershipToken,
+                activeTaskRunId,
+              });
+              return { success: false, error: 'TASK_SUPERSEDED' };
+            }
             try {
               // ── Phase 12 Containment at the DISPATCH boundary ──────────────
               // Defence in depth: the AgentLoop already evaluated containment
@@ -1276,12 +1319,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           },
 
           onStepProgress: (state: TaskState) => {
-            // Phase 14 projection + output screening happen inside
-            // sendToDashboard, which is the single boundary every outbound
-            // payload crosses. The transport is otherwise unchanged.
-            sendToDashboard(state, dashboardTabId);
+            if (taskOwnershipToken !== activeTaskRunId) {
+              console.warn('[PrivAgent SW] Suppressed step progress from superseded task loop', {
+                taskOwnershipToken,
+                activeTaskRunId,
+              });
+              return;
+            }
+            sendToDashboard({ ...state, runId: taskOwnershipToken }, dashboardTabId);
           },
         };
+
+        if (taskOwnershipToken !== activeTaskRunId) {
+          console.info('[PrivAgent SW] Task aborted before loop creation (superseded)', {
+            taskOwnershipToken,
+            activeTaskRunId,
+          });
+          return;
+        }
 
         // Real provider: backend Gemma (or fallback to configured provider)
         const provider = new ModelRouter(createAgentProvider({ provider: 'backend' }));
@@ -1294,46 +1349,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Verification, Goal Verification and the Recovery Engine all remain
         // authoritative and unreordered. The live dispatch-time containment
         // check in executeAction below is likewise untouched.
-        activeLoop = new AgentLoop(provider, loopCallbacks, {
+        const thisLoop = new AgentLoop(provider, loopCallbacks, {
+          runId: taskOwnershipToken,
           maxSteps: 10,
           maxRetries: 2,
           delayBetweenStepsMs: 500,
-          // PHASE 17.10 Step 10.6 (G7).
-          //
-          // This was 0, which made the ENTIRE bounded provider-retry path
-          // unreachable on the production service-worker loop — the only loop
-          // the autonomous agent actually runs. `requestActionWithBoundedRetry`
-          // checks `attempt >= this.providerRetries` BEFORE any delay, so a
-          // budget of 0 breaks on the first attempt and no rate limit could ever
-          // be retried here, whatever the provider classification or the
-          // Retry-After the backend relayed. A real G7 run confirmed it:
-          // `[G7_RETRY_LOOP] {"providerRetries":0,"willRetry":false}`.
-          //
-          // 2 is the value the popup loop already uses for the same provider
-          // path. It stays strictly bounded: total provider calls remain
-          // ≤ maxSteps × (1 + providerRetries) = 10 × 3 = 30, and the retry
-          // branch is still gated on `err.retryable`, which a rate limit only
-          // becomes when the provider published a Retry-After. Nothing else
-          // about the loop changes: no classification, no delay policy, no
-          // back-off guessing, and no authority.
-          //
-          // `providerRetryDelayMs` is deliberately left at its existing default:
-          // this change does not introduce a back-off for a rate limit that
-          // arrives WITHOUT a Retry-After — that case still fails closed.
           providerRetries: 2,
           targetTabId,
           containmentScope,
           harness: new AgentHarness(),
-          // PHASE 17.4 D5: reliability state survives service-worker eviction.
           longHorizonStore: createSessionStore(),
           initialUrl: targetTab.url || (targetTab as any).pendingUrl || undefined,
         });
+        activeLoop = thisLoop;
+        (globalThis as any).__privagentActiveLoop = thisLoop;
 
-        console.info('[AgentTrace] agent loop started');
-        const finalState = await activeLoop.runTask(task);
-        console.info('[AgentTrace] terminal progress emitted', { status: finalState.status });
-        await sendToDashboard(finalState, dashboardTabId);
+        console.info('[AgentTrace] agent loop started', { runId: taskOwnershipToken });
+        const finalState = await thisLoop.runTask(task);
+        (globalThis as any).__privagentLastState = finalState;
+        if (taskOwnershipToken !== activeTaskRunId) {
+          console.info('[AgentTrace] terminal progress suppressed (task superseded)', {
+            taskOwnershipToken,
+            activeTaskRunId,
+          });
+          return;
+        }
+        console.info('[AgentTrace] terminal progress emitted', { status: finalState.status, runId: taskOwnershipToken });
+        await sendToDashboard({ ...finalState, runId: taskOwnershipToken }, dashboardTabId);
       } catch (err) {
+        if (taskOwnershipToken !== activeTaskRunId) {
+          return;
+        }
         const errReason = err instanceof Error ? err.message : String(err);
         console.error('[AgentTrace] M6 failed', { reason: errReason });
         console.info('[AgentTrace] terminal progress emitted', { status: 'FAILED' });
@@ -1345,6 +1391,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             task,
             steps: activeLoop?.getState().steps || [],
             reason: errReason,
+            runId: taskOwnershipToken,
           },
           dashboardTabId
         );
@@ -1356,8 +1403,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // ── Stop real task execution ─────────────────────────────────────────────
   if (message.type === 'PRIVAGENT_DASHBOARD_STOP_TASK') {
+    activeTaskRunId++;
     if (activeLoop) {
       activeLoop.stop();
+      activeLoop = null;
     }
     sendResponse({ stopped: true });
     return false;

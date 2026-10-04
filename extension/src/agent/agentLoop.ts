@@ -99,6 +99,8 @@ import { verifyTaskGoal } from './goalVerifier';
 import {
   evaluateContainment,
   containmentSummary,
+  deriveRootHost,
+  hostWithinScope,
   type ContainmentScope,
 } from './containment';
 import {
@@ -211,6 +213,8 @@ export interface AgentLoopCallbacks {
 }
 
 export interface AgentLoopOptions {
+  /** Phase 18.1: Task run correlation identifier for single active task ownership */
+  runId?: number | string;
   maxSteps?: number;
   /**
    * PHASE 17.4 D5. Where long-horizon RELIABILITY state is persisted so a
@@ -341,6 +345,7 @@ export class AgentLoop {
    * Security Critic → Privacy → Risk/Confirmation → Execution → Verification).
    */
   private readonly recoveryEngine = new RecoveryEngine(DEFAULT_RECOVERY_BOUNDS);
+  private readonly taskRunId?: number | string;
 
   /**
    * PHASE 17.8 D-01. Number of decision-trace steps whose DETAILED trace could
@@ -483,6 +488,7 @@ export class AgentLoop {
     this.longHorizonStore = options.longHorizonStore ?? createNoopStore();
     this.containmentScope = options.containmentScope ?? null;
     this.harness = options.harness ?? null;
+    this.taskRunId = options.runId;
 
     this.state = createAgentTaskState('', {
       maxSteps: this.maxSteps,
@@ -494,16 +500,27 @@ export class AgentLoop {
     }
   }
 
+  getRunId(): number | string | undefined {
+    return this.taskRunId;
+  }
+
+  isHalted(): boolean {
+    return this.isStopped;
+  }
+
   /**
    * Safely halt the running task loop.
+   * If silent is true, suppresses event emission (used when superseding an old loop).
    */
-  stop(): void {
+  stop(silent = false): void {
     this.isStopped = true;
-    if (this.state.status === 'IN_PROGRESS') {
+    if (!silent && this.state.status === 'IN_PROGRESS') {
       this.state.status = 'STOPPED';
       this.state.goalStatus = 'STOPPED';
       this.state.reason = 'Task stopped by user.';
-      this.notifyProgress();
+      if (this.callbacks.onStepProgress) {
+        this.callbacks.onStepProgress(this.getState());
+      }
     }
   }
 
@@ -1232,6 +1249,7 @@ export class AgentLoop {
       // exactly as before. A semantic destination has no URL, and inventing one
       // — or guessing the site's internal paths — would be both a fabrication
       // and a fixture special-case.
+      if (this.isStopped) break;
       const deterministicDestination = OneActionPlanner.proposeDestinationNavigation(activeSubgoal);
       try {
         if (deterministicDestination) {
@@ -1245,6 +1263,7 @@ export class AgentLoop {
           action = await this.requestActionWithBoundedRetry(task, context);
           console.info('[AgentTrace] reasoning response received');
         }
+        if (this.isStopped) break;
 
         // Enforce the One-Action Proposal constraint: exactly ONE atomic action from allowlist
         const singleActionCheck = OneActionPlanner.validateSingleActionProposal(action);
@@ -1886,9 +1905,11 @@ export class AgentLoop {
         this.state.containmentDecision = null;
       }
 
+      if (this.isStopped) break;
       // 6. Execute
       this.provider.resetEscalation?.();
       let execResult = await this.callbacks.executeAction(action);
+      if (this.isStopped) break;
       console.info('[AgentTrace] executeAction response received');
       this.state.lastAction = action;
       this.state.lastActionResult = { success: execResult.success, error: execResult.error };
@@ -2231,6 +2252,18 @@ export class AgentLoop {
         this.state.retryCount++;
         this.state.failureCount++;
 
+        const recordedFailedAction: BrowserAction = {
+          ...action,
+          effect: effectResult.status,
+          ...(effectResult.diagnostics?.scrollDelta !== undefined
+            ? { scrollDelta: effectResult.diagnostics.scrollDelta }
+            : {}),
+        };
+        // Failed actions are NOT recorded in state.previousActions (which holds only verified
+        // successful actions per Phase 6 contract). Safe effect metadata is supplied to the
+        // reasoner via historyForReasoner at requestActionWithBoundedRetry.
+        this.state.recentActions.push(recordedFailedAction);
+
         const failureRecord: FailureRecord = {
           category: 'ACTION_NO_EFFECT',
           reason: effectResult.details || `Action '${action.action}' produced no observable effect.`,
@@ -2349,6 +2382,8 @@ export class AgentLoop {
           targetId: 'target' in action ? (action as any).target : undefined,
           subgoalId: activeSubgoal?.id,
           noEffect: true,
+          scrollDirection: action.action === 'scroll' ? action.direction : undefined,
+          scrollBoundaryReached: action.action === 'scroll' && effectResult.diagnostics?.scrollDelta === 0,
         });
         this.state.recoveryHistory = [...this.recoveryEngine.history];
         this.state.totalRecoveryAttempts = this.recoveryEngine.totalRecoveries;
@@ -2449,8 +2484,15 @@ export class AgentLoop {
       });
       this.state.lastActionResult = { success: true };
       this.state.retryCount = 0; // Reset retry count after success
-      this.state.previousActions.push(action);
-      this.state.recentActions.push(action);
+      const recordedAction: BrowserAction = {
+        ...action,
+        effect: effectResult.status,
+        ...(effectResult.diagnostics?.scrollDelta !== undefined
+          ? { scrollDelta: effectResult.diagnostics.scrollDelta }
+          : {}),
+      };
+      this.state.previousActions.push(recordedAction);
+      this.state.recentActions.push(recordedAction);
       this.state.completedSteps.push(`${action.action}: ${transitionDesc}`);
       if ('target' in action && typeof (action as any).target === 'string') {
         this.state.visitedElementIds.push((action as any).target);
@@ -2725,10 +2767,18 @@ export class AgentLoop {
     // still in progress.
     await clearTracker(this.longHorizonStore);
 
+    if (this.isStopped) {
+      this.state.status = 'STOPPED';
+      this.state.goalStatus = 'STOPPED';
+      this.state.reason = this.state.reason || 'Task stopped by user.';
+    }
+
     if (this.state.status === 'SUCCESS') {
       console.info('[AgentTrace] M6 completed');
     } else if (this.state.status === 'FAILED') {
       console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+    } else if (this.state.status === 'STOPPED') {
+      console.info('[AgentTrace] M6 stopped', { reason: this.state.reason });
     }
     return this.getState();
   }
@@ -2953,6 +3003,9 @@ export class AgentLoop {
 
     let lastError: unknown;
     for (let attempt = 0; attempt <= this.providerRetries; attempt++) {
+      if (this.isStopped) {
+        throw new ProviderError('Task stopped.', 'timeout', { retryable: false });
+      }
       this.state.providerAttempts++;
       //
       // PHASE 17.5 (F6): the watchdog timer is now CLEARED. It used to be
@@ -2972,10 +3025,28 @@ export class AgentLoop {
             55000
           );
         });
+        const historyForReasoner: BrowserAction[] = [...this.state.previousActions];
+        const lastStep = this.state.steps.length > 0 ? this.state.steps[this.state.steps.length - 1] : undefined;
+        if (lastStep && !lastStep.effectVerified) {
+          const alreadyIncluded = historyForReasoner.some(
+            (a) => a === lastStep.action
+          );
+          if (!alreadyIncluded) {
+            historyForReasoner.push({
+              ...lastStep.action,
+              effect: lastStep.effectStatus || 'ACTION_NO_EFFECT',
+              ...(lastStep.action.action === 'scroll' ? { scrollDelta: 0 } : {}),
+            } as BrowserAction);
+          }
+        }
         const action = await Promise.race([
-          this.provider.requestAction(task, context, this.state.previousActions),
+          this.provider.requestAction(task, context, historyForReasoner),
           timeoutPromise,
         ]);
+
+        if (this.isStopped) {
+          throw new ProviderError('Task stopped.', 'timeout', { retryable: false });
+        }
 
         //
         // PHASE 17.5 (F3). STALE RESPONSE REJECTION. The proposal was computed
@@ -3018,7 +3089,13 @@ export class AgentLoop {
       try {
         const dest = new URL(action.url);
         const curr = new URL(currentUrl);
-        // If navigating to a different origin/domain, require user confirmation
+        // Phase 18.4: Subdomains within the rootHost scope (or containment scope)
+        // are authorized navigation paths that do not require external confirmation.
+        const currentRootHost = this.containmentScope?.rootHost || deriveRootHost(curr.hostname);
+        if (hostWithinScope(dest.hostname, currentRootHost)) {
+          return false;
+        }
+        // If navigating to an external origin/domain outside rootHost scope, require user confirmation
         if (dest.origin !== curr.origin) {
           return true;
         }
@@ -3182,6 +3259,7 @@ export class AgentLoop {
   }
 
   private notifyProgress(): void {
+    if (this.isStopped) return;
     if (this.callbacks.onStepProgress) {
       this.callbacks.onStepProgress(this.getState());
     }

@@ -249,6 +249,15 @@ class BrowserActionModel(StrictModel):
     url: Optional[str] = None
     key: Optional[str] = None
     reason: Optional[Annotated[str, Field(max_length=300)]] = None
+    effect: Optional[Annotated[str, Field(max_length=100)]] = None
+    scroll_delta: Optional[int] = Field(default=None, validation_alias=AliasChoices("scroll_delta", "scrollDelta"))
+
+    @field_validator("effect")
+    @classmethod
+    def validate_effect_safety(cls, v: Optional[str]) -> Optional[str]:
+        if v:
+            scan_text(v)
+        return v
 
     # Which optional fields are ALLOWED for each action type.
     _ALLOWED_FIELDS: Dict[BrowserActionType, frozenset] = {

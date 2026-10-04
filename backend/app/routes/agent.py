@@ -402,7 +402,7 @@ async def generate_action(
     )
 
     # Backend logs the actual model_id for debugging, but we do not leak it to the frontend telemetry
-    logger.info("Agent Action Reasoning: role=%s, model=%s, provider=%s, latency=%.1fms", body.model_role or "FAST", result.model, effective_provider, result.latency_ms)
+    logger.info("Agent Action Reasoning: role=%s, model=%s, provider=%s, latency=%.1fms, action=%s", body.model_role or "FAST", result.model, effective_provider, result.latency_ms, action.model_dump())
 
     return AgentActionResponse(
         success=True,

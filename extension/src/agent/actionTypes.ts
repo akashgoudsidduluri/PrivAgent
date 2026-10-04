@@ -38,6 +38,8 @@ export interface ClickAction {
   action: 'click';
   target: string;
   reason?: string;
+  effect?: string;
+  scrollDelta?: number;
 }
 
 export interface ScrollAction {
@@ -45,6 +47,8 @@ export interface ScrollAction {
   direction: ScrollDirection;
   amount: number;
   reason?: string;
+  effect?: string;
+  scrollDelta?: number;
 }
 
 export interface TypeAction {
@@ -52,6 +56,8 @@ export interface TypeAction {
   target: string;
   text: string;
   reason?: string;
+  effect?: string;
+  scrollDelta?: number;
 }
 
 export interface SelectAction {
@@ -59,12 +65,16 @@ export interface SelectAction {
   target: string;
   option: string;
   reason?: string;
+  effect?: string;
+  scrollDelta?: number;
 }
 
 export interface NavigateAction {
   action: 'navigate';
   url: string;
   reason?: string;
+  effect?: string;
+  scrollDelta?: number;
 }
 
 /**
@@ -80,6 +90,8 @@ export interface PressKeyAction {
   /** Optional: the control expected to hold focus (verified at execution). */
   target?: string;
   reason?: string;
+  effect?: string;
+  scrollDelta?: number;
 }
 
 export type BrowserAction =

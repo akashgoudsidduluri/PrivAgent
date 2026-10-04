@@ -137,7 +137,7 @@ def verify_payload_invariants(raw: dict) -> None:
                 raise PayloadSecurityError(
                     f"[PrivAgent Backend Security] history[{i}] missing 'action'."
                 )
-            allowed = {"click", "scroll", "type", "select", "navigate"}
+            allowed = {"click", "scroll", "type", "select", "navigate", "pressKey"}
             if entry.get("action") not in allowed:
                 raise PayloadSecurityError(
                     f"[PrivAgent Backend Security] history[{i}].action "

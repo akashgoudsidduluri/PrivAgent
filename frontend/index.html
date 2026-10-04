@@ -3,231 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PrivAgent — Security & AI Agent Console</title>
+    <title>PrivAgent — Autonomous Privacy Browser Agent</title>
     <meta
       name="description"
-      content="PrivAgent Autonomous Browser Agent (SIH26171 / ISRO) — On-device visual perception, privacy firewall, and local M5 safety enforcement."
+      content="PrivAgent Autonomous Browser Agent (SIH26171 / ISRO) — Modern AI agent interface with provable on-device privacy protection."
     />
     <link rel="icon" type="image/png" href="../extension/public/icons/icon48.png" />
   </head>
   <body>
     <div id="app">
-      <!-- Top Bar -->
-      <header class="app-topbar">
-        <div class="topbar-left">
-          <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Sidebar (Ctrl+B)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
-          <div class="topbar-brand">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-            <span>PrivAgent</span>
-          </div>
-          <span class="env-tag">M12 PROD</span>
-        </div>
+      <!-- Minimal Modern Top Header -->
+      <header id="app-topbar" class="app-topbar"></header>
 
-        <div class="topbar-center">
-          <div class="status-indicator">
-            <span class="label">Backend</span>
-            <span id="top-backend-dot" class="status-dot green"></span>
-            <span id="top-backend-val" class="value">Ready</span>
-          </div>
-          <div class="status-indicator">
-            <span class="label">Reasoner</span>
-            <span id="top-reasoner-dot" class="status-dot green"></span>
-            <span id="top-reasoner-val" class="value">Groq (gpt-oss-20b)</span>
-          </div>
-          <div class="status-indicator">
-            <span class="label">Firewall</span>
-            <span id="top-firewall-dot" class="status-dot green"></span>
-            <span id="top-firewall-val" class="value">Active (Zero-Leak)</span>
-          </div>
-          <div class="status-indicator">
-            <span class="label">Target</span>
-            <span id="top-target-dot" class="status-dot blue"></span>
-            <span id="top-target-val" class="value">localhost:4174</span>
-          </div>
-        </div>
+      <!-- Main Layout (Persistent Sidebar + Workspace) -->
+      <div class="app-main-layout">
+        <!-- Persistent Modern Left Sidebar -->
+        <aside id="app-sidebar" class="app-sidebar"></aside>
 
-        <div class="topbar-right">
-          <button id="topbar-run-btn" class="topbar-btn primary" title="Run Task in Agent Workspace">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            <span>Run Task</span>
-          </button>
-          <button id="topbar-stop-btn" class="topbar-btn danger" title="Stop Active Task">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="6" width="12" height="12"></rect>
-            </svg>
-            <span>Stop</span>
-          </button>
-          <button id="topbar-settings-btn" class="topbar-btn" title="Open System Console">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-          </button>
-        </div>
-      </header>
-
-      <!-- App Body (Sidebar + Content Workspace) -->
-      <div class="app-body">
-        <!-- Collapsible Sidebar -->
-        <aside id="app-sidebar" class="app-sidebar">
-          <nav class="sidebar-nav">
-            <div class="nav-group-title">Command</div>
-            
-            <div class="nav-item active" data-tab="overview" title="Primary Command Center">
-              <span class="nav-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="14" width="7" height="7"></rect>
-                  <rect x="3" y="14" width="7" height="7"></rect>
-                </svg>
-              </span>
-              <span class="nav-label">Overview</span>
-            </div>
-
-            <div class="nav-item" data-tab="agent" title="Agent Closed-Loop Workspace">
-              <span class="nav-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="4 17 10 11 4 5"></polyline>
-                  <line x1="12" y1="19" x2="20" y2="19"></line>
-                </svg>
-              </span>
-              <span class="nav-label">Agent Workspace</span>
-            </div>
-
-            <div class="nav-item" data-tab="browser" title="Target Browser Inspector">
-              <span class="nav-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                </svg>
-              </span>
-              <span class="nav-label">Browser View</span>
-            </div>
-
-            <div class="nav-group-title">Security & Proof</div>
-
-            <div class="nav-item" data-tab="privacy" title="Privacy Firewall & M8 Fusion Console">
-              <span class="nav-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                </svg>
-              </span>
-              <span class="nav-label">Privacy Firewall</span>
-            </div>
-
-            <div class="nav-item" data-tab="evaluation" title="SIH Benchmark & Evaluation Matrix">
-              <span class="nav-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 20V10"></path>
-                  <path d="M12 20V4"></path>
-                  <path d="M6 20v-6"></path>
-                </svg>
-              </span>
-              <span class="nav-label">SIH Evaluation</span>
-            </div>
-
-            <div class="nav-item" data-tab="evidence" title="Judge-Ready Evidence Explorer">
-              <span class="nav-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-              </span>
-              <span class="nav-label">Evidence Explorer</span>
-            </div>
-
-            <div class="nav-item" data-tab="activity" title="Chronological Event Timeline">
-              <span class="nav-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-              </span>
-              <span class="nav-label">Activity Timeline</span>
-            </div>
-
-            <div class="nav-group-title">Architecture</div>
-
-            <div class="nav-item" data-tab="system" title="System Hub & Architecture Visualization">
-              <span class="nav-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                  <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                  <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                </svg>
-              </span>
-              <span class="nav-label">System Architecture</span>
-            </div>
-          </nav>
-
-          <div class="sidebar-footer">
-            <div class="footer-info">
-              <div style="font-weight: 700; color: var(--text-secondary);">PRIVAGENT v0.8.0</div>
-              <div>SIH26171 / ISRO Problem Statement</div>
-            </div>
-          </div>
-        </aside>
-
-        <!-- Main Workspace View Containers -->
-        <main class="app-content">
-          <section id="view-overview" class="view-container active"></section>
-          <section id="view-agent" class="view-container"></section>
-          <section id="view-browser" class="view-container"></section>
-          <section id="view-privacy" class="view-container"></section>
-          <section id="view-evaluation" class="view-container"></section>
-          <section id="view-evidence" class="view-container"></section>
-          <section id="view-activity" class="view-container"></section>
-          <section id="view-system" class="view-container"></section>
-        </main>
+        <!-- Central Agent Workspace (Conversation Stream & Live Response Panel) -->
+        <main id="app-workspace" class="app-workspace"></main>
       </div>
 
-      <!-- Bottom Status Bar -->
-      <footer class="app-statusbar">
-        <div class="statusbar-left">
-          <div id="status-extension-pill" class="statusbar-item clickable" title="Extension connection state">
-            <span id="status-extension-dot" class="status-dot green"></span>
-            <span id="status-extension-label">Extension CONNECTED</span>
-          </div>
-          <span class="statusbar-sep">|</span>
-          <div class="statusbar-item">
-            <span style="color: var(--status-green-bright);">FIREWALL: ACTIVE</span>
-          </div>
-        </div>
+      <!-- Modern Bottom Task Composer -->
+      <div id="app-composer"></div>
 
-        <div class="statusbar-center">
-          <div class="statusbar-item">
-            <span>SENSITIVE TRANSMITTED:</span>
-            <span id="statusbar-sensitive-count" style="color: var(--status-green-bright); font-weight: 700;">0 BYTES (NON-NEGOTIABLE)</span>
-          </div>
-        </div>
-
-        <div class="statusbar-right">
-          <div class="statusbar-item">
-            <span class="label" style="color: var(--text-dim);">TARGET:</span>
-            <span id="statusbar-target" style="color: var(--text-secondary);">http://localhost:4174</span>
-          </div>
-          <span class="statusbar-sep">|</span>
-          <div class="statusbar-item">
-            <span class="label" style="color: var(--text-dim);">PIPELINE:</span>
-            <span id="statusbar-stage" style="color: var(--status-blue-bright);">IDLE</span>
-          </div>
-        </div>
-      </footer>
+      <!-- Secondary Drawer / Modal for In-Depth Tooling & Benchmarks -->
+      <div id="app-secondary-drawer" class="secondary-drawer-overlay"></div>
     </div>
 
     <script type="module" src="./src/main.ts"></script>

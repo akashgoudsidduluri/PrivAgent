@@ -204,6 +204,10 @@ export interface RecoveryFailureEvidence {
   noEffect?: boolean;
   /** True when modal-like overlays are currently observed on the page. */
   modalLikelyBlocking?: boolean;
+  /** Scroll direction for scroll actions (safe metadata). */
+  scrollDirection?: 'up' | 'down';
+  /** True when scroll delta was 0, indicating boundary reached. */
+  scrollBoundaryReached?: boolean;
 }
 
 export interface RecoveryDecision {
@@ -471,7 +475,8 @@ export interface RecoveryHistoryEntry {
 }
 
 function evidenceKey(evidence: RecoveryFailureEvidence): string {
-  return `${evidence.code}|${evidence.subgoalId ?? ''}|${evidence.targetId ?? ''}`;
+  const dir = evidence.scrollDirection ? `:${evidence.scrollDirection}` : '';
+  return `${evidence.code}|${evidence.subgoalId ?? ''}|${evidence.targetId ?? ''}${dir}`;
 }
 
 function describeStrategy(strategy: RecoveryStrategy): string {

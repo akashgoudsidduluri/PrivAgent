@@ -49,6 +49,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   private extensionConnected = false;
   private pingListeners: Array<(connected: boolean) => void> = [];
 
+  private currentRunId = 0;
   private isStartingTask = false;
   private messageBridgeHandler: ((event: MessageEvent) => void) | null = null;
   private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
@@ -270,6 +271,31 @@ export class ExtensionAgentAdapter implements AgentAdapter {
   }
 
   private handleExtensionProgress(data: any): void {
+    if (typeof data.runId === 'number' && data.runId !== this.currentRunId) {
+      console.warn('[AgentTrace] Dropping stale progress from superseded runId', {
+        incomingRunId: data.runId,
+        activeRunId: this.currentRunId,
+        incomingTask: data.task,
+        activeTask: this.state.task,
+      });
+      return;
+    }
+
+    if (data.task && this.state.task && data.task !== this.state.task) {
+      console.warn('[AgentTrace] Dropping progress for mismatched task prompt', {
+        incomingTask: data.task,
+        activeTask: this.state.task,
+      });
+      return;
+    }
+
+    if ((this.state.status === 'STOPPED' || this.state.status === 'FAILED') && data.status === 'RUNNING') {
+      console.warn('[AgentTrace] Dropping RUNNING progress because adapter is already terminal', {
+        status: this.state.status,
+      });
+      return;
+    }
+
     // The structured Phase 14 projection is the source of truth for anything
     // user-facing. It is parsed FIRST so the stage tracker and the fallback
     // reason below read from it rather than from the legacy `reason` string,
@@ -576,28 +602,28 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     console.info('[Adapter] START_TASK received', { taskLength: task.length });
     console.info('[AgentTrace] dashboard START_TASK received', { taskLength: task.length });
 
-    // Genuine concurrent-task protection: reject if a task is actively being
-    // dispatched (isStartingTask) OR if the agent loop is running AND the
-    // watchdog is still ticking (meaning we have a live task in the SW).
-    // If the watchdog has already fired (watchdogTimer===null) and state is
-    // still RUNNING, the TASK_PROGRESS relay from the SW was dropped — allow
-    // a fresh start by resetting the stale RUNNING state.
-    const isLikelyStaleRunning =
-      this.state.status === 'RUNNING' &&
-      !this.isStartingTask &&
-      this.watchdogTimer === null;
-
-    if (isLikelyStaleRunning) {
-      console.warn('[AgentTrace] stale RUNNING state detected (watchdog fired, relay lost) — resetting for fresh task');
-      this.state = { ...this.state, status: 'FAILED', reason: 'Previous task relay was lost; starting fresh.' };
-      this.notify();
-    }
+    this.currentRunId++;
+    const thisRunId = this.currentRunId;
 
     if (this.state.status === 'RUNNING' || this.isStartingTask) {
-      console.warn('[AgentTrace] dashboard startTask rejected: task already running or starting (genuine concurrent guard)');
-      return;
+      console.warn('[AgentTrace] Superseding previous task with new task', {
+        oldTask: this.state.task,
+        newTask: task,
+        previousRunId: thisRunId - 1,
+        newRunId: thisRunId,
+      });
+      // Explicitly tell extension background to cancel previous loop
+      window.postMessage(
+        {
+          source: 'privagent-dashboard',
+          type: 'STOP_TASK',
+          runId: thisRunId,
+        },
+        '*'
+      );
     }
 
+    this.clearWatchdog();
     this.isStartingTask = true;
     this.lastLifecycleStage = 'TARGET_RESOLUTION';
     try {
@@ -605,6 +631,15 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
       // Check extension connectivity
       const connected = await this.checkExtensionConnected();
+      // If another task superseded while waiting for ping check, abandon this start
+      if (this.currentRunId !== thisRunId) {
+        console.warn('[AgentTrace] startTask aborted: superseded by newer task', {
+          supersededRunId: thisRunId,
+          activeRunId: this.currentRunId,
+        });
+        return;
+      }
+
       if (!connected) {
         this.state = {
           ...this.state,
@@ -633,7 +668,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       };
       this.notify();
 
-      console.info('[AgentTrace] dashboard START_TASK posted to window', { taskLength: task.length });
+      console.info('[AgentTrace] dashboard START_TASK posted to window', { taskLength: task.length, runId: thisRunId });
       this.resetWatchdog(30000);
 
       window.postMessage(
@@ -641,20 +676,25 @@ export class ExtensionAgentAdapter implements AgentAdapter {
           source: 'privagent-dashboard',
           type: 'START_TASK',
           task,
+          runId: thisRunId,
         },
         '*'
       );
     } finally {
-      this.isStartingTask = false;
+      if (this.currentRunId === thisRunId) {
+        this.isStartingTask = false;
+      }
     }
   }
 
   async stopTask(): Promise<void> {
+    this.currentRunId++;
     this.clearWatchdog();
     window.postMessage(
       {
         source: 'privagent-dashboard',
         type: 'STOP_TASK',
+        runId: this.currentRunId,
       },
       '*'
     );

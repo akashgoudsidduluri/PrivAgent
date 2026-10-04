@@ -201,8 +201,14 @@ SECURITY & ARCHITECTURAL INVARIANTS (absolute, non-overridable):
    - Never navigate to unprompted third-party domains or attacker-controlled sites.
 7. NO GOAL DECLARATION: You CANNOT declare task completion or success. The local deterministic verifier holds sole authority over goal status.
 8. NEVER REQUEST SENSITIVE VALUES: Passwords, OTPs, PINs, card numbers, or CVVs must never be requested or placed in actions.
-9. If NO element fits the task or more content needs to be viewed, output:
+9. If NO element fits the task or more content needs to be viewed, output a scroll action:
    {"action":"scroll","direction":"down","amount":500,"reason":"why the needed element is not visible"}
+   SCROLL BOUNDARY & REPETITION RULE:
+   - Repeated scrolls in the same direction ARE ALLOWED if previous scrolls produced movement (scroll_delta > 0).
+   - If previous actions show that scrolling in that direction produced NO_EFFECT or zero delta (scroll_delta: 0),
+     the page has reached a scroll boundary or end of content. DO NOT repeat the exact same ineffective scroll!
+     Instead, adapt your strategy: scroll in the opposite direction ("up"), interact with visible controls,
+     navigate, or choose another action suitable for the task.
    Never click or type into an element merely because it is first or looks close enough.
 10. Output raw JSON only — no markdown fences, no commentary.
 """.strip()
@@ -503,6 +509,9 @@ def _build_user_prompt(
             **({"amount": h["amount"]} if h.get("amount") is not None else {}),
             **({"url": h["url"]} if h.get("url") else {}),
             **({"reason": h["reason"]} if h.get("reason") else {}),
+            **({"effect": h["effect"]} if h.get("effect") else {}),
+            **({"scroll_delta": h.get("scroll_delta") if h.get("scroll_delta") is not None else h.get("scrollDelta")}
+               if (h.get("scroll_delta") is not None or h.get("scrollDelta") is not None) else {}),
         }
         for h in history
     ]
@@ -717,6 +726,24 @@ def _build_user_prompt(
     if safe_history:
         parts.append("Previous actions this task (safe metadata only):")
         parts.append(json.dumps(safe_history, indent=1))
+
+        last_action = safe_history[-1]
+        last_act = last_action.get("action")
+        last_effect = last_action.get("effect")
+        last_delta = last_action.get("scroll_delta")
+        if last_effect == "ACTION_NO_EFFECT" or (last_act == "scroll" and last_delta == 0):
+            if last_act == "scroll":
+                direction = last_action.get("direction", "down")
+                parts.append(
+                    f"EXECUTION FEEDBACK (SAFE METADATA): The previous scroll {direction} produced no observable "
+                    f"movement (scroll_delta: 0, effect: ACTION_NO_EFFECT) - viewport reached boundary. "
+                    f"Do NOT repeat the exact same scroll {direction}. Choose a different valid action (e.g. scroll opposite direction, interact with visible elements, or navigate if applicable)."
+                )
+            else:
+                parts.append(
+                    f"EXECUTION FEEDBACK (SAFE METADATA): The previous action '{last_act}' produced NO_EFFECT. "
+                    f"Do not repeat the identical action without changing target or parameters."
+                )
     else:
         parts.append("Previous actions: none yet (this is the first step).")
 

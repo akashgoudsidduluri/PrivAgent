@@ -1,90 +1,94 @@
 /* ==========================================================================
-   PrivAgent — Security & AI Console Design Tokens (M12 Redesign)
-   Aesthetic: Dark, high-contrast, polished professional security/AI console.
-   Restrained palette: Neutral dark slate canvas, crisp 1px borders,
-   subtle panel elevations, monospace technical values, status badges.
+   PrivAgent — Modern AI Agent Interface Design Tokens (Phase 18 Redesign)
+   Inspired by modern ChatGPT-style AI interfaces:
+   - Clean dark canvas with high contrast typography
+   - Restrained subtle borders & glass surfaces
+   - Dedicated semantic status colors
+   - Modern typography hierarchy
    ========================================================================== */
 
 :root {
-  /* Surfaces & Backgrounds */
-  --bg-app: #080b11;
-  --bg-sidebar: #0c1018;
-  --bg-sidebar-hover: #141b27;
-  --bg-sidebar-active: #182232;
-  --bg-topbar: #0c1018;
-  --bg-panel: #111722;
-  --bg-panel-header: #0d121b;
-  --bg-panel-subtle: #0e131d;
-  --bg-card: #151c2a;
-  --bg-card-hover: #1a2334;
-  --bg-input: #090d14;
-  --bg-input-focus: #0c121d;
-  --bg-statusbar: #0a0e16;
+  /* Core Surface Palette (Modern Dark Canvas) */
+  --bg-app: #0b0f17;
+  --bg-sidebar: #0f141f;
+  --bg-sidebar-hover: #161d2d;
+  --bg-sidebar-active: #1c2538;
+  --bg-topbar: #0b0f17;
+  --bg-workspace: #0b0f17;
+  --bg-card: #131926;
+  --bg-card-hover: #182030;
+  --bg-card-subtle: #0e1420;
+  --bg-input: #121824;
+  --bg-input-focus: #151d2c;
+  --bg-bubble-user: #1c2638;
+  --bg-bubble-agent: #111724;
 
-  /* Crisp 1px Borders */
-  --border-subtle: #1c2637;
-  --border-panel: #233044;
-  --border-strong: #2e3f59;
+  /* Subtle Borders & Dividers */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.22);
   --border-focus: #3b82f6;
-  --border-active: #60a5fa;
 
-  /* Typography & Readability */
-  --text-bright: #f8fafc;
-  --text-primary: #e2e8f0;
+  /* Typography Hierarchy */
+  --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --text-dim: #475569;
+  --text-bright: #ffffff;
 
-  /* Restrained Semantic Status Tokens */
-  --status-green: #059669;
-  --status-green-bright: #10b981;
+  /* Semantic Accent & Status Colors */
+  --status-green: #10b981;
+  --status-green-hover: #059669;
   --status-green-bg: rgba(16, 185, 129, 0.12);
-  --status-green-border: rgba(16, 185, 129, 0.35);
+  --status-green-border: rgba(16, 185, 129, 0.3);
 
-  --status-amber: #d97706;
-  --status-amber-bright: #f59e0b;
-  --status-amber-bg: rgba(245, 158, 11, 0.12);
-  --status-amber-border: rgba(245, 158, 11, 0.35);
-
-  --status-red: #dc2626;
-  --status-red-bright: #ef4444;
-  --status-red-bg: rgba(239, 68, 68, 0.12);
-  --status-red-border: rgba(239, 68, 68, 0.35);
-
-  --status-blue: #2563eb;
-  --status-blue-bright: #3b82f6;
+  --status-blue: #3b82f6;
+  --status-blue-hover: #2563eb;
   --status-blue-bg: rgba(59, 130, 246, 0.12);
-  --status-blue-border: rgba(59, 130, 246, 0.35);
+  --status-blue-border: rgba(59, 130, 246, 0.3);
 
-  --status-purple: #7c3aed;
-  --status-purple-bright: #8b5cf6;
+  --status-amber: #f59e0b;
+  --status-amber-hover: #d97706;
+  --status-amber-bg: rgba(245, 158, 11, 0.12);
+  --status-amber-border: rgba(245, 158, 11, 0.3);
+
+  --status-red: #ef4444;
+  --status-red-hover: #dc2626;
+  --status-red-bg: rgba(239, 68, 68, 0.12);
+  --status-red-border: rgba(239, 68, 68, 0.3);
+
+  --status-purple: #8b5cf6;
   --status-purple-bg: rgba(139, 92, 246, 0.12);
-  --status-purple-border: rgba(139, 92, 246, 0.35);
-
-  --status-gray: #475569;
-  --status-gray-bright: #94a3b8;
-  --status-gray-bg: rgba(148, 163, 184, 0.1);
-  --status-gray-border: rgba(148, 163, 184, 0.25);
+  --status-purple-border: rgba(139, 92, 246, 0.3);
 
   /* Typography Stacks */
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
 
-  /* Layout Scales */
-  --topbar-height: 44px;
-  --statusbar-height: 26px;
-  --sidebar-width: 220px;
-  --sidebar-collapsed-width: 54px;
+  /* Geometry & Layout Dimensions */
+  --topbar-height: 52px;
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 0px;
+  --composer-max-width: 820px;
+  --workspace-max-width: 840px;
 
-  /* Crisp Border Radius */
-  --radius-xs: 3px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  /* Border Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-pill: 9999px;
 
-  /* Shadows */
-  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-panel: 0 4px 12px rgba(0, 0, 0, 0.4);
+  /* Subtle Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.45);
+  --shadow-composer: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 220ms ease;
 }
 
 *, *::before, *::after {
@@ -100,9 +104,22 @@ html, body {
   background-color: var(--bg-app);
   color: var(--text-primary);
   font-family: var(--font-ui);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input, textarea {
+  font-family: inherit;
+  color: inherit;
 }
 
 .mono {

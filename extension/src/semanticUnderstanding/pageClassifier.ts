@@ -177,8 +177,8 @@ export function classifyPageSemantics(
   // ──────────────────────────────────────────────────────────────────────────
   const dataGrids = targetDoc?.querySelectorAll('[role="grid"], table tbody tr, .dashboard-widget, .metrics-grid');
   const trCount = targetDoc?.querySelectorAll('table tbody tr').length ?? 0;
-  const dashboardHeading = primaryH1.includes('dashboard') || primaryH1.includes('analytics') || primaryH1.includes('overview') || primaryH1.includes('admin');
-  const dashboardUrl = rawUrl.includes('/dashboard') || rawUrl.includes('/analytics') || rawUrl.includes('/admin');
+  const dashboardHeading = primaryH1.includes('dashboard') || primaryH1.includes('analytics') || primaryH1.includes('overview') || primaryH1.includes('admin') || primaryH1.includes('transactions') || primaryH1.includes('recent activity');
+  const dashboardUrl = rawUrl.includes('/dashboard') || rawUrl.includes('/analytics') || rawUrl.includes('/admin') || rawUrl.includes('/transactions');
 
   if (trCount >= 3 || (dataGrids && dataGrids.length >= 3)) {
     signals.push({ type: 'DASHBOARD', weight: 0.7, evidence: `Tabular data grid / rows detected (row count: ${trCount})` });
@@ -219,8 +219,8 @@ export function classifyPageSemantics(
   // 9. SETTINGS / PREFERENCES
   // ──────────────────────────────────────────────────────────────────────────
   const settingsContainers = targetDoc?.querySelector('.settings-panel, [data-settings], #settings-form');
-  const settingsHeading = primaryH1.includes('settings') || primaryH1.includes('preferences') || primaryH1.includes('account configuration');
-  const settingsUrl = rawUrl.includes('/settings') || rawUrl.includes('/preferences');
+  const settingsHeading = primaryH1.includes('settings') || primaryH1.includes('preferences') || primaryH1.includes('account configuration') || primaryH1.includes('account details') || primaryH1.includes('api key') || primaryH1.includes('api keys');
+  const settingsUrl = rawUrl.includes('/settings') || rawUrl.includes('/preferences') || rawUrl.includes('/keys') || rawUrl.includes('/api-keys');
 
   if (settingsContainers) {
     signals.push({ type: 'SETTINGS', weight: 0.8, evidence: 'Explicit settings/preferences container panel' });

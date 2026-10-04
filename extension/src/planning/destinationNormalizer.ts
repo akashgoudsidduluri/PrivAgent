@@ -370,6 +370,16 @@ const PAGE_ROLE_TABLE: ReadonlyMap<string, RoleReadings> = new Map<string, RoleR
   ['settings', [['SETTINGS']]],
   ['preferences', [['SETTINGS']]],
   ['dashboard', [['DASHBOARD']]],
+  ['transactions', [['DASHBOARD']]],
+  ['recent transactions', [['DASHBOARD']]],
+  ['transaction history', [['DASHBOARD']]],
+  ['account details', [['SETTINGS', 'DASHBOARD']]],
+  ['api keys', [['SETTINGS', 'DASHBOARD']]],
+  ['api key', [['SETTINGS', 'DASHBOARD']]],
+
+  // ── listing (product details) ────────────────────────────────────────────
+  ['product details', [['LISTING']]],
+  ['product detail', [['LISTING']]],
 
   // ── genuinely ambiguous (N9) ────────────────────────────────────────────
   // Each head has TWO defensible readings over the EXISTING enum. No value is

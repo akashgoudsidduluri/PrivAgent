@@ -33,6 +33,7 @@ import { AgentContextPayload, AgentDetection } from '../privacy/types';
 import { ActionRiskAssessment } from './riskEngine';
 import { classifyWebContent, classifyModelOutput } from '../security/injectionFirewall';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
+import { deriveRootHost, hostWithinScope } from './containment';
 
 // ── Verdict ──────────────────────────────────────────────────────────────────
 
@@ -173,6 +174,69 @@ function parseUrlSafely(url: string | undefined): URL | null {
   }
 }
 
+/** Sensitive parameter keys that indicate credentials, secret tokens, or exfiltration in URLs. */
+const SENSITIVE_PARAM_NAMES = [
+  'token', 'secret', 'key', 'apikey', 'api_key', 'auth', 'access_token',
+  'password', 'passwd', 'credential', 'otp', 'cvv', 'session', 'session_id', 'bearer',
+];
+
+function isSensitiveNavigationUrl(url: string, parsed: URL | null): boolean {
+  if (!parsed) return false;
+
+  // 1. Sensitive query parameter names or values in searchParams.
+  for (const [rawKey, rawValue] of parsed.searchParams.entries()) {
+    const key = rawKey.toLowerCase().replace(/[-_]/g, '');
+    if (SENSITIVE_PARAM_NAMES.some((sp) => key === sp || key.includes(sp))) {
+      if (rawValue.trim().length > 0) {
+        return true;
+      }
+    }
+    // High-entropy token or credentials in parameter value.
+    if (rawValue.length >= 16 && /[A-Za-z0-9+/=_-]{16,}/.test(rawValue)) {
+      if (key.includes('token') || key.includes('sec') || key.includes('auth') || key.includes('key')) {
+        return true;
+      }
+    }
+    // PII scan on parameter values
+    if (scanForRawSensitiveValues({ param_val: rawValue }, { allowedKeyNames: ['param_val'] }).length > 0) {
+      return true;
+    }
+  }
+
+  // 2. Hash fragment inspection (e.g. #token=SECRET or #access_token=...)
+  if (parsed.hash && parsed.hash.length > 1) {
+    const hash = parsed.hash.slice(1);
+    try {
+      const hashParams = new URLSearchParams(hash);
+      for (const [rawKey, rawValue] of hashParams.entries()) {
+        const key = rawKey.toLowerCase().replace(/[-_]/g, '');
+        if (SENSITIVE_PARAM_NAMES.some((sp) => key === sp || key.includes(sp))) {
+          if (rawValue.trim().length > 0) {
+            return true;
+          }
+        }
+        if (scanForRawSensitiveValues({ hash_val: rawValue }, { allowedKeyNames: ['hash_val'] }).length > 0) {
+          return true;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Scan path segments for raw PII values (credit cards, PAN, emails in path)
+  if (parsed.pathname && parsed.pathname.length > 1) {
+    const pathParts = parsed.pathname.split('/').filter(Boolean);
+    for (const part of pathParts) {
+      if (scanForRawSensitiveValues({ path_val: decodeURIComponent(part) }, { allowedKeyNames: ['path_val'] }).length > 0) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function targetDescriptor(action: BrowserAction, target?: AgentDetection): string {
   const parts: string[] = [action.reason ?? ''];
   if ('target' in action && typeof (action as { target?: unknown }).target === 'string') {
@@ -281,11 +345,15 @@ export function reviewProposedAction(input: SecurityCriticInput): SecurityCritic
         findings.push('SUSPICIOUS_NAVIGATION');
       } else if (current && parsed.origin !== current.origin) {
         // Cross-origin: legitimate, but always worth a second look unless the
-        // goal actually names the destination.
+        // goal actually names the destination or it is within the same root host scope.
+        const currentRootHost = deriveRootHost(currentUrl);
+        const isSubdomain = hostWithinScope(parsed.hostname, currentRootHost);
         const goalNamesHost =
           userGoal.includes(parsed.hostname.toLowerCase()) ||
           goalTokens(userGoal).some((t) => t.length >= 4 && parsed.hostname.toLowerCase().includes(t));
-        if (!goalNamesHost && !hasAnyTerm(userGoal, NAVIGATE_TERMS)) {
+        if (!goalNamesHost && !isSubdomain) {
+          findings.push('SUSPICIOUS_NAVIGATION');
+        } else if (!goalNamesHost && !hasAnyTerm(userGoal, NAVIGATE_TERMS)) {
           findings.push('SUSPICIOUS_NAVIGATION');
         }
       }
@@ -293,16 +361,39 @@ export function reviewProposedAction(input: SecurityCriticInput): SecurityCritic
   }
 
   // ── 2. Sensitive-data disclosure attempt ─────────────────────────────────
-  if (
-    hasAnyTerm(descriptor, DISCLOSURE_TERMS) &&
-    (hasAnyTerm(descriptor, CONSEQUENTIAL_TERMS) || action.action === 'navigate' || action.action === 'type')
-  ) {
-    findings.push('SENSITIVE_DISCLOSURE_ATTEMPT');
-  }
-  // A typing action that carries an obviously credential-shaped value.
-  if (action.action === 'type') {
+  // Navigation: URL itself is inspected for raw sensitive data, tokens, and PII.
+  // The model's reason text explaining the destination is NOT treated as raw data disclosure.
+  if (action.action === 'navigate') {
+    const navUrl = (action as { url?: string }).url || input.destinationUrl;
+    if (typeof navUrl === 'string' && navUrl.trim().length > 0) {
+      const parsedNav = parseUrlSafely(navUrl);
+      if (isSensitiveNavigationUrl(navUrl, parsedNav)) {
+        findings.push('SENSITIVE_DISCLOSURE_ATTEMPT');
+      }
+    }
+  } else if (action.action === 'type') {
     const typed = String((action as { text?: string }).text ?? '');
-    if (/\b\d{13,19}\b/.test(typed) || /\b\d{3,4}\b/.test(typed) && /\bcvv\b|\bpin\b/i.test(descriptor)) {
+    const typeViolations = scanForRawSensitiveValues({ typed_content: typed }, { allowedKeyNames: ['typed_content'] });
+    if (
+      typeViolations.length > 0 ||
+      /\b\d{13,19}\b/.test(typed) ||
+      (/\b\d{3,4}\b/.test(typed) && /\bcvv\b|\bpin\b/i.test(descriptor))
+    ) {
+      findings.push('SENSITIVE_DISCLOSURE_ATTEMPT');
+    }
+    if (
+      hasAnyTerm(descriptor, DISCLOSURE_TERMS) &&
+      (hasAnyTerm(descriptor, CONSEQUENTIAL_TERMS) || /\b(send|upload|transmit|leak|exfiltrate|copy)\b/i.test(descriptor))
+    ) {
+      findings.push('SENSITIVE_DISCLOSURE_ATTEMPT');
+    }
+  } else {
+    // Non-navigate, non-type actions (e.g. click):
+    // Only flag disclosure if target surface has disclosure terms AND consequential terms.
+    if (
+      hasAnyTerm(targetSurface, DISCLOSURE_TERMS) &&
+      (hasAnyTerm(targetSurface, CONSEQUENTIAL_TERMS) || hasAnyTerm(descriptor, CONSEQUENTIAL_TERMS))
+    ) {
       findings.push('SENSITIVE_DISCLOSURE_ATTEMPT');
     }
   }

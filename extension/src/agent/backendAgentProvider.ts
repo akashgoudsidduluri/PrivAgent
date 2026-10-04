@@ -153,7 +153,19 @@ export class BackendAgentProvider implements AgentProvider {
       retryAfterMs: null as number | null,
     };
     try {
-      const payload = { task, context: egressContext, history, model_role: role };
+      // Map history entries to safe metadata only (excluding raw text/values)
+      const safeHistory = history.map((act) => ({
+        action: act.action,
+        ...('target' in act && act.target ? { target: act.target } : {}),
+        ...('direction' in act && act.direction ? { direction: act.direction } : {}),
+        ...('amount' in act && act.amount !== undefined ? { amount: act.amount } : {}),
+        ...('url' in act && act.url ? { url: act.url } : {}),
+        ...('reason' in act && act.reason ? { reason: act.reason } : {}),
+        ...('key' in act && act.key ? { key: act.key } : {}),
+        ...(act.effect ? { effect: act.effect } : {}),
+        ...(act.scrollDelta !== undefined ? { scrollDelta: act.scrollDelta } : {}),
+      }));
+      const payload = { task, context: egressContext, history: safeHistory, model_role: role };
       const egressDecision = validateEgressPayload(payload, this.actionEndpoint);
       if (egressDecision.directive === 'BLOCK') {
         throw new ProviderError(`Egress Firewall Blocked Request: ${egressDecision.reason}`, 'unknown');
