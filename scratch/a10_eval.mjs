@@ -135,7 +135,9 @@ function privacyChecks(scenario, runStartedAt) {
   }
   if (!newest) {
     result.note =
-      'no gateway model-facing capture for this run (CONTROLLED provider does not traverse the FastAPI gateway, so no model-facing payload exists to inspect)';
+      scenario.provider === 'LIVE'
+        ? 'no gateway model-facing capture for this run: the gateway/provider failed before any model-facing payload was constructed, so there was nothing model-facing to inspect'
+        : 'no gateway model-facing capture for this run (CONTROLLED provider does not traverse the FastAPI gateway, so no model-facing payload exists to inspect)';
     return result;
   }
   let doc;
