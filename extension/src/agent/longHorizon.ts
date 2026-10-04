@@ -32,7 +32,26 @@ import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 // PHASE 17.4. Reuses the Phase 17.3 document-identity primitive rather than
 // inventing a second definition of "same page". No cycle: this contract
 // imports only a type from effectVerifier.
-import { isSameDocumentIdentity } from '../ocr/ocrObservationContract';
+// PHASE 18.7 / I-8 uses the SAME primitive (`normalizeDocumentIdentity`) for the
+// semantic page-change signal, so "a hash-only URL change is not a new page"
+// keeps exactly the meaning it had in 17.3/17.4.
+import { normalizeDocumentIdentity } from '../ocr/ocrObservationContract';
+// PHASE 18.7 / I-8. The ONE semantic-progress classifier. `assessProgress`
+// below is a thin wrapper over it — this file remains the single owner of
+// progress semantics, and nothing else in production may import the module.
+import {
+  DEFAULT_SEMANTIC_PROGRESS_BOUNDS,
+  EMPTY_SEMANTIC_PROGRESS_BUDGET,
+  SemanticProgressTracker,
+  classifySemanticProgress,
+  type GeometricSignal,
+  type SemanticProgressBudgetState,
+  type SemanticProgressSignal,
+  type SemanticProgressVerdict,
+  type ScrollDirection,
+  type SemanticObservation,
+  type StagnationKind,
+} from './semanticProgress';
 import {
   PlanningBounds,
   DEFAULT_PLANNING_BOUNDS,
@@ -156,6 +175,14 @@ export interface TaskObservation {
   entityIds: string[];
   /** Sorted interactive candidate ids currently present. */
   candidateIds: string[];
+  /**
+   * PHASE 18.7 / I-8. Sorted sanitized-fact ids currently present. IDS ONLY —
+   * the display text stays in the sanitized context and never enters loop
+   * state. Optional so a producer predating I-8 keeps its previous shape.
+   */
+  factIds?: string[];
+  /** Sorted affordance ids currently present. IDS ONLY. */
+  affordanceIds?: string[];
   scrollY: number;
   /** LENGTH ONLY of the targeted field's value — never the value itself. */
   targetValueLength: number;
@@ -186,6 +213,18 @@ export interface ProgressAssessment {
   meaningful: boolean;
   signals: ProgressSignal[];
   fingerprint: string;
+  /**
+   * PHASE 18.7 / I-8. The bounded scroll-strategy verdict. `NONE` means the
+   * scroll strategy is still viable; the other two are truthful stagnation
+   * reports that recovery consumes. Never a task verdict.
+   */
+  stagnation: StagnationKind;
+  /** What the viewport did. Recorded; never sufficient on its own. */
+  geometry: GeometricSignal;
+  /** Consecutive same-direction scrolls with no semantic signal. */
+  sameDirectionRun: number;
+  /** The scroll strategy has demonstrably had no effect. */
+  budgetExhausted: boolean;
 }
 
 /** Build an observation from a sanitized context. Structure only. */
@@ -195,11 +234,21 @@ export function observeFromContext(
 ): TaskObservation {
   const entityIds = (context.semantic_context?.entities ?? []).map((e) => e.id).sort();
   const candidateIds = context.detections.map((d) => d.id).sort();
+  // PHASE 18.7 / I-8. Semantic ids participate in the progress decision, so the
+  // observation must carry them. NORMALIZED KEYS ONLY: a `SanitizedSemanticFact`
+  // has no opaque id, and its `displayText`/`displayValue` are page-derived text
+  // that must never enter loop state (it is persisted and can reach a summary).
+  // A newly appearing fact KEY is the value-free evidence that a new kind of
+  // fact is now observable; the ledger's own record count covers value changes.
+  const factIds = [...new Set((context.semantic_context?.facts ?? []).map((f) => f.key))].sort();
+  const affordanceIds = (context.semantic_context?.affordances ?? []).map((a) => a.id).sort();
   return {
     url: context.url,
     pageGeneration: context.semantic_context?.pageGeneration ?? 0,
     entityIds,
     candidateIds,
+    factIds,
+    affordanceIds,
     scrollY: extra.scrollY ?? 0,
     targetValueLength: extra.targetValueLength ?? 0,
     // PHASE 17.4. Absent flag means the 17.1 producer did not assert
@@ -280,65 +329,101 @@ export function fingerprintObservation(
 export function assessProgress(
   previous: TaskObservation | null,
   current: TaskObservation,
-  opts: { subgoalJustCompleted?: string; discoveriesAdded?: number } = {}
+  opts: {
+    subgoalJustCompleted?: string;
+    discoveriesAdded?: number;
+    evidenceDelta?: number;
+    scrollDirection?: ScrollDirection | null;
+  } = {},
+  carry: SemanticProgressBudgetState = EMPTY_SEMANTIC_PROGRESS_BUDGET
 ): ProgressAssessment {
   const signals: ProgressSignal[] = [];
   //
-  // PHASE 17.4. `observedChange` is what makes progress MEANINGFUL, and it is
-  // built ONLY from the observation. Bookkeeping (a subgoal being marked
-  // complete, a discovery being added) is recorded in `signals` for the
-  // diagnostic trace but is no longer sufficient on its own: the sole
-  // production call site passed `subgoalJustCompleted` derived from
-  // `lastActionResult.success`, which is DISPATCH state, so every successfully
-  // dispatched action reported progress and `consecutiveNoProgress` could never
-  // advance. Stagnation detection was unreachable as a result.
+  // PHASE 17.4. `observedChange` used to be what made progress MEANINGFUL.
+  // It counted a CHANGED `scrollY` as an observed change, which is exactly how
+  // an unbounded, individually-"productive", goal-ineffective scroll loop was
+  // possible: every successful scroll produced a fresh fingerprint and reset
+  // `consecutiveNoProgress`, so neither `detectLoop` nor `detectStall` could
+  // ever fire and `maxSteps` was the only bound.
   //
-  // This is the fix, and it is deliberately in the pure function rather than at
-  // the call site, so the rule holds for every present and future caller.
-  let observedChange = false;
-  if (previous) {
-    // PHASE 17.4. Reuse the 17.3 document-identity primitive: a hash change is
-    // not a new document, and a genuinely different path/query is.
-    if (!isSameDocumentIdentity(previous.url, current.url)) {
-      signals.push('NEW_PAGE');
-      observedChange = true;
+  // PHASE 18.7 / I-8. The decision now comes from `classifySemanticProgress`,
+  // the single semantic-progress authority. GEOMETRY IS NOT A SIGNAL: moving
+  // the viewport changes where we look, not what we know. The Phase 17.4 rule
+  // that a completed subgoal or a dispatch alone is not progress is preserved
+  // exactly — those are still recorded in `signals` for the trace and still
+  // cannot make a cycle meaningful on their own.
+  const semantic: SemanticProgressVerdict = classifySemanticProgress(
+    {
+      previous: previous ? toSemanticObservation(previous) : null,
+      current: toSemanticObservation(current),
+      evidenceDelta: opts.evidenceDelta ?? 0,
+      scrollDirection: opts.scrollDirection ?? null,
+    },
+    carry
+  );
+  const meaningful = semantic.meaningful;
+
+  // The pre-existing trace vocabulary, preserved so existing consumers and
+  // tests keep reading the same `signals`. Geometry alone now yields NO
+  // progress signal at all — it is reported through `ProgressAssessment.geometry`.
+  if (!previous) signals.push('NEW_PAGE');
+  for (const signal of semantic.signals) {
+    switch (signal) {
+      case 'PAGE_IDENTITY_CHANGED':
+        if (previous) signals.push('NEW_PAGE');
+        break;
+      case 'NEW_ENTITY':
+        signals.push('NEW_ENTITY');
+        break;
+      case 'NEW_CANDIDATE':
+        signals.push('NEW_CANDIDATE');
+        break;
+      case 'EVIDENCE_DELTA':
+      case 'NEW_SEMANTIC_FACT':
+      case 'NEW_AFFORDANCE':
+        // Evidence and new sanitized facts ARE entity-level discoveries for the
+        // trace, but they are not double-counted here: `semantic.signals`
+        // already carries the precise code.
+        break;
+      case 'TARGET_VALUE_CHANGED':
+        signals.push('RELEVANT_STATE_CHANGED');
+        break;
     }
-    if (current.entityIds.length > previous.entityIds.length) {
-      signals.push('NEW_ENTITY');
-      observedChange = true;
-    }
-    if (current.candidateIds.length > previous.candidateIds.length) {
-      signals.push('NEW_CANDIDATE');
-      observedChange = true;
-    }
-    // A geometry difference is only evidence when the geometry was actually
-    // READ. An all-zero fallback viewport is the absence of a reading, so
-    // "0 → 0" is not "nothing moved"; it is "we do not know".
-    const geometryObserved = current.viewportObservable !== false && previous.viewportObservable !== false;
-    if (
-      previous.targetValueLength !== current.targetValueLength ||
-      (geometryObserved && previous.scrollY !== current.scrollY)
-    ) {
-      signals.push('RELEVANT_STATE_CHANGED');
-      if (geometryObserved || previous.targetValueLength !== current.targetValueLength) {
-        observedChange = true;
-      }
-    }
-  } else {
-    signals.push('NEW_PAGE');
-    observedChange = true;
   }
   if (opts.subgoalJustCompleted) signals.push('SUBGOAL_COMPLETED');
   if ((opts.discoveriesAdded ?? 0) > 0) {
     signals.push('NEW_ENTITY');
     // A discovery is derived from an observed entity, so it is evidence too.
-    observedChange = true;
   }
 
   return {
-    meaningful: observedChange,
+    meaningful,
     signals,
     fingerprint: fingerprintObservation(current),
+    stagnation: semantic.stagnation,
+    geometry: semantic.geometry,
+    sameDirectionRun: semantic.sameDirectionRun,
+    budgetExhausted: semantic.budgetExhausted,
+  };
+}
+
+/**
+ * Narrow a `TaskObservation` to what the semantic-progress classifier reads.
+ * `documentIdentity` reuses the existing 17.3 normalization, so a fragment-only
+ * URL change is still the same document here.
+ */
+export function toSemanticObservation(observation: TaskObservation): SemanticObservation {
+  return {
+    // The 17.3 primitive, verbatim. A hash-only URL change is the same
+    // document here for the same reason it was one in 17.4.
+    documentIdentity: normalizeDocumentIdentity(observation.url) ?? observation.url,
+    entityIds: observation.entityIds,
+    candidateIds: observation.candidateIds,
+    factIds: observation.factIds ?? [],
+    affordanceIds: observation.affordanceIds ?? [],
+    scrollY: observation.scrollY,
+    targetValueLength: observation.targetValueLength,
+    viewportObservable: observation.viewportObservable,
   };
 }
 
@@ -397,22 +482,30 @@ export interface StallDetection {
   consecutiveNoProgress: number;
   totalNoProgress: number;
   reason: string;
+  /**
+   * PHASE 18.7 / I-8. WHICH kind of stagnation this is, taken from the single
+   * semantic-progress classifier. Recovery consumes it verbatim so a truthful
+   * `OSCILLATION` is never relabelled as generic no-effect.
+   */
+  kind: StagnationKind;
 }
 
 export function detectStall(
   consecutiveNoProgress: number,
   totalNoProgress: number,
-  bounds: Pick<LongHorizonBounds, 'maxConsecutiveNoProgress'>
+  bounds: Pick<LongHorizonBounds, 'maxConsecutiveNoProgress'>,
+  kind: StagnationKind = 'NO_EFFECT'
 ): StallDetection {
   if (consecutiveNoProgress >= bounds.maxConsecutiveNoProgress) {
     return {
       stalled: true,
       consecutiveNoProgress,
       totalNoProgress,
+      kind,
       reason: `${consecutiveNoProgress} consecutive actions produced no meaningful progress (limit ${bounds.maxConsecutiveNoProgress}).`,
     };
   }
-  return { stalled: false, consecutiveNoProgress, totalNoProgress, reason: 'Task is still progressing.' };
+  return { stalled: false, consecutiveNoProgress, totalNoProgress, kind: 'NONE', reason: 'Task is still progressing.' };
 }
 
 // ── Hard bounds ─────────────────────────────────────────────────────────────
@@ -504,6 +597,8 @@ export interface LongHorizonSnapshot {
   recentFingerprints: string[];
   lastLoop?: { kind: LoopKind; reason: string };
   lastStallReason?: string;
+  /** PHASE 18.7 / I-8. Bounded scroll-strategy verdict. Never a task verdict. */
+  semanticProgress: SemanticProgressVerdict;
 }
 
 export class LongHorizonTracker {
@@ -515,6 +610,13 @@ export class LongHorizonTracker {
   private discoveryIds = new Set<string>();
   private fingerprints: string[] = [];
   private lastObservation: TaskObservation | null = null;
+  /**
+   * PHASE 18.7 / I-8. The bounded scroll-strategy budget: consecutive
+   * same-direction scrolls with no semantic signal, and the alternating-run
+   * length that distinguishes OSCILLATION from plain NO_EFFECT. It is fed by
+   * `observe()` and read by `detectStall()`.
+   */
+  private readonly semanticProgress: SemanticProgressTracker;
 
   actionCount = 0;
   recoveryCount = 0;
@@ -525,6 +627,13 @@ export class LongHorizonTracker {
 
   constructor(bounds: LongHorizonBounds = DEFAULT_LONG_HORIZON_BOUNDS) {
     this.bounds = bounds;
+    this.semanticProgress = new SemanticProgressTracker({
+      // Reuse the tracker's own no-progress ceiling so the two bounds cannot
+      // drift apart; the plan's default of 3 same-direction scrolls is the
+      // same number `maxConsecutiveNoProgress` already carried.
+      maxSameDirectionWithoutProgress: bounds.maxConsecutiveNoProgress,
+      maxAlternatingWithoutProgress: Math.max(4, bounds.maxConsecutiveNoProgress + 1),
+    });
   }
 
   // ── Initialization ──────────────────────────────────────────────────────
@@ -552,6 +661,7 @@ export class LongHorizonTracker {
     this.totalNoProgress = 0;
     this.lastLoop = undefined;
     this.lastStallReason = undefined;
+    this.semanticProgress.reset();
   }
 
   // ── Subgoal lifecycle ───────────────────────────────────────────────────
@@ -619,12 +729,44 @@ export class LongHorizonTracker {
    */
   observe(
     observation: TaskObservation,
-    action?: { action: string; target?: string },
-    opts: { subgoalJustCompleted?: string; discoveriesAdded?: number; countsAsAction?: boolean } = {}
+    action?: { action: string; target?: string; direction?: string },
+    opts: {
+      subgoalJustCompleted?: string;
+      discoveriesAdded?: number;
+      countsAsAction?: boolean;
+      /** PHASE 18.7 / I-8. New evidence-ledger records this cycle produced. */
+      evidenceDelta?: number;
+    } = {}
   ): ProgressAssessment {
-    const assessment = assessProgress(this.lastObservation, observation, {
-      subgoalJustCompleted: opts.subgoalJustCompleted,
-      discoveriesAdded: opts.discoveriesAdded,
+    //
+    // PHASE 18.7 / I-8. The scroll direction comes from the RETAINED action the
+    // loop actually dispatched — never from the provider's prose — and only
+    // when that action really was a scroll.
+    const scrollDirection: ScrollDirection | null =
+      action?.action === 'scroll' && (action.direction === 'up' || action.direction === 'down')
+        ? action.direction
+        : null;
+    // The budget is stateful; `assessProgress` itself stays pure. Both are
+    // driven by `classifySemanticProgress` with the SAME input and the SAME
+    // carried budget, so there is exactly one definition of "meaningful" and the
+    // two cannot disagree.
+    const carry = this.semanticProgress.carry();
+    const assessment = assessProgress(
+      this.lastObservation,
+      observation,
+      {
+        subgoalJustCompleted: opts.subgoalJustCompleted,
+        discoveriesAdded: opts.discoveriesAdded,
+        evidenceDelta: opts.evidenceDelta ?? 0,
+        scrollDirection,
+      },
+      carry
+    );
+    this.semanticProgress.evaluate({
+      previous: this.lastObservation ? toSemanticObservation(this.lastObservation) : null,
+      current: toSemanticObservation(observation),
+      evidenceDelta: opts.evidenceDelta ?? 0,
+      scrollDirection,
     });
     if (opts.countsAsAction !== false) this.actionCount += 1;
 
@@ -714,9 +856,21 @@ export class LongHorizonTracker {
   }
 
   detectStall(): StallDetection {
-    const d = detectStall(this.consecutiveNoProgress, this.totalNoProgress, this.bounds);
+    // PHASE 18.7 / I-8. The KIND comes from the semantic-progress classifier,
+    // never from guesswork, so recovery is told the difference between "scrolling
+    // had no effect" and "the agent is oscillating" — two different strategies.
+    const kind = this.semanticProgress.snapshot().stagnation;
+    const d = detectStall(this.consecutiveNoProgress, this.totalNoProgress, this.bounds, kind);
     if (d.stalled) this.lastStallReason = d.reason;
     return d;
+  }
+
+  /**
+   * PHASE 18.7 / I-8. The live semantic-progress verdict: budget, geometry and
+   * stagnation kind. Read-only; recovery consumes this verbatim.
+   */
+  semanticProgressVerdict(): SemanticProgressVerdict {
+    return this.semanticProgress.snapshot();
   }
 
   checkBounds(): BoundsCheck {
@@ -811,6 +965,7 @@ export class LongHorizonTracker {
       recentFingerprints: [...this.fingerprints],
       lastLoop: this.lastLoop,
       lastStallReason: this.lastStallReason,
+      semanticProgress: this.semanticProgress.snapshot(),
     };
   }
 

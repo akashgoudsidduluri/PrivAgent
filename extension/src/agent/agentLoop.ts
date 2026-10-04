@@ -413,6 +413,20 @@ export class AgentLoop {
    * Security Critic → Privacy → Risk/Confirmation → Execution → Verification).
    */
   private readonly recoveryEngine = new RecoveryEngine(DEFAULT_RECOVERY_BOUNDS);
+  /**
+   * PHASE 18.7 / I-8. Ledger size at the end of the previous cycle, so the next
+   * one can compute a truthful EVIDENCE DELTA. A COUNT only.
+   */
+  private lastObservedLedgerSize = 0;
+  /**
+   * PHASE 18.7 / I-8. Task-scoped, one-way strategy constraint.
+   *
+   * Set when the bounded scroll budget drains or the agent is detected
+   * oscillating. It is a STRATEGY restriction, not an authority: it can only
+   * prevent a proposed scroll from being DISPATCHED. It can never grant a
+   * dispatch, and every other gate still runs in full on everything else.
+   */
+  private scrollStrategyExhausted = false;
   private readonly taskRunId?: number | string;
 
   /**
@@ -1235,6 +1249,16 @@ export class AgentLoop {
       // changed nothing was indistinguishable from it.
       const lhLastAction =
         this.state.steps.length > 0 ? this.state.steps[this.state.steps.length - 1]!.action : undefined;
+      //
+      // PHASE 18.7 / I-8 — EVIDENCE DELTA.
+      //
+      // This is the number that actually decides whether a scroll bought
+      // anything. The loop read the ledger's own size at the end of the previous
+      // cycle; the growth since is what the new facts this cycle discovered are
+      // worth. It is a COUNT — no claim, no id, no text — and it is read from
+      // the ledger this device holds, never from anything the model said.
+      const lhEvidenceDelta = (this.evidenceLedger?.size ?? 0) - this.lastObservedLedgerSize;
+      this.lastObservedLedgerSize = this.evidenceLedger?.size ?? 0;
       const lhProgress = this.longHorizon.observe(lhObservation, lhLastAction, {
         //
         // PHASE 17.4. `subgoalJustCompleted` is no longer passed at all.
@@ -1252,6 +1276,12 @@ export class AgentLoop {
         //
         // Only count an observation as an action once a step has actually run.
         countsAsAction: this.state.lastActionResult !== null,
+        //
+        // PHASE 18.7 / I-8. The ledger growth since the previous cycle. Without
+        // it a scroll that reveals nothing is indistinguishable from a scroll
+        // that reveals the answer, and geometry alone would keep reporting
+        // progress.
+        evidenceDelta: lhEvidenceDelta,
       });
       const lhLoop = this.longHorizon.detectLoop();
       const lhStall = this.longHorizon.detectStall();
@@ -1280,6 +1310,14 @@ export class AgentLoop {
         actions: this.longHorizon.actionCount,
         loop: lhLoop.loop ? lhLoop.kind : false,
         stalled: lhStall.stalled,
+        // PHASE 18.7 / I-8. What the SEMANTIC view says, as opposed to what the
+        // geometry did. Content-free: codes, counts and booleans only.
+        semanticProgress: lhProgress.meaningful,
+        semanticSignals: this.longHorizon.semanticProgressVerdict().signals,
+        geometry: lhProgress.geometry,
+        sameDirectionRun: lhProgress.sameDirectionRun,
+        stagnation: lhProgress.stagnation,
+        evidenceDelta: lhEvidenceDelta,
       });
 
       // Loop / stall: stop blindly repeating, remember it, and replan ONLY the
@@ -1301,6 +1339,44 @@ export class AgentLoop {
           reopened: replan.reopened,
           preservedCompleted: replan.preservedCompleted,
           preservedDiscoveries: replan.preservedDiscoveries,
+        });
+      }
+
+      // ── PHASE 18.7 / I-8: SEMANTIC STAGNATION IS A STRATEGY VERDICT ───────
+      //
+      // A replan above re-opens the remaining work, but a replan alone cannot
+      // stop the observed failure mode: the reasoner re-proposes the scroll it
+      // was just shown does nothing, and the run continues until `maxSteps`.
+      //
+      // What is added here is a bounded, task-scoped STRATEGY constraint derived
+      // from the ONE semantic-progress authority:
+      //
+      //   • the same-direction scroll budget drained without a single evidence
+      //     or semantic signal      → NO_EFFECT
+      //   • up/down alternating with no signal between → OSCILLATION
+      //
+      // It grants NOTHING. Its single power is negative: once set, a proposed
+      // `scroll` is not dispatched, because scrolling demonstrably no longer
+      // changes what the task knows. Every other action type is untouched, and
+      // on every action that IS dispatched the complete gate chain runs in its
+      // original order — Grounding → M5 → Security Critic → M5/Privacy →
+      // Risk/Confirmation → Containment → Execution → EffectVerifier →
+      // DestinationVerifier → GoalVerifier. It is one-way for the life of the
+      // task: a productive cycle can never re-arm scrolling, because a
+      // productive cycle means the budget was never drained.
+      if (lhProgress.budgetExhausted && !this.scrollStrategyExhausted) {
+        this.scrollStrategyExhausted = true;
+        console.warn('[AgentTrace] I-8 scroll strategy exhausted — no further scrolls will be dispatched', {
+          stagnation: lhProgress.stagnation,
+          sameDirectionRun: lhProgress.sameDirectionRun,
+          geometry: lhProgress.geometry,
+          evidenceDelta: lhEvidenceDelta,
+          consecutiveNoProgress: this.longHorizon.consecutiveNoProgress,
+        });
+        await recordLongHorizonFailure(siteScope, this.hierarchicalGoal?.goalId ?? 'unknown-goal', {
+          failureType: 'ACTION_NO_EFFECT',
+          reason: lhProgress.stagnation,
+          subgoalId: activeSubgoal?.id,
         });
       }
 
@@ -1414,6 +1490,36 @@ export class AgentLoop {
           break;
         }
         action = singleActionCheck.action!;
+
+        //
+        // PHASE 18.7 / I-8 — AN EXHAUSTED STRATEGY IS NOT RE-DISPATCHED.
+        //
+        // The reasoner can be shown, truthfully, that three downward scrolls
+        // produced no new evidence, and still propose a fourth. Without this
+        // check the run continues to `maxSteps` and ends "exceeded maximum step
+        // limit", which is exactly the untruthful-by-omission outcome I-8
+        // exists to close.
+        //
+        // WHAT THIS IS NOT: it is not a gate, it is not a permission and it
+        // cannot approve anything. It can only NOT dispatch a scroll whose
+        // strategy is already exhausted, and it records that truthfully as a
+        // non-dispatched step so the reasoner sees what happened. `totalNoProgress`
+        // keeps advancing, so the pre-existing stall budget terminates the run
+        // within a bounded number of further cycles.
+        if (this.scrollStrategyExhausted && action.action === 'scroll') {
+          // `currentStep` was already advanced for this cycle above; advancing it
+          // again here would hand the loop a second budget.
+          const kind = this.longHorizon.semanticProgressVerdict().stagnation;
+          const refusal = `SCROLL_STRATEGY_EXHAUSTED:${kind}`;
+          this.recordStep(action, false, refusal, false, refusal);
+          console.info('[AgentTrace] refused an exhausted-strategy scroll', {
+            direction: action.direction,
+            stagnation: kind,
+            reason: refusal,
+          });
+          await this.delay(this.delayBetweenStepsMs);
+          continue;
+        }
       } catch (err: unknown) {
         //
         // PHASE 18.7 / A1 + A9. A terminal proposal is NOT a failure and NOT a

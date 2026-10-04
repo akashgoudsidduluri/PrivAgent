@@ -13,7 +13,10 @@ import {
 } from '../extension/src/content/domInteractiveScanner';
 import { verifyTargetTabAlive } from '../extension/src/background/targetResolver';
 import { checkActionIdempotency } from '../extension/src/agent/actionIdempotency';
-import { runBoundedScrollDiscovery } from '../extension/src/agent/infiniteScrollScanner';
+import {
+  SemanticProgressTracker,
+  type SemanticObservation,
+} from '../extension/src/agent/semanticProgress';
 
 describe('PrivAgent M11 Browser Robustness Suite', () => {
   // ── 1. Failure Taxonomy & State Tracking ─────────────────────────────────
@@ -188,39 +191,77 @@ describe('PrivAgent M11 Browser Robustness Suite', () => {
   });
 
   // ── 8. Bounded Infinite Scroll Discovery ─────────────────────────────────
-  describe('8. Bounded Infinite Scroll Discovery', () => {
-    it('should discover target item when reached within scroll budget', async () => {
-      let callCount = 0;
-      const matcher = () => {
-        callCount++;
-        return callCount >= 3 ? { id: 'item-emerald', title: 'Emerald Backpack' } : null;
-      };
-      const scrollAction = vi.fn().mockResolvedValue(true);
+  //
+  // PHASE 18.7 / I-8. These two cases previously drove
+  // `runBoundedScrollDiscovery` from `infiniteScrollScanner.ts`. That module was
+  // PROVEN DEAD: `grep -rn 'runBoundedScrollDiscovery|infiniteScrollScanner'
+  // extension/src` returned only its own definition, and no production path —
+  // loop, planner, recovery engine or service worker — ever called it. The
+  // closure plan's instruction was explicit: "Wire runBoundedScrollDiscovery into
+  // the loop, or delete it. Dead security-shaped code is a liability."
+  //
+  // It is deleted, and its INTENT — a bounded scroll budget that stops honestly
+  // instead of scrolling forever — is now enforced by the one mechanism that is
+  // actually reachable: `SemanticProgressTracker` in `semanticProgress.ts`,
+  // driven from `LongHorizonTracker.observe()` and consumed by the loop. Wiring
+  // the dead scanner back in would have created a SECOND, independent scroll
+  // budget — exactly the duplication I-8 forbids.
+  //
+  // The intent is therefore re-asserted against the live mechanism.
+  describe('8. Bounded Scroll Discovery (the production mechanism, I-8)', () => {
+    const baseline = {
+      documentIdentity: 'https://shop.example/catalogue',
+      entityIds: ['e1'],
+      candidateIds: ['c1'],
+      factIds: [],
+      affordanceIds: [],
+      targetValueLength: 0,
+      viewportObservable: true,
+    } as const;
 
-      const res = await runBoundedScrollDiscovery(matcher, scrollAction, {
-        maxScrolls: 4,
-        settleTimeoutMs: 10,
-      });
+    it('should discover target item when reached within scroll budget', () => {
+      const tracker = new SemanticProgressTracker();
+      let prev: SemanticObservation | null = { ...baseline, scrollY: 0 };
+      tracker.evaluate({ previous: null, current: prev, scrollDirection: null });
 
-      expect(res.found).toBe(true);
-      expect(res.match?.title).toBe('Emerald Backpack');
-      expect(res.scrollsUsed).toBe(2);
-      expect(res.budgetExhausted).toBe(false);
+      // Two fruitless scrolls, then the target finally appears.
+      let found = false;
+      for (let i = 1; i <= 4 && !found; i++) {
+        const discovered = i >= 3;
+        const cur: SemanticObservation = {
+          ...baseline,
+          scrollY: i * 500,
+          candidateIds: discovered ? ['c1', 'item-emerald'] : ['c1'],
+        };
+        const v = tracker.evaluate({
+          previous: prev,
+          current: cur,
+          scrollDirection: 'down',
+          evidenceDelta: discovered ? 1 : 0,
+        });
+        found = v.meaningful && cur.candidateIds.includes('item-emerald');
+        prev = cur;
+      }
+
+      expect(found).toBe(true);
+      expect(tracker.snapshot().budgetExhausted).toBe(false);
     });
 
-    it('should fail honestly and declare budgetExhausted when item not found within budget', async () => {
-      const matcher = () => null;
-      const scrollAction = vi.fn().mockResolvedValue(true);
+    it('should fail honestly and declare budgetExhausted when item not found within budget', () => {
+      const tracker = new SemanticProgressTracker();
+      let prev: SemanticObservation | null = { ...baseline, scrollY: 0 };
+      tracker.evaluate({ previous: null, current: prev, scrollDirection: null });
 
-      const res = await runBoundedScrollDiscovery(matcher, scrollAction, {
-        maxScrolls: 3,
-        settleTimeoutMs: 10,
-      });
+      let verdict = tracker.snapshot();
+      for (let i = 1; i <= 3; i++) {
+        const cur: SemanticObservation = { ...baseline, scrollY: i * 500 };
+        verdict = tracker.evaluate({ previous: prev, current: cur, scrollDirection: 'down' });
+        prev = cur;
+      }
 
-      expect(res.found).toBe(false);
-      expect(res.budgetExhausted).toBe(true);
-      expect(res.scrollsUsed).toBe(3);
-      expect(res.reason).toContain('bounded scroll budget');
+      expect(verdict.meaningful).toBe(false);
+      expect(verdict.budgetExhausted).toBe(true);
+      expect(verdict.stagnation).toBe('NO_EFFECT');
     });
   });
 });
