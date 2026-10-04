@@ -105,7 +105,9 @@ describe('Provider retry bound proof (Phase 4)', () => {
     const loop = makeLoop(boundedFlaky, { maxSteps, providerRetries });
     const state: TaskState = await loop.runTask('Inspect the page thoroughly');
 
-    // Task ends at the max-step bound (goal never satisfied by scrolls).
+    // PHASE 18.7 / A8: an EXPLICIT `providerRetries` remains the operator's
+    // ceiling, so the documented worst case is still reachable and still
+    // provable. A8 only replaces the DEFAULT budget.
     expect(state.status).toBe('FAILED');
     // EXACT worst case: every step consumed its full 1 + providerRetries budget.
     expect(calls).toBe(maxSteps * (1 + providerRetries));
@@ -127,7 +129,7 @@ describe('Provider retry bound proof (Phase 4)', () => {
     const loop = makeLoop(alwaysRetryable, { maxSteps, providerRetries });
     const state: TaskState = await loop.runTask('Find the account number field');
 
-    expect(state.status).toBe('FAILED');
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
     // Fail-closed: a fully-failed reasoning step ends the task immediately.
     expect(calls).toBe(1 + providerRetries);
     expect(state.providerAttempts).toBe(calls);
@@ -147,7 +149,7 @@ describe('Provider retry bound proof (Phase 4)', () => {
     const loop = makeLoop(authFailure, { maxSteps: 10, providerRetries: 3 });
     const state = await loop.runTask('Find the account number field');
 
-    expect(state.status).toBe('FAILED');
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
     expect(calls).toBe(1);
     expect(state.providerAttempts).toBe(1);
   });
@@ -169,7 +171,7 @@ describe('Provider retry bound proof (Phase 4)', () => {
     expect(calls).toBe(1);
     expect(state.providerAttempts).toBe(1);
     // Fail-closed: no action is invented or executed when reasoning is unavailable.
-    expect(state.status).toBe('FAILED');
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
     expect(state.previousActions).toEqual([]);
     expect(state.reason).toMatch(/reasoning/i);
   });
@@ -190,7 +192,7 @@ describe('Provider retry bound proof (Phase 4)', () => {
 
       expect(calls).toBe(3); // 1 + providerRetries
       expect(state.providerAttempts).toBe(3);
-      expect(state.status).toBe('FAILED');
+      expect(state.status).toBe('PROVIDER_UNAVAILABLE');
     }
   });
 

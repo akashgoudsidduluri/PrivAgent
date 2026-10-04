@@ -50,6 +50,9 @@ import { ProviderError } from './openRouterProvider';
 import {
   isObservationCurrent,
   observationIdentity,
+  providerRetryBudget,
+  providerTaskClassFor,
+  terminalStateForProviderFailure,
 } from './providerResponse';
 import { AgentContextPayload, SensitiveEntityType } from '../privacy/types';
 import { assessActionRisk, ActionRiskAssessment } from './riskEngine';
@@ -123,6 +126,13 @@ import {
 } from './containment';
 import {
   RecoveryEngine,
+  TypedRecoveryPlanner,
+  recoveryCategoryFor,
+  type RecoveryFailureCategory,
+  type RecoveryRecord,
+  type RecoveryStrategyClass,
+  type TypedRecoveryOutcome,
+  MAX_RECOVERY_RECORDS,
   DEFAULT_RECOVERY_BOUNDS,
   type RecoveryDecision,
   type RecoveryHistoryEntry,
@@ -383,6 +393,8 @@ export class AgentLoop {
   private delayBetweenStepsMs: number;
   private requireConfirmationForExternalNavigation: boolean;
   private providerRetries: number;
+  /** PHASE 18.7 / A8. True when `providerRetries` was set by the caller. */
+  private readonly providerRetriesExplicit: boolean;
   private providerRetryDelayMs: number;
   private targetTabId: number | null = null;
   private state: AgentTaskState;
@@ -414,6 +426,12 @@ export class AgentLoop {
    */
   private readonly recoveryEngine = new RecoveryEngine(DEFAULT_RECOVERY_BOUNDS);
   /**
+   * PHASE 18.7 / A7. The bounded typed recovery planner. It selects a strategy
+   * CLASS and writes a `RecoveryRecord`; it never selects an action, never
+   * executes one, and never approves one.
+   */
+  private readonly typedRecovery = new TypedRecoveryPlanner();
+  /**
    * PHASE 18.7 / I-8. Ledger size at the end of the previous cycle, so the next
    * one can compute a truthful EVIDENCE DELTA. A COUNT only.
    */
@@ -427,6 +445,12 @@ export class AgentLoop {
    * dispatch, and every other gate still runs in full on everything else.
    */
   private scrollStrategyExhausted = false;
+  /**
+   * PHASE 18.7 / A7. Set when a STALE_PERCEPTION recovery turn is taken, and
+   * consumed by the next perception failure so the reported reason names the
+   * upstream cause rather than only its symptom.
+   */
+  private pendingStaleReason: string | undefined;
   private readonly taskRunId?: number | string;
 
   /**
@@ -620,6 +644,10 @@ export class AgentLoop {
     this.requireConfirmationForExternalNavigation =
       options.requireConfirmationForExternalNavigation ?? true;
     this.providerRetries = options.providerRetries ?? 2;
+    // PHASE 18.7 / A8. An explicit operator setting is a deliberate ceiling and
+    // is honoured exactly; only the DEFAULT is replaced by the task-class-aware
+    // budget.
+    this.providerRetriesExplicit = options.providerRetries !== undefined;
     this.providerRetryDelayMs = options.providerRetryDelayMs ?? 250;
     this.targetTabId = options.targetTabId ?? null;
     // PHASE 17.4 D5. Default is an in-memory store: persistence is opt-in and
@@ -773,6 +801,12 @@ export class AgentLoop {
     // Phase 10: a fresh task starts with a fresh recovery budget. History from
     // a previous task must never bleed into this one's bounds.
     this.recoveryEngine.reset();
+    // PHASE 18.7 / A7. A new task gets a full recovery budget; a restart must
+    // never inherit a drained one.
+    this.typedRecovery.reset();
+    this.scrollStrategyExhausted = false;
+    this.lastObservedLedgerSize = 0;
+    this.pendingStaleReason = undefined;
     this.state.recoveryHistory = [];
     this.state.totalRecoveryAttempts = 0;
 
@@ -910,7 +944,18 @@ export class AgentLoop {
       if (!normalized) {
         this.state.status = 'FAILED';
         this.state.goalStatus = 'FAILED';
-        this.state.reason = 'Perception failed: Unable to obtain sanitized page context.';
+        //
+        // PHASE 18.7 / A7. When the failure came after a STALE_PERCEPTION
+        // recovery turn, the stale observation is the upstream cause: the
+        // reasoner refused a proposal computed against a page that had since
+        // moved, and the page then could not be re-read. Reporting only the
+        // second event would hide the first, which is the one that matters.
+        if (this.pendingStaleReason) {
+          this.state.reason = this.pendingStaleReason;
+          this.pendingStaleReason = undefined;
+        } else {
+          this.state.reason = 'Perception failed: Unable to obtain sanitized page context.';
+        }
         this.notifyProgress();
         console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
         break;
@@ -1366,6 +1411,11 @@ export class AgentLoop {
       // productive cycle means the budget was never drained.
       if (lhProgress.budgetExhausted && !this.scrollStrategyExhausted) {
         this.scrollStrategyExhausted = true;
+        // PHASE 18.7 / A7. The stagnation verdict becomes a typed recovery
+        // record with the category it actually is — OSCILLATION is not
+        // relabelled as generic no-effect, because the two need different
+        // strategies.
+        this.planRecoveryForLastStep(lhProgress.stagnation === 'OSCILLATION' ? 'OSCILLATION' : 'NO_EFFECT');
         console.warn('[AgentTrace] I-8 scroll strategy exhausted — no further scrolls will be dispatched', {
           stagnation: lhProgress.stagnation,
           sameDirectionRun: lhProgress.sameDirectionRun,
@@ -1554,6 +1604,82 @@ export class AgentLoop {
           continue;
         }
         const msg = err instanceof Error ? err.message : String(err);
+
+        //
+        // PHASE 18.7 / A7 — STALE PERCEPTION IS A RECOVERY CASE, NOT A CRASH.
+        //
+        // A proposal computed against a page that has since moved is refused,
+        // which is correct. Reporting that as a terminal task failure is not:
+        // the loop re-perceives at the top of every cycle, so the honest
+        // response is one bounded turn with a FRESH perception. The typed
+        // record makes the reason visible, and its budget of 1 guarantees this
+        // cannot loop.
+        if (err instanceof ProviderError && err.category === 'STALE_RESPONSE') {
+          const stale = this.planRecoveryForLastStep('STALE_PERCEPTION');
+          if (stale && !stale.exhausted) {
+            //
+            // STALE_PERCEPTION's strategy is RE_PERCEIVE, and it is performed
+            // HERE rather than deferred: a proposal computed against a page that
+            // has since moved must never be carried into the next decision, and
+            // the next cycle's perception is the only thing that can fix it. If
+            // the fresh perception is unavailable there is nothing truthful to
+            // do but say so.
+            const fresh = await this.callbacks.perceivePage();
+            // Normalised through exactly the same path the next cycle uses, so
+            // "a fresh perception is available" means the same thing in both
+            // places and cannot disagree with itself.
+            if (fresh && this.normalizePerceptionResult(fresh)) {
+              this.state.reason = 'Observation was superseded; a fresh perception was taken.';
+              this.pendingStaleReason =
+                'Provider response was stale and the page could not be re-perceived.';
+              this.notifyProgress();
+              continue;
+            }
+            this.state.status = 'FAILED';
+            this.state.goalStatus = 'FAILED';
+            this.state.reason =
+              'Provider response was stale and the page could not be re-perceived.';
+            this.notifyProgress();
+            console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+            break;
+          }
+        }
+
+        //
+        // PHASE 18.7 / A8 — A PROVIDER FAILURE IS ITS OWN TRUTHFUL STATE.
+        //
+        // It used to end as `FAILED` with "Agent reasoning failed: …", which
+        // reads as a browser or goal failure. It is neither: the browser was
+        // never asked to do anything, and nothing about the page was decided.
+        // Reporting it as `PROVIDER_UNAVAILABLE` is what makes a rate limit, a
+        // timeout, a malformed HTTP 200 and a schema violation all
+        // distinguishable from "the agent tried and could not".
+        //
+        // It can never be SUCCESS: `goalStatus` is left untouched, so only the
+        // GoalVerifier may still report it, and it never ran.
+        if (err instanceof ProviderError) {
+          const first = this.planRecoveryForLastStep('PROVIDER_UNAVAILABLE');
+          const category = err.category;
+          //
+          // The bounded retry for a provider failure is the IN-STEP budget in
+          // `requestStepFromProvider`, and it has already been spent by the time
+          // control returns here. Issuing another cycle would spend a SECOND
+          // budget for the same failure — which is exactly what the M7 guarantee
+          // ("a rate limit costs exactly ONE request") forbids. So the cycle
+          // always ends, and the second plan() records that decision honestly.
+          const terminal = first?.exhausted ? first : this.planRecoveryForLastStep('PROVIDER_UNAVAILABLE');
+          this.state.status = terminalStateForProviderFailure(category);
+          this.state.reason = userFacingMessageForStatus(this.state.status);
+          this.notifyProgress();
+          console.warn('[AgentTrace] reasoning provider unavailable', {
+            category,
+            attempts: this.state.providerAttempts,
+            retryCount: terminal?.record.retryCount,
+            reasonCode: terminal?.record.reasonCode,
+          });
+          break;
+        }
+
         this.state.status = 'FAILED';
         this.state.goalStatus = 'FAILED';
         this.state.reason = `Agent reasoning failed: ${msg}`;
@@ -1601,6 +1727,10 @@ export class AgentLoop {
 
         const failReason = `Target Grounding Failed (${grounding.failureReason || 'ELEMENT_NOT_FOUND'}): ${grounding.details}`;
         this.recordStep(action, false, failReason, false, failReason);
+        // PHASE 18.7 / A7. Grounding is a GATE: nothing executed. Recovery must
+        // not retry the same prohibited proposal — its POLICY_BLOCKED budget is
+        // 1, after which the strategy chain terminates truthfully.
+        this.planRecoveryForLastStep('POLICY_BLOCKED');
         this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
@@ -1746,6 +1876,11 @@ export class AgentLoop {
         this.state.decisionTraceSummary = tracer.getSummary();
         this.notifyProgress();
 
+        // PHASE 18.7 / A7. M5 is the authoritative structural gate; a refusal is
+        // recorded as POLICY_BLOCKED with a budget of 1, so the identical
+        // proposal cannot be retried blindly.
+        this.planRecoveryForLastStep('POLICY_BLOCKED');
+
         if (this.state.retryCount > this.maxRetries) {
           this.state.status = 'FAILED';
           this.state.goalStatus = 'FAILED';
@@ -1808,6 +1943,10 @@ export class AgentLoop {
 
         const criticReason = `Security Critic BLOCKED (${critic.code}): ${critic.reason}`;
         this.recordStep(action, false, criticReason, false, criticReason);
+        // PHASE 18.7 / A7. The Security Critic's refusal is authoritative and is
+        // recorded as such. Recovery gets a bounded strategy class; it cannot
+        // override, defer or re-run the critic.
+        this.planRecoveryForLastStep('POLICY_BLOCKED');
         this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
           goal: task,
@@ -1974,6 +2113,9 @@ export class AgentLoop {
         if (!review.safe) {
           this.state.retryCount++;
           this.recordStep(action, false, `SAFETY Rejected: ${review.reason}`, false, review.reason, targetDet?.type, risk, semantic, confidence);
+          // PHASE 18.7 / A7. A SAFETY refusal is a gate refusal, not a browser
+          // failure. Recovery is bounded and cannot propose the same action.
+          this.planRecoveryForLastStep('POLICY_BLOCKED');
           this.notifyProgress();
           if (this.state.retryCount > this.maxRetries) {
             this.state.status = 'FAILED';
@@ -2590,6 +2732,43 @@ export class AgentLoop {
           effectResult.status,
           effectResult.details
         );
+
+        //
+        // PHASE 18.7 / A7 — TRUTHFUL TYPED RECOVERY FOR A NO-EFFECT STEP.
+        //
+        // The category is DERIVED, never asserted by the caller: OSCILLATION
+        // when the I-8 semantic-progress authority has detected an alternating
+        // run, otherwise NO_EFFECT from the EffectVerifier's own verdict.
+        // `madeProgress` inside the record comes from `assessProgress`, so it
+        // can never be confused with the fact that this action did dispatch.
+        const noEffectRecovery = this.planRecoveryForLastStep(
+          this.longHorizon.semanticProgressVerdict().stagnation === 'OSCILLATION' ? 'OSCILLATION' : 'NO_EFFECT'
+        );
+        if (noEffectRecovery?.exhausted) {
+          // Bounded recovery is spent for this category. Terminate TRUTHFULLY
+          // rather than cycling: this is the path that stops "keep scrolling,
+          // keep hoping" from running to the step ceiling. The failure record
+          // keeps the repository's EXISTING vocabulary, so every existing
+          // consumer of it reads this exactly as it reads the older paths.
+          const record = this.lastRecoveryRecord();
+          const exhaustedRecord: FailureRecord = {
+            category: 'RECOVERY_EXHAUSTED',
+            reason: `Recovery limit exceeded for ${record?.failureCategory ?? 'NO_EFFECT'} after ${record?.retryCount ?? 0} bounded attempts.`,
+            pageGeneration: this.state.currentPageGeneration,
+            attemptedAction: action,
+            recoveryAttempted: true,
+            finalState: 'FAILED',
+            timestamp: Date.now(),
+          };
+          this.state.lastFailure = exhaustedRecord;
+          this.state.failureHistory.push(exhaustedRecord);
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason = exhaustedRecord.reason;
+          this.notifyProgress();
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+          break;
+        }
 
         this.recordDecisionStep(tracer, {
           step: this.state.currentStep,
@@ -3326,7 +3505,8 @@ export class AgentLoop {
     const expectedIdentity = this.observationIdentityFor(context);
 
     let lastError: unknown;
-    for (let attempt = 0; attempt <= this.providerRetries; attempt++) {
+    let attempt = 0;
+    for (;;) {
       if (this.isStopped) {
         throw new ProviderError('Task stopped.', 'timeout', { retryable: false });
       }
@@ -3370,6 +3550,9 @@ export class AgentLoop {
         this.notifyProgress();
         console.info('[AgentTrace] reasoning retry attempt starting', {
           attempt,
+          // PHASE 18.7 / A8. The ceiling is still the operator's
+          // `providerRetries`; A8 only ever narrows it, per attempt, to the
+          // task-class/category budget computed after the previous failure.
           maxAttempts: this.providerRetries + 1,
         });
       }
@@ -3529,18 +3712,48 @@ export class AgentLoop {
       } catch (err: unknown) {
         lastError = err;
         this.provider.registerFailure?.();
-        const retryable = err instanceof ProviderError ? err.retryable : false;
-        if (!retryable || attempt >= this.providerRetries) {
-          break;
-        }
+        //
+        // PHASE 18.7 / A8 — THE BUDGET IS DECIDED BY THE FAILURE, NOT BEFORE IT.
+        //
+        // The category is only knowable once the attempt has failed, so the
+        // budget is computed HERE rather than once up front. A non-ProviderError
+        // (a `TerminalProposalSignal`, a host fault) was never a transport
+        // problem at all, so it is never retried — it propagates immediately.
+        if (!(err instanceof ProviderError)) break;
+        //
+        // The hard ceiling is unchanged: `providerRetries` still caps the run,
+        // exactly as Phase 17.5 (F8) required.
+        //
+        // When the operator set that ceiling EXPLICITLY it is honoured as-is: it
+        // is a deliberate configuration, not a default, and silently lowering it
+        // would make the documented bound unprovable. When it was left at the
+        // default, A8 supplies the task-class-aware budget instead — an
+        // information task spends 1, an interactive one 2, and a deterministic
+        // failure 0 or 1 depending on whether anything could change.
+        const budget = this.providerRetriesExplicit
+          ? this.providerRetries
+          : Math.min(
+              this.providerRetries,
+              providerRetryBudget(
+                providerTaskClassFor({
+                  requiresEvidence: this.intentDecision?.requiresEvidence,
+                  requiresDestination: this.intentDecision?.requiresDestination,
+                }),
+                err.category,
+                err.retryAfterMs,
+                err.retryable === true
+              )
+            );
+        if (err.retryable !== true || attempt >= budget) break;
         //
         // PHASE 17.5 (F8). A server Retry-After is honoured only when parsed and
         // trustworthy, is clamped to 30s, and stays INSIDE the configured bounded
         // provider retry count. It can never become an infinite loop, and it never
         // applies to a rate limit, which stays non-retryable by design.
         //
-        const hint = err instanceof ProviderError ? err.retryAfterMs : undefined;
+        const hint = err.retryAfterMs;
         const delay = typeof hint === 'number' ? Math.min(hint, 30_000) : this.providerRetryDelayMs;
+        attempt++;
         await this.delay(delay);
       } finally {
         if (timer !== undefined) clearTimeout(timer);
@@ -3616,6 +3829,79 @@ export class AgentLoop {
       return true;
     }
     return false;
+  }
+
+  /**
+   * PHASE 18.7 / A7 — BUILD A TRUTHFUL RECOVERY RECORD.
+   *
+   * Every typed failure site in the loop funnels through here so there is
+   * exactly ONE place a `RecoveryRecord` is produced, and none of the sites can
+   * invent one. The inputs are the facts the device already established:
+   *
+   *   • the typed dispatch/effect pair from `buildActionHistoryEntry` (A6),
+   *   • the semantic-progress verdict from the ONE progress authority (I-8),
+   *   • and the failure category, which is DERIVED deterministically.
+   *
+   * `madeProgress` is read from `this.longHorizon.semanticProgressVerdict()`
+   * and therefore can only ever come from `assessProgress`. It is never read
+   * from dispatch success, which is the conflation that made Phase 17.4's
+   * stagnation detection unreachable in the first place.
+   *
+   * Nothing here executes, approves or dispatches anything. The returned
+   * outcome is a strategy CLASS plus a bound.
+   */
+  private planRecovery(input: {
+    failureCategory: RecoveryFailureCategory;
+    previousActionResult: ActionHistoryEntry | null;
+    substep?: string;
+  }): TypedRecoveryOutcome {
+    const outcome = this.typedRecovery.plan({
+      failureCategory: input.failureCategory,
+      previousActionResult: input.previousActionResult,
+      madeProgress: this.longHorizon.semanticProgressVerdict().meaningful,
+    });
+    this.state.recoveryRecords = [...this.typedRecovery.records].slice(-MAX_RECOVERY_RECORDS);
+    console.info('[AgentTrace] recovery record', {
+      category: outcome.record.failureCategory,
+      from: outcome.record.strategyFrom,
+      to: outcome.record.strategyTo,
+      retryCount: outcome.record.retryCount,
+      reasonCode: outcome.record.reasonCode,
+      madeProgress: outcome.record.madeProgress,
+      observationState: outcome.record.observationState,
+      exhausted: outcome.exhausted,
+    });
+    return outcome;
+  }
+
+  /**
+   * Build the typed history entry for the step just recorded and plan recovery
+   * from it. Callers pass only the CATEGORY, which is derived from typed state;
+   * they never construct an `ActionHistoryEntry` themselves.
+   */
+  private planRecoveryForLastStep(
+    failureCategory: RecoveryFailureCategory
+  ): TypedRecoveryOutcome | undefined {
+    const last = this.state.steps[this.state.steps.length - 1];
+    return this.planRecovery({
+      failureCategory,
+      // No step means no action was ever proposed — a provider outage, or a
+      // host fault. `null` says exactly that; a placeholder entry would invent
+      // an action nobody proposed.
+      previousActionResult: last
+        ? buildActionHistoryEntry(last, {
+            currentPageGeneration: this.state.currentPageGeneration,
+          })
+        : null,
+    });
+  }
+
+  /**
+   * The most recent recovery record, read by the terminal paths so a truthful
+   * reason reaches the user without any free text being synthesised.
+   */
+  private lastRecoveryRecord(): RecoveryRecord | undefined {
+    return this.state.recoveryRecords?.[this.state.recoveryRecords.length - 1];
   }
 
   private recordStep(

@@ -82,9 +82,11 @@ describe('17.5 loop-level · provider failure never becomes SUCCESS (M5)', () =>
       { maxSteps: 3, providerRetries: 1, delayBetweenStepsMs: 0, providerRetryDelayMs: 0 }
     );
     const state = await loop.runTask('Do the thing');
-    expect(state.status).toBe('FAILED');
+    // PHASE 18.7 / A8: a provider failure is its own truthful terminal state.
+    // The invariant this test exists for is unchanged and is asserted first.
     expect(state.goalStatus).not.toBe('SUCCESS');
-    expect(state.reason).toMatch(/Agent reasoning failed/);
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
+    expect(state.steps).toEqual([]);
   });
 
   it('a non-retryable provider failure does not retry at all', async () => {
@@ -110,7 +112,7 @@ describe('17.5 loop-level · retries are bounded (M4)', () => {
         { maxSteps: 3, providerRetries: retries, delayBetweenStepsMs: 0, providerRetryDelayMs: 0 }
       );
       const state = await loop.runTask('Do the thing');
-      expect(state.status).toBe('FAILED');
+      expect(state.status).toBe('PROVIDER_UNAVAILABLE');
       expect(calls.n).toBe(retries + 1);
     }
   });

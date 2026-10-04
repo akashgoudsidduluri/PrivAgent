@@ -1086,6 +1086,163 @@ def parse_model_action(content: str) -> Dict[str, Any]:
     return parsed
 
 
+# ── PHASE 18.7 / A8 — SEMANTIC / APPLICABILITY VALIDATION ─────────────────────
+#
+# HTTP 200 IS NOT A VALID ACTION.
+# -----------------------------------
+# The model answered. That is all an HTTP 200 means. Before A8 this module
+# returned the model's dict VERBATIM and `routes/agent.py` then "helped" it into
+# shape: it rewrote `navigate` into `scroll`, invented a `direction` and an
+# `amount` that were never supplied, and silently deleted every field that did
+# not fit. The observed real-world result was a body in which the model had
+# filled every unused field with the literal string "down":
+#
+#   {"action":"scroll","amount":500,"direction":"down","option":"down",
+#    "reason":"…","target":"down","text":"down","url":"down"}
+#
+# Three separate untruths were laundered into one valid-looking action:
+#   1. an inapplicable field was present and was dropped rather than refused,
+#   2. the action TYPE could be rewritten into a different action,
+#   3. required fields could be invented when absent.
+#
+# None of that is repair; all of it is fabrication. The rules below REFUSE.
+#
+# WHAT IS STILL ALLOWED (and why it is not coercion)
+# ---------------------------------------------------
+# Exactly three normalizations, each of which preserves the model's meaning and
+# changes none of its semantics:
+#   • case/whitespace on the `direction` enum ("Down" -> "down"),
+#   • a numeric STRING for `amount` ("500" -> 500), still range-checked after,
+#   • the existing pressKey alias table ("enter" -> "Enter"), which maps INTO a
+#     fixed allowlist rather than inventing a key.
+# Everything else — an inapplicable field, a missing required field, an invalid
+# enum, an out-of-range amount, a rewritten action type — is REFUSED as a model
+# contract violation. Nothing is clamped, filled in, or stripped.
+
+# Fields that belong to the action, and fields that are required for it.
+# Mirrors `BrowserActionModel._ALLOWED_FIELDS` / `_REQUIRED_FIELDS`; the
+# pydantic model below remains the final authority and is unchanged.
+_A8_ALLOWED_FIELDS: Dict[str, frozenset] = {
+    "click": frozenset({"target"}),
+    "scroll": frozenset({"direction", "amount"}),
+    "type": frozenset({"target", "text"}),
+    "select": frozenset({"target", "option"}),
+    "navigate": frozenset({"url"}),
+    "pressKey": frozenset({"key", "target"}),
+}
+
+_A8_REQUIRED_FIELDS: Dict[str, frozenset] = {
+    "click": frozenset({"target"}),
+    "scroll": frozenset({"direction", "amount"}),
+    "type": frozenset({"target", "text"}),
+    "select": frozenset({"target", "option"}),
+    "navigate": frozenset({"url"}),
+    "pressKey": frozenset({"key"}),
+}
+
+# Never part of the applicability decision. `reason` is diagnostic prose and is
+# scanned separately; `effect`/`scroll_delta` are device-side history fields the
+# model has no business setting.
+_A8_NEUTRAL_FIELDS = frozenset({"action", "reason"})
+
+
+def normalize_model_action_shape(raw: Dict[str, Any]) -> Dict[str, Any]:
+    """Apply ONLY the three meaning-preserving normalizations A8 permits.
+
+    Returns a NEW dict. Never mutates the caller's, never invents a value, never
+    changes an action type, and never removes a field.
+    """
+    out = dict(raw)
+    action = out.get("action")
+
+    if action == "scroll":
+        direction = out.get("direction")
+        if isinstance(direction, str):
+            folded = direction.strip().lower()
+            # Only the canonical enum, case-insensitively. Anything else is
+            # refused by the applicability gate rather than defaulted.
+            if folded in ("up", "down"):
+                out["direction"] = folded
+        amount = out.get("amount")
+        if isinstance(amount, str):
+            try:
+                out["amount"] = int(amount.strip())
+            except (ValueError, TypeError):
+                # Left as-is; the applicability gate refuses a non-numeric one.
+                pass
+    elif action == "pressKey":
+        key = out.get("key")
+        if isinstance(key, str):
+            mapped = _PRESS_KEY_ALIASES.get(key.strip().lower())
+            if mapped is not None:
+                out["key"] = mapped
+
+    return out
+
+
+def assert_model_action_applicable(raw: Dict[str, Any]) -> None:
+    """REFUSE a model action that parses but does not APPLY.
+
+    Raises `ReasoningError(kind="model_contract")`, which the route surfaces as
+    a 502 — a deterministic output problem, never confused with an outage and
+    never presented as a successful action.
+    """
+    if not isinstance(raw, dict):
+        raise ReasoningError("Model output is not a JSON object.", kind="invalid_json")
+
+    action = raw.get("action")
+    if not isinstance(action, str) or action not in _A8_ALLOWED_FIELDS:
+        # The action TYPE itself is `BrowserActionModel`'s call, not this gate's.
+        # The 17.10 classification of an unknown enum as a genuine structure
+        # error is deliberate and is preserved; duplicating it here would create
+        # a second, competing definition. Return and let pydantic refuse it.
+        return
+
+    provided = {k: v for k, v in raw.items() if k not in _A8_NEUTRAL_FIELDS and v is not None}
+    inapplicable = sorted(k for k in provided if k not in _A8_ALLOWED_FIELDS[action])
+    if inapplicable:
+        # The observed `target`/`text`/`url` = "down" class of failure.
+        raise ReasoningError(
+            "Model action carries field(s) that do not apply to its action type: "
+            + ", ".join(inapplicable),
+            kind="model_contract",
+        )
+
+    def _absent(value: Any) -> bool:
+        # A whitespace-only string is as absent as an empty one: a target of
+        # "   " addresses nothing, and treating it as present would hand the
+        # device an action with no referent.
+        if value is None:
+            return True
+        if isinstance(value, str):
+            return value.strip() == ""
+        return False
+
+    missing = sorted(k for k in _A8_REQUIRED_FIELDS[action] if _absent(raw.get(k)))
+    if missing:
+        raise ReasoningError(
+            "Model action is missing required field(s): " + ", ".join(missing),
+            kind="model_contract",
+        )
+
+    if action == "scroll":
+        direction = raw.get("direction")
+        if not isinstance(direction, str) or direction.strip().lower() not in ("up", "down"):
+            raise ReasoningError("Model scroll direction is not up|down.", kind="model_contract")
+        amount = raw.get("amount")
+        if isinstance(amount, bool) or not isinstance(amount, int):
+            raise ReasoningError("Model scroll amount is not an integer.", kind="model_contract")
+        if not (1 <= amount <= 5000):
+            # Out of range is REFUSED, never clamped. Clamping is exactly the
+            # silent repair A8 removes.
+            raise ReasoningError("Model scroll amount is outside 1-5000.", kind="model_contract")
+
+    if action == "type" and not isinstance(raw.get("text"), str):
+        raise ReasoningError("Model type text is not a string.", kind="model_contract")
+    if action == "select" and not isinstance(raw.get("option"), str):
+        raise ReasoningError("Model select option is not a string.", kind="model_contract")
+
+
 # ── PHASE 18.7 / A1 — the proposal contract ───────────────────────────────────
 #
 # The model is a PROPOSER. It may propose what to do next: a browser action, or
@@ -1094,6 +1251,22 @@ def parse_model_action(content: str) -> Dict[str, Any]:
 # and nothing here grants a permission.
 
 PROPOSAL_KINDS = ("ACTION", "ANSWER", "NEEDS_INFORMATION", "PARTIAL", "CANNOT_VERIFY")
+
+# PHASE 18.7 / A8. The ONLY key aliases permitted. Each maps a spelling onto a
+# member of the existing pressKey allowlist; none invents a key.
+_PRESS_KEY_ALIASES: Dict[str, str] = {
+    "enter": "Enter",
+    "return": "Enter",
+    "tab": "Tab",
+    "escape": "Escape",
+    "esc": "Escape",
+    "arrowdown": "ArrowDown",
+    "arrowup": "ArrowUp",
+    "arrowleft": "ArrowLeft",
+    "arrowright": "ArrowRight",
+    "backspace": "Backspace",
+    "delete": "Delete",
+}
 
 # Text the model authored inside a proposal. Every one of these is UNTRUSTED
 # prose and runs through the same scanner as `reason` — a claim is no safer

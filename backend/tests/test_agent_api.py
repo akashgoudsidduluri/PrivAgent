@@ -186,10 +186,16 @@ def test_agent_action_rejects_invalid_sanitized_status():
     assert resp.status_code == 422
 
 
-def test_agent_action_normalizes_navigate_down_to_scroll(monkeypatch):
-    """When LLM emits navigate with url='down' to view more results, normalize to scroll."""
+def test_agent_action_refuses_navigate_with_a_non_url_target(monkeypatch):
+    """PHASE 18.7 / A8: `{"action":"navigate","url":"down"}` is REFUSED.
+
+    This response used to be silently rewritten into `scroll/down/500` — an
+    action the model never proposed, invented from a heuristic reading of the
+    word "down". HTTP 200 plus a JSON body is not a valid action, and repairing
+    one into a different action is fabrication, not validation.
+    """
     from app.reasoner import MockReasoner, ReasoningResult
-    
+
     def fake_request(*args, **kwargs):
         return ReasoningResult(
             raw_action={"action": "navigate", "url": "down", "reason": "Navigate down the homepage."},
@@ -204,16 +210,22 @@ def test_agent_action_normalizes_navigate_down_to_scroll(monkeypatch):
         "context": VALID_CONTEXT,
     }
     resp = _post_agent(req_body)
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["success"] is True
-    assert data["action"]["action"] == "scroll"
-    assert data["action"]["direction"] == "down"
-    assert data["action"]["amount"] == 500
+
+    assert resp.status_code == 502
+    body = resp.json()
+    assert body["detail"]["success"] is False
+    # No action is fabricated, and no scroll is silently manufactured.
+    assert "action" not in body
 
 
-def test_agent_action_normalizes_navigate_direction_to_scroll(monkeypatch):
-    """When LLM emits navigate with direction='down', amount=500, normalize to scroll."""
+def test_agent_action_refuses_inapplicable_fields_on_a_navigate(monkeypatch):
+    """PHASE 18.7 / A8: `direction`/`amount` do not apply to `navigate`.
+
+    This is the observed real-world defect class: a model that filled every
+    unused field with the literal string "down". The old normalizer deleted the
+    inapplicable fields and kept going; A8 refuses the response instead, so the
+    unusable answer never becomes a browser action.
+    """
     from app.reasoner import MockReasoner, ReasoningResult
 
     def fake_request(*args, **kwargs):
@@ -230,12 +242,14 @@ def test_agent_action_normalizes_navigate_direction_to_scroll(monkeypatch):
         "context": VALID_CONTEXT,
     }
     resp = _post_agent(req_body)
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["success"] is True
-    assert data["action"]["action"] == "scroll"
-    assert data["action"]["direction"] == "down"
-    assert data["action"]["amount"] == 500
+
+    assert resp.status_code == 502
+    body = resp.json()
+    assert body["detail"]["success"] is False
+    assert "action" not in body
+    # A deterministic output fault, never confused with a provider outage.
+    assert body["detail"]["error_kind"] == "model_contract"
+    assert body["detail"]["retryable"] is False
 
 
 def test_agent_action_supports_press_key(monkeypatch):

@@ -467,6 +467,7 @@ describe('17.5 · privacy of provider failure handling (20)', () => {
       retryAfterMs: null,
       fallbackUsed: false,
       validation: 'REFUSED',
+      validationStage: 'SCHEMA',
       actionType: null,
       terminalOutcome: 'FAILED',
       latencyMs: 12,
@@ -493,6 +494,7 @@ describe('17.5 · privacy of provider failure handling (20)', () => {
         'retried',
         'terminalOutcome',
         'validation',
+        'validationStage',
       ].sort()
     );
     expect(first.requestId).toMatch(/^req-\d+$/);

@@ -514,6 +514,18 @@ export interface AgentTaskState extends TaskState {
   recoveryStrategy?: import('./recoveryEngine').RecoveryStrategy;
 
   /**
+   * PHASE 18.7 / A7: the bounded, typed recovery records for this task.
+   *
+   * Each entry is a fixed-vocabulary projection of a fact the device already
+   * established — typed effect verdict, typed dispatch status, observation
+   * provenance, and the I-8 semantic-progress verdict. There is deliberately no
+   * free-text field, so no page content and no model prose can reach it. The
+   * planner keeps its own ring bounded to `MAX_RECOVERY_RECORDS`; the copy
+   * here is truncated to the same bound on every write.
+   */
+  recoveryRecords?: import('./recoveryEngine').RecoveryRecord[];
+
+  /**
    * Phase 13 Harness: the cycle-coordination record for this task.
    *
    * Verdicts, codes and counters only — never a URL, page text, or any model

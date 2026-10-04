@@ -38,8 +38,10 @@ from ..models import (
 )
 from ..reasoner import (
     ReasoningError,
+    assert_model_action_applicable,
     build_reasoner,
     last_clamped_fields,
+    normalize_model_action_shape,
     resolve_reasoner_name,
 )
 from ..security import PayloadSecurityError, verify_payload_invariants
@@ -373,94 +375,49 @@ async def generate_action(
             ),
         )
 
-    # 2. LLM output is UNTRUSTED: defensive normalization + strict schema validation.
+    # 2. LLM output is UNTRUSTED: strict APPLICABILITY gate, then strict schema.
+    #
+    # PHASE 18.7 / A8. This block used to REWRITE the model's action: it turned
+    # `navigate` into `scroll`, invented a `direction` and an `amount` that were
+    # never supplied, and silently deleted every field that did not fit the
+    # action type. That is not validation — it is fabrication, and it is how a
+    # malformed HTTP 200 became a real browser action.
+    #
+    # What happens now:
+    #   1. the three MEANING-PRESERVING normalizations A8 permits (enum case,
+    #      numeric string for amount, pressKey alias) — nothing more,
+    #   2. `assert_model_action_applicable` REFUSES an inapplicable field, a
+    #      missing required field, an invalid enum or an out-of-range amount,
+    #   3. `BrowserActionModel` remains the authoritative schema and policy gate,
+    #      completely unchanged.
+    #
+    # A refusal is a deterministic model-contract violation (502). It is never
+    # coerced into a working action, and it is never reported as success.
     try:
         raw_dict = dict(result.raw_action) if isinstance(result.raw_action, dict) else result.raw_action
-        if isinstance(raw_dict, dict):
-            act_type = str(raw_dict.get("action", "")).strip()
-
-            # Normalize direction and url heuristics
-            raw_dir = str(raw_dict.get("direction", "")).strip().lower()
-            raw_url = str(raw_dict.get("url", "")).strip().lower()
-
-            # Did the model say "navigate" when it actually meant "scroll"?
-            # (e.g. {"action": "navigate", "url": "down"} or {"action": "navigate", "direction": "down"})
-            if act_type == "navigate":
-                has_valid_http_url = raw_url.startswith(("http://", "https://"))
-                is_scroll_intent = (
-                    not has_valid_http_url
-                    and (
-                        raw_url in ("down", "up", "downwards", "upwards", "bottom", "top")
-                        or raw_dir in ("down", "up", "downwards", "upwards", "bottom", "top")
-                        or (raw_dict.get("direction") is not None and str(raw_dict.get("direction")).strip().lower() in ("down", "up"))
-                        or (raw_dict.get("amount") is not None and not raw_dict.get("url"))
-                    )
-                )
-                if is_scroll_intent:
-                    raw_dict["action"] = "scroll"
-                    raw_dict["direction"] = "up" if ("up" in raw_dir or "up" in raw_url or "top" in raw_url) else "down"
-                    amount_val = raw_dict.get("amount")
-                    try:
-                        raw_dict["amount"] = int(amount_val) if amount_val is not None else 500
-                    except (ValueError, TypeError):
-                        raw_dict["amount"] = 500
-                    raw_dict.pop("url", None)
-                    raw_dict.pop("text", None)
-                    raw_dict.pop("target", None)
-                elif raw_dict.get("target") and not has_valid_http_url:
-                    # Model targeted an element with action "navigate"
-                    if raw_dict.get("text"):
-                        raw_dict["action"] = "type"
-                        raw_dict.pop("url", None)
-                    else:
-                        raw_dict["action"] = "click"
-                        raw_dict.pop("url", None)
-
-            # Re-read normalized act_type
-            act_type = raw_dict.get("action")
-
-            if act_type == "scroll":
-                # Ensure direction is valid ('up' | 'down')
-                d = str(raw_dict.get("direction", "down")).strip().lower()
-                raw_dict["direction"] = "up" if ("up" in d or "top" in d) else "down"
-
-                # Ensure amount is valid bounded int
-                amt = raw_dict.get("amount")
-                try:
-                    raw_dict["amount"] = max(1, min(5000, int(amt))) if amt is not None else 500
-                except (ValueError, TypeError):
-                    raw_dict["amount"] = 500
-
-                for k in ["target", "text", "option", "url", "key"]:
-                    raw_dict.pop(k, None)
-            elif act_type == "click":
-                for k in ["direction", "amount", "text", "option", "url", "key"]:
-                    raw_dict.pop(k, None)
-            elif act_type == "type":
-                for k in ["direction", "amount", "option", "url", "key"]:
-                    raw_dict.pop(k, None)
-            elif act_type == "select":
-                for k in ["direction", "amount", "text", "url", "key"]:
-                    raw_dict.pop(k, None)
-            elif act_type == "navigate":
-                for k in ["target", "direction", "amount", "text", "option", "key"]:
-                    raw_dict.pop(k, None)
-            elif act_type == "pressKey":
-                raw_key = str(raw_dict.get("key", "")).strip()
-                key_map = {
-                    "enter": "Enter", "return": "Enter",
-                    "tab": "Tab", "escape": "Escape", "esc": "Escape",
-                    "arrowdown": "ArrowDown", "down": "ArrowDown",
-                    "arrowup": "ArrowUp", "up": "ArrowUp",
-                    "arrowleft": "ArrowLeft", "left": "ArrowLeft",
-                    "arrowright": "ArrowRight", "right": "ArrowRight",
-                    "backspace": "Backspace", "delete": "Delete",
-                }
-                if raw_key.lower() in key_map:
-                    raw_dict["key"] = key_map[raw_key.lower()]
-                for k in ["direction", "amount", "text", "option", "url"]:
-                    raw_dict.pop(k, None)
+        if not isinstance(raw_dict, dict):
+            raise ReasoningError("Model output is not a JSON object.", kind="model_contract")
+        raw_dict = normalize_model_action_shape(raw_dict)
+        assert_model_action_applicable(raw_dict)
         action = BrowserActionModel.model_validate(raw_dict)
+    except ReasoningError as err:
+        # PHASE 18.7 / A8. A response that PARSES but does not APPLY is a
+        # deterministic output fault. It is reported exactly like a Phase 18.5
+        # model-contract violation — 502, `model_contract`, non-retryable — and
+        # it never carries an action. Nothing here is repaired or defaulted.
+        logger.warning("Reasoner action refused by the applicability gate: %s", err.kind)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={
+                "success": False,
+                "reason": (
+                    "Reasoner returned a well-formed response whose fields do not "
+                    "apply to the action it proposed."
+                ),
+                "error_kind": "model_contract",
+                "retryable": False,
+            },
+        )
     except PydanticValidationError as err:
         # PHASE 17.5 (F4): PRIVACY. The raw model action used to be logged here
         # (`raw: %s`). It is model-authored text and may contain a value the model

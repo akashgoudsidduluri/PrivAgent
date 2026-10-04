@@ -25,14 +25,32 @@ import { ProviderError, ProviderErrorKind } from './openRouterProvider';
 import {
   parseRetryAfter,
   readBoundedJsonBody,
+  validateProviderResponse,
   validateProviderEnvelope,
   validateProviderStep,
   type ProviderStep,
   type ProviderTelemetryEvent,
+  type ProviderValidationStage,
 } from './providerResponse';
 import { validateEgressPayload } from '../security/egressFirewall';
 
 const DEFAULT_AGENT_API_BASE = 'http://127.0.0.1:8010';
+
+/**
+ * PHASE 18.7 / A8. Categories that are decided by the BODY rather than by the
+ * transport. A failure in this set means an HTTP 200 arrived and was refused on
+ * its content; anything else failed before or during transport.
+ */
+const CONTENT_FAILURE_CATEGORIES: ReadonlySet<string> = new Set([
+  'INVALID_JSON',
+  'SCHEMA_INVALID',
+  'UNSUPPORTED_ACTION',
+  'MODEL_CONTRACT',
+  'PROVIDER_INVALID_RESPONSE',
+  'OVERSIZED_RESPONSE',
+  'EMPTY_RESPONSE',
+  'STALE_RESPONSE',
+]);
 
 export interface BackendAgentErrorDetail {
   success: false;
@@ -218,21 +236,23 @@ export class BackendAgentProvider implements AgentProvider {
       //
       // PHASE 17.5 (F5, F1). BOUNDED body read, then STRICT validation.
       //
-      // The backend is local and trusted to be *well-intentioned*, but its
-      // response is still untrusted INPUT: a misconfigured or replaced backend
-      // must not be able to hand the agent an arbitrary object. Previously this
-      // returned `data.action` verbatim, with no schema check and no size bound.
+      // PHASE 18.7 / A8. `validateProviderResponse` runs the whole remaining
+      // pipeline in order — SCHEMA then APPLICABILITY — and every refusal is
+      // attributed to the stage that produced it. HTTP 200 has already been
+      // established by the `resp.ok` branch above; reaching this point means
+      // only that the TRANSPORT succeeded, never that the body is a usable step.
       //
       // M5 still runs afterwards and remains the authority. This only means a
       // malformed response is refused HERE, at the boundary, instead of
       // travelling through the loop to be caught later.
-      const validated = validateProviderStep(await readBoundedJsonBody(resp));
+      const validated = validateProviderResponse(await readBoundedJsonBody(resp));
       this.recordTelemetry({
         ...base,
         category: 'OK',
         httpStatus: resp.status,
         retryable: false,
         validation: 'PASS',
+        validationStage: 'APPLICABILITY',
         actionType: validated.kind === 'ACTION' ? validated.action.action : null,
         terminalOutcome: validated.kind === 'ACTION' ? 'CONTINUE' : 'TERMINAL_PROPOSAL',
         latencyMs: Date.now() - startedAt,
@@ -247,13 +267,26 @@ export class BackendAgentProvider implements AgentProvider {
       // content into telemetry.
       //
       const isProviderError = err instanceof ProviderError;
+      // PHASE 18.7 / A8. The stage is attributed honestly: a refusal that came
+      // out of validation is `REFUSED` at that stage, and anything that never
+      // reached validation is `NOT_RUN`. A malformed 200 is therefore visibly
+      // distinct from a transport outage in telemetry as well as in the thrown
+      // category.
+      const validationStage: ProviderValidationStage | 'NOT_RUN' = !isProviderError
+        ? 'NOT_RUN'
+        : err.category === 'STALE_RESPONSE'
+          ? 'APPLICABILITY'
+          : CONTENT_FAILURE_CATEGORIES.has(err.category)
+            ? 'SCHEMA'
+            : 'HTTP';
       this.recordTelemetry({
         ...base,
         category: isProviderError ? err.category : 'UNKNOWN_PROVIDER_FAILURE',
         httpStatus: isProviderError ? err.status ?? null : null,
         retryable: isProviderError ? err.retryable : false,
         retryAfterMs: isProviderError ? err.retryAfterMs ?? null : null,
-        validation: isProviderError && err.category === 'STALE_RESPONSE' ? 'REFUSED' : 'NOT_RUN',
+        validation: isProviderError && validationStage !== 'NOT_RUN' ? 'REFUSED' : 'NOT_RUN',
+        validationStage,
         actionType: null,
         terminalOutcome: 'FAILED',
         latencyMs: Date.now() - startedAt,

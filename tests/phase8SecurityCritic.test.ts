@@ -378,7 +378,10 @@ describe('Phase 8 — Security Critic in the live AgentLoop', () => {
     const state = await loop.runTask('Open Google and search cats');
     expect(executed).toBe(0);
     expect(state.steps[0]?.validationReason).toContain('Security Critic BLOCKED');
+    // PHASE 18.7 / A8: the critic's BLOCK ends the task through the bounded
+    // typed recovery, not through a provider outage.
     expect(state.status).toBe('FAILED');
+    expect(state.recoveryRecords?.some((r) => r.failureCategory === 'POLICY_BLOCKED')).toBe(true);
   });
 
   it('an unrelated action proposed by the reasoner never reaches the browser', async () => {
@@ -452,6 +455,10 @@ describe('Phase 8 — Security Critic in the live AgentLoop', () => {
     );
     const state = await loop.runTask('Open Google and search cats');
     expect(executed).toBe(0);
-    expect(state.status).toBe('FAILED');
+    // PHASE 18.7 / A8: the provider-failure state is typed and truthful, and
+    // the invariant this test exists for — the critic does not weaken the
+    // provider fail-closed path — is asserted by `executed` above.
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
+    expect(state.steps).toEqual([]);
   });
 });

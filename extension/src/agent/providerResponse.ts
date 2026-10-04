@@ -102,7 +102,25 @@ export type ProviderFailureCategory =
   // contract. Deterministic and non-transient, so it must never be grouped
   // with the transport faults above (A-G).
   | 'MODEL_CONTRACT' // Q
+  // PHASE 18.7 / A8. The provider answered with HTTP 200 and the body is not a
+  // usable step: it is not JSON, it is missing required fields, it carries an
+  // invalid enum value or a wrong field type, or it is internally contradictory
+  // (a terminal proposal claiming a kind it cannot support; a proposal of kind
+  // ACTION carrying no action). This is its own category precisely so it is
+  // never mistaken for a transport outage, and never mistaken for success.
+  | 'PROVIDER_INVALID_RESPONSE'
   | 'UNKNOWN_PROVIDER_FAILURE'; // P
+
+/**
+ * PHASE 18.7 / A8. The three validation stages a provider response must pass,
+ * in order. A stage either yields the next input or a truthful failure; there
+ * is no repair path between them.
+ *
+ *   HTTP          — transport status and `Retry-After` (backendAgentProvider)
+ *   SCHEMA        — the envelope and the per-action-type field shape
+ *   APPLICABILITY — the step must be internally coherent and applicable
+ */
+export type ProviderValidationStage = 'HTTP' | 'SCHEMA' | 'APPLICABILITY';
 
 /** The existing repository error vocabulary, preserved — not replaced. */
 export type { ProviderErrorKind };
@@ -384,7 +402,240 @@ export function validateProviderAction(raw: unknown): BrowserAction {
 }
 
 /**
- * Validate a provider's whole response envelope before the action is read out of
+ * PHASE 18.7 / A8 — STAGE 3: SEMANTIC / APPLICABILITY VALIDATION.
+ *
+ * The SCHEMA stage above asks "does this have the right shape?". This asks "is
+ * it APPLICABLE?", which is a different question and the one the real defect
+ * class escaped: a body can satisfy every structural rule and still say
+ * something the agent cannot act on.
+ *
+ * What is checked here is INTERNAL COHERENCE only:
+ *   • a terminal proposal of kind `ACTION` must actually carry an action, and
+ *     that action must itself validate — otherwise the relay would hand a
+ *     terminal-shaped envelope containing an unvalidated action straight to the
+ *     device, which is precisely how a malformed 200 becomes a bogus action;
+ *   • a terminal proposal of kind `ANSWER`/`PARTIAL` must actually carry an
+ *     answer, `NEEDS_INFORMATION` a question or a list of what is missing, and
+ *     `CANNOT_VERIFY` a reason — a proposal that asserts an outcome it does not
+ *     support is refused here rather than reaching the A1 device verifier as an
+ *     unexplicable claim.
+ *
+ * What is NOT checked here, deliberately: grounding (M5), scheme policy
+ * (containment), risk and confirmation. Duplicating a security rule here would
+ * create a second authority that could drift from the first.
+ *
+ * REFUSES ONLY. It never fills a missing field, never widens a kind, and never
+ * turns an unusable step into a usable one.
+ */
+const PROPOSAL_KINDS: ReadonlySet<string> = new Set([
+  'ACTION',
+  'ANSWER',
+  'NEEDS_INFORMATION',
+  'PARTIAL',
+  'CANNOT_VERIFY',
+]);
+
+const TERMINAL_KINDS: ReadonlySet<string> = new Set(['ANSWER', 'NEEDS_INFORMATION', 'PARTIAL', 'CANNOT_VERIFY']);
+
+function inapplicable(message: string): ProviderError {
+  return new ProviderError(message, 'missing_action', {
+    category: 'PROVIDER_INVALID_RESPONSE',
+  });
+}
+
+function nonEmptyString(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+/** STAGE 3. Returns the same step, or throws. Never mutates, never repairs. */
+export function validateStepApplicability(step: ProviderStep): ProviderStep {
+  if (step.kind === 'ACTION') {
+    // A schema-valid action is, by construction, internally coherent: the
+    // schema stage already refused non-applicable fields and missing required
+    // ones. There is nothing left to check that would not be a duplicate of an
+    // existing authority.
+    return step;
+  }
+
+  const raw = step.proposal as Record<string, unknown>;
+  const kind = typeof raw.kind === 'string' ? raw.kind : undefined;
+  if (kind === undefined || !PROPOSAL_KINDS.has(kind)) {
+    throw inapplicable('Provider terminal proposal declares an unknown kind.');
+  }
+
+  if (kind === 'ACTION') {
+    // The proposal says "act", so it must carry an action — and that action
+    // goes through the SAME schema stage as any other.
+    const nested = raw.action;
+    if (!isPlainObject(nested)) {
+      throw inapplicable('Provider terminal proposal declares ACTION but carries no action.');
+    }
+    return Object.freeze({ kind: 'ACTION' as const, action: validateProviderAction(nested) });
+  }
+
+  if (!TERMINAL_KINDS.has(kind)) return step;
+
+  if ((kind === 'ANSWER' || kind === 'PARTIAL') && !nonEmptyString(raw.answer)) {
+    throw inapplicable(`Provider terminal proposal declares ${kind} but carries no answer.`);
+  }
+  if (kind === 'NEEDS_INFORMATION') {
+    const missing = Array.isArray(raw.missing) ? raw.missing.filter((m) => nonEmptyString(m)) : [];
+    if (!nonEmptyString(raw.question) && missing.length === 0) {
+      throw inapplicable('Provider terminal proposal declares NEEDS_INFORMATION with no question or gap.');
+    }
+  }
+  if (kind === 'CANNOT_VERIFY' && !nonEmptyString(raw.reason)) {
+    throw inapplicable('Provider terminal proposal declares CANNOT_VERIFY with no reason.');
+  }
+  return step;
+}
+
+/**
+ * PHASE 18.7 / A8 — THE WHOLE PIPELINE, with the stage attached to the failure.
+ *
+ * `HTTP` status handling lives in the provider (it needs the status code and the
+ * headers); everything downstream of it lives here. A failure always carries the
+ * stage it died at, so a malformed 200 is never reported as a transport outage
+ * and never reported as success.
+ */
+export function validateProviderResponse(data: unknown): ProviderStep {
+  return validateStepApplicability(validateProviderStep(data));
+}
+/**
+ * PHASE 18.7 / A8 — BOUNDED, TASK-CLASS-AWARE RETRY BUDGET.
+ *
+ * `HTTP 200` is not the question this answers; the question is how many more
+ * times it is worth asking. Two facts drive it:
+ *
+ *  1. TRANSIENT vs DETERMINISTIC. A transport fault or a rate limit may clear
+ *     on its own. A malformed body, a schema violation, an invalid enum or an
+ *     unsupported action will not: asking the same question again produces the
+ *     same answer, so a deterministic failure gets a SMALLER budget, not a
+ *     larger one.
+ *  2. TASK CLASS. An information task has nothing partial to protect and no
+ *     intermediate value to gain, so a rate-limited first attempt must not burn
+ *     the whole budget, and a deterministic failure is not retried for it at
+ *     all — a second identical malformed answer tells us nothing new.
+ *
+ * The budget is a hard count. It is computed here, once, from a category and a
+ * task class — never from a message string, never from a counter the provider
+ * controls.
+ */
+export type ProviderTaskClass = 'INFORMATION' | 'INTERACTIVE' | 'UNKNOWN';
+
+/**
+ * Failure categories a retry could plausibly fix. Everything else is treated
+ * as deterministic. A rate limit WITHOUT a provider-supplied `Retry-After` is
+ * deliberately NOT transient here — the Phase 17.5 rule that a rate limit is
+ * never retried on a guess is preserved (see `isTransientFailure`).
+ */
+const TRANSIENT_CATEGORIES: ReadonlySet<ProviderFailureCategory> = new Set<ProviderFailureCategory>([
+  'NETWORK_FAILURE',
+  'TIMEOUT',
+  'HTTP_5XX',
+  'HTTP_429_RATE_LIMIT',
+  'EMPTY_RESPONSE',
+  'FALLBACK_EXHAUSTED',
+]);
+
+/**
+ * Categories that are NEVER retried, whatever anything else claims. A
+ * malformed body, a schema violation or an auth failure produces the same
+ * answer every time it is asked.
+ */
+const NEVER_RETRY_CATEGORIES: ReadonlySet<ProviderFailureCategory> = new Set<ProviderFailureCategory>([
+  'SCHEMA_INVALID',
+  'INVALID_JSON',
+  'UNSUPPORTED_ACTION',
+  'MODEL_CONTRACT',
+  'PROVIDER_INVALID_RESPONSE',
+  'OVERSIZED_RESPONSE',
+  'HTTP_401_403',
+  'HTTP_409',
+  'PROVIDER_CONFIGURATION_ERROR',
+]);
+
+/**
+ * True when a retry could plausibly change the answer.
+ *
+ * `declaredRetryable` is the transport's OWN verdict, and it is honoured only
+ * for a category that does not positively say the failure is deterministic.
+ * That is what keeps a bare, uncategorised transport fault retryable while a
+ * malformed body stays un-retryable even if something upstream flags it.
+ */
+export function isTransientFailure(
+  category: ProviderFailureCategory,
+  retryAfterMs?: number,
+  declaredRetryable?: boolean
+): boolean {
+  // A rate limit is only transient when the provider published its own
+  // `Retry-After`. Without one, retrying is guessing at a published limit.
+  if (category === 'HTTP_429_RATE_LIMIT') return typeof retryAfterMs === 'number';
+  if (NEVER_RETRY_CATEGORIES.has(category)) return false;
+  if (TRANSIENT_CATEGORIES.has(category)) return true;
+  return declaredRetryable === true;
+}
+
+const TRANSIENT_BUDGET: Readonly<Record<ProviderTaskClass, number>> = Object.freeze({
+  INFORMATION: 1,
+  INTERACTIVE: 2,
+  UNKNOWN: 2,
+});
+
+const DETERMINISTIC_BUDGET: Readonly<Record<ProviderTaskClass, number>> = Object.freeze({
+  INFORMATION: 0,
+  INTERACTIVE: 1,
+  UNKNOWN: 1,
+});
+
+/** How many additional attempts (beyond the first) this failure may take. */
+export function providerRetryBudget(
+  taskClass: ProviderTaskClass,
+  category: ProviderFailureCategory,
+  retryAfterMs?: number,
+  declaredRetryable?: boolean
+): number {
+  const transient = isTransientFailure(category, retryAfterMs, declaredRetryable);
+  // M7 / Phase 17.5, strengthened: a rate limit the provider gave no
+  // `Retry-After` for is never retried, on any task class. Honouring a limit we
+  // cannot read the terms of is guessing.
+  if (category === 'HTTP_429_RATE_LIMIT' && !transient) return 0;
+  return transient ? TRANSIENT_BUDGET[taskClass] : DETERMINISTIC_BUDGET[taskClass];
+}
+
+/**
+ * Classify a task from what the device ALREADY KNOWS. Never from the model's
+ * prose: the intent boundary's frozen decision is the only source, and it is
+ * what lets an information task — which has nothing partial to protect and no
+ * intermediate value to gain — spend less of its retry budget on a provider
+ * that is not answering.
+ */
+export function providerTaskClassFor(input: {
+  requiresEvidence?: boolean;
+  requiresDestination?: boolean;
+}): ProviderTaskClass {
+  if (input.requiresEvidence === true && input.requiresDestination === false) return 'INFORMATION';
+  if (input.requiresEvidence === true && input.requiresDestination === true) return 'UNKNOWN';
+  return 'INTERACTIVE';
+}
+
+/**
+ * PHASE 18.7 / A8 — THE TRUTHFUL OUTCOME OF A PROVIDER FAILURE.
+ *
+ * A provider failure is NEVER a success, never a completed subgoal, and never
+ * a goal-verified result. It is its own terminal state, which is what makes it
+ * distinguishable from a browser failure, a goal failure and insufficient
+ * evidence — the four states a rate limit used to be confused with.
+ */
+export function terminalStateForProviderFailure(category: ProviderFailureCategory): 'PROVIDER_UNAVAILABLE' {
+  // One state, deliberately. Every provider-failure category — transport,
+  // schema, applicability — is a truthful "the reasoning service could not
+  // produce a usable step", and none of them is a statement about the page.
+  void category;
+  return 'PROVIDER_UNAVAILABLE';
+}
+
+/** Validate a provider's whole response envelope before the action is read out of
  * it. A malformed envelope produces NO ACTION.
  */
 export function validateProviderEnvelope(data: unknown): BrowserAction {
@@ -535,6 +786,13 @@ export interface ProviderTelemetryEvent {
   retryAfterMs: number | null;
   fallbackUsed: boolean;
   validation: 'PASS' | 'REFUSED' | 'NOT_RUN';
+  /**
+   * PHASE 18.7 / A8. Which pipeline stage the response reached. `HTTP` means
+   * the transport was refused before a body was read; `SCHEMA`/`APPLICABILITY`
+   * mean a 200 arrived and was refused on its content; `NOT_RUN` means the
+   * failure happened before validation could start.
+   */
+  validationStage: ProviderValidationStage | 'NOT_RUN';
   actionType: string | null;
   terminalOutcome: 'CONTINUE' | 'FAILED' | 'ABORTED' | 'PENDING' | 'TERMINAL_PROPOSAL';
   latencyMs: number | null;

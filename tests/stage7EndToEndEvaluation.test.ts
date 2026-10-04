@@ -437,8 +437,10 @@ describe('PrivAgent Stage 7 — Security invariants (synthetic)', () => {
     );
     const state = await loop.runTask('Do anything');
     expect(executed).toBe(0);
-    expect(state.status).toBe('FAILED');
-    expect(state.reason).toContain('Agent reasoning failed');
+    // PHASE 18.7 / A8: a provider failure is reported as its own truthful
+    // state — never as a browser or goal failure, and never as a success.
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
+    expect(state.reason).toMatch(/reasoning service/i);
   });
 
   it('I11. goal success requires actually observed browser state', async () => {

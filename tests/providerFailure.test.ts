@@ -107,7 +107,10 @@ describe('OpenRouterProvider failure handling (Phase E)', () => {
     // Zero immediate retries: one request, one attempt, fail-closed, nothing executed.
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(state.providerAttempts).toBe(1);
-    expect(state.status).toBe('FAILED');
+    // PHASE 18.7 / A8: a rate limit is its own truthful terminal state, so it is
+    // never reported as a browser or goal failure — and never as a success.
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
+    expect(state.goalStatus).not.toBe('SUCCESS');
     expect(executed).toEqual([]);
   });
 
@@ -258,7 +261,9 @@ describe('BackendAgentProvider failure handling (Phase E)', () => {
     const state = await loop.runTask('Find and click the account number field');
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(state.providerAttempts).toBe(1);
-    expect(state.status).toBe('FAILED');
+    // PHASE 18.7 / A8: one request, and a truthful provider-failure state.
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
+    expect(state.goalStatus).not.toBe('SUCCESS');
   });
 
   it('still retries a transient backend 5xx within the existing bounded policy', async () => {

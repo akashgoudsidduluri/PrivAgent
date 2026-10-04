@@ -242,7 +242,15 @@ export function phaseFromPlanningState(state?: string): AgentActivityPhase {
 // ── The projection ───────────────────────────────────────────────────────────
 
 function isTerminalStatus(status: string): boolean {
-  return status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED';
+  return (
+    status === 'SUCCESS' ||
+    status === 'FAILED' ||
+    status === 'STOPPED' ||
+    // PHASE 18.7 / A8. A provider failure is a TYPED terminal state, so the
+    // dashboard must be able to report it as an outcome rather than leaving
+    // the panel in a running shape forever.
+    status === 'PROVIDER_UNAVAILABLE'
+  );
 }
 
 /**
@@ -271,8 +279,7 @@ function classifyTerminalReason(s: AgentTaskState): AgentTerminalReason {
       : 'STEP_BOUND_EXHAUSTED';
   }
 
-  const lastCategory = s.lastFailure?.category;
-  if (lastCategory) {
+  const lastCategory = s.lastFailure?.category;  if (lastCategory) {
     if (REASONER_FAILURES.has(lastCategory)) return 'REASONER_FAILED';
     if (lastCategory === 'RECOVERY_EXHAUSTED') return 'RECOVERY_EXHAUSTED';
     if (lastCategory === 'CONTAINMENT_DENIED') return 'CONTAINMENT_DENIED';
@@ -280,6 +287,12 @@ function classifyTerminalReason(s: AgentTaskState): AgentTerminalReason {
 
   if (/^Perception failed/i.test(s.reason ?? '')) return 'PERCEPTION_FAILED';
   if (/^Agent reasoning failed/i.test(s.reason ?? '')) return 'REASONER_FAILED';
+  //
+  // PHASE 18.7 / A8. The typed status is the RIGHT way to reach this verdict:
+  // a message-prefix regex was only ever a proxy for "the reasoner could not
+  // answer", and A8 replaced that message with an honest one. Reading the
+  // status means the verdict cannot drift from the state it describes.
+  if (s.status === 'PROVIDER_UNAVAILABLE') return 'REASONER_FAILED';
   if (s.currentStep >= s.maxSteps) return 'STEP_BOUND_EXHAUSTED';
 
   return 'UNKNOWN';

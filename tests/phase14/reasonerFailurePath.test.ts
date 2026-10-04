@@ -148,9 +148,12 @@ describe('REASONER PATH · 2. The loop reaches a clean terminal state', () => {
     });
     const state = await loop.runTask(TASK);
 
-    expect(state.status).toBe('FAILED');
-    expect(state.reason).toMatch(/Agent reasoning failed/);
-    expect(state.reason).toMatch(/Backend unavailable/);
+    // PHASE 18.7 / A8: an unreachable reasoner is its own truthful terminal
+    // state, not a browser or goal failure. The class the dashboard shows is
+    // still the pre-existing REASONER_FAILED.
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
+    expect(state.goalStatus).not.toBe('SUCCESS');
+    expect(projectAgentOutput(state).terminal?.reason).toBe('REASONER_FAILED');
 
     const out = projectAgentOutput(state);
     expect(out.outcome).toBe('FAILED');
@@ -158,11 +161,12 @@ describe('REASONER PATH · 2. The loop reaches a clean terminal state', () => {
     expect(out.terminal?.headline).toContain('reasoning model was unavailable');
   });
 
-  it('reasoner timeout → terminal FAILED, still REASONER_FAILED', async () => {
+  it('reasoner timeout → terminal PROVIDER_UNAVAILABLE, still REASONER_FAILED', async () => {
     const loop = makeLoop(new ScriptedProvider('timeout'), async () => context());
     const state = await loop.runTask(TASK);
 
-    expect(state.status).toBe('FAILED');
+    // PHASE 18.7 / A8: a timeout is a truthful provider-failure state.
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
     expect(projectAgentOutput(state).terminal?.reason).toBe('REASONER_FAILED');
   });
 
@@ -170,8 +174,12 @@ describe('REASONER PATH · 2. The loop reaches a clean terminal state', () => {
     const loop = makeLoop(new ScriptedProvider('malformed'), async () => context());
     const state = await loop.runTask(TASK);
 
-    expect(state.status).toBe('FAILED');
-    expect(state.reason).toMatch(/Agent reasoning failed/);
+    // PHASE 18.7 / A8: a malformed response is a provider failure, and it is
+    // never turned into an action, a success or a fabricated completion.
+    expect(state.status).toBe('PROVIDER_UNAVAILABLE');
+    expect(state.steps).toEqual([]);
+    expect(state.previousActions).toEqual([]);
+    expect(state.goalStatus).not.toBe('SUCCESS');
   });
 
   it('perception completes BEFORE the reasoner is ever called', async () => {
