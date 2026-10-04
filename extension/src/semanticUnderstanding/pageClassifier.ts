@@ -166,16 +166,32 @@ export function classifyPageSemantics(
     (rawUrl.endsWith('/') || rawUrl.includes('/webhp') || observedSearchQuery(rawUrl).length === 0);
   const hasDedicatedSearchForm = targetDoc?.querySelector('form[action*="search" i]');
 
+  // PHASE 18.7 / A4 — CHROME IS NOT IDENTITY.
+  //
+  // A search box is present on essentially every site, including articles. When
+  // a page also carries substantial editorial body text, "has a search box" is
+  // chrome and must not vote. The explicit portal signal below is unaffected,
+  // because that one is about the page's URL actually being a search surface.
+  const bodyParagraphs = targetDoc?.querySelectorAll('p');
+  const longBodyParagraphs = bodyParagraphs
+    ? Array.from(bodyParagraphs).filter(p => (p.textContent || '').trim().length > 100).length
+    : 0;
+  const hasEditorialBody = longBodyParagraphs >= 6;
+
   if (searchInputs && searchInputs.length > 0 && productCount < 2) {
-    signals.push({ type: 'SEARCH', weight: 0.65, evidence: 'Prominent search input control detected' });
+    if (hasEditorialBody) {
+      signals.push({ type: 'ARTICLE', weight: 0.2, evidence: 'Site search chrome present but page carries editorial body text' });
+    } else {
+      signals.push({ type: 'SEARCH', weight: 0.65, evidence: 'Prominent search input control detected' });
+    }
   }
-  if (searchRole) {
+  if (searchRole && !hasEditorialBody) {
     signals.push({ type: 'SEARCH', weight: 0.5, evidence: 'Semantic ARIA role="search" container found' });
   }
   if (isSearchEngineHome && (searchInputs && searchInputs.length > 0)) {
     signals.push({ type: 'SEARCH', weight: 0.8, evidence: 'Search engine portal home page with primary query box' });
   }
-  if (hasDedicatedSearchForm && productCount < 2) {
+  if (hasDedicatedSearchForm && productCount < 2 && !hasEditorialBody) {
     signals.push({ type: 'SEARCH', weight: 0.5, evidence: 'Dedicated search query form present' });
   }
 
@@ -208,7 +224,21 @@ export function classifyPageSemantics(
   if (articleTags && articleTags.length > 0 && paragraphs && paragraphs.length >= 2) {
     signals.push({ type: 'ARTICLE', weight: 0.85, evidence: `Semantic article container with ${paragraphs.length} paragraphs` });
   } else if (longParagraphs.length >= 3 && productCount === 0 && !hasPasswordInput) {
-    signals.push({ type: 'ARTICLE', weight: 0.7, evidence: `Editorial body text detected (${longParagraphs.length} long text paragraphs)` });
+    // PHASE 18.7 / A4 — weight scales with how much editorial body text is
+    // actually present.
+    //
+    // Real-page evidence: the loaded Wikipedia Charminar ARTICLE classified as
+    // `search`. Wikipedia renders its body in `#mw-content-text`, not an
+    // `<article>` tag, so the container branch never fired and the article
+    // signal sat at a flat 0.7 — while three separate "this page has a search
+    // box" signals (0.65 + 0.5 + 0.5) outvoted it. Every site has a search box;
+    // that is site CHROME, not what the page IS. A page with substantial body
+    // prose IS an article, so the article signal now has to be able to win.
+    signals.push({
+      type: 'ARTICLE',
+      weight: longParagraphs.length >= 10 ? 0.95 : longParagraphs.length >= 6 ? 0.85 : 0.7,
+      evidence: `Editorial body text detected (${longParagraphs.length} long text paragraphs)`,
+    });
   }
 
   // ──────────────────────────────────────────────────────────────────────────

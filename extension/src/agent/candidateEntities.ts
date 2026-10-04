@@ -11,6 +11,8 @@
  *  3. Local deterministic constraint evaluation holds sole authority for matching.
  */
 
+import { truncateAtWordBoundary } from '../semanticObservation/types';
+
 export type CandidateEntityType =
   | 'Product'
   | 'Article'
@@ -23,6 +25,23 @@ export type CandidateEntityType =
   | 'Document'
   | 'Event'
   | 'Generic';
+
+/**
+ * PHASE 18.7 / A4 — a CONTENT-DERIVED label for a table row.
+ *
+ * Handles both shapes real pages use:
+ *   - a header/definition row:  ["Religion", "Islam"]  -> "Religion: Islam"
+ *   - a plain data row:         ["Charminar"]          -> "Charminar"
+ *
+ * Falls back to a structural label only when the row carries no text, which is
+ * the only case where a positional label is actually the honest answer.
+ */
+export function describeTableRow(cellTexts: readonly string[], ordinal: number): string {
+  const parts = cellTexts.map((t) => t.trim()).filter(Boolean);
+  if (parts.length === 0) return `Table Row ${ordinal}`;
+  if (parts.length === 1) return truncateAtWordBoundary(parts[0]!, 80);
+  return truncateAtWordBoundary(`${parts[0]}: ${parts[1]}`, 80);
+}
 
 export interface CandidateEntity {
   id: string;
@@ -137,18 +156,33 @@ export function extractGenericEntities(root: Document | HTMLElement = document):
 
     const cells = Array.from(row.querySelectorAll('td, th'));
     const attributes: Record<string, string | number | boolean> = {};
+    const cellTexts: string[] = [];
 
     cells.forEach((cell, idx) => {
       const text = (cell.textContent || '').trim();
       if (text.length > 0 && text.length < 50) {
         attributes[`col_${idx + 1}`] = text;
+        cellTexts.push(text);
       }
     });
+
+    // PHASE 18.7 / A4 — MEANINGFUL LABELS.
+    //
+    // The title used to be `Table Row ${n}`, a positional counter that carried
+    // no information whatsoever. Real-page evidence (Wikipedia/Charminar) showed
+    // the model receiving five entities labelled "Table Row 1".."Table Row 5",
+    // so it could not tell that one of them was "Religion: Islam".
+    //
+    // The label is now derived from the row's own content, which is what the
+    // model actually needs in order to reason about the page. It is generic —
+    // no site-specific knowledge — and it degrades safely to a structural label
+    // only when the row genuinely has no text at all.
+    const title = describeTableRow(cellTexts, entities.length + 1);
 
     entities.push({
       id,
       type: 'TableRow',
-      title: `Table Row ${entities.length + 1}`,
+      title,
       attributes,
       sourceElementId: row.id || undefined,
     });

@@ -31,6 +31,7 @@ import {
   MAX_SEMANTIC_FACTS,
   SemanticFact,
   SemanticFactValueKind,
+  truncateAtWordBoundary,
 } from './types';
 
 /** Structural/computed attribute names that are not displayed facts. */
@@ -78,7 +79,7 @@ export function parseDisplayedValue(raw: string): { value: string | number | nul
     const parsed = Number(numeric);
     if (Number.isFinite(parsed)) return { value: parsed, kind: 'numeric' };
   }
-  return { value: trimmed.slice(0, MAX_FACT_TEXT_CHARS), kind: 'text' };
+  return { value: truncateAtWordBoundary(trimmed, MAX_FACT_TEXT_CHARS), kind: 'text' };
 }
 
 /** Splits displayed text into its label and value halves, when it has both. */
@@ -114,8 +115,16 @@ function screenFact(candidate: {
   if (!candidate.key) return null;
   if (candidate.displayText.length < 1) return null;
 
-  const label = candidate.label.slice(0, MAX_FACT_LABEL_CHARS);
-  const displayText = candidate.displayText.slice(0, MAX_FACT_TEXT_CHARS);
+  // PHASE 18.7 / A4 — WORD-BOUNDARY truncation.
+  //
+  // `.slice()` cut mid-word. Real-page evidence from Wikipedia/Charminar showed
+  // facts reaching the model as "The fifth ruler of the Qutb Shahi dynast" and
+  // "The construction began in 1589 and was c". A truncated word cannot be
+  // quoted, matched against the task, or verified — so it could never have
+  // satisfied the evidence-based completion rule even once that rule existed.
+  // Truncating on a word boundary is strictly more useful AND keeps the bound.
+  const label = truncateAtWordBoundary(candidate.label, MAX_FACT_LABEL_CHARS);
+  const displayText = truncateAtWordBoundary(candidate.displayText, MAX_FACT_TEXT_CHARS);
 
   // M8 raw-value screen over the CONTENT fields only. `id`, `selector` and
   // `key` are structural and are already validated as part of the world model.

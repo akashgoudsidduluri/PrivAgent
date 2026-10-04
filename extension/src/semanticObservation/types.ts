@@ -163,5 +163,31 @@ export const MAX_SEMANTIC_FACTS = 24;
 export const MAX_FACT_TEXT_CHARS = 120;
 /** Maximum characters of sanitized label per fact. */
 export const MAX_FACT_LABEL_CHARS = 40;
+
+/**
+ * PHASE 18.7 / A4 — truncate on a WORD boundary.
+ *
+ * Lives here, beside the limits it enforces, so both the fact extractor and the
+ * entity extractor can use it without an agent→semanticObservation layering
+ * inversion.
+ *
+ * The previous behaviour was a raw `.slice()`, which cut mid-word. Real-page
+ * evidence from the Wikipedia Charminar article showed facts reaching the model
+ * as "The fifth ruler of the Qutb Shahi dynast" and "The construction began in
+ * 1589 and was c". A half-word is not quotable, not matchable against the task,
+ * and not verifiable — so it could never have satisfied an evidence-based
+ * completion rule. Truncating on a word boundary is strictly more useful and
+ * keeps the bound.
+ */
+export function truncateAtWordBoundary(value: string, maxChars: number): string {
+  const text = value.trim();
+  if (text.length <= maxChars) return text;
+  const clipped = text.slice(0, maxChars);
+  const lastSpace = clipped.lastIndexOf(' ');
+  // Only accept a break that keeps most of the budget; otherwise a very long
+  // first word is returned intact rather than mangled to nothing.
+  const cut = lastSpace > maxChars * 0.5 ? clipped.slice(0, lastSpace) : clipped;
+  return cut.replace(/[\s\-,;:.]+$/, '');
+}
 /** Maximum age (ms) before an observation is treated as STALE. */
 export const MAX_SEMANTIC_OBSERVATION_AGE_MS = 15_000;

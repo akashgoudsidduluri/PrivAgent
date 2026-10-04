@@ -203,6 +203,36 @@ export function extractTaskTerms(task: string | undefined): string[] {
  * @throws PrivacyBoundaryError if the minimized result fails the raw-value
  *         firewall (fail closed — no context is returned at all).
  */
+/**
+ * PHASE 18.7 / A4 — AFFORDANCE TARGETS MUST BE A SUBSET OF OFFERED IDS.
+ *
+ * ONE implementation, used by BOTH model-facing projections
+ * (`minimizeAgentContext` — the service worker's egress path — and
+ * `buildModelFacingContext` — the OpenRouter provider's), so the invariant
+ * cannot hold in one and not the other.
+ *
+ * Real-page evidence from the Wikipedia Charminar article showed the model
+ * receiving affordances pointing at `wm-elem-2-144/145/146` while only THREE
+ * detections were offered. The prompt simultaneously instructs "the ONLY valid
+ * values for target are the ids listed under Detected elements" and then lists
+ * affordances naming ids that are not in that list.
+ *
+ * An affordance naming an id the model cannot target is not information, it is
+ * a decoy.
+ */
+export function filterAffordancesToOfferedIds<
+  T extends { affordances?: Array<{ targetElementId?: string }> }
+>(semanticContext: T, detections: ReadonlyArray<{ id: string }>): T {
+  if (!semanticContext?.affordances) return semanticContext;
+  const offered = new Set(detections.map((d) => d.id));
+  return {
+    ...semanticContext,
+    affordances: semanticContext.affordances.filter(
+      (a) => !a.targetElementId || offered.has(a.targetElementId)
+    ),
+  };
+}
+
 export function minimizeAgentContext(
   payload: AgentContextPayload,
   options: MinimizationOptions = {}
@@ -283,6 +313,15 @@ export function minimizeAgentContext(
     }
   }
 
+  // THE OFFERED SET — the detections that actually survive bounding and
+  // therefore the ONLY ids the model may use as an action target.
+  //
+  // Filtering against `payload.detections` instead is subtly wrong: real
+  // evidence from the Wikipedia Charminar run showed 37 privacy findings
+  // bounded down to 3 exported detections, so affordances naming ids that were
+  // BOUNDED OUT survived the filter and reached the prompt as decoys.
+  const offeredDetections = limited.map((entry) => entry.detection);
+
   const minimizedPayload: AgentContextPayload = {
     url: payload.url,
     timestamp: payload.timestamp,
@@ -294,13 +333,13 @@ export function minimizeAgentContext(
     screenshot_dimensions: payload.screenshot_dimensions
       ? { ...payload.screenshot_dimensions }
       : null,
-    detections: limited.map((entry) => entry.detection),
+    detections: offeredDetections,
     total_elements_scanned: payload.total_elements_scanned,
     sensitive_elements_detected: payload.sensitive_elements_detected,
     sanitized_status: 'sanitized_only',
     ocr_metrics: payload.ocr_metrics ? { ...payload.ocr_metrics } : null,
     ...(payload.page_type ? { page_type: payload.page_type } : {}),
-    ...(payload.semantic_context ? { semantic_context: payload.semantic_context } : {}),
+    ...(payload.semantic_context ? { semantic_context: filterAffordancesToOfferedIds(payload.semantic_context, offeredDetections) } : {}),
     //
     // Post-17.9. The OCR observation's precedents apply: this is carried through
     // minimization because goal verification reads it, and it is stripped at the
@@ -417,6 +456,21 @@ export function buildModelFacingContext(
     };
   });
 
+  // PHASE 18.7 / A4 — AFFORDANCE TARGETS MUST BE A SUBSET OF OFFERED IDS.
+  //
+  // Real-page evidence from the Wikipedia Charminar article showed the model
+  // receiving affordances pointing at `wm-elem-2-144`, `wm-elem-2-145` and
+  // `wm-elem-2-146` while only THREE detections were offered (`searchInput`,
+  // `inter-input-14`, `inter-button-3`). The prompt simultaneously instructs
+  // "the ONLY valid values for target are the ids listed under Detected
+  // elements" and then lists affordances referencing ids that are not in that
+  // list — a contradiction that makes the model act on an unusable target.
+  //
+  // An affordance naming an id the model cannot target is not information, it is
+  // a decoy. Page-level affordances with no element target are retained: they
+  // describe the page, not a control.
+  const offeredIds = new Set(payload.detections.map((d) => d.id));
+
   return {
     url: payload.url,
     task,
@@ -431,7 +485,7 @@ export function buildModelFacingContext(
         pageState: payload.semantic_context.pageState,
         pageGeneration: payload.semantic_context.pageGeneration,
         entities: payload.semantic_context.entities,
-        affordances: payload.semantic_context.affordances,
+        affordances: filterAffordancesToOfferedIds(payload.semantic_context, payload.detections).affordances ?? [],
         promptInjectionDetected: payload.semantic_context.promptInjectionDetected,
         // Post-17.9. Sanitized, bounded display facts, so the reasoner can read
         // a displayed value instead of guessing at one. Already M8-screened and
