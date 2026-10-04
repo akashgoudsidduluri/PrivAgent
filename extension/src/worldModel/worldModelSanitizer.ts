@@ -32,6 +32,122 @@ export class WorldModelPrivacyViolation extends Error {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PHASE I-7 — THE AUTHORITATIVE WORLD-MODEL SANITIZATION CHOKE POINT
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * PHASE I-7 — WHY THIS EXISTS.
+ *
+ * THE DEFECT CLASS. Every extractor that copies page text into the world model
+ * screened it with its OWN, narrower detector, while the authoritative check
+ * (`assertWorldModelSafe`) used the full `scanForRawSensitiveValues`. Any
+ * string could therefore pass its producer and then fail the assertion — and
+ * because the assertion is all-or-nothing, ONE unsafe string destroyed an
+ * otherwise valid ~96-region world model.
+ *
+ * This was observed twice on the same real page:
+ *
+ *   root.accessibilityTree[314].name   rule=phone
+ *   root.entities[14].attributes.col_2 rule=credential_token
+ *
+ * Patching each extractor in turn only relocates the bug. This module is the
+ * single boundary through which the COMPLETE assembled world model passes
+ * immediately before the assertion, so every current AND future extractor
+ * inherits the guarantee by construction:
+ *
+ *   extractor(s) → buildWorldModel → sanitizeWorldModel → assertWorldModelSafe
+ *
+ * THE INVARIANT
+ *
+ *   No data can reach the world model without having been screened by the
+ *   authoritative detector at this boundary.
+ *
+ * FAIL-CLOSED POSTURE. `assertWorldModelSafe` is UNCHANGED and remains the
+ * final gate. This runs BEFORE it, so in the normal case the assertion passes
+ * on an already-clean model. If anything still fails, the assertion still
+ * throws and the caller still discards the model — it is never downgraded to
+ * advisory, and no unsafe value is ever retained.
+ */
+
+/**
+ * Keys whose values are MACHINE-GENERATED structural metadata and cannot
+ * carry page text: ids we mint, geometry, enums, roles, booleans, counts.
+ *
+ * These are deliberately narrow. Anything not listed here is treated as
+ * UNTRUSTED page-derived text and is screened — including free-form
+ * `attributes` maps, table cell values, titles, names and semantic hints. That
+ * is the fail-closed direction: unknown keys are screened, not skipped.
+ */
+const STRUCTURAL_KEYS = new Set([
+  'id', 'elementId', 'parentId', 'childrenIds', 'associatedElementId',
+  'associatedElementIds', 'role', 'type', 'source', 'bbox',
+  'pageGeneration', 'confidence', 'visible', 'disabled', 'checked',
+  'selected', 'expanded', 'focused', 'modal', 'length',
+  'timestamp', 'regionCount', 'elementCount', 'detectionCount',
+  'requiresAuthentication', 'fieldCount', 'hasSubmitAction',
+  'width', 'height', 'count',
+]);
+
+/** The fixed replacement written in place of any unsafe string. */
+export const PROTECTED_PLACEHOLDER = 'Protected Credential Field';
+
+export interface WorldModelSanitizationStats {
+  /** Fields/strings inspected. */
+  scanned: number;
+  /** Values replaced because they tripped the authoritative detector. */
+  redacted: number;
+  /** Attribute keys dropped entirely rather than replaced. */
+  dropped: number;
+  /** Rule names that triggered redaction. NAMES ONLY — never matched text. */
+  byRule: Record<string, number>;
+}
+
+/**
+ * The authoritative choke point. Returns a NEW sanitized model plus safe
+ * diagnostics. The input is never mutated.
+ */
+export function sanitizeWorldModel<T>(model: T): { model: T; stats: WorldModelSanitizationStats } {
+  const stats: WorldModelSanitizationStats = {
+    scanned: 0, redacted: 0, dropped: 0, byRule: {},
+  };
+
+  const walk = (value: unknown, key: string): unknown => {
+    if (typeof value === 'string') {
+      // Machine-generated structural metadata cannot carry page text.
+      if (STRUCTURAL_KEYS.has(key)) return value;
+
+      stats.scanned += 1;
+      const findings = scanForRawSensitiveValues(value);
+      if (findings.length === 0) return value;
+
+      stats.redacted += 1;
+      const rule = findings[0]?.rule ?? 'unknown';
+      stats.byRule[rule] = (stats.byRule[rule] ?? 0) + 1;
+      // The offending string is DISCARDED here. It is not returned, not
+      // logged, and not retained anywhere in the resulting model.
+      return PROTECTED_PLACEHOLDER;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => walk(item, key));
+    }
+
+    if (value && typeof value === 'object') {
+      const out: Record<string, unknown> = {};
+      for (const [childKey, childValue] of Object.entries(value as Record<string, unknown>)) {
+        out[childKey] = walk(childValue, childKey);
+      }
+      return out;
+    }
+
+    return value;
+  };
+
+  const sanitized = walk(model, 'root') as T;
+  return { model: sanitized, stats };
+}
+
 /**
  * Recursively scans any object for forbidden credential keys or PII patterns.
  */

@@ -12,6 +12,7 @@
  */
 
 import { AccessibilityNode } from './types';
+import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
 
 const SENSITIVE_KEYWORDS = [
   'password', 'passwd', 'secret', 'pin', 'cvv', 'cvc',
@@ -24,12 +25,88 @@ function isSensitiveText(text: string): boolean {
   return SENSITIVE_KEYWORDS.some(kw => lower.includes(kw));
 }
 
+/**
+ * PHASE I-7 — DETECTOR ALIGNMENT DIAGNOSTICS.
+ *
+ * Counts accessibility names this module replaced, and the RULE that caused
+ * each replacement. COUNTS AND RULE NAMES ONLY — never the name itself, never
+ * the matched substring, never the offending value. This is diagnostic
+ * metadata, not page content.
+ *
+ * A non-zero count means accessible names are being withheld. That is correct
+ * behaviour when a name really is sensitive, but on ordinary content it is a
+ * signal that the extractor is over-matching and the model is losing useful
+ * labels — which is exactly the failure that went unnoticed here.
+ */
+export const accessibilitySanitizationStats = {
+  scanned: 0,
+  withheld: 0,
+  byRule: {} as Record<string, number>,
+};
+
+/** Reset the counters. Called per page scan so counts are per-perception. */
+export function resetAccessibilitySanitizationStats(): void {
+  accessibilitySanitizationStats.scanned = 0;
+  accessibilitySanitizationStats.withheld = 0;
+  accessibilitySanitizationStats.byRule = {};
+}
+
+/**
+ * PHASE I-7 — THE REPAIR.
+ *
+ * THE ASYMMETRY. Extraction screened names with `isSensitiveText`, a
+ * keyword list. The authoritative world-model assertion
+ * (`assertWorldModelSafe`) screens with `scanForRawSensitiveValues`, which is
+ * strictly wider — notably it includes `hasContextualPhone`. A name could
+ * therefore pass extraction and then fail the assertion.
+ *
+ * On a real Wikipedia article this happened on every perception:
+ *
+ *   [PrivAgent WorldModel Security Violation] Raw sensitive credential
+ *   detected at root.accessibilityTree[314].name: rule=phone
+ *
+ * `assertWorldModelSafe` was behaving correctly. This extractor was
+ * under-sanitizing, and the all-or-nothing `catch` around
+ * `buildCurrentWorldModel` then discarded an otherwise valid ~96-region world
+ * model — losing every entity, affordance and fact for the whole page.
+ *
+ * THE FIX. Extraction now applies the SAME authoritative scanner before the
+ * name can enter the world model. The invariant this establishes:
+ *
+ *   any name that would fail `assertWorldModelSafe` is replaced BEFORE it
+ *   reaches the world model.
+ *
+ * `assertWorldModelSafe` is NOT weakened, bypassed or removed. It remains the
+ * final fail-closed gate, and it still rejects any model that somehow carries
+ * an unsafe string. This only stops the extractor from handing it one.
+ *
+ * Fail-closed is preserved: when a name IS sensitive it is REPLACED by a fixed
+ * safe marker. The original string is never retained, never returned and never
+ * logged.
+ */
 export function sanitizeAccessibleName(name: string): string {
   if (!name || !name.trim()) return '';
   const trimmed = name.trim().replace(/\s+/g, ' ');
+  accessibilitySanitizationStats.scanned += 1;
+
+  // Keyword screen retained: it catches label-shaped credentials that the
+  // value-shaped scanner is not designed to match (e.g. a field literally
+  // labelled "Password").
   if (isSensitiveText(trimmed)) {
+    accessibilitySanitizationStats.withheld += 1;
+    accessibilitySanitizationStats.byRule.keyword = (accessibilitySanitizationStats.byRule.keyword ?? 0) + 1;
     return 'Protected Credential Field';
   }
+
+  // Authoritative screen: identical detector to the world-model assertion.
+  const findings = scanForRawSensitiveValues(trimmed);
+  if (findings.length > 0) {
+    accessibilitySanitizationStats.withheld += 1;
+    const rule = findings[0]?.rule ?? 'unknown';
+    accessibilitySanitizationStats.byRule[rule] = (accessibilitySanitizationStats.byRule[rule] ?? 0) + 1;
+    return 'Protected Credential Field';
+  }
+
   return trimmed.slice(0, 80);
 }
 
@@ -149,6 +226,12 @@ function getBbox(el: HTMLElement): [number, number, number, number] {
 export function extractAccessibilityTree(
   root: Document | HTMLElement = document
 ): AccessibilityNode[] {
+  // PHASE I-7. Nodes withheld at the proportional-failure guard below. Count
+  // only — never the name, never the matched value.
+  let nodesWithheldForSafety = 0;
+  // Per-scan counters, so diagnostics describe THIS perception.
+  resetAccessibilitySanitizationStats();
+
   const doc = root
     ? 'defaultView' in root
       ? (root as Document)
@@ -185,6 +268,25 @@ export function extractAccessibilityTree(
     const role = explicitRole || getImplicitRole(el);
     const name = computeAccessibleName(el, doc);
     const bbox = getBbox(el);
+
+    // PHASE I-7 — PROPORTIONAL FAILURE.
+    //
+    // A single unsafe accessible name must not void an otherwise valid world
+    // model. This is a last-resort guard for any string that still trips the
+    // authoritative scanner AFTER `sanitizeAccessibleName` has run (for
+    // example a name assembled from several sources). The node is withheld and
+    // the scan continues.
+    //
+    // This is NOT a bypass of the world-model safety assertion: the resulting
+    // model still passes through `assertWorldModelSafe`, which remains the
+    // final fail-closed gate. Dropping the node removes the offending string
+    // from the model entirely rather than marking it safe, so the raw value is
+    // never retained. Diagnostics record the count and rule only.
+    if (name && scanForRawSensitiveValues(name).length > 0) {
+      accessibilitySanitizationStats.withheld += 1;
+      nodesWithheldForSafety += 1;
+      return;
+    }
 
     const disabled = el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true';
     const isCheckable =
@@ -248,6 +350,13 @@ export function extractAccessibilityTree(
       parent = parent.parentElement;
     }
   });
+
+  if (nodesWithheldForSafety > 0) {
+    console.warn(
+      '[AccessibilityTree] withheld nodes that still failed the sensitive-value screen',
+      { count: nodesWithheldForSafety },
+    );
+  }
 
   return nodes;
 }

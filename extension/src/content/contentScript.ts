@@ -6,7 +6,8 @@ import { createSanitizedExport } from '../privacy/securityBoundary';
 import { isUrlExcluded, getExclusionReason } from '../privacy/siteExclusions';
 import { ExtensionMessage, isSensitiveEntityType, PrivacyScanReport, RedactionMode, SensitiveEntityType } from '../privacy/types';
 import { buildBrowserWorldModel } from '../worldModel/worldModelBuilder';
-import { assertWorldModelSafe, createSanitizedWorldModelSummary } from '../worldModel/worldModelSanitizer';
+import { accessibilitySanitizationStats } from '../worldModel/accessibilityTree';
+import { assertWorldModelSafe, createSanitizedWorldModelSummary, sanitizeWorldModel } from '../worldModel/worldModelSanitizer';
 import { worldModelStore } from '../worldModel/worldModelStore';
 import { BrowserWorldModel } from '../worldModel/types';
 import { buildSemanticUnderstanding, SemanticUnderstandingOutput } from '../semanticUnderstanding';
@@ -72,13 +73,46 @@ let currentPageGeneration = restorePageGeneration();
 
 function buildCurrentWorldModel(privacyFindings?: PrivacyFinding[]): { worldModel: BrowserWorldModel; activeWorldModelRef: { pageGeneration: number; worldModelId: string }; summary: ReturnType<typeof createSanitizedWorldModelSummary> } {
   const pageGeneration = currentPageGeneration;
-  const worldModel = buildBrowserWorldModel({
+  // PHASE I-7 — THE CHOKE POINT.
+  //
+  //   extractors -> build -> SANITIZE -> assert -> downstream
+  //
+  // The COMPLETE assembled model is screened here, once, by the authoritative
+  // detector — before the assertion. Every current and future extractor
+  // inherits the guarantee from this single point rather than from each
+  // remembering to call its own privacy helper.
+  //
+  // `assertWorldModelSafe` below is UNCHANGED and still the final fail-closed
+  // gate: it still throws on anything unsafe, and the caller still discards
+  // the model on throw. This does not make it advisory.
+  const builtModel = buildBrowserWorldModel({
     root: document,
     pageGeneration,
     privacyFindings,
   });
 
+  const { model: worldModel, stats: sanitizeStats } = sanitizeWorldModel(builtModel);
+
+  if (sanitizeStats.redacted > 0 || sanitizeStats.dropped > 0) {
+    // Counts and rule NAMES only. Never the matched value, never the field
+    // content, never a page string.
+    console.warn('[ContentScript] world model fields sanitized at the choke point', {
+      scanned: sanitizeStats.scanned,
+      redacted: sanitizeStats.redacted,
+      rules: Object.keys(sanitizeStats.byRule),
+    });
+  }
+
   assertWorldModelSafe(worldModel);
+  // PHASE I-7 — safe diagnostics. Counts and rule names ONLY: no accessible
+  // name, no matched substring, no raw value ever reaches this line.
+  if (accessibilitySanitizationStats.withheld > 0) {
+    console.warn('[ContentScript] accessibility names withheld', {
+      scanned: accessibilitySanitizationStats.scanned,
+      withheld: accessibilitySanitizationStats.withheld,
+      rules: Object.keys(accessibilitySanitizationStats.byRule),
+    });
+  }
   const ref = worldModelStore.registerWorldModel(worldModel);
   const storedWorldModel = worldModelStore.getActiveWorldModel(ref);
   if (!storedWorldModel) {
