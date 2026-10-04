@@ -15,6 +15,8 @@
  *     targets the dashboard, and never invents a website.
  */
 
+import { canonicalizeSiteOrigin, isKnownSearchPortalAlias } from '../planning/searchCapability';
+
 export interface MinimalTab {
   id?: number;
   url?: string;
@@ -29,7 +31,12 @@ export interface MinimalTab {
  */
 export interface ProvisioningDestination {
   url: string;
-  source: 'explicit-url' | 'google-intent';
+  /**
+   * PHASE 18.6 (I-4). The `'google-intent'` source is replaced by the
+   * engine-agnostic `'declared-portal-intent'`: provisioning is now attributed
+   * to the registry-resolved destination rather than to one privileged brand.
+   */
+  source: 'explicit-url' | 'declared-portal-intent';
 }
 
 export type TargetFailureCode = 'DESTINATION_REQUIRED';
@@ -85,8 +92,6 @@ export function extractExplicitTargetFromTask(task: string): { hostname?: string
   return null;
 }
 
-const GOOGLE_ORIGIN = 'https://www.google.com';
-
 /**
  * True when a URL points at the PrivAgent dashboard (or any port-5173 origin).
  * Provisioning MUST fail closed on these: the agent is never allowed to drive its
@@ -140,15 +145,28 @@ export function extractProvisioningDestination(
     }
   }
 
-  // 2. Clear Google intent. Requires BOTH the site name and a navigation/search verb
-  // so that incidental mentions (e.g. "the google chrome settings") never provision.
+  // 2. Clear PORTAL intent. Requires BOTH a known site alias and a
+  // navigation/search verb, so incidental mentions (e.g. "the chrome settings")
+  // never provision.
+  //
+  // PHASE 18.6 (I-4). This used to be a single hard-coded `\bgoogle\b` test that
+  // provisioned `https://www.google.com`, which silently redirected any task
+  // mentioning Google and made Google the only site with this behaviour. It is
+  // now resolved through the same capability registry every other destination
+  // uses, so no brand is privileged and an unknown name provisions nothing.
   const lower = task.toLowerCase();
-  const mentionsGoogle = /\bgoogle\b/.test(lower);
   const hasNavVerb = /\b(open|opens|go|goes|visit|visits|navigate|navigates|launch|launches|search|searches|searching|browse|browses)\b/.test(
     lower
   );
-  if (mentionsGoogle && hasNavVerb && !isDashboardUrl(GOOGLE_ORIGIN, dashboardOrigin)) {
-    return { url: GOOGLE_ORIGIN, source: 'google-intent' };
+  if (hasNavVerb) {
+    const tokens = lower.match(/[a-z0-9][a-z0-9-]*/g) || [];
+    for (const token of tokens) {
+      if (!isKnownSearchPortalAlias(token)) continue;
+      const origin = canonicalizeSiteOrigin(token);
+      if (origin && !isDashboardUrl(origin, dashboardOrigin)) {
+        return { url: origin, source: 'declared-portal-intent' };
+      }
+    }
   }
 
   return null;
@@ -479,11 +497,17 @@ export function buildProvisioningDestinationUrl(ref: TaskTargetReference): strin
     const protocol = (ref.hostname === 'localhost' || ref.hostname === '127.0.0.1') ? 'http:' : 'https:';
     return `${protocol}//${ref.hostname}${ref.port ? `:${ref.port}` : ''}`;
   }
+  // PHASE 18.6 (I-4). A bare site NAME no longer manufactures a destination.
+  //
+  // The old code returned `https://www.google.com` for one hard-coded brand and
+  // `https://www.<name>.com` for everything else. Both invented an origin the
+  // user never gave. An invented destination is indistinguishable downstream
+  // from a user-declared one, so it silently satisfied the Security Critic's
+  // "destination is implied by the goal" check while being untrue. Resolution
+  // now goes through the explicit capability registry and FAILS CLOSED: an
+  // unknown name yields no destination at all.
   if (ref.siteName) {
-    if (ref.siteName.toLowerCase() === 'google') {
-      return 'https://www.google.com';
-    }
-    return `https://www.${ref.siteName.toLowerCase()}.com`;
+    return canonicalizeSiteOrigin(ref.siteName) ?? '';
   }
   return '';
 }
@@ -552,7 +576,7 @@ export function resolveTargetWebTab(
           reason: `Target tab for "${targetRef.rawTarget}" not found. Provisioning a dedicated target tab at ${destUrl}.`,
           provisioning: {
             url: destUrl,
-            source: targetRef.fullUrl ? 'explicit-url' : 'google-intent',
+            source: targetRef.fullUrl ? 'explicit-url' : 'declared-portal-intent',
           },
         };
       }

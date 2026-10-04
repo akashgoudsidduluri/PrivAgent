@@ -22,6 +22,7 @@ import {
 import { BrowserWorldModel } from '../worldModel/types';
 import { SemanticPageType } from '../semanticUnderstanding/semanticTypes';
 import { normalizeDestination } from '../planning/destinationNormalizer';
+import { isSearchSurfaceUrl } from '../planning/searchCapability';
 
 export interface TaskDecompositionOptions {
   worldModel?: BrowserWorldModel;
@@ -315,11 +316,15 @@ export function decomposeTask(
   /** Prerequisites contributed by the destination subgoal, when one exists. */
   const destinationPrerequisites = (id: string): string[] => (id ? [id] : []);
 
-  // Determine if browser is already at a search engine or query results
+  // PHASE 18.6 (I-4). Whether a search can be performed from where the agent
+  // stands is a CAPABILITY question, not a question about which vendors exist.
+  // This used to be a hard-coded `google.com | bing.com | duckduckgo.com`
+  // substring test, so an unlisted engine was invisible here and the three that
+  // happened to be listed were privileged over every other site. It is now
+  // decided from the observed structure of the URL by the shared capability
+  // module, which also recognises any engine that produces a real query.
   const isAlreadyOnSearchPage =
-    currentUrl.includes('google.com') ||
-    currentUrl.includes('bing.com') ||
-    currentUrl.includes('duckduckgo.com') ||
+    isSearchSurfaceUrl(currentUrl) ||
     currentCategory === 'SEARCH' ||
     currentCategory === 'SEARCH_RESULTS';
 
@@ -339,12 +344,34 @@ export function decomposeTask(
       const destinationNavId = addDestinationSubgoal();
       let navId = '';
       if (!isAlreadyOnSearchPage && !currentUrl) {
+        // PHASE 18.6 (I-4). This condition used to be
+        // `URL_CONTAINS 'google.com'`, i.e. the subgoal could ONLY ever be
+        // completed by ending up on Google — a search task silently required a
+        // specific vendor even when the user declared a different one. It now
+        // mirrors the commerce branch exactly: when the user DECLARED a
+        // destination, that declaration is the condition; when they did not, the
+        // condition stays deliberately unverifiable so GoalProgressTracker fails
+        // it closed and the subgoal cannot fabricate completion.
         navId = addSubgoal(
           'NAVIGATE',
           'Navigate to search engine or knowledge portal',
           'navigate',
           [],
-          { type: 'URL_CONTAINS', expectedValue: 'google.com', description: 'Search portal loaded' }
+          declaredDestination
+            ? {
+                type: 'DESTINATION_VERIFIED' as const,
+                description: 'Declared destination is observed',
+              }
+            : {
+                // KNOWN-UNVERIFIABLE, DELIBERATELY FAIL CLOSED. There is no
+                // declared destination to verify against, and asserting a
+                // vendor hostname here would reintroduce exactly the
+                // Google-centric assumption I-4 removes.
+                type: 'AFFORDANCE_AVAILABLE' as const,
+                description: 'Search portal reachable',
+              },
+          undefined,
+          declaredDestination
         );
       } else if (isAlreadyOnSearchPage) {
         skippedInitialSteps.push('NAVIGATE (Browser already on search provider/page)');

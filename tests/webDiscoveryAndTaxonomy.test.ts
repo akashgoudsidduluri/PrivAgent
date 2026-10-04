@@ -18,8 +18,33 @@ describe('PrivAgent Web Discovery & Error Taxonomy Suite', () => {
     it('plans e-commerce discovery for product queries and identifies consequential purchases', () => {
       const plan = planWebDiscovery('Find beige baggy pants under ₹1500');
       expect(plan.category).toBe('ECOMMERCE_DISCOVERY');
-      expect(plan.destinationUrl).toBe('https://duckduckgo.com');
+      // PHASE 18.6 (I-4). This asserted `https://duckduckgo.com`, which WAS the
+      // defect: every e-commerce and informational plan silently redirected to
+      // one vendor no matter what the user asked or which site they were on.
+      // `undefined` now means "no destination was DETERMINED", which callers
+      // must handle rather than paper over with a default brand.
+      expect(plan.destinationUrl).toBeUndefined();
       expect(plan.searchQuery).toBe('Find beige baggy pants under ₹1500');
+    });
+
+    it('never invents a search destination when none was determined (I-4)', () => {
+      // Both informational branches used to return a hard-coded origin. Any
+      // consumer that wanted "a destination" was therefore handed a brand the
+      // user never named. Failing closed is the safe direction: the planner
+      // asks instead of navigating somewhere undeclared.
+      const informational = planWebDiscovery('tell me about the history of Charminar');
+      expect(informational.category).toBe('INFORMATIONAL_SEARCH');
+      expect(informational.destinationUrl).toBeUndefined();
+
+      const ecommerce = planWebDiscovery('buy a blue shirt');
+      expect(ecommerce.destinationUrl).toBeUndefined();
+    });
+
+    it('still returns a destination when the user actually supplied one', () => {
+      // Failing closed must not mean "never navigates": an explicitly declared
+      // destination is a user-provided origin and is honoured unchanged.
+      const plan = planWebDiscovery('Open the localhost 4173 and get my account number');
+      expect(plan.destinationUrl).toBe('http://localhost:4173');
     });
 
     it('flags consequential actions (buy, pay, order) as requiring user confirmation', () => {

@@ -61,7 +61,32 @@ describe('Target Tab Provisioning', () => {
 
     it('extracts Google intent for "open google and search for black cats"', () => {
       const dest = extractProvisioningDestination('open google and search for black cats');
-      expect(dest).toEqual({ url: 'https://www.google.com', source: 'google-intent' });
+      // PHASE 18.6 (I-4): the destination is UNCHANGED, only the attribution
+      // label. It used to be `google-intent`, which recorded that this code path
+      // was a hand-written special case for one brand. It is now resolved through
+      // the shared capability registry like every other alias.
+      expect(dest).toEqual({ url: 'https://www.google.com', source: 'declared-portal-intent' });
+    });
+
+    // PHASE 18.6 (I-4) — no brand may be privileged over another. These prove
+    // the same code path serves any registered origin, and that an UNREGISTERED
+    // name provisions nothing at all rather than inventing `www.<name>.com`.
+    it.each([
+      ['bing', 'https://www.bing.com'],
+      ['duckduckgo', 'https://duckduckgo.com'],
+      ['wikipedia', 'https://en.wikipedia.org'],
+    ])('resolves the %s alias from the shared registry, not a brand special case', (alias, origin) => {
+      const dest = extractProvisioningDestination(`open ${alias} and search for cats`);
+      expect(dest).toEqual({ url: origin, source: 'declared-portal-intent' });
+    });
+
+    it('provisions NOTHING for an unregistered site name instead of fabricating a URL', () => {
+      // The I-4 defect: `https://www.<name>.com` invented an origin for any word
+      // the user typed. An invented destination is indistinguishable downstream
+      // from a user-declared one, so it silently satisfied the Security Critic's
+      // "destination is implied by the goal" check while being untrue.
+      const dest = extractProvisioningDestination('open notrealportal and search for cats');
+      expect(dest).toBeNull();
     });
 
     it('extracts Google intent for "search google for privacy"', () => {
@@ -104,7 +129,7 @@ describe('Target Tab Provisioning', () => {
 
       // Unrelated tab 42 must NOT be selected
       expect(result.selectedTab).toBeNull();
-      expect(result.provisioning).toEqual({ url: 'https://www.google.com', source: 'google-intent' });
+      expect(result.provisioning).toEqual({ url: 'https://www.google.com', source: 'declared-portal-intent' });
     });
 
     it('keeps the explicit localhost:4173 match behaviour untouched', () => {
@@ -129,7 +154,7 @@ describe('Target Tab Provisioning', () => {
       const result = resolveTargetWebTab([DASHBOARD], 'open google and search for black cats');
 
       expect(result.selectedTab).toBeNull();
-      expect(result.provisioning).toEqual({ url: 'https://www.google.com', source: 'google-intent' });
+      expect(result.provisioning).toEqual({ url: 'https://www.google.com', source: 'declared-portal-intent' });
       expect(result.provisioning?.url).not.toContain('5173');
     });
 

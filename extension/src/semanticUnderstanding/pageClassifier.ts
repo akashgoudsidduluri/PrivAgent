@@ -13,6 +13,7 @@
 
 import { BrowserWorldModel } from '../worldModel/types';
 import { PageClassificationResult, SemanticPageType } from './semanticTypes';
+import { isSearchSurfaceUrl, observedSearchQuery } from '../planning/searchCapability';
 
 export interface PageClassificationOptions {
   worldModel?: BrowserWorldModel;
@@ -155,8 +156,14 @@ export function classifyPageSemantics(
   // ──────────────────────────────────────────────────────────────────────────
   const searchInputs = targetDoc?.querySelectorAll('input[type="search"], input[name="q"], input[name="query"], [role="search"]');
   const searchRole = targetDoc?.querySelector('[role="search"]');
-  const isSearchEngineHome = (rawUrl.includes('google.') || rawUrl.includes('bing.') || rawUrl.includes('duckduckgo.')) &&
-    (rawUrl.endsWith('/') || rawUrl.includes('/webhp') || !rawUrl.includes('?q='));
+  // PHASE 18.6 (I-4). Was a `google. | bing. | duckduckgo.` substring test, which
+  // made page classification brand-aware: an unlisted search engine was
+  // classified by its vendor identity rather than by what the page actually is.
+  // It is now decided by the shared, engine-agnostic capability check plus the
+  // observed absence of a query — i.e. by structure, not by who operates it.
+  const isSearchEngineHome =
+    isSearchSurfaceUrl(rawUrl) &&
+    (rawUrl.endsWith('/') || rawUrl.includes('/webhp') || observedSearchQuery(rawUrl).length === 0);
   const hasDedicatedSearchForm = targetDoc?.querySelector('form[action*="search" i]');
 
   if (searchInputs && searchInputs.length > 0 && productCount < 2) {

@@ -27,7 +27,17 @@ export type GoalCategory =
 
 export interface WebDiscoveryPlan {
   category: GoalCategory;
-  destinationUrl: string;
+  /**
+   * The origin to open, or `undefined` when none was DETERMINED.
+   *
+   * PHASE 18.6 (I-4). This was `string` and every branch returned a
+   * hard-coded `https://duckduckgo.com`, so an informational task always
+   * quietly redirected to one vendor regardless of what the user asked for and
+   * regardless of the site they were already on. `undefined` now means "no
+   * destination was determined", which callers must handle rather than paper
+   * over with a default brand.
+   */
+  destinationUrl: string | undefined;
   searchQuery?: string;
   initialActionDescription: string;
   requiresGatedConfirmation: boolean;
@@ -81,7 +91,7 @@ export function planWebDiscovery(goal: string): WebDiscoveryPlan {
     const isConsequential = isConsequentialAction(text);
     return {
       category: 'ECOMMERCE_DISCOVERY',
-      destinationUrl: 'https://duckduckgo.com',
+      destinationUrl: undefined,
       searchQuery: goal,
       initialActionDescription: `Navigate to web search to find matching catalogue items: "${goal}"`,
       requiresGatedConfirmation: isConsequential,
@@ -91,7 +101,7 @@ export function planWebDiscovery(goal: string): WebDiscoveryPlan {
   // 3. General Informational Search
   return {
     category: 'INFORMATIONAL_SEARCH',
-    destinationUrl: 'https://duckduckgo.com',
+    destinationUrl: undefined,
     searchQuery: goal,
     initialActionDescription: `Search the web for query: "${goal}"`,
     requiresGatedConfirmation: false,

@@ -9,6 +9,7 @@
  */
 
 import { StructuredConstraints, SubGoalItem } from './agentState';
+import { canonicalizeSiteOrigin } from '../planning/searchCapability';
 
 export interface ParsedGoalResult {
   normalizedGoal: string;
@@ -119,14 +120,26 @@ export function extractTargetSite(task: string): string | undefined {
 
   const domainRegex = /\b([a-z0-9-]+\.(?:com|org|net|in|io|gov|edu))\b/i;
   const matchDomain = task.match(domainRegex);
+  // A domain the user typed in full is a USER-PROVIDED destination, so it is
+  // honoured (with the conventional www. normalisation) rather than guessed.
   if (matchDomain && matchDomain[1]) return `https://www.${matchDomain[1].toLowerCase()}`;
 
+  // The local demo fixture. This is NOT a brand assumption: it maps a
+  // deliberately named local shopping fixture, and it is retained because it is
+  // an explicit, tested product capability rather than a silent redirect of an
+  // ordinary web task to some vendor.
   if (task.toLowerCase().includes('shopping site') || task.toLowerCase().includes('shopping portal')) {
     return 'http://localhost:4174';
   }
 
-  if (task.toLowerCase().includes('google')) {
-    return 'https://www.google.com';
+  // PHASE 18.6 (I-4). The destination alias is resolved through the single
+  // capability registry instead of a hand-written `includes('google')` branch.
+  // No brand is special-cased, and an unknown alias yields `undefined` so the
+  // planner must ask rather than invent an origin for whatever word was typed.
+  const tokens = task.toLowerCase().match(/[a-z0-9][a-z0-9-]*/g) || [];
+  for (const token of tokens) {
+    const resolved = canonicalizeSiteOrigin(token);
+    if (resolved) return resolved;
   }
 
   return undefined;

@@ -426,6 +426,16 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
   });
 
   // Test 15 & 16: Consequential action check (NEEDS_USER_CONFIRMATION for external navigation)
+  //
+  // PHASE 18.6 (I-6). The goal string here used to be "Navigate outside", which
+  // does NOT imply any particular destination. The Security Critic therefore
+  // blocked the proposal with SUSPICIOUS_NAVIGATION before the confirmation gate
+  // was ever reached, so the test asserted a status the loop correctly refused
+  // to produce. That was a STALE FIXTURE, not a production defect: the Critic
+  // is a non-negotiable security invariant and must not be weakened to make a
+  // test pass. The task now declares the destination it actually navigates to,
+  // which exercises the gate this test exists to cover and leaves the Critic's
+  // own blocking behaviour pinned by the companion test immediately below.
   it('15 & 16. pauses loop in NEEDS_USER_CONFIRMATION when navigating to an external origin', async () => {
     const provider = new MockAgentProvider();
     // Agent proposes navigating to an external origin
@@ -438,11 +448,46 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
     const executeAction = vi.fn(async () => ({ success: true }));
 
     const loop = new AgentLoop(provider, { perceivePage, executeAction }, { delayBetweenStepsMs: 5 });
-    const state = await loop.runTask('Navigate outside');
+    const state = await loop.runTask('Navigate to https://external-untrusted.com/login');
 
     expect(state.status).toBe('NEEDS_USER_CONFIRMATION');
     expect(state.requiresUserConfirmationAction).toBeDefined();
     expect(executeAction).not.toHaveBeenCalled(); // Paused: did not execute automatically
+  });
+
+  // Companion to 15 & 16: the Security Critic must STILL refuse a navigation the
+  // goal never implied. This is the behaviour the old fixture accidentally
+  // tripped, and it is a security invariant — so it is pinned explicitly rather
+  // than discarded when the fixture above was corrected.
+  it('15b. the Security Critic still blocks a navigation the goal never implied', async () => {
+    const provider = new MockAgentProvider();
+    provider.setNextAction({
+      action: 'navigate',
+      url: 'https://external-untrusted.com/login',
+    });
+
+    const perceivePage = vi.fn(async () => createMockContext(0));
+    const executeAction = vi.fn(async (_action: { action: string }) => ({ success: true }));
+
+    const loop = new AgentLoop(provider, { perceivePage, executeAction }, { delayBetweenStepsMs: 5 });
+    const state = await loop.runTask('Navigate outside');
+
+    expect(state.status).not.toBe('NEEDS_USER_CONFIRMATION');
+    expect(state.status).toBe('FAILED');
+    // The Critic's verdict is recorded on the step where it fired; the terminal
+    // `reason` legitimately reflects the LAST failure (here, the retry budget
+    // running out), so it is the step record that must carry the Critic.
+    const criticStep = (state.steps ?? [])[0]!;
+    expect(criticStep.validationAllowed).toBe(false);
+    expect(criticStep.validationReason).toMatch(
+      /Security Critic|SUSPICIOUS_NAVIGATION|not implied by the goal/i
+    );
+    // The invariant that matters for security is that the un-implied navigation
+    // never reached the browser. The loop may legitimately retry with other
+    // proposals afterwards, so this asserts on the dispatched actions rather
+    // than on the dispatch count.
+    const dispatched = executeAction.mock.calls.map((c) => c[0]?.action);
+    expect(dispatched).not.toContain('navigate');
   });
 
   // Test 17: Stop / Cancel action transitions status to STOPPED
