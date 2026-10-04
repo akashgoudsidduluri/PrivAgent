@@ -1,0 +1,113 @@
+{
+  "phase": "18.7",
+  "work": "A5 / I-5 — information-task completion requires verified evidence",
+  "labels": "PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND / PROVEN_REAL_PROVIDER_PARTIAL",
+  "artifacts": {
+    "falseSuccessBefore": "docs/evidence/post-17-10/audit/a19_real_run.json",
+    "falseSuccessDetail": "docs/evidence/post-17-10/audit/a19_real_chrome_false_success.json",
+    "ruleProbe": "docs/evidence/post-17-10/audit/a5_rule_probe.json",
+    "afterA5": "docs/evidence/post-17-10/audit/a5_real_run.json",
+    "mutationSuite": "docs/evidence/post-17-10/audit/a5_mutation_suite.mjs"
+  },
+  "theDefect": {
+    "observed": "Real Chrome, real production dist, real Wikipedia page, real dashboard.",
+    "task": "tell me about charminar",
+    "before": {
+      "terminalStatus": "SUCCESS",
+      "headline": "Goal achieved.",
+      "reasonerCalls": 0,
+      "actionsDispatched": 0,
+      "verifiedEvidenceRecords": 0,
+      "elapsedMs": 800,
+      "sameViewportAlsoShowed": "No result yet.",
+      "authorisingRule": "2c",
+      "howTheRuleWasIdentified": "A content-free `rule` id was added to every goal-verification SUCCESS, and the loop now logs '[AgentTrace] goal verification satisfied {rule}'. The diagnostic name deliberately excludes res.reason, which quotes the observed fact and its value and must never reach a log line."
+    },
+    "diagnosis": "Rule 2c was not wrong — every one of its guards held. Its reportIntent regex matches 'tell me', one fresh semantic fact existed with a unique candidate for its key, and it certified. The real problem is that 2c was never told the task NEEDS evidence, so it had no reason to insist. The gate was keyed on wording, not on the deterministic intent."
+  },
+  "theFix": {
+    "rule": "A5 evidence requirement, keyed on the I-1 deterministic intent",
+    "gate": "If the intent decision says requiresEvidence, a SUCCESS is unreachable until at least one ledger record is VERIFIED and CURRENT and its normalized key matches a subject term drawn from the USER'S OWN task text.",
+    "keyedOn": "state.intentRequiresEvidence, carried from the frozen I-1 IntentDecision and never re-derived",
+    "failsClosedTo": "IN_PROGRESS — not FAILED, because nothing failed; the agent simply has not established the answer yet and the loop should keep working.",
+    "neverReads": [
+      "the model's claim",
+      "the model's answer text",
+      "the model's reason",
+      "any action outcome",
+      "dispatch success"
+    ],
+    "condition2cUnchanged": true,
+    "condition2cNote": "2c was NOT replaced. Its guards, its ambiguity provision and its own tests are untouched; it is now simply reached only when the task does not require evidence, or when the evidence requirement is met. Every pre-A5 caller has no intent decision attached, which is treated as 'not required', so their behaviour is bit-for-bit identical."
+  },
+  "realChromeAfter": {
+    "task": "tell me about charminar",
+    "goalVerificationSatisfiedTrace": "ABSENT",
+    "terminalSuccessProgress": "ABSENT",
+    "reasonerCalls": 3,
+    "network": [
+      { "endpoint": "/api/v1/agent/action", "status": 200 },
+      { "endpoint": "/api/v1/agent/review", "status": 200 },
+      { "endpoint": "/api/v1/agent/action", "status": 503 },
+      { "endpoint": "/api/v1/agent/action", "status": 200 },
+      { "endpoint": "/api/v1/agent/review", "status": 200 },
+      { "endpoint": "/api/v1/agent/action", "status": 503 }
+    ],
+    "evidenceLedgerGrowth": [
+      { "generation": 2, "ledgerSize": 24 },
+      { "generation": 3, "ledgerSize": 48 },
+      { "generation": 4, "ledgerSize": 60 }
+    ],
+    "finalDashboardStep": "Step 2 of 10, still IN_PROGRESS",
+    "interpretation": "The false SUCCESS is gone. Before A5 this exact task completed at step 0 with no model call. After A5 the loop runs the full pipeline — three reasoning calls, the Security Critic review endpoint twice, the ledger accumulating across three generations — and correctly declines to claim an answer it has not established. The two 503s are provider rate limits, reported as rate_limit and never converted into a success."
+  },
+  "mutationSuite": {
+    "score": "7/7 resolved (6 killed, 1 documented-equivalent)",
+    "killed": [
+      { "id": "A5-M1", "criterion": "the intent flag is honoured", "testsFailed": 11 },
+      { "id": "A5-M2", "criterion": "the requirement exists at all", "testsFailed": 11 },
+      { "id": "A5-M3", "criterion": "verification status matters", "testsFailed": 2 },
+      { "id": "A5-M4", "criterion": "subject matching matters", "testsFailed": 1 },
+      { "id": "A5-M5", "criterion": "unmet evidence is IN_PROGRESS, never SUCCESS", "testsFailed": 13 },
+      { "id": "A5-M6", "criterion": "the loop refreshes the verified keys BEFORE the verdict", "testsFailed": 4 }
+    ],
+    "documentedEquivalent": {
+      "id": "A5-M7",
+      "criterion": "stale records stop counting",
+      "reason": "EvidenceLedger.advance() sets freshness STALE and verificationStatus INVALIDATED together, and verify() refuses any non-CURRENT record, so a STALE-but-VERIFIED record is unreachable through the public API. The freshness clause in citable() is defence-in-depth rather than a rule any current mutation can reach. It is KEPT because A2's acceptance criterion 1 is a stated invariant, not a test artefact. Listed explicitly instead of being counted as a kill or padded around with a test that cannot fail."
+    },
+    "gapsFoundAndClosed": [
+      {
+        "id": "A5-M6",
+        "gap": "The first pass of this suite had 7 mutants and two survivors, both loop-side. Every test at that point called verifyTaskGoal directly, so the WIRING was untested — and the wiring is precisely where the real defect lived, because the loop decided the verdict before the evidence inputs were ever refreshed.",
+        "fix": "Added five tests that construct a real AgentLoop with a real EvidenceLedger and assert on the published state: an empty ledger cannot report SUCCESS, verified keys are published, a stale record stops being published, an unverified record is never published as verified, and an unflagged task is not forced to a non-success."
+      },
+      {
+        "id": "duplicate-freshness-clause",
+        "gap": "The loop re-checked freshness that EvidenceLedger.citable() had already enforced.",
+        "fix": "Removed the duplicate rather than weakening the test. Two copies of one rule is how they drift; the comment now says which layer owns it."
+      }
+    ]
+  },
+  "verification": {
+    "focusedTests": "23/23 (tests/phase18_7_a5EvidenceCompletion.test.ts)",
+    "condition2cNonRegression": "tests/post179SemanticObservation.test.ts and tests/goalVerifier.test.ts pass UNCHANGED",
+    "loopNonRegression": "tests/agentLoop.test.ts passes unchanged",
+    "mutationSuite": "7/7 resolved",
+    "tsc": "clean",
+    "build": "exit 0",
+    "fullRegression": "DEFERRED to the A10 checkpoint by instruction."
+  },
+  "honestSideObservation": {
+    "finding": "The A1 proposal contract reached the model but was not exercised by it.",
+    "evidence": "The exact prompt in the post-A5 capture contains the full A1 instruction verbatim, including the evidence count derived from the block actually rendered: 'ANSWER — you can answer now; give `answer` and cite evidence record ids from the evidence list (20 available).'",
+    "whatTheModelDid": "On both live turns groq openai/gpt-oss-20b returned the legacy action form, scroll/down/500. It did not use the terminal kinds.",
+    "consequence": "A1's ANSWER/PARTIAL/NEEDS_INFORMATION/CANNOT_VERIFY path remains IMPLEMENTED — NOT YET REAL-VERIFIED. The contract is demonstrably delivered to the model and the device-side verifier is unit- and mutation-tested, but no real-browser run has yet produced a terminal proposal.",
+    "notConvertedToPass": "This is recorded as an open gap, not treated as a successful answer path."
+  },
+  "status": {
+    "A5": "CLOSED — the real-browser false success no longer occurs, and every goal-verification SUCCESS now names the rule that authorised it",
+    "A1": "IMPLEMENTED — NOT YET REAL-VERIFIED (instruction confirmed delivered; model has not yet chosen a terminal kind in a live run)",
+    "A9": "IMPLEMENTED — typed states exist and are verified by tests; no live run has produced one yet"
+  }
+}

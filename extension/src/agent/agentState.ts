@@ -372,6 +372,38 @@ export interface AgentTaskState extends TaskState {
    */
   answer?: string;
 
+  /**
+   * PHASE 18.7 / A5 — the I-1 intent decision's `requiresEvidence`, carried
+   * through unchanged and never re-derived here.
+   *
+   * This is what makes the information case a RULE rather than a WORDING
+   * GUESS. The GoalVerifier's read-only display-fact condition is gated on a
+   * regex over the user's sentence, so "tell me about X" was certified from
+   * page evidence alone, before any model call and before a single ledger
+   * record had been verified. Keying on the deterministic intent instead means
+   * the rule applies to the class of task, not to the phrasing that happens to
+   * match.
+   *
+   * Undefined means "no intent decision was attached", which the verifier
+   * treats as NOT requiring evidence — so every pre-A5 caller keeps its exact
+   * current behaviour.
+   */
+  intentRequiresEvidence?: boolean;
+
+  /**
+   * PHASE 18.7 / A5 — the normalized KEYS of ledger records that are currently
+   * VERIFIED and CURRENT, refreshed each cycle by the loop.
+   *
+   * Keys, never claim text, and never anything the model wrote: they are
+   * derived on the device from what was observed. The GoalVerifier matches
+   * these against the USER'S OWN task text to decide whether the question's
+   * subject has actually been established.
+   *
+   * A task that requires evidence cannot be reported SUCCESSFUL while this is
+   * empty.
+   */
+  verifiedEvidenceKeys?: readonly string[];
+
   // Browser targets
   targetTabId: number | null;
   windowId: number | null;

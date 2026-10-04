@@ -1336,6 +1336,13 @@ export class AgentLoop {
       }
 
       // 3. Goal Completion Detection
+      //
+      // PHASE 18.7 / A5. The evidence inputs are refreshed HERE, immediately
+      // before the verdict, not in the reasoning path below. The bug this fixes
+      // was a SUCCESS decided at exactly this point while the state still
+      // carried no verified evidence — the reasoning path had never run, so
+      // anything set there would have been too late.
+      this.refreshEvidenceCompletionInputs();
       if (this.isTaskGoalSatisfied(task, this.state, context)) {
         if (this.state.plan) {
           this.state.plan = updateTaskPlanProgress(
@@ -3458,6 +3465,33 @@ export class AgentLoop {
     return false;
   }
 
+  /**
+   * PHASE 18.7 / A5 — refresh the two inputs the GoalVerifier uses to decide
+   * whether an information task may be reported successful.
+   *
+   * Both are derived on the device from the local ledger and the intent
+   * boundary's frozen decision. Nothing here reads a model claim, an answer
+   * text or an action outcome.
+   *
+   * Called immediately BEFORE every goal verdict, so a record that went stale
+   * on a later page generation stops counting, and a record verified during
+   * this cycle starts counting.
+   */
+  private refreshEvidenceCompletionInputs(): void {
+    this.state.intentRequiresEvidence = this.intentDecision?.requiresEvidence ?? false;
+    // `citable()` is the ledger's own single gate: it already excludes STALE,
+    // CONFLICTED, INVALIDATED and non-SANITIZED records. Only the VERIFIED
+    // promotion is left to add here — re-checking freshness here too would be a
+    // second copy of a rule that already lives in one place, and two copies of
+    // a rule is exactly how they drift.
+    this.state.verifiedEvidenceKeys = this.evidenceLedger
+      ? this.evidenceLedger
+          .citable()
+          .filter((r) => r.verificationStatus === 'VERIFIED')
+          .map((r) => r.key)
+      : [];
+  }
+
   private isTaskGoalSatisfied(task: string, state: AgentTaskState, context: AgentContextPayload): boolean {
     if (state.lastActionResult && !state.lastActionResult.success) {
       return false;
@@ -3468,6 +3502,11 @@ export class AgentLoop {
       if (res.reason) {
         state.reason = res.reason;
       }
+      // PHASE 18.7 / A5. The rule id only — `res.reason` quotes the observed
+      // fact and its value, so it must never reach a log line. Without this,
+      // a SUCCESS is undiagnosable in a real browser and a false one is
+      // impossible to attribute.
+      console.info('[AgentTrace] goal verification satisfied', { rule: res.rule ?? 'UNATTRIBUTED' });
       return true;
     }
     return false;

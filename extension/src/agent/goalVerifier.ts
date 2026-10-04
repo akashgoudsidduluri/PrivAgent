@@ -26,6 +26,7 @@
 
 import { AgentContextPayload, AgentDetection } from '../privacy/types';
 import { AgentTaskState, CandidateProductItem, StructuredConstraints, TaskStatus } from './agentState';
+import { subjectTermsFromTask } from './proposal';
 import { isSameDocumentIdentity, MAX_OCR_OBSERVATION_AGE_MS, OCRObservation } from '../ocr/ocrObservationContract';
 import { GoalProgressTracker } from '../hierarchicalPlanning/goalProgressTracker';
 import type { Subgoal } from '../hierarchicalPlanning/hierarchicalTypes';
@@ -42,6 +43,17 @@ export interface GoalVerificationResult {
   status: TaskStatus;
   reason?: string;
   verifiedCandidates?: CandidateProductItem[];
+  /**
+   * PHASE 18.7 / A5 — which branch authorised a SUCCESS, e.g. '2c'.
+   *
+   * CONTENT-FREE BY CONSTRUCTION. `reason` quotes the observed fact and its
+   * value, so it can never be logged; a rule id names a branch of this function
+   * and carries no page string, no value and no credential. It exists so a
+   * SUCCESS can be attributed in a real-browser trace and so A10's "zero false
+   * successes" criterion can be checked against something auditable rather
+   * than against prose.
+   */
+  rule?: string;
 }
 
 /**
@@ -457,6 +469,7 @@ function verifyScrollGoal(
     if (moved >= want) {
       return {
         satisfied: true,
+        rule: '0-precondition.1',
         status: 'SUCCESS',
         reason: `Scroll goal verified from observed viewport position: observed ${moved}px of ${claim.direction} travel from a baseline of ${baseline}px to ${scrollY}px.`,
       };
@@ -470,6 +483,7 @@ function verifyScrollGoal(
     if (moved > 0) {
       return {
         satisfied: true,
+        rule: '0-precondition.2',
         status: 'SUCCESS',
         reason: `Scroll goal verified from observed viewport position: ${scrollY - baseline}px of ${claim.direction} travel observed (${baseline}px → ${scrollY}px).`,
       };
@@ -489,6 +503,7 @@ function verifyScrollGoal(
   if (inView) {
     return {
       satisfied: true,
+      rule: '0-precondition.3',
       status: 'SUCCESS',
       reason: `Scroll goal verified from observed state: target '${claim.targetTerms.join(' ')}' is inside the observed viewport at ${scrollY}px.`,
     };
@@ -500,6 +515,33 @@ function verifyScrollGoal(
  * Main goal verification function. Evaluates current observable browser state
  * and decides whether the goal is genuinely achieved.
  */
+/**
+ * PHASE 18.7 / A5 — has the question's subject actually been established?
+ *
+ * Requires ALL of:
+ *   * at least one ledger record the local verifier promoted to VERIFIED,
+ *   * that record still CURRENT (not invalidated by a later page generation),
+ *   * and its normalized key matching a subject term drawn from the USER'S OWN
+ *     task text.
+ *
+ * Deterministic and local: it reads only `state.verifiedEvidenceKeys`, which the
+ * loop derives from the device's own ledger. It never reads the model's claim,
+ * its reason, its answer text or any action.
+ *
+ * A missing list, an empty list, or a list that matches nothing all fail closed.
+ */
+function hasVerifiedSubjectEvidence(state: AgentTaskState, task: string): boolean {
+  const keys = state.verifiedEvidenceKeys;
+  if (!keys || keys.length === 0) return false;
+  const terms = subjectTermsFromTask(task);
+  if (terms.length === 0) return false;
+  return keys.some((key) => {
+    const normalized = key.toLowerCase();
+    if (!normalized) return false;
+    return terms.some((term) => normalized.includes(term) || term.includes(normalized));
+  });
+}
+
 export function verifyTaskGoal(
   task: string,
   state: AgentTaskState,
@@ -524,6 +566,7 @@ export function verifyTaskGoal(
       if (q.length > 0 && u.pathname.toLowerCase() !== '/' && (intent.length === 0 || q.toLowerCase().includes(intent) || intent.includes(q.toLowerCase()))) {
         return {
           satisfied: true,
+          rule: '1',
           status: 'SUCCESS',
           reason: `Search goal verified against observed results URL: query '${q}' present at '${u.hostname}'.`,
         };
@@ -547,6 +590,7 @@ export function verifyTaskGoal(
       if (u.searchParams.has('q') && u.searchParams.get('q')!.length > 0) {
         return {
           satisfied: true,
+          rule: '1b',
           status: 'SUCCESS',
           reason: `Google search query verified in results URL: '${u.searchParams.get('q')}'.`,
         };
@@ -575,6 +619,7 @@ export function verifyTaskGoal(
     if (wasOnLoginPage && isNowAwayFromLogin) {
       return {
         satisfied: true,
+        rule: '2',
         status: 'SUCCESS',
         reason: `Login successful: authenticated state observed at '${currentUrl}'.`,
       };
@@ -619,6 +664,7 @@ export function verifyTaskGoal(
     if (unmatched.length === 0 && observedLower.length >= Math.min(2, researchItems.length)) {
       return {
         satisfied: true,
+        rule: '2b',
         status: 'SUCCESS',
         reason:
           `Research goal verified from observed browser state: all ${researchItems.length} requested ` +
@@ -626,6 +672,47 @@ export function verifyTaskGoal(
       };
     }
     return { satisfied: false, status: 'IN_PROGRESS' };
+  }
+
+  // ── 2c-bis. Evidence requirement (PHASE 18.7 / A5) ────────────────────────
+  //
+  // THE DEFECT THIS FIXES, observed in a real browser.
+  //
+  // Running the real extension against the real Wikipedia page with the task
+  // "tell me about charminar" produced SUCCESS in ~800 ms with ZERO reasoner
+  // calls, ZERO dispatched actions and ZERO verified ledger records — while the
+  // dashboard showed "No result yet." beside "Goal achieved.". The rule that
+  // authorised it was 2c: its `reportIntent` regex matches "tell me", one fresh
+  // semantic fact existed with a unique candidate for its key, and the loop
+  // exited before the model was ever consulted.
+  //
+  // So 2c could certify an information task on the strength of a phrase. This
+  // is not a weakness in 2c — every one of its guards held — it is that 2c was
+  // never told that the task NEEDS evidence, so it had no reason to insist.
+  //
+  // The fix adds that missing precondition and keys it on the DETERMINISTIC
+  // intent rather than on wording, so it covers the class of task:
+  //   * if the I-1 intent decision says the task requires evidence, then a
+  //     SUCCESS is unreachable until at least one ledger record is VERIFIED
+  //     and CURRENT AND its key matches a subject term of the USER'S OWN task;
+  //   * an absent intent decision means "not required", so every pre-A5 caller
+  //     keeps exactly the behaviour it had.
+  //
+  // FAIL CLOSED. When the requirement is unmet this returns IN_PROGRESS — not
+  // FAILED, because nothing failed; the agent simply has not established the
+  // answer yet, and the loop should keep working. It never returns a terminal
+  // state from here, and it never reads the model's claim.
+  const requiresEvidence = state.intentRequiresEvidence === true;
+  const evidenceSatisfied = !requiresEvidence || hasVerifiedSubjectEvidence(state, task);
+  if (requiresEvidence && !evidenceSatisfied) {
+    return {
+      satisfied: false,
+      status: 'IN_PROGRESS',
+      reason:
+        `Evidence requirement unmet: the intent boundary marked this task as needing ` +
+        `evidence, and no VERIFIED, CURRENT ledger record matches the subject of the ` +
+        `question yet. Completion stays unreachable until one does.`,
+    };
   }
 
   // ── 2c. Read-only display-fact goals (post-17.9) ───────────────────────────
@@ -687,6 +774,7 @@ export function verifyTaskGoal(
         if (candidates.length === 1 && observed) {
           return {
             satisfied: true,
+            rule: '2c',
             status: 'SUCCESS',
             reason:
               `Display fact verified from fresh authoritative observation: ` +
@@ -732,6 +820,7 @@ export function verifyTaskGoal(
       if (best) {
         return {
           satisfied: true,
+          rule: '3.1',
           status: 'SUCCESS',
           reason: `Verified qualifying product candidate '${best.title}' matching constraints (${best.constraintNotes}).`,
           verifiedCandidates: qualifying,
@@ -748,6 +837,7 @@ export function verifyTaskGoal(
     if (currentUrl.includes('product') && qualifying.length > 0) {
       return {
         satisfied: true,
+        rule: '3.2',
         status: 'SUCCESS',
         reason: 'Observed product detail page with a qualifying item in the current perception.',
         verifiedCandidates: qualifying,
@@ -780,6 +870,7 @@ export function verifyTaskGoal(
     if (observedLedger) {
       return {
         satisfied: true,
+        rule: '4',
         status: 'SUCCESS',
         reason: 'Transaction history surface observed in the current perception.',
       };
@@ -828,6 +919,7 @@ export function verifyTaskGoal(
     if (observedUrl.includes('detail') || observedUrl.includes('transaction')) {
       return {
         satisfied: true,
+        rule: '5',
         status: 'SUCCESS',
         reason: 'Account details surface observed in the current browser state.',
       };
@@ -877,6 +969,7 @@ export function verifyTaskGoal(
       if (match) {
         return {
           satisfied: true,
+          rule: '6.1',
           status: 'SUCCESS',
           reason: `Visual OCR goal verified: sensitive phone entity identified in visual region without raw value exposure (ID: ${match.id}).`,
         };
@@ -888,6 +981,7 @@ export function verifyTaskGoal(
       if (match) {
         return {
           satisfied: true,
+          rule: '6.2',
           status: 'SUCCESS',
           reason: `Visual OCR goal verified: sensitive email entity identified in visual region without raw value exposure (ID: ${match.id}).`,
         };
@@ -902,6 +996,7 @@ export function verifyTaskGoal(
         if (!quoted || match.label.toLowerCase().includes(quoted[1]!.toLowerCase())) {
           return {
             satisfied: true,
+            rule: '6.3',
             status: 'SUCCESS',
             reason: `Visual OCR goal verified: visible heading '${match.label}' identified inside visual element.`,
           };
@@ -921,6 +1016,7 @@ export function verifyTaskGoal(
       if (match) {
         return {
           satisfied: true,
+          rule: '6.4',
           status: 'SUCCESS',
           reason: `Visual OCR goal verified: text matching '${quoted[1]}' perceived inside visual element ('${match.label}').`,
         };
@@ -935,6 +1031,7 @@ export function verifyTaskGoal(
       if (match) {
         return {
           satisfied: true,
+          rule: '6.5',
           status: 'SUCCESS',
           reason: `Visual OCR goal verified: observed statement inside visual element ('${match.label}').`,
         };
@@ -1121,6 +1218,7 @@ function verifyDeclaredDestinationGoal(
 
   return {
     satisfied: true,
+    rule: '7',
     status: 'SUCCESS',
     reason: `Declared destination goal verified by the destination verifier: ${recheck.reason}`,
   };
