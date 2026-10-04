@@ -57,6 +57,10 @@ export type ProviderErrorKind =
   | 'missing_action'
   | 'unsupported_action'
   | 'empty_response'
+  // PHASE 18.5 / I-3. The model answered, but what it answered violates the
+  // action contract. Distinct from every transport kind above precisely so a
+  // contract problem is never reported as a provider outage.
+  | 'model_contract'
   | 'unknown';
 
 /**

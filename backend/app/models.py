@@ -418,6 +418,9 @@ class ReasoningTelemetry(StrictModel):
     attempts: int = 1
     fallback_used: bool = False
     error_kind: Optional[str] = None   # "timeout" | "auth" | "invalid_json" | ...
+    # PHASE 18.5 / I-3. Names of diagnostic fields the reasoner bounded to
+    # their limit instead of rejecting the turn. NAMES ONLY — never content.
+    clamped_fields: Optional[List[str]] = None
 
 
 class AgentActionResponse(StrictModel):

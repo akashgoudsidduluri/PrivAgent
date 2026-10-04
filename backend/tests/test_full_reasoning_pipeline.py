@@ -189,22 +189,47 @@ class TestFullPipelineFailures:
             [_completion('{"action":"click","target":"element_details","reason":"Account holder Rahul Sharma."}')],
         )
         resp = client.post("/api/v1/agent/action", json=_agent_body("Find account details"))
-        # Fails closed: reasoner-layer scan raises ReasoningError → 503.
-        assert resp.status_code == 503
+        # PHASE 18.5 / I-3. Still fails closed — the PII scan is untouched and
+        # still rejects. Only the STATUS changed: a model contract violation is
+        # 502, not 503 "Service Unavailable", so it is no longer reported as
+        # a provider outage.
+        assert resp.status_code == 502
         detail = resp.json()["detail"]
-        assert detail["error_kind"] == "invalid_action"
+        assert detail["error_kind"] == "model_contract"
         assert detail["success"] is False
+        assert detail["retryable"] is False
 
-    def test_oversized_model_reason_rejected(self, monkeypatch, openrouter_mode):
+    def test_oversized_model_reason_is_bounded_not_rejected(self, monkeypatch, openrouter_mode):
+        """PHASE 18.5 / I-3 — CONTRACT CHANGE.
+
+        This test previously asserted that a 400-character `reason` was
+        REJECTED with 503. That behaviour was the defect: diagnostic prose
+        decided whether an already-valid, fully-gated action survived, and it
+        reported the loss as a provider outage.
+
+        The contract now bounds diagnostic prose instead of discarding the
+        turn. The bound itself is UNCHANGED and still strictly enforced — that
+        is what this test now proves, together with the fact that the action
+        survives and reaches the normal validation path.
+        """
+        from app.reasoner import MAX_REASON_CHARS
+
         huge_reason = "x" * 400
         _patch_openrouter(
             monkeypatch,
             [_completion(f'{{"action":"click","target":"element_details","reason":"{huge_reason}"}}')],
         )
         resp = client.post("/api/v1/agent/action", json=_agent_body("Find account details"))
-        # Oversized model fields are rejected (reasoner-layer limit) → 503.
-        assert resp.status_code == 503
-        assert resp.json()["detail"]["error_kind"] == "invalid_action"
+
+        # The turn is NOT lost over prose length...
+        assert resp.status_code == 200
+        body = resp.json()
+        # ...the bound still holds on what is actually transmitted...
+        assert len(body["action"]["reason"]) <= MAX_REASON_CHARS
+        # ...the clamp is reported rather than silent...
+        assert body["telemetry"]["clamped_fields"] == ["reason"]
+        # ...and the action itself is untouched.
+        assert body["action"]["action"] == "click"
 
     def test_model_script_output_rejected_by_action_model(self, monkeypatch, openrouter_mode):
         _patch_openrouter(
@@ -214,13 +239,15 @@ class TestFullPipelineFailures:
         resp = client.post("/api/v1/agent/action", json=_agent_body("Fill the form"))
         assert resp.status_code == 502
 
-    def test_model_malformed_json_fails_closed_503(self, monkeypatch, openrouter_mode):
+    def test_model_malformed_json_fails_closed_502(self, monkeypatch, openrouter_mode):
         _patch_openrouter(monkeypatch, [_completion("I cannot comply with that request.")])
         resp = client.post("/api/v1/agent/action", json=_agent_body("Find anything"))
-        assert resp.status_code == 503
+        # PHASE 18.5 / I-3: malformed model output is a CONTRACT failure (502),
+        # not a provider outage (503). Still fails closed, still no action.
+        assert resp.status_code == 502
         detail = resp.json()["detail"]
         assert detail["success"] is False
-        assert detail["error_kind"] in ("invalid_json", "empty_response")
+        assert detail["retryable"] is False
 
     def test_openrouter_5xx_fails_closed_503(self, monkeypatch, openrouter_mode):
         _patch_openrouter(monkeypatch, [httpx.Response(500, json={"error": {"message": "server oops"}})])
@@ -254,7 +281,11 @@ class TestFullPipelineFailures:
         """Model returns an empty/garbage output for an unknown task — no fallback."""
         _patch_openrouter(monkeypatch, [_completion("")])
         resp = client.post("/api/v1/agent/action", json=_agent_body("Do something unknown"))
-        assert resp.status_code == 503
+        # PHASE 18.5 / I-3: empty/garbage model output is a contract failure.
+        # The guarantee under test is unchanged and is the important one — no
+        # first-detection guessing — so no action may be fabricated.
+        assert resp.status_code == 502
+        assert resp.json()["detail"]["success"] is False
 
 
 class TestFullPipelineHistoryGuard:

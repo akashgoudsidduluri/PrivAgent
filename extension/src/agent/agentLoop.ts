@@ -25,6 +25,7 @@
  */
 
 import { BrowserAction, ActionType } from './actionTypes';
+import { filterToHistoryContract } from './historyContract';
 import { validateAction } from './actionValidator';
 import { groundProposedTarget } from './groundingEngine';
 import { canPerformAction, assertSanitizedContextSafe } from './privacyPolicy';
@@ -3067,19 +3068,47 @@ export class AgentLoop {
             55000
           );
         });
-        const historyForReasoner: BrowserAction[] = [...this.state.previousActions];
+        const rawHistory: BrowserAction[] = [...this.state.previousActions];
         const lastStep = this.state.steps.length > 0 ? this.state.steps[this.state.steps.length - 1] : undefined;
         if (lastStep && !lastStep.effectVerified) {
-          const alreadyIncluded = historyForReasoner.some(
+          const alreadyIncluded = rawHistory.some(
             (a) => a === lastStep.action
           );
           if (!alreadyIncluded) {
-            historyForReasoner.push({
+            rawHistory.push({
               ...lastStep.action,
               effect: lastStep.effectStatus || 'ACTION_NO_EFFECT',
               ...(lastStep.action.action === 'scroll' ? { scrollDelta: 0 } : {}),
             } as BrowserAction);
           }
+        }
+        //
+        // PHASE 18.5 (I-2). The effect/scrollDelta enrichment above is
+        // preserved exactly — it is what lets the model distinguish a scroll
+        // that moved the page from one that did not.
+        //
+        // What is added is a CONTRACT FILTER. The backend validates history
+        // with `BrowserActionModel`, which is strict and enforces per-action-
+        // type field applicability (`type` needs `text`, `click` needs
+        // `target`, ...). Actions that violate that shape could reach history
+        // and the backend would then reject the ENTIRE request with a 422 —
+        // losing a turn over one malformed HISTORICAL entry, observed live as
+        // `Action 'type' requires a non-empty 'text' field` against
+        // `body.history[1]`.
+        //
+        // The backend's strictness is untouched. This only stops the sender
+        // emitting entries its own contract forbids. Dropping an entry cannot
+        // grant permission, alter an action, or bypass a gate; the dropped
+        // COUNT is logged so the condition stays visible, and never the
+        // content.
+        //
+        const { history: historyForReasoner, dropped: droppedHistoryEntries } =
+          filterToHistoryContract(rawHistory);
+        if (droppedHistoryEntries > 0) {
+          console.warn('[AgentTrace] dropped non-conforming reasoner history entries', {
+            dropped: droppedHistoryEntries,
+            kept: historyForReasoner.length,
+          });
         }
         const action = await Promise.race([
           this.provider.requestAction(task, context, historyForReasoner),

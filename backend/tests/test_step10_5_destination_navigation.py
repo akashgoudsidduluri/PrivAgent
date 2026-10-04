@@ -142,12 +142,19 @@ class TestModelFacingInstruction:
         assert "Do NOT wait for a link whose text happens to name the role" in p
 
     def test_the_enforced_reason_length_limit_is_actually_enforced(self):
-        """Mutation M20 (skipping `_enforce_field_limits`) was caught by this.
+        """Mutation M20 (skipping the field-limit enforcement) is caught here.
 
         The prompt STATES the limit and the validator ENFORCES it; both halves
-        are asserted here so the two cannot drift apart in either direction.
+        are asserted so they cannot drift apart in either direction.
+
+        PHASE 18.5 / I-3: `reason` is diagnostic, so the limit is enforced by
+        BOUNDING rather than by rejecting the turn. The property this test has
+        always claimed — "the limit is actually enforced" — is therefore
+        asserted as: nothing longer than MAX_REASON_CHARS ever comes back out.
+        DECISION fields are still hard-rejected; that is asserted separately in
+        test_phase18_5_model_contract.py.
         """
-        from app.reasoner import MAX_REASON_CHARS, ReasoningError, parse_model_action
+        from app.reasoner import MAX_REASON_CHARS, parse_model_action
 
         ok = "x" * (MAX_REASON_CHARS - 1)
         parsed = parse_model_action(
@@ -155,10 +162,10 @@ class TestModelFacingInstruction:
         assert parsed["reason"] == ok
 
         too_long = "x" * (MAX_REASON_CHARS + 1)
-        with pytest.raises(ReasoningError) as exc:
-            parse_model_action(
-                '{"action":"click","target":"x","reason":"%s"}' % too_long)
-        assert "300-character" in str(exc.value)
+        parsed = parse_model_action(
+            '{"action":"click","target":"x","reason":"%s"}' % too_long)
+        # The limit holds. Unchanged at 300 — not raised, not relaxed.
+        assert len(parsed["reason"]) == MAX_REASON_CHARS
 
     def test_it_states_the_enforced_reason_length_limit(self):
         """The validator hard-rejects a `reason` over MAX_REASON_CHARS.

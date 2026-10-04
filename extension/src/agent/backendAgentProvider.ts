@@ -334,6 +334,15 @@ export class BackendAgentProvider implements AgentProvider {
         else if (d.error_kind === 'rate_limit') kind = 'rate_limit';
         else if (d.error_kind === 'timeout' || d.error_kind === 'network') kind = d.error_kind;
         else if (d.error_kind === 'not_configured') kind = 'auth';
+        // PHASE 18.5 / I-3. The backend now reports a model contract
+        // violation (502) under its own `model_contract` kind. It used to
+        // arrive as a bare 503 whose body carried no recognised kind, and fell
+        // through to `http_error` — i.e. exactly the same classification a
+        // genuine provider outage received. Preserving the distinct kind is
+        // what keeps "the model answered with something unusable" separable
+        // from "the provider could not answer", which is the whole point of
+        // the change.
+        else if (d.error_kind === 'model_contract') kind = 'model_contract';
         else kind = 'http_error';
         structuredKindFound = true;
         retryable = Boolean(d.retryable);

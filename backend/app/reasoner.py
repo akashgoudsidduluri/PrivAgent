@@ -55,24 +55,79 @@ MAX_REASON_CHARS = 300
 MAX_TEXT_CHARS = 500
 MAX_OPTION_CHARS = 200
 
+# PHASE 18.5 / I-3. Fields that DECIDE the action are hard-rejected when
+# oversized; diagnostic prose is bounded instead. See `_enforce_field_limits`.
+DECISION_FIELD_LIMITS = {
+    "text": MAX_TEXT_CHARS,
+    "option": MAX_OPTION_CHARS,
+    "target": MAX_PROMPT_FIELD_CHARS,
+    "url": MAX_PROMPT_FIELD_CHARS,
+    "direction": MAX_PROMPT_FIELD_CHARS,
+}
+DIAGNOSTIC_FIELD_LIMITS = {
+    "reason": MAX_REASON_CHARS,
+}
+
+# Names of diagnostic fields clamped by the most recent `parse_model_action`
+# call. Names only — never field CONTENT. Written and read within a single
+# request; the route reads it immediately after parsing to populate telemetry.
+last_clamped_fields: List[str] = []
+
 
 def _enforce_field_limits(action: Dict[str, Any]) -> None:
-    """Reject oversized model-emitted fields instead of truncating silently."""
-    limits = {
-        "reason": MAX_REASON_CHARS,
-        "text": MAX_TEXT_CHARS,
-        "option": MAX_OPTION_CHARS,
-        "target": MAX_PROMPT_FIELD_CHARS,
-        "url": MAX_PROMPT_FIELD_CHARS,
-        "direction": MAX_PROMPT_FIELD_CHARS,
-    }
-    for field, limit in limits.items():
+    """Reject oversized model-emitted DECISION fields.
+
+    PHASE 18.5 / I-3 CONTRACT DECISION.
+
+    A model-emitted field is one of two things, and conflating them is what
+    caused the observed failure ("Model-emitted 'reason' exceeds the
+    300-character limit" -> HTTP 503 -> whole turn lost).
+
+    1. DECISION fields (`target`, `url`, `text`, `option`, `direction`) decide
+       WHAT THE AGENT DOES. An over-length value here means the action is
+       ungroundable or unsafe — an over-long `text` to type, an over-long
+       `url` to navigate to. These are HARD REJECTED, exactly as before.
+       Strictness here is load-bearing and is NOT relaxed.
+
+    2. The DIAGNOSTIC field (`reason`) is prose explaining a choice that has
+       ALREADY been made. It never selects, grounds, authorizes or executes
+       anything; it is read by a human and by logs. The action it accompanies
+       still passes grounding, BrowserActionModel, M5, the Security Critic,
+       containment, effect verification and goal verification.
+
+    Discarding a structurally valid, fully-gated action because its
+    accompanying sentence ran a few characters long is the defect: it turns a
+    model-compliance wobble into total loss of a turn, and — because the field
+    limit raised `invalid_action`, which the route reported as 503 — it made a
+    model contract violation INDISTINGUISHABLE from a provider outage.
+
+    `reason` is therefore BOUNDED, not GATING: see
+    `_clamp_diagnostic_fields`. The 300-character bound is unchanged and is
+    still the hard limit on what ever reaches the pipeline or the UI. The
+    clamp is never silent — it is recorded and reported.
+    """
+    for field, limit in DECISION_FIELD_LIMITS.items():
         value = action.get(field)
         if isinstance(value, str) and len(value) > limit:
             raise ReasoningError(
                 f"Model-emitted '{field}' exceeds the {limit}-character limit.",
                 kind="invalid_action",
             )
+
+
+def _clamp_diagnostic_fields(action: Dict[str, Any]) -> List[str]:
+    """Bound diagnostic prose to its limit. Never invalidates the action.
+
+    Returns the NAMES of the fields that were clamped (never their content) so
+    the clamp can be reported as telemetry instead of happening silently.
+    """
+    clamped: List[str] = []
+    for field, limit in DIAGNOSTIC_FIELD_LIMITS.items():
+        value = action.get(field)
+        if isinstance(value, str) and len(value) > limit:
+            action[field] = value[:limit]
+            clamped.append(field)
+    return clamped
 
 
 class ReasoningError(RuntimeError):
@@ -118,6 +173,10 @@ class ReasoningResult:
     model: str
     latency_ms: float
     attempts: int
+    # PHASE 18.5 / I-3. NAMES (never content) of diagnostic fields that were
+    # clamped to their bound. Empty when nothing was clamped. Carried so the
+    # clamp is reported rather than silent.
+    clamped_fields: List[str] = field(default_factory=list)
 
 
 # ── Provider contract (server side) ───────────────────────────────────────────
@@ -771,6 +830,11 @@ def parse_model_action(content: str) -> Dict[str, Any]:
     Defensive parsing: strips markdown fences, extracts the first JSON object,
     and requires a dict with a string "action" field. Raises ReasoningError on
     any malformed output — never fabricates an action.
+
+    PHASE 18.5 / I-3: diagnostic fields (`reason`) are bounded to their limit
+    rather than rejecting the turn. The names of any clamped fields are left in
+    `last_clamped_fields` for the caller to report; the bound itself is
+    unchanged.
     """
     if not content or not content.strip():
         raise ReasoningError("Model returned an empty response.", kind="empty_response")
@@ -814,7 +878,8 @@ def parse_model_action(content: str) -> Dict[str, Any]:
     if not isinstance(action, str) or not action.strip():
         raise ReasoningError('Model output missing a valid "action" field.', kind="missing_action")
 
-    # Phase 3: reject oversized model-emitted fields (no silent truncation).
+    # Phase 3: reject oversized model-emitted DECISION fields (no silent
+    # truncation). Diagnostic prose is bounded later, after the PII scan.
     _enforce_field_limits(parsed)
 
     # Phase 2 (HIGH-4): an untrusted model must not smuggle PII through
@@ -828,6 +893,13 @@ def parse_model_action(content: str) -> Dict[str, Any]:
                 f"Model-emitted reason rejected by text-safety scan (rule={finding.rule}).",
                 kind="invalid_action",
             )
+
+    # PHASE 18.5 / I-3. The PII scan above deliberately runs on the FULL,
+    # unclamped `reason`: a sensitive value past the 300-char bound is still a
+    # violation and must still be rejected. Only after it has passed is the
+    # diagnostic prose bounded to its limit, so the bound can never be used to
+    # smuggle unscanned text past the safety layer.
+    last_clamped_fields[:] = _clamp_diagnostic_fields(parsed)
 
     return parsed
 

@@ -35,7 +35,12 @@ from ..models import (
     BrowserActionModel,
     ReasoningTelemetry,
 )
-from ..reasoner import ReasoningError, build_reasoner, resolve_reasoner_name
+from ..reasoner import (
+    ReasoningError,
+    build_reasoner,
+    last_clamped_fields,
+    resolve_reasoner_name,
+)
 from ..security import PayloadSecurityError, verify_payload_invariants
 
 router = APIRouter(prefix="/api/v1/agent", tags=["agent"])
@@ -54,6 +59,23 @@ def _rate_limit_headers(err: ReasoningError) -> Dict[str, str]:
     if err.kind == "rate_limit" and err.retry_after:
         return {"Retry-After": str(err.retry_after)}
     return {}
+
+
+# PHASE 18.5 / I-3. Reasoner failures that mean "the model answered, but what
+# it answered is unusable", as opposed to "the provider could not answer".
+# These are reported as 502 `model_contract` so a client (and an operator) can
+# tell a prompt/contract problem from a service outage. The classes are
+# disjoint by construction: every genuinely transient/provider-side kind is
+# absent from this tuple and therefore still maps to 503.
+_MODEL_CONTRACT_KINDS = frozenset(
+    {
+        "invalid_action",
+        "invalid_json",
+        "missing_action",
+        "empty_response",
+        "unexpected_format",
+    }
+)
 
 
 def _build_reasoner():
@@ -224,15 +246,47 @@ async def generate_action(
             # provider's own Retry-After is TRANSIENT, and is reported as such
             # with that header relayed. Every other kind is reported exactly as
             # before. Nothing here converts a failure into a success: the
-            # status is still 503 and no action is produced.
+            # status is still a failure and no action is produced.
+            #
+            # PHASE 18.5 / I-3 — MODEL CONTRACT vs PROVIDER OUTAGE.
+            #
+            # The defect: EVERY reasoner failure was reported as HTTP 503
+            # "Service Unavailable". 503 means "this service is down, try
+            # later". But `invalid_action` (and `invalid_json`,
+            # `missing_action`, `empty_response`, `unexpected_format`) are
+            # MODEL CONTRACT failures: the service is healthy and answered.
+            # Reporting them as 503 made a model that emitted unusable output
+            # indistinguishable from an outage, sent operators looking at
+            # provider health for a prompt problem, and told the client to
+            # treat a deterministic contract violation as a transient fault.
+            #
+            # The fix separates the two classes on the wire. Contract failures
+            # are 502 (an upstream returned something unusable); genuine
+            # provider faults — auth, rate limit, timeout, network, not
+            # configured, 5xx — remain 503 exactly as before. Neither is ever
+            # converted into a success, and retryability is unchanged:
+            # contract violations stay non-retryable because re-sending the
+            # same prompt reliably reproduces the same unusable output.
             rate_limited = err.kind == "rate_limit" and bool(err.retry_after)
+            contract_failure = err.kind in _MODEL_CONTRACT_KINDS
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                status_code=(
+                    status.HTTP_502_BAD_GATEWAY
+                    if contract_failure
+                    else status.HTTP_503_SERVICE_UNAVAILABLE
+                ),
                 headers=_rate_limit_headers(err),
                 detail={
                     "success": False,
-                    "reason": f"Reasoning unavailable: {err}",
-                    "error_kind": "rate_limit" if rate_limited else err.kind,
+                    "reason": (
+                        f"Reasoner model contract violation: {err}"
+                        if contract_failure
+                        else f"Reasoning unavailable: {err}"
+                    ),
+                    "error_kind": (
+                        "model_contract" if contract_failure
+                        else ("rate_limit" if rate_limited else err.kind)
+                    ),
                     "retryable": rate_limited,
                 },
             )
@@ -399,6 +453,11 @@ async def generate_action(
         latency_ms=round(result.latency_ms, 1),
         attempts=result.attempts,
         fallback_used=fallback_used,
+        # PHASE 18.5 / I-3. Field NAMES only, never content. Makes the
+        # diagnostic clamp observable instead of silent, so a model that
+        # routinely over-runs `reason` is visible without ever putting prose
+        # on the wire twice.
+        clamped_fields=list(last_clamped_fields) or None,
     )
 
     # Backend logs the actual model_id for debugging, but we do not leak it to the frontend telemetry

@@ -98,6 +98,10 @@ export type ProviderFailureCategory =
   | 'PROVIDER_CONFIGURATION_ERROR' // M
   | 'FALLBACK_EXHAUSTED' // N
   | 'STALE_RESPONSE' // O
+  // PHASE 18.5 / I-3. The provider answered; the answer violated the action
+  // contract. Deterministic and non-transient, so it must never be grouped
+  // with the transport faults above (A-G).
+  | 'MODEL_CONTRACT' // Q
   | 'UNKNOWN_PROVIDER_FAILURE'; // P
 
 /** The existing repository error vocabulary, preserved — not replaced. */
@@ -123,6 +127,11 @@ export function categoryForKind(kind: ProviderErrorKind, status?: number): Provi
       return 'SCHEMA_INVALID';
     case 'unsupported_action':
       return 'UNSUPPORTED_ACTION';
+    // PHASE 18.5 / I-3. A model-contract violation is its own failure
+    // category, so recovery and reporting can treat it as a deterministic
+    // output problem rather than a transient transport fault.
+    case 'model_contract':
+      return 'MODEL_CONTRACT';
     case 'http_error':
     case 'unknown':
       break;
