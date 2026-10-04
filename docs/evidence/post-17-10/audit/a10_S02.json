@@ -1,0 +1,278 @@
+{
+  "phase": "18.7-A10",
+  "work": "A10 FINAL REAL-WEB EVALUATION — S02 INFORMATION_RETRIEVAL: Tell me about Charminar (A1 ANSWER attempt)",
+  "labels": "PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND",
+  "scenario": {
+    "id": "S02",
+    "category": "INFORMATION_RETRIEVAL",
+    "title": "Tell me about Charminar (A1 ANSWER attempt)",
+    "task": "tell me about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "harnessExit": 0,
+    "rawArtifact": "docs/evidence/post-17-10/audit/_a10_raw_S02.json"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "settleMs": 45000,
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://127.0.0.1:4174 (ApexCart), http://127.0.0.1:4175 (synthetic banking)",
+    "gateway": "http://127.0.0.1:8010 (FastAPI)",
+    "startedAt": "2026-10-04T19:35:27.948Z",
+    "endedAt": "2026-10-04T19:36:19.788Z"
+  },
+  "provider": {
+    "type": "LIVE_CLOUD_REASONER",
+    "proofLevel": "PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND",
+    "stubMode": null,
+    "model": "openai/gpt-oss-20b",
+    "gatewayRequests": [
+      {
+        "path": "/api/v1/agent/action",
+        "status": 502,
+        "action": null,
+        "telemetryProvider": null
+      }
+    ],
+    "unavailable": [
+      {
+        "category": "MODEL_CONTRACT",
+        "attempts": 1,
+        "retryCount": 1,
+        "reasonCode": "RETRY_BUDGET_EXHAUSTED"
+      }
+    ]
+  },
+  "intent": {
+    "intent": "INFORMATION_REQUEST",
+    "confidence": "DETERMINISTIC",
+    "requiresDestination": false,
+    "requiresEvidence": true,
+    "admitsBrowserAutomation": true,
+    "refusal": null
+  },
+  "perception": [
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 37,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 98,
+      "privacyFindingsCount": 37
+    }
+  ],
+  "semanticObservation": {
+    "state": "OBSERVED",
+    "facts": 24,
+    "regionsConsidered": 33,
+    "droppedSensitive": 0,
+    "quarantinedInjection": 0,
+    "latencyMs": 4
+  },
+  "semanticUnderstanding": {
+    "pageType": "ARTICLE",
+    "pageState": "populated",
+    "pageGeneration": 2,
+    "entityCount": 5,
+    "affordanceCount": 6
+  },
+  "actions": {
+    "executedCount": 0,
+    "history": [],
+    "statuses": [],
+    "effectVerifiedCount": 0,
+    "noEffectCount": 0,
+    "refusedNotDispatched": [],
+    "gatesExecuted": {
+      "m5": 0,
+      "privacyPolicy": 0,
+      "safetyReview": 0,
+      "containment": 0,
+      "grounding": 0
+    },
+    "scrollStrategyExhausted": []
+  },
+  "evidence": {
+    "ledgerUpdates": 1,
+    "ledgerSize": 24,
+    "lastIngested": 24,
+    "requiresEvidence": true,
+    "verification": {
+      "effectVerifiedSteps": 0,
+      "answerVerified": null,
+      "note": "This trace vocabulary emits effect verdicts (EFFECT_VERIFIED / ACTION_NO_EFFECT / EFFECT_UNVERIFIABLE); it does not emit a separate answer-verifier line, so answer verification is read from the terminal status only."
+    }
+  },
+  "destination": {
+    "required": false,
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "finalUrlFromTimeline": "https://en.wikipedia.org/wiki/Charminar",
+    "navigationObserved": false
+  },
+  "goalState": {
+    "longHorizonFinal": {
+      "meaningfulProgress": true,
+      "signals": [
+        "NEW_PAGE"
+      ],
+      "completedSubgoals": 0,
+      "pendingSubgoals": 3,
+      "discoveries": 5,
+      "actions": 0,
+      "loop": false,
+      "stalled": false,
+      "semanticProgress": true,
+      "semanticSignals": [
+        "EVIDENCE_DELTA"
+      ],
+      "geometry": "GEOMETRY_UNCHANGED",
+      "sameDirectionRun": 0,
+      "stagnation": "NONE",
+      "evidenceDelta": 24
+    },
+    "pendingSubgoals": 3,
+    "replans": 0
+  },
+  "recovery": {
+    "records": [
+      {
+        "category": "PROVIDER_UNAVAILABLE",
+        "from": "CONTINUE",
+        "to": "CONTINUE",
+        "retryCount": 0,
+        "reasonCode": "PROVIDER_COULD_NOT_ANSWER",
+        "madeProgress": true,
+        "observationState": "NOT_APPLICABLE",
+        "exhausted": false
+      },
+      {
+        "category": "PROVIDER_UNAVAILABLE",
+        "from": "CONTINUE",
+        "to": "STOP",
+        "retryCount": 1,
+        "reasonCode": "RETRY_BUDGET_EXHAUSTED",
+        "madeProgress": true,
+        "observationState": "NOT_APPLICABLE",
+        "exhausted": true
+      }
+    ],
+    "decisions": [],
+    "boundedTermination": true
+  },
+  "providerOutcome": {
+    "requestCount": 1,
+    "statuses": [
+      502
+    ],
+    "unavailable": 1
+  },
+  "privacy": {
+    "independent": true,
+    "source": "llm_context_0002.json",
+    "capturedAt": 1791142536.414791,
+    "rawMarkerHits": [],
+    "rawMarkerCount": 0,
+    "forbiddenKeyHits": [],
+    "screenshotDataUriHits": 0,
+    "ocrRawTextHits": 0,
+    "note": null,
+    "promptChars": 11089
+  },
+  "falseSuccessChecks": {
+    "evaluated": [
+      {
+        "id": "SUCCESS_WITH_ZERO_ACTIONS",
+        "violated": false,
+        "evidence": "terminal=PROVIDER_UNAVAILABLE executedActions=0"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_VERIFIED_EVIDENCE_FOR_EVIDENCE_TASK",
+        "violated": false,
+        "evidence": "requiresEvidence=true effectVerified=0 ledgerSize=24"
+      },
+      {
+        "id": "SUCCESS_AFTER_PROVIDER_FAILURE",
+        "violated": false,
+        "evidence": "providerUnavailableRecords=1"
+      },
+      {
+        "id": "SUCCESS_AFTER_NO_EFFECT_ACTION",
+        "violated": false,
+        "evidence": "noEffectActions=0"
+      },
+      {
+        "id": "SUCCESS_WITH_STALE_OR_NON_PROGRESSING_OBSERVATION",
+        "violated": false,
+        "evidence": "stagnation=NONE evidenceDelta=24"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_DESTINATION_VERIFICATION_WHEN_REQUIRED",
+        "violated": false,
+        "evidence": "requiresDestination=false navigationObserved=false"
+      }
+    ],
+    "violations": [],
+    "critical": false
+  },
+  "userFacing": {
+    "outputScreens": {
+      "verdict": "CLEAR",
+      "audit": "OUTPUT_SCREEN_CLEAR (0 finding(s))",
+      "outcome": "FAILED",
+      "phase": "TERMINAL",
+      "resultKind": "NONE"
+    },
+    "dashboardHeadline": null,
+    "timelineStatuses": [
+      {
+        "status": "RUNNING",
+        "phase": null,
+        "outcome": null
+      },
+      {
+        "status": "RUNNING",
+        "phase": "PERCEPTION",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "PLANNING",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "PROVIDER_UNAVAILABLE",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "PROVIDER_UNAVAILABLE",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      }
+    ]
+  },
+  "result": {
+    "scenarioId": "S02",
+    "category": "INFORMATION_RETRIEVAL",
+    "title": "Tell me about Charminar (A1 ANSWER attempt)",
+    "task": "tell me about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "proofLevel": "PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND",
+    "verdict": "PROVIDER_UNAVAILABLE",
+    "terminal": {
+      "status": "PROVIDER_UNAVAILABLE",
+      "reason": "The reasoning service was unavailable, so nothing was changed on the page.",
+      "currentStep": 1,
+      "observed": true
+    },
+    "blocker": "Provider did not return a usable action: category=MODEL_CONTRACT reasonCode=RETRY_BUDGET_EXHAUSTED. Classified PROVIDER/ENVIRONMENTAL, not an application failure."
+  }
+}

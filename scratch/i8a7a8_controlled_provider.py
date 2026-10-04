@@ -17,10 +17,17 @@ This stub is therefore used ONLY to make the browser-side behaviour
 observable. It is honest about that: every artifact it produces is labelled
 CONTROLLED_PROVIDER, and the live-model proofs are labelled separately.
 
-Modes (chosen by the file name / env, never by model output):
-  scroll_down   — always propose scroll/down
-  oscillate     — alternate scroll/down, scroll/up
-  malformed     — HTTP 200 with the exact observed defect class
+Modes (chosen by the env var, never by model output):
+  scroll_down       — always propose scroll/down
+  oscillate         — alternate scroll/down, scroll/up
+  malformed         — HTTP 200 with the exact observed live-model defect class
+  bad_enum          — 200 whose action-specific enum value is not in the enum
+  missing_field     — 200 missing a required action field
+  wrong_type        — 200 with a field of the wrong type
+  server_503        — upstream 503 with Retry-After (transient, bounded retry)
+  click_fixture     — click a REAL affordance target read out of the posted
+                      sanitized context (never a hard-coded id)
+  navigate_fixture  — navigate to a route of the same fixture origin
 """
 
 import json
@@ -50,7 +57,56 @@ CONTEXT = {
 }
 
 
-def next_action(mode: str, n: int) -> dict:
+def _first_target(payload: dict) -> str | None:
+    """Pick a REAL actionable target out of the posted sanitized context.
+
+    The stub never invents an element id: it reads what the extension actually
+    said it could see, so a successful dispatch is evidence about the loop and
+    not about a hard-coded fixture assumption.
+    """
+    context = (payload or {}).get("context") or {}
+    semantic = context.get("semantic_context") or context.get("semanticContext") or {}
+    preferred = ("CLICK", "SUBMIT_SEARCH", "FILL_FIELD", "SELECT_OPTION", "ENTER_QUERY")
+    affordances = semantic.get("affordances") or []
+    for wanted in preferred:
+        for a in affordances:
+            if a.get("type") == wanted and a.get("targetElementId"):
+                return a["targetElementId"]
+    for a in affordances:
+        if a.get("targetElementId"):
+            return a["targetElementId"]
+    # Fall back to the sanitized detections the extension actually reported.
+    interactive = ("button", "link", "search", "checkbox", "radio", "input", "select")
+    for d in context.get("detections") or []:
+        if d.get("id") and str(d.get("type", "")).lower() in interactive:
+            return d["id"]
+    return None
+
+
+def _answer_from_context(payload: dict) -> str:
+    """Compose an ANSWER strictly out of the sanitized facts the device sent.
+
+    This is a CONTROLLED provider: it stands in for a model that chose to answer
+    instead of acting. The answer text is assembled from the device's own
+    sanitized observations so the ANSWER path can be exercised end to end. It is
+    not evidence that a live model produces ANSWERs.
+    """
+    context = (payload or {}).get("context") or {}
+    semantic = context.get("semantic_context") or context.get("semanticContext") or {}
+    facts = semantic.get("facts") or []
+    lines = []
+    for f in facts[:5]:
+        if isinstance(f, dict):
+            key = f.get("key") or f.get("label") or f.get("type")
+            value = f.get("value") or f.get("summary") or f.get("text") or ""
+            if key or value:
+                lines.append(f"{key}: {value}".strip(": ").strip())
+    if not lines:
+        lines.append("no structured facts were available in the sanitized observation")
+    return "Based on the observed page state — " + "; ".join(lines)
+
+
+def next_action(mode: str, n: int, payload: dict) -> dict:
     if mode == "scroll_down":
         return {"action": "scroll", "direction": "down", "amount": 500,
                 "reason": "controlled: scroll down"}
@@ -65,7 +121,43 @@ def next_action(mode: str, n: int) -> dict:
         return {"action": "scroll", "amount": 500, "direction": "down",
                 "option": "", "reason": "controlled: malformed", "target": "",
                 "text": "", "url": ""}
+    if mode == "bad_enum":
+        return {"action": "scroll", "direction": "sideways", "amount": 500,
+                "reason": "controlled: enum outside the contract"}
+    if mode == "missing_field":
+        return {"action": "scroll", "amount": 500,
+                "reason": "controlled: direction missing"}
+    if mode == "wrong_type":
+        return {"action": "scroll", "direction": "down", "amount": "five hundred",
+                "reason": "controlled: amount is not a number"}
+    if mode == "click_fixture":
+        target = _first_target(payload)
+        if not target:
+            return {"action": "scroll", "direction": "down", "amount": 400,
+                    "reason": "controlled: no clickable affordance was offered"}
+        return {"action": "click", "target": target,
+                "reason": "controlled: click a real affordance from the sanitized context"}
+    if mode == "navigate_fixture":
+        return {"action": "navigate", "url": "http://127.0.0.1:4174/product.html",
+                "reason": "controlled: navigate to a route of the same origin"}
+    if mode == "navigate_wikipedia":
+        return {"action": "navigate", "url": "https://en.wikipedia.org/wiki/Main_Page",
+                "reason": "controlled: navigate to a goal-named host"}
+    if mode == "act_then_answer":
+        return {"action": "scroll", "direction": "down", "amount": 400,
+                "reason": "controlled: gather evidence before answering"}
     raise SystemExit(f"unknown stub mode {mode}")
+
+
+def terminal_proposal(mode: str, n: int, payload: dict):
+    if mode == "answer":
+        return {"kind": "ANSWER", "answer": _answer_from_context(payload)}
+    if mode == "act_then_answer" and n >= 3:
+        # A model that gathers evidence first and only then answers. The device
+        # requires an ACTION from the planning step, so answering on the very
+        # first cycle is correctly refused; this mode reproduces the real shape.
+        return {"kind": "ANSWER", "answer": _answer_from_context(payload)}
+    return None
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -74,7 +166,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         length = int(self.headers.get("Content-Length") or 0)
-        self.rfile.read(length)
+        raw = self.rfile.read(length)
+        try:
+            payload = json.loads(raw or b"{}")
+        except Exception:
+            payload = {}
         if not self.path.endswith("/agent/action"):
             if self.path.endswith("/agent/review"):
                 # The loop's SAFETY review is a separate endpoint on the same
@@ -92,13 +188,33 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         SERVED["n"] += 1
-        body = json.dumps({
+        if MODE == "server_503":
+            # Transient upstream failure, declared retryable with a Retry-After.
+            # A10 checks that this is retried WITHIN BOUNDS and then reported
+            # truthfully — never that a 503 is retried into a green result.
+            detail = json.dumps({"success": False,
+                                 "reason": "controlled stub: upstream model overloaded",
+                                 "error_kind": "upstream_unavailable",
+                                 "retryable": True}).encode()
+            self.send_response(503)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Retry-After", "1")
+            self.send_header("Content-Length", str(len(detail)))
+            self.end_headers()
+            self.wfile.write(detail)
+            return
+        proposal = terminal_proposal(MODE, SERVED["n"], payload)
+        envelope = {
             "success": True,
-            "action": next_action(MODE, SERVED["n"]),
             "reason": f"controlled stub mode={MODE} call={SERVED['n']}",
             "telemetry": {"provider": "controlled_stub", "role": "FAST",
                           "latency_ms": 1.0, "attempts": 1, "fallback_used": False},
-        }).encode()
+        }
+        if proposal is not None:
+            envelope["proposal"] = proposal
+        else:
+            envelope["action"] = next_action(MODE, SERVED["n"], payload)
+        body = json.dumps(envelope).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
@@ -106,6 +222,15 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):  # noqa: N802
+        global MODE
+        # /mode?set=<mode> lets one long-lived stub serve a whole A10 sweep
+        # without a restart per scenario. The mode is still chosen by the
+        # harness, never by anything the page or the model says.
+        if self.path.startswith("/mode"):
+            from urllib.parse import urlparse, parse_qs
+            q = parse_qs(urlparse(self.path).query)
+            if "set" in q:
+                MODE = q["set"][0]
         body = json.dumps({"success": True, "stub_mode": MODE,
                            "calls_served": SERVED["n"]}).encode()
         self.send_response(200)

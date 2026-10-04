@@ -1,0 +1,556 @@
+{
+  "phase": "18.7-A10",
+  "work": "A10 FINAL REAL-WEB EVALUATION — S05 SCROLL_CONTENT_DISCOVERY: Productive scroll on the lazy-loading fixture: each scroll reveals new evidence (I-8 A)",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "scenario": {
+    "id": "S05",
+    "category": "SCROLL_CONTENT_DISCOVERY",
+    "title": "Productive scroll on the lazy-loading fixture: each scroll reveals new evidence (I-8 A)",
+    "task": "scroll down to find more products",
+    "startUrl": "http://127.0.0.1:4174/lazy-scroll.html",
+    "harnessExit": 0,
+    "rawArtifact": "docs/evidence/post-17-10/audit/_a10_raw_S05.json"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "settleMs": 60000,
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://127.0.0.1:4174 (ApexCart), http://127.0.0.1:4175 (synthetic banking)",
+    "gateway": "http://127.0.0.1:8010 (FastAPI)",
+    "startedAt": "2026-10-04T19:41:47.798Z",
+    "endedAt": "2026-10-04T19:42:54.172Z"
+  },
+  "provider": {
+    "type": "CONTROLLED_STUB",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "stubMode": "scroll_down",
+    "model": "openai/gpt-oss-20b",
+    "gatewayRequests": [
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      }
+    ],
+    "unavailable": []
+  },
+  "intent": {
+    "intent": "INFORMATION_REQUEST",
+    "confidence": "DETERMINISTIC",
+    "requiresDestination": false,
+    "requiresEvidence": true,
+    "admitsBrowserAutomation": true,
+    "refusal": null
+  },
+  "perception": [
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 0,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 4,
+      "privacyFindingsCount": 0
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 1,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 5,
+      "privacyFindingsCount": 1
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 1,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 5,
+      "privacyFindingsCount": 1
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 1,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 5,
+      "privacyFindingsCount": 1
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 1,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 1,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 5,
+      "privacyFindingsCount": 1
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 1,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 1,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 5,
+      "privacyFindingsCount": 1
+    }
+  ],
+  "semanticObservation": {
+    "state": "OBSERVED",
+    "facts": 14,
+    "regionsConsidered": 14,
+    "droppedSensitive": 0,
+    "quarantinedInjection": 0,
+    "latencyMs": 1
+  },
+  "semanticUnderstanding": {
+    "pageType": "UNKNOWN",
+    "pageState": "populated",
+    "pageGeneration": 9,
+    "entityCount": 0,
+    "affordanceCount": 1
+  },
+  "actions": {
+    "executedCount": 6,
+    "history": [
+      {
+        "index": 1,
+        "outcome": "EFFECT_VERIFIED",
+        "detail": {
+          "status": "SCROLL_CHANGED",
+          "details": "Scroll down by 500px shifted viewport by 199px."
+        },
+        "t": 6420
+      },
+      {
+        "index": 2,
+        "outcome": "EFFECT_VERIFIED",
+        "detail": {
+          "status": "SCROLL_CHANGED",
+          "details": "Scroll down by 500px shifted viewport by 494px."
+        },
+        "t": 7034
+      },
+      {
+        "index": 3,
+        "outcome": "EFFECT_VERIFIED",
+        "detail": {
+          "status": "SCROLL_CHANGED",
+          "details": "Scroll down by 500px shifted viewport by 247px."
+        },
+        "t": 7631
+      },
+      {
+        "index": 4,
+        "outcome": "ACTION_NO_EFFECT",
+        "detail": {
+          "status": "ACTION_NO_EFFECT",
+          "details": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "t": 8220
+      },
+      {
+        "index": 5,
+        "outcome": "ACTION_NO_EFFECT",
+        "detail": {
+          "status": "ACTION_NO_EFFECT",
+          "details": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "t": 8855
+      },
+      {
+        "index": 6,
+        "outcome": "ACTION_NO_EFFECT",
+        "detail": {
+          "status": "ACTION_NO_EFFECT",
+          "details": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "t": 9482
+      }
+    ],
+    "statuses": [
+      "EFFECT_VERIFIED",
+      "EFFECT_VERIFIED",
+      "EFFECT_VERIFIED",
+      "ACTION_NO_EFFECT",
+      "ACTION_NO_EFFECT",
+      "ACTION_NO_EFFECT"
+    ],
+    "effectVerifiedCount": 3,
+    "noEffectCount": 3,
+    "refusedNotDispatched": [],
+    "gatesExecuted": {
+      "m5": 6,
+      "privacyPolicy": 6,
+      "safetyReview": 6,
+      "containment": 6,
+      "grounding": 0
+    },
+    "scrollStrategyExhausted": []
+  },
+  "evidence": {
+    "ledgerUpdates": 8,
+    "ledgerSize": 60,
+    "lastIngested": 14,
+    "requiresEvidence": true,
+    "verification": {
+      "effectVerifiedSteps": 3,
+      "answerVerified": null,
+      "note": "This trace vocabulary emits effect verdicts (EFFECT_VERIFIED / ACTION_NO_EFFECT / EFFECT_UNVERIFIABLE); it does not emit a separate answer-verifier line, so answer verification is read from the terminal status only."
+    }
+  },
+  "destination": {
+    "required": false,
+    "startUrl": "http://127.0.0.1:4174/lazy-scroll.html",
+    "finalUrlFromTimeline": "http://127.0.0.1:4174/lazy-scroll.html",
+    "navigationObserved": false
+  },
+  "goalState": {
+    "longHorizonFinal": {
+      "meaningfulProgress": false,
+      "signals": [],
+      "completedSubgoals": 0,
+      "pendingSubgoals": 4,
+      "discoveries": 0,
+      "actions": 5,
+      "loop": "REPEATED_STATE",
+      "stalled": false,
+      "semanticProgress": false,
+      "semanticSignals": [],
+      "geometry": "GEOMETRY_UNCHANGED",
+      "sameDirectionRun": 1,
+      "stagnation": "NONE",
+      "evidenceDelta": 0
+    },
+    "pendingSubgoals": 4,
+    "replans": 1
+  },
+  "recovery": {
+    "records": [
+      {
+        "category": "NO_EFFECT",
+        "from": "CONTINUE",
+        "to": "RE_PERCEIVE",
+        "retryCount": 0,
+        "reasonCode": "EFFECT_UNCHANGED",
+        "madeProgress": true,
+        "observationState": "CURRENT",
+        "exhausted": false
+      },
+      {
+        "category": "NO_EFFECT",
+        "from": "RE_PERCEIVE",
+        "to": "CHANGE_STRATEGY",
+        "retryCount": 1,
+        "reasonCode": "EFFECT_UNCHANGED",
+        "madeProgress": true,
+        "observationState": "CURRENT",
+        "exhausted": false
+      },
+      {
+        "category": "NO_EFFECT",
+        "from": "CHANGE_STRATEGY",
+        "to": "STOP",
+        "retryCount": 2,
+        "reasonCode": "RETRY_BUDGET_EXHAUSTED",
+        "madeProgress": false,
+        "observationState": "CURRENT",
+        "exhausted": true
+      }
+    ],
+    "decisions": [
+      {
+        "code": "ACTION_NO_EFFECT",
+        "strategy": "REPERCEIVE",
+        "attempt": 1,
+        "reason": "Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 5."
+      },
+      {
+        "code": "ACTION_NO_EFFECT",
+        "strategy": "REPERCEIVE",
+        "attempt": 2,
+        "reason": "Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 7."
+      }
+    ],
+    "boundedTermination": true
+  },
+  "providerOutcome": {
+    "requestCount": 12,
+    "statuses": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "unavailable": 0
+  },
+  "privacy": {
+    "independent": false,
+    "source": null,
+    "capturedAt": null,
+    "markersSearched": 0,
+    "rawMarkerHits": [],
+    "rawMarkerCount": 0,
+    "forbiddenKeyHits": [],
+    "screenshotDataUriHits": 0,
+    "ocrRawTextHits": 0,
+    "note": "no gateway model-facing capture for this run (CONTROLLED provider does not traverse the FastAPI gateway, so no model-facing payload exists to inspect)",
+    "scenarioNote": "CONTROLLED provider: the scripted stub answers the extension directly, so this run has no gateway model-facing payload. Independent raw-value verification for this action shape is carried by the LIVE privacy scenario."
+  },
+  "falseSuccessChecks": {
+    "evaluated": [
+      {
+        "id": "SUCCESS_WITH_ZERO_ACTIONS",
+        "violated": false,
+        "evidence": "terminal=FAILED executedActions=6"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_VERIFIED_EVIDENCE_FOR_EVIDENCE_TASK",
+        "violated": false,
+        "evidence": "requiresEvidence=true effectVerified=3 ledgerSize=60"
+      },
+      {
+        "id": "SUCCESS_AFTER_PROVIDER_FAILURE",
+        "violated": false,
+        "evidence": "providerUnavailableRecords=0"
+      },
+      {
+        "id": "SUCCESS_AFTER_NO_EFFECT_ACTION",
+        "violated": false,
+        "evidence": "noEffectActions=3"
+      },
+      {
+        "id": "SUCCESS_WITH_STALE_OR_NON_PROGRESSING_OBSERVATION",
+        "violated": false,
+        "evidence": "stagnation=NONE evidenceDelta=0"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_DESTINATION_VERIFICATION_WHEN_REQUIRED",
+        "violated": false,
+        "evidence": "requiresDestination=false navigationObserved=false"
+      }
+    ],
+    "violations": [],
+    "critical": false
+  },
+  "userFacing": {
+    "outputScreens": {
+      "verdict": "BLOCKED",
+      "audit": "OUTPUT_SCREEN_BLOCKED (1 finding(s))",
+      "outcome": "FAILED",
+      "phase": "TERMINAL",
+      "resultKind": "NONE"
+    },
+    "dashboardHeadline": null,
+    "timelineStatuses": [
+      {
+        "status": "RUNNING",
+        "phase": null,
+        "outcome": null
+      },
+      {
+        "status": "RUNNING",
+        "phase": "PERCEPTION",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "PLANNING",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "FAILED",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "FAILED",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      }
+    ]
+  },
+  "result": {
+    "scenarioId": "S05",
+    "category": "SCROLL_CONTENT_DISCOVERY",
+    "title": "Productive scroll on the lazy-loading fixture: each scroll reveals new evidence (I-8 A)",
+    "task": "scroll down to find more products",
+    "startUrl": "http://127.0.0.1:4174/lazy-scroll.html",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "verdict": "FAILED",
+    "terminal": {
+      "status": "FAILED",
+      "reason": "Recovery limit exceeded for NO_EFFECT after 2 bounded attempts.",
+      "currentStep": 6,
+      "observed": true
+    },
+    "blocker": null
+  }
+}

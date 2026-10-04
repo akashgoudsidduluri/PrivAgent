@@ -1,0 +1,198 @@
+{
+  "_note": "A10 FINAL REAL-WEB EVALUATION \u2014 scenario table. Data only; no logic. Provider types: LIVE (real FastAPI gateway on 8010 calling the configured cloud reasoner) or CONTROLLED (scratch/i8a7a8_controlled_provider.py serving the same wire contract with a scripted action sequence). A CONTROLLED run is never recorded as a live-provider result.",
+  "scenarios": [
+    {
+      "id": "S01",
+      "category": "NAVIGATION",
+      "title": "Open Wikipedia from a non-Wikipedia origin",
+      "task": "open wikipedia",
+      "provider": "LIVE",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 60000,
+      "cdpPort": 9821
+    },
+    {
+      "id": "S02",
+      "category": "INFORMATION_RETRIEVAL",
+      "title": "Tell me about Charminar (A1 ANSWER attempt)",
+      "task": "tell me about charminar",
+      "provider": "LIVE",
+      "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+      "settleMs": 45000,
+      "cdpPort": 9822
+    },
+    {
+      "id": "S03",
+      "category": "SEARCH_DISCOVERY",
+      "title": "Search the encyclopedia for cats",
+      "task": "search for cats on wikipedia",
+      "provider": "LIVE",
+      "startUrl": "https://en.wikipedia.org/wiki/Main_Page",
+      "settleMs": 45000,
+      "cdpPort": 9823
+    },
+    {
+      "id": "S04",
+      "category": "MULTI_STEP_INFORMATION",
+      "title": "Navigate then retrieve information (destination + evidence)",
+      "task": "open wikipedia and find information about charminar",
+      "provider": "LIVE",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 45000,
+      "cdpPort": 9824
+    },
+    {
+      "id": "S05",
+      "category": "SCROLL_CONTENT_DISCOVERY",
+      "title": "Productive scroll on the lazy-loading fixture: each scroll reveals new evidence (I-8 A)",
+      "task": "scroll down to find more products",
+      "provider": "CONTROLLED",
+      "stubMode": "scroll_down",
+      "startUrl": "http://127.0.0.1:4174/lazy-scroll.html",
+      "settleMs": 60000,
+      "cdpPort": 9825
+    },
+    {
+      "id": "S06",
+      "category": "USEFUL_ACTION",
+      "title": "Safe non-destructive interaction on the synthetic shopping fixture",
+      "task": "open the shopping site and click the winter jackets category",
+      "provider": "CONTROLLED",
+      "stubMode": "click_fixture",
+      "startUrl": "http://127.0.0.1:4174/lazy-scroll.html",
+      "settleMs": 60000,
+      "cdpPort": 9826
+    },
+    {
+      "id": "S07",
+      "category": "NAVIGATION_ACROSS_ROUTES",
+      "title": "Allowed route transition within one origin",
+      "task": "open the product page of the shopping site",
+      "provider": "CONTROLLED",
+      "stubMode": "navigate_fixture",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 60000,
+      "cdpPort": 9827
+    },
+    {
+      "id": "S08",
+      "category": "NO_EFFECT_RECOVERY",
+      "title": "Scroll at the scroll boundary produces no effect; bounded recovery (I-8 B + A7)",
+      "task": "open the shopping site and scroll down to find the winter jacket",
+      "provider": "CONTROLLED",
+      "stubMode": "scroll_down",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 60000,
+      "cdpPort": 9828
+    },
+    {
+      "id": "S09",
+      "category": "OSCILLATION_RECOVERY",
+      "title": "DOWN -> UP -> DOWN -> UP with no gain (I-8 C + A7)",
+      "task": "tell me about charminar",
+      "provider": "CONTROLLED",
+      "stubMode": "oscillate",
+      "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+      "settleMs": 60000,
+      "cdpPort": 9829
+    },
+    {
+      "id": "S10",
+      "category": "PROVIDER_MALFORMED_200",
+      "title": "A 200 carrying the live model's defect payload must not dispatch (A8)",
+      "task": "open the shopping site and scroll down to find the winter jacket",
+      "provider": "CONTROLLED",
+      "stubMode": "malformed",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 50000,
+      "cdpPort": 9830
+    },
+    {
+      "id": "S11",
+      "category": "PROVIDER_INVALID_ENUM",
+      "title": "Invalid action-specific enum value inside a 200",
+      "task": "open the shopping site and scroll down to find the winter jacket",
+      "provider": "CONTROLLED",
+      "stubMode": "bad_enum",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 50000,
+      "cdpPort": 9831
+    },
+    {
+      "id": "S12",
+      "category": "PROVIDER_MISSING_FIELD",
+      "title": "Missing required action field inside a 200",
+      "task": "open the shopping site and scroll down to find the winter jacket",
+      "provider": "CONTROLLED",
+      "stubMode": "missing_field",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 50000,
+      "cdpPort": 9832
+    },
+    {
+      "id": "S13",
+      "category": "PROVIDER_WRONG_TYPE",
+      "title": "Wrong field type inside a 200",
+      "task": "open the shopping site and scroll down to find the winter jacket",
+      "provider": "CONTROLLED",
+      "stubMode": "wrong_type",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 50000,
+      "cdpPort": 9833
+    },
+    {
+      "id": "S14",
+      "category": "PROVIDER_503",
+      "title": "Upstream 503 from the gateway: bounded, truthful, zero dispatch",
+      "task": "tell me about charminar",
+      "provider": "CONTROLLED",
+      "stubMode": "server_503",
+      "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+      "settleMs": 70000,
+      "cdpPort": 9834
+    },
+    {
+      "id": "S15",
+      "category": "PRIVACY_SECURITY",
+      "title": "Synthetic banking fixture: raw values must never reach the model-facing surface",
+      "task": "tell me about my account details",
+      "provider": "LIVE",
+      "startUrl": "http://127.0.0.1:4175/index.html",
+      "settleMs": 45000,
+      "cdpPort": 9835
+    },
+    {
+      "id": "S16",
+      "category": "NAVIGATION_ACROSS_ROUTES",
+      "title": "Allowed route transition whose destination is stated in the goal",
+      "task": "open http://127.0.0.1:4174/product.html",
+      "provider": "CONTROLLED",
+      "stubMode": "navigate_fixture",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 60000,
+      "cdpPort": 9836
+    },
+    {
+      "id": "S18",
+      "category": "NAVIGATION_ACROSS_ROUTES",
+      "title": "Allowed cross-origin destination transition to a goal-named host",
+      "task": "open wikipedia",
+      "provider": "CONTROLLED",
+      "stubMode": "navigate_wikipedia",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 60000,
+      "cdpPort": 9838
+    },
+    {
+      "id": "S17",
+      "category": "INFORMATION_ANSWER_PATH",
+      "title": "Controlled act-then-ANSWER proposal: the A1 terminal chain, measured end to end",
+      "task": "tell me about charminar",
+      "provider": "CONTROLLED",
+      "stubMode": "act_then_answer",
+      "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+      "settleMs": 60000,
+      "cdpPort": 9837
+    }
+  ]
+}

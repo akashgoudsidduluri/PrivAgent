@@ -1,0 +1,371 @@
+{
+  "phase": "18.7-A10",
+  "work": "A10 FINAL REAL-WEB EVALUATION — S17 INFORMATION_ANSWER_PATH: Controlled act-then-ANSWER proposal: the A1 terminal chain, measured end to end",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "scenario": {
+    "id": "S17",
+    "category": "INFORMATION_ANSWER_PATH",
+    "title": "Controlled act-then-ANSWER proposal: the A1 terminal chain, measured end to end",
+    "task": "tell me about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "harnessExit": 0,
+    "rawArtifact": "docs/evidence/post-17-10/audit/_a10_raw_S17.json"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "settleMs": 60000,
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://127.0.0.1:4174 (ApexCart), http://127.0.0.1:4175 (synthetic banking)",
+    "gateway": "http://127.0.0.1:8010 (FastAPI)",
+    "startedAt": "2026-10-04T20:06:41.212Z",
+    "endedAt": "2026-10-04T20:07:47.816Z"
+  },
+  "provider": {
+    "type": "CONTROLLED_STUB",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "stubMode": "act_then_answer",
+    "model": "openai/gpt-oss-20b",
+    "gatewayRequests": [
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": "controlled_stub"
+      }
+    ],
+    "unavailable": [
+      {
+        "category": "SCHEMA_INVALID",
+        "attempts": 3,
+        "retryCount": 1,
+        "reasonCode": "RETRY_BUDGET_EXHAUSTED"
+      }
+    ]
+  },
+  "intent": {
+    "intent": "INFORMATION_REQUEST",
+    "confidence": "DETERMINISTIC",
+    "requiresDestination": false,
+    "requiresEvidence": true,
+    "admitsBrowserAutomation": true,
+    "refusal": null
+  },
+  "perception": [
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 37,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 96,
+      "privacyFindingsCount": 37
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 37,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 96,
+      "privacyFindingsCount": 37
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 37,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 96,
+      "privacyFindingsCount": 37
+    }
+  ],
+  "semanticObservation": {
+    "state": "OBSERVED",
+    "facts": 24,
+    "regionsConsidered": 33,
+    "droppedSensitive": 0,
+    "quarantinedInjection": 0,
+    "latencyMs": 0
+  },
+  "semanticUnderstanding": {
+    "pageType": "ARTICLE",
+    "pageState": "populated",
+    "pageGeneration": 4,
+    "entityCount": 5,
+    "affordanceCount": 6
+  },
+  "actions": {
+    "executedCount": 2,
+    "history": [
+      {
+        "index": 1,
+        "outcome": "EFFECT_VERIFIED",
+        "detail": {
+          "status": "SCROLL_CHANGED",
+          "details": "Scroll down by 400px shifted viewport by 400px."
+        },
+        "t": 7025
+      },
+      {
+        "index": 2,
+        "outcome": "EFFECT_VERIFIED",
+        "detail": {
+          "status": "SCROLL_CHANGED",
+          "details": "Scroll down by 400px shifted viewport by 400px."
+        },
+        "t": 7939
+      }
+    ],
+    "statuses": [
+      "EFFECT_VERIFIED",
+      "EFFECT_VERIFIED"
+    ],
+    "effectVerifiedCount": 2,
+    "noEffectCount": 0,
+    "refusedNotDispatched": [],
+    "gatesExecuted": {
+      "m5": 2,
+      "privacyPolicy": 2,
+      "safetyReview": 2,
+      "containment": 2,
+      "grounding": 0
+    },
+    "scrollStrategyExhausted": []
+  },
+  "evidence": {
+    "ledgerUpdates": 3,
+    "ledgerSize": 60,
+    "lastIngested": 24,
+    "requiresEvidence": true,
+    "verification": {
+      "effectVerifiedSteps": 2,
+      "answerVerified": null,
+      "note": "This trace vocabulary emits effect verdicts (EFFECT_VERIFIED / ACTION_NO_EFFECT / EFFECT_UNVERIFIABLE); it does not emit a separate answer-verifier line, so answer verification is read from the terminal status only."
+    }
+  },
+  "destination": {
+    "required": false,
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "finalUrlFromTimeline": "https://en.wikipedia.org/wiki/Charminar",
+    "navigationObserved": false
+  },
+  "goalState": {
+    "longHorizonFinal": {
+      "meaningfulProgress": true,
+      "signals": [],
+      "completedSubgoals": 0,
+      "pendingSubgoals": 3,
+      "discoveries": 5,
+      "actions": 2,
+      "loop": false,
+      "stalled": false,
+      "semanticProgress": true,
+      "semanticSignals": [
+        "EVIDENCE_DELTA"
+      ],
+      "geometry": "GEOMETRY_CHANGED",
+      "sameDirectionRun": 0,
+      "stagnation": "NONE",
+      "evidenceDelta": 12
+    },
+    "pendingSubgoals": 3,
+    "replans": 0
+  },
+  "recovery": {
+    "records": [
+      {
+        "category": "PROVIDER_UNAVAILABLE",
+        "from": "CONTINUE",
+        "to": "CONTINUE",
+        "retryCount": 0,
+        "reasonCode": "PROVIDER_COULD_NOT_ANSWER",
+        "madeProgress": true,
+        "observationState": "STALE",
+        "exhausted": false
+      },
+      {
+        "category": "PROVIDER_UNAVAILABLE",
+        "from": "CONTINUE",
+        "to": "STOP",
+        "retryCount": 1,
+        "reasonCode": "RETRY_BUDGET_EXHAUSTED",
+        "madeProgress": true,
+        "observationState": "STALE",
+        "exhausted": true
+      }
+    ],
+    "decisions": [],
+    "boundedTermination": true
+  },
+  "providerOutcome": {
+    "requestCount": 5,
+    "statuses": [
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "unavailable": 1
+  },
+  "privacy": {
+    "independent": false,
+    "source": null,
+    "capturedAt": null,
+    "markersSearched": 0,
+    "rawMarkerHits": [],
+    "rawMarkerCount": 0,
+    "forbiddenKeyHits": [],
+    "screenshotDataUriHits": 0,
+    "ocrRawTextHits": 0,
+    "note": "no gateway model-facing capture for this run (CONTROLLED provider does not traverse the FastAPI gateway, so no model-facing payload exists to inspect)",
+    "scenarioNote": "CONTROLLED provider: the scripted stub answers the extension directly, so this run has no gateway model-facing payload. Independent raw-value verification for this action shape is carried by the LIVE privacy scenario."
+  },
+  "falseSuccessChecks": {
+    "evaluated": [
+      {
+        "id": "SUCCESS_WITH_ZERO_ACTIONS",
+        "violated": false,
+        "evidence": "terminal=PROVIDER_UNAVAILABLE executedActions=2"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_VERIFIED_EVIDENCE_FOR_EVIDENCE_TASK",
+        "violated": false,
+        "evidence": "requiresEvidence=true effectVerified=2 ledgerSize=60"
+      },
+      {
+        "id": "SUCCESS_AFTER_PROVIDER_FAILURE",
+        "violated": false,
+        "evidence": "providerUnavailableRecords=1"
+      },
+      {
+        "id": "SUCCESS_AFTER_NO_EFFECT_ACTION",
+        "violated": false,
+        "evidence": "noEffectActions=0"
+      },
+      {
+        "id": "SUCCESS_WITH_STALE_OR_NON_PROGRESSING_OBSERVATION",
+        "violated": false,
+        "evidence": "stagnation=NONE evidenceDelta=12"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_DESTINATION_VERIFICATION_WHEN_REQUIRED",
+        "violated": false,
+        "evidence": "requiresDestination=false navigationObserved=false"
+      }
+    ],
+    "violations": [],
+    "critical": false
+  },
+  "userFacing": {
+    "outputScreens": {
+      "verdict": "CLEAR",
+      "audit": "OUTPUT_SCREEN_CLEAR (0 finding(s))",
+      "outcome": "FAILED",
+      "phase": "TERMINAL",
+      "resultKind": "NONE"
+    },
+    "dashboardHeadline": null,
+    "timelineStatuses": [
+      {
+        "status": "RUNNING",
+        "phase": null,
+        "outcome": null
+      },
+      {
+        "status": "RUNNING",
+        "phase": "PERCEPTION",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "PLANNING",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "PLANNING",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "PLANNING",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "PROVIDER_UNAVAILABLE",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "PROVIDER_UNAVAILABLE",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      }
+    ]
+  },
+  "result": {
+    "scenarioId": "S17",
+    "category": "INFORMATION_ANSWER_PATH",
+    "title": "Controlled act-then-ANSWER proposal: the A1 terminal chain, measured end to end",
+    "task": "tell me about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "verdict": "PROVIDER_UNAVAILABLE",
+    "terminal": {
+      "status": "PROVIDER_UNAVAILABLE",
+      "reason": "The reasoning service was unavailable, so nothing was changed on the page.",
+      "currentStep": 3,
+      "observed": true
+    },
+    "blocker": null
+  }
+}

@@ -1,0 +1,279 @@
+{
+  "phase": "18.7-A10",
+  "work": "A10 FINAL REAL-WEB EVALUATION — S13 PROVIDER_WRONG_TYPE: Wrong field type inside a 200",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "scenario": {
+    "id": "S13",
+    "category": "PROVIDER_WRONG_TYPE",
+    "title": "Wrong field type inside a 200",
+    "task": "open the shopping site and scroll down to find the winter jacket",
+    "startUrl": "http://127.0.0.1:4174/index.html",
+    "harnessExit": 0,
+    "rawArtifact": "docs/evidence/post-17-10/audit/_a10_raw_S13.json"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "settleMs": 50000,
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://127.0.0.1:4174 (ApexCart), http://127.0.0.1:4175 (synthetic banking)",
+    "gateway": "http://127.0.0.1:8010 (FastAPI)",
+    "startedAt": "2026-10-04T19:52:35.245Z",
+    "endedAt": "2026-10-04T19:53:31.838Z"
+  },
+  "provider": {
+    "type": "CONTROLLED_STUB",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "stubMode": "wrong_type",
+    "model": "openai/gpt-oss-20b",
+    "gatewayRequests": [
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      }
+    ],
+    "unavailable": [
+      {
+        "category": "SCHEMA_INVALID",
+        "attempts": 1,
+        "retryCount": 1,
+        "reasonCode": "RETRY_BUDGET_EXHAUSTED"
+      }
+    ]
+  },
+  "intent": {
+    "intent": "MIXED_TASK",
+    "confidence": "DETERMINISTIC",
+    "requiresDestination": true,
+    "requiresEvidence": true,
+    "admitsBrowserAutomation": true,
+    "refusal": null
+  },
+  "perception": [
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1280,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 6,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1280,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 11,
+      "privacyFindingsCount": 6
+    }
+  ],
+  "semanticObservation": {
+    "state": "OBSERVED",
+    "facts": 3,
+    "regionsConsidered": 3,
+    "droppedSensitive": 0,
+    "quarantinedInjection": 0,
+    "latencyMs": 1
+  },
+  "semanticUnderstanding": {
+    "pageType": "UNKNOWN",
+    "pageState": "populated",
+    "pageGeneration": 2,
+    "entityCount": 0,
+    "affordanceCount": 1
+  },
+  "actions": {
+    "executedCount": 0,
+    "history": [],
+    "statuses": [],
+    "effectVerifiedCount": 0,
+    "noEffectCount": 0,
+    "refusedNotDispatched": [],
+    "gatesExecuted": {
+      "m5": 0,
+      "privacyPolicy": 0,
+      "safetyReview": 0,
+      "containment": 0,
+      "grounding": 0
+    },
+    "scrollStrategyExhausted": []
+  },
+  "evidence": {
+    "ledgerUpdates": 1,
+    "ledgerSize": 3,
+    "lastIngested": 3,
+    "requiresEvidence": true,
+    "verification": {
+      "effectVerifiedSteps": 0,
+      "answerVerified": null,
+      "note": "This trace vocabulary emits effect verdicts (EFFECT_VERIFIED / ACTION_NO_EFFECT / EFFECT_UNVERIFIABLE); it does not emit a separate answer-verifier line, so answer verification is read from the terminal status only."
+    }
+  },
+  "destination": {
+    "required": true,
+    "startUrl": "http://127.0.0.1:4174/index.html",
+    "finalUrlFromTimeline": "http://127.0.0.1:4174/index.html",
+    "navigationObserved": false
+  },
+  "goalState": {
+    "longHorizonFinal": {
+      "meaningfulProgress": true,
+      "signals": [
+        "NEW_PAGE"
+      ],
+      "completedSubgoals": 0,
+      "pendingSubgoals": 4,
+      "discoveries": 0,
+      "actions": 0,
+      "loop": false,
+      "stalled": false,
+      "semanticProgress": true,
+      "semanticSignals": [
+        "EVIDENCE_DELTA"
+      ],
+      "geometry": "GEOMETRY_UNCHANGED",
+      "sameDirectionRun": 0,
+      "stagnation": "NONE",
+      "evidenceDelta": 3
+    },
+    "pendingSubgoals": 4,
+    "replans": 0
+  },
+  "recovery": {
+    "records": [
+      {
+        "category": "PROVIDER_UNAVAILABLE",
+        "from": "CONTINUE",
+        "to": "CONTINUE",
+        "retryCount": 0,
+        "reasonCode": "PROVIDER_COULD_NOT_ANSWER",
+        "madeProgress": true,
+        "observationState": "NOT_APPLICABLE",
+        "exhausted": false
+      },
+      {
+        "category": "PROVIDER_UNAVAILABLE",
+        "from": "CONTINUE",
+        "to": "STOP",
+        "retryCount": 1,
+        "reasonCode": "RETRY_BUDGET_EXHAUSTED",
+        "madeProgress": true,
+        "observationState": "NOT_APPLICABLE",
+        "exhausted": true
+      }
+    ],
+    "decisions": [],
+    "boundedTermination": true
+  },
+  "providerOutcome": {
+    "requestCount": 1,
+    "statuses": [
+      200
+    ],
+    "unavailable": 1
+  },
+  "privacy": {
+    "independent": false,
+    "source": null,
+    "capturedAt": null,
+    "markersSearched": 0,
+    "rawMarkerHits": [],
+    "rawMarkerCount": 0,
+    "forbiddenKeyHits": [],
+    "screenshotDataUriHits": 0,
+    "ocrRawTextHits": 0,
+    "note": "no gateway model-facing capture for this run (CONTROLLED provider does not traverse the FastAPI gateway, so no model-facing payload exists to inspect)",
+    "scenarioNote": "CONTROLLED provider: the scripted stub answers the extension directly, so this run has no gateway model-facing payload. Independent raw-value verification for this action shape is carried by the LIVE privacy scenario."
+  },
+  "falseSuccessChecks": {
+    "evaluated": [
+      {
+        "id": "SUCCESS_WITH_ZERO_ACTIONS",
+        "violated": false,
+        "evidence": "terminal=PROVIDER_UNAVAILABLE executedActions=0"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_VERIFIED_EVIDENCE_FOR_EVIDENCE_TASK",
+        "violated": false,
+        "evidence": "requiresEvidence=true effectVerified=0 ledgerSize=3"
+      },
+      {
+        "id": "SUCCESS_AFTER_PROVIDER_FAILURE",
+        "violated": false,
+        "evidence": "providerUnavailableRecords=1"
+      },
+      {
+        "id": "SUCCESS_AFTER_NO_EFFECT_ACTION",
+        "violated": false,
+        "evidence": "noEffectActions=0"
+      },
+      {
+        "id": "SUCCESS_WITH_STALE_OR_NON_PROGRESSING_OBSERVATION",
+        "violated": false,
+        "evidence": "stagnation=NONE evidenceDelta=3"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_DESTINATION_VERIFICATION_WHEN_REQUIRED",
+        "violated": false,
+        "evidence": "requiresDestination=true navigationObserved=false"
+      }
+    ],
+    "violations": [],
+    "critical": false
+  },
+  "userFacing": {
+    "outputScreens": {
+      "verdict": "CLEAR",
+      "audit": "OUTPUT_SCREEN_CLEAR (0 finding(s))",
+      "outcome": "FAILED",
+      "phase": "TERMINAL",
+      "resultKind": "NONE"
+    },
+    "dashboardHeadline": null,
+    "timelineStatuses": [
+      {
+        "status": "RUNNING",
+        "phase": null,
+        "outcome": null
+      },
+      {
+        "status": "RUNNING",
+        "phase": "PERCEPTION",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "PLANNING",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "PROVIDER_UNAVAILABLE",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "PROVIDER_UNAVAILABLE",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      }
+    ]
+  },
+  "result": {
+    "scenarioId": "S13",
+    "category": "PROVIDER_WRONG_TYPE",
+    "title": "Wrong field type inside a 200",
+    "task": "open the shopping site and scroll down to find the winter jacket",
+    "startUrl": "http://127.0.0.1:4174/index.html",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "verdict": "PROVIDER_UNAVAILABLE",
+    "terminal": {
+      "status": "PROVIDER_UNAVAILABLE",
+      "reason": "The reasoning service was unavailable, so nothing was changed on the page.",
+      "currentStep": 1,
+      "observed": true
+    },
+    "blocker": "Provider did not return a usable action: category=SCHEMA_INVALID reasonCode=RETRY_BUDGET_EXHAUSTED. Classified PROVIDER/ENVIRONMENTAL, not an application failure."
+  }
+}

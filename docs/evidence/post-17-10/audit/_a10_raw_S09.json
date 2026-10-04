@@ -1,0 +1,1562 @@
+{
+  "phase": "18.7-A10",
+  "work": "A10 FINAL REAL-WEB EVALUATION — S09 OSCILLATION_RECOVERY: DOWN -> UP -> DOWN -> UP with no gain (I-8 C + A7)",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "inputs": {
+    "task": "tell me about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "settleMs": 60000
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "reasoner": {
+      "mode": "groq",
+      "apiKeyConfigured": true,
+      "model": "openai/gpt-oss-20b",
+      "configuredFallback": "openrouter",
+      "reasonerClass": "GroqReasoner",
+      "keyValueNeverPrinted": true
+    }
+  },
+  "timeline": [
+    {
+      "t": 3757,
+      "wall": 1791143309526,
+      "status": "RUNNING",
+      "stage": null,
+      "phase": null,
+      "outcome": null,
+      "currentStep": 0,
+      "currentUrl": null
+    },
+    {
+      "t": 3789,
+      "wall": 1791143309558,
+      "status": "RUNNING",
+      "stage": null,
+      "phase": "PERCEPTION",
+      "outcome": "RUNNING",
+      "currentStep": 0,
+      "currentUrl": "https://en.wikipedia.org/wiki/Charminar"
+    },
+    {
+      "t": 3853,
+      "wall": 1791143309622,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "PLANNING",
+      "outcome": "RUNNING",
+      "currentStep": 0,
+      "currentUrl": "https://en.wikipedia.org/wiki/Charminar"
+    },
+    {
+      "t": 4494,
+      "wall": 1791143310263,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "RECOVERY",
+      "outcome": "RUNNING",
+      "currentStep": 1,
+      "currentUrl": "https://en.wikipedia.org/wiki/Charminar"
+    },
+    {
+      "t": 6275,
+      "wall": 1791143312044,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "PLANNING",
+      "outcome": "RUNNING",
+      "currentStep": 2,
+      "currentUrl": "https://en.wikipedia.org/wiki/Charminar"
+    },
+    {
+      "t": 7920,
+      "wall": 1791143313689,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "PLANNING",
+      "outcome": "RUNNING",
+      "currentStep": 3,
+      "currentUrl": "https://en.wikipedia.org/wiki/Charminar"
+    },
+    {
+      "t": 9141,
+      "wall": 1791143314910,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "PLANNING",
+      "outcome": "RUNNING",
+      "currentStep": 4,
+      "currentUrl": "https://en.wikipedia.org/wiki/Charminar"
+    },
+    {
+      "t": 10471,
+      "wall": 1791143316240,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "PLANNING",
+      "outcome": "RUNNING",
+      "currentStep": 5,
+      "currentUrl": "https://en.wikipedia.org/wiki/Charminar"
+    },
+    {
+      "t": 12504,
+      "wall": 1791143318273,
+      "status": "FAILED",
+      "stage": null,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "currentStep": 6,
+      "currentUrl": "https://en.wikipedia.org/wiki/Charminar"
+    }
+  ],
+  "network": [
+    {
+      "t": 7428,
+      "kind": "request",
+      "requestId": "1246291.3",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 9478,
+      "status": 200,
+      "tResponse": 7431,
+      "tFinished": 7433,
+      "roundTripMs": 5,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    },
+    {
+      "t": 7452,
+      "kind": "request",
+      "requestId": "1246291.4",
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "method": "POST",
+      "postDataBytes": 15491,
+      "status": 200,
+      "tResponse": 7459,
+      "tFinished": 7461,
+      "roundTripMs": 9,
+      "telemetry": null
+    },
+    {
+      "t": 9179,
+      "kind": "request",
+      "requestId": "1246291.5",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 10145,
+      "status": 200,
+      "tResponse": 9182,
+      "tFinished": 9183,
+      "roundTripMs": 4,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    },
+    {
+      "t": 9199,
+      "kind": "request",
+      "requestId": "1246291.6",
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "method": "POST",
+      "postDataBytes": 15782,
+      "status": 200,
+      "tResponse": 9201,
+      "tFinished": 9202,
+      "roundTripMs": 3,
+      "telemetry": null
+    },
+    {
+      "t": 10835,
+      "kind": "request",
+      "requestId": "1246291.7",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 10339,
+      "status": 200,
+      "tResponse": 10843,
+      "tFinished": 10845,
+      "roundTripMs": 10,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    },
+    {
+      "t": 10861,
+      "kind": "request",
+      "requestId": "1246291.8",
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "method": "POST",
+      "postDataBytes": 15857,
+      "status": 200,
+      "tResponse": 10864,
+      "tFinished": 10866,
+      "roundTripMs": 5,
+      "telemetry": null
+    },
+    {
+      "t": 12052,
+      "kind": "request",
+      "requestId": "1246291.9",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 10549,
+      "status": 200,
+      "tResponse": 12061,
+      "tFinished": 12063,
+      "roundTripMs": 11,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    },
+    {
+      "t": 12082,
+      "kind": "request",
+      "requestId": "1246291.10",
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "method": "POST",
+      "postDataBytes": 15932,
+      "status": 200,
+      "tResponse": 12086,
+      "tFinished": 12093,
+      "roundTripMs": 11,
+      "telemetry": null
+    },
+    {
+      "t": 13393,
+      "kind": "request",
+      "requestId": "1246291.11",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 10771,
+      "status": 200,
+      "tResponse": 13397,
+      "tFinished": 13399,
+      "roundTripMs": 6,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    },
+    {
+      "t": 13418,
+      "kind": "request",
+      "requestId": "1246291.12",
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "method": "POST",
+      "postDataBytes": 16007,
+      "status": 200,
+      "tResponse": 13429,
+      "tFinished": 13431,
+      "roundTripMs": 13,
+      "telemetry": null
+    },
+    {
+      "t": 14432,
+      "kind": "request",
+      "requestId": "1246291.13",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 11084,
+      "status": 200,
+      "tResponse": 14435,
+      "tFinished": 14436,
+      "roundTripMs": 4,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    }
+  ],
+  "dashboardLogs": [
+    {
+      "t": 6594,
+      "text": "[Adapter] START_TASK received {\"taskLength\":23}"
+    },
+    {
+      "t": 6595,
+      "text": "[AgentTrace] dashboard START_TASK received {\"taskLength\":23}"
+    },
+    {
+      "t": 6596,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791143309331\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 6615,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791143309331\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 6615,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791143309331\",\"attempt\":1}"
+    },
+    {
+      "t": 6619,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791143309331\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 6626,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791143309331\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 6629,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 6629,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 6630,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 6630,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 6634,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791143309331\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 6634,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791143309331\",\"connected\":true}"
+    },
+    {
+      "t": 6635,
+      "text": "[AgentTrace] dashboard START_TASK posted to window {\"taskLength\":23,\"runId\":1}"
+    },
+    {
+      "t": 6636,
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": 6636,
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": 6692,
+      "text": "[Extension] message received {\"type\":\"START_TASK\"}"
+    },
+    {
+      "t": 6782,
+      "text": "[Adapter] response received {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":false,\"interactionPhase\":null,\"interactionOutcome\":null}"
+    },
+    {
+      "t": 6802,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":false,\"interactionPhase\":null}"
+    },
+    {
+      "t": 6818,
+      "text": "[Adapter] response received {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PERCEPTION\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 6828,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PERCEPTION\"}"
+    },
+    {
+      "t": 6881,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 6881,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\"}"
+    },
+    {
+      "t": 7534,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":1,\"hasInteraction\":true,\"interactionPhase\":\"RECOVERY\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 7535,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":1,\"hasInteraction\":true,\"interactionPhase\":\"RECOVERY\"}"
+    },
+    {
+      "t": 9299,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":2,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 9300,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":2,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\"}"
+    },
+    {
+      "t": 10945,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":3,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 10946,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":3,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\"}"
+    },
+    {
+      "t": 12165,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":4,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 12166,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":4,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\"}"
+    },
+    {
+      "t": 13496,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":5,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 13496,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":5,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\"}"
+    },
+    {
+      "t": 15529,
+      "text": "[Adapter] response received {\"status\":\"FAILED\",\"currentStep\":6,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\",\"interactionOutcome\":\"FAILED\"}"
+    },
+    {
+      "t": 15530,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"FAILED\",\"currentStep\":6,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\"}"
+    },
+    {
+      "t": 18644,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791143321387\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 18651,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791143321387\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 18652,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791143321387\",\"attempt\":1}"
+    },
+    {
+      "t": 18658,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791143321387\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 18658,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791143321387\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 18660,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 18661,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 18661,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 18661,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 18662,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791143321387\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 18662,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791143321387\",\"connected\":true}"
+    },
+    {
+      "t": 33644,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791143336387\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 33661,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791143336387\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 33662,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791143336387\",\"attempt\":1}"
+    },
+    {
+      "t": 33666,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791143336387\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 33667,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791143336387\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 33675,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 33675,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 33676,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 33676,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 33676,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791143336387\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 33677,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791143336387\",\"connected\":true}"
+    },
+    {
+      "t": 48644,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791143351387\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 48664,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791143351387\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 48665,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791143351387\",\"attempt\":1}"
+    },
+    {
+      "t": 48667,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791143351387\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 48667,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791143351387\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 48673,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 48674,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 48675,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 48675,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 48676,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791143351387\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 48677,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791143351387\",\"connected\":true}"
+    },
+    {
+      "t": 63644,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791143366387\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 63657,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791143366387\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 63658,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791143366387\",\"attempt\":1}"
+    },
+    {
+      "t": 63660,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791143366387\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 63660,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791143366387\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 63662,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 63663,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 63663,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 63663,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 63664,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791143366387\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 63664,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791143366387\",\"connected\":true}"
+    }
+  ],
+  "swLogs": [
+    {
+      "t": 6609,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791143309331\"}"
+    },
+    {
+      "t": 6611,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791143309331\"}"
+    },
+    {
+      "t": 6611,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791143309331\",\"targetFound\":true,\"tabId\":1231753943,\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 6611,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791143309331\",\"targetFound\":true}"
+    },
+    {
+      "t": 6703,
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": 6711,
+      "text": "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}"
+    },
+    {
+      "t": 6713,
+      "text": "[AgentTrace] service worker START_TASK received {\"taskLength\":23}"
+    },
+    {
+      "t": 6717,
+      "text": "[AgentTrace] intent classified {\"intent\":\"INFORMATION_REQUEST\",\"confidence\":\"DETERMINISTIC\",\"requiresDestination\":false,\"requiresEvidence\":true,\"admitsBrowserAutomation\":true,\"refusal\":null}"
+    },
+    {
+      "t": 6745,
+      "text": "TARGET_TAB_CANDIDATES [{\"id\":1231753941,\"origin\":\"null\"},{\"id\":1231753942,\"origin\":\"http://localhost:5173\"},{\"id\":1231753943,\"origin\":\"https://en.wikipedia.org\"}]"
+    },
+    {
+      "t": 6749,
+      "text": "[AgentTrace] containment scope established {\"established\":true,\"rootHost\":\"wikipedia.org\",\"tabId\":1231753943}"
+    },
+    {
+      "t": 6753,
+      "text": "TARGET_TAB_SELECTED {\"tabId\":1231753943,\"origin\":\"https://en.wikipedia.org\",\"reason\":\"Selected active web tab.\"}"
+    },
+    {
+      "t": 6760,
+      "text": "[AgentTrace] target resolved {\"tabId\":1231753943}"
+    },
+    {
+      "t": 6762,
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": 6767,
+      "text": "TARGET_TAB_READY {\"tabId\":1231753943}"
+    },
+    {
+      "t": 6767,
+      "text": "[AgentTrace] target content script ready {\"tabId\":1231753943}"
+    },
+    {
+      "t": 6767,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PERCEPTION\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 6767,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"RUNNING\",\"currentStep\":0,\"reason\":\"Target tab discovered and ready. Starting visual privacy perception...\"}"
+    },
+    {
+      "t": 6814,
+      "text": "[AgentTrace] agent loop started {\"runId\":1}"
+    },
+    {
+      "t": 6850,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 6852,
+      "text": "[AgentTrace] long-horizon state {\"restoreStatus\":\"FRESH_NO_RECORD\",\"detail\":null,\"actionCount\":0,\"recoveryCount\":0,\"consecutiveNoProgress\":0,\"totalNoProgress\":0}"
+    },
+    {
+      "t": 6853,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 6859,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":0}"
+    },
+    {
+      "t": 6860,
+      "text": "[AgentTrace] harness cycle {\"cycle\":1,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:wikipedia.org\",\"withinScope\":true}"
+    },
+    {
+      "t": 6861,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":1,\"url\":\"https://en.wikipedia.org/wiki/Charminar\"}"
+    },
+    {
+      "t": 7353,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":37,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 7365,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 7381,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 7392,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":24,\"regionsConsidered\":33,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":2}"
+    },
+    {
+      "t": 7393,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":24,\"ledgerSize\":24,\"generation\":2}"
+    },
+    {
+      "t": 7395,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":1,\"contextUrl\":\"https://en.wikipedia.org/wiki/Charminar\",\"worldModelId\":\"wm-g2-muu8havj-32p5\"}"
+    },
+    {
+      "t": 7395,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1265,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":98,\"privacyFindingsCount\":37}"
+    },
+    {
+      "t": 7396,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"ARTICLE\",\"pageState\":\"populated\",\"pageGeneration\":2,\"entityCount\":5,\"affordanceCount\":6}"
+    },
+    {
+      "t": 7415,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 7428,
+      "text": "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-muu8hasq-7wrtt-sg1\",\"category\":\"LOCATE\",\"description\":\"Perceive page and locate candidate controls relevant to \\\"tell me about charminar\\\"\"}"
+    },
+    {
+      "t": 7429,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[\"NEW_PAGE\"],\"completedSubgoals\":0,\"pendingSubgoals\":3,\"discoveries\":5,\"actions\":0,\"loop\":false,\"stalled\":false,\"semanticProgress\":true,\"semanticSignals\":[\"EVIDENCE_DELTA\"],\"geometry\":\"GEOMETRY_UNCHANGED\",\"sameDirectionRun\":0,\"stagnation\":\"NONE\",\"evidenceDelta\":24}"
+    },
+    {
+      "t": 7435,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 7436,
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": 7444,
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": 7446,
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": 7452,
+      "text": "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}"
+    },
+    {
+      "t": 7462,
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": 7463,
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 7468,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":0,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 7468,
+      "text": "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:wikipedia.org\"}"
+    },
+    {
+      "t": 7476,
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": 7482,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":0,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 7483,
+      "text": "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll up produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}"
+    },
+    {
+      "t": 7498,
+      "text": "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)"
+    },
+    {
+      "t": 7498,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 7500,
+      "text": "[AgentTrace] recovery record {\"category\":\"NO_EFFECT\",\"from\":\"CONTINUE\",\"to\":\"RE_PERCEIVE\",\"retryCount\":0,\"reasonCode\":\"EFFECT_UNCHANGED\",\"madeProgress\":true,\"observationState\":\"CURRENT\",\"exhausted\":false}"
+    },
+    {
+      "t": 7502,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"RECOVERY\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 7503,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":1}"
+    },
+    {
+      "t": 7503,
+      "text": "[AgentTrace] recovery decision {\"code\":\"ACTION_NO_EFFECT\",\"strategy\":\"REPERCEIVE\",\"attempt\":1,\"reason\":\"Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 2.\"}"
+    },
+    {
+      "t": 7901,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":37,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 7910,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 7912,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":24,\"regionsConsidered\":33,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}"
+    },
+    {
+      "t": 7913,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":24,\"ledgerSize\":48,\"generation\":3}"
+    },
+    {
+      "t": 8434,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 8444,
+      "text": "[AgentTrace] harness cycle {\"cycle\":2,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:wikipedia.org\",\"withinScope\":true}"
+    },
+    {
+      "t": 8444,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":4,\"url\":\"https://en.wikipedia.org/wiki/Charminar\"}"
+    },
+    {
+      "t": 9131,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":37,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 9134,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 9142,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 9147,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":24,\"regionsConsidered\":33,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}"
+    },
+    {
+      "t": 9148,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":24,\"ledgerSize\":60,\"generation\":4}"
+    },
+    {
+      "t": 9148,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":4,\"contextUrl\":\"https://en.wikipedia.org/wiki/Charminar\",\"worldModelId\":\"wm-g4-muu8hc3j-ve5z\"}"
+    },
+    {
+      "t": 9148,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1265,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":98,\"privacyFindingsCount\":37}"
+    },
+    {
+      "t": 9149,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"ARTICLE\",\"pageState\":\"populated\",\"pageGeneration\":4,\"entityCount\":5,\"affordanceCount\":6}"
+    },
+    {
+      "t": 9167,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 9179,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":2,\"discoveries\":5,\"actions\":1,\"loop\":false,\"stalled\":false,\"semanticProgress\":true,\"semanticSignals\":[\"EVIDENCE_DELTA\"],\"geometry\":\"GEOMETRY_UNCHANGED\",\"sameDirectionRun\":0,\"stagnation\":\"NONE\",\"evidenceDelta\":36}"
+    },
+    {
+      "t": 9184,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 9185,
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": 9192,
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": 9193,
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": 9199,
+      "text": "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}"
+    },
+    {
+      "t": 9208,
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": 9209,
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 9216,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":0,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 9217,
+      "text": "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:wikipedia.org\"}"
+    },
+    {
+      "t": 9220,
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": 9249,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":500,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 9250,
+      "text": "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED {\"status\":\"SCROLL_CHANGED\",\"details\":\"Scroll down by 500px shifted viewport by 500px.\"}"
+    },
+    {
+      "t": 9285,
+      "text": "[AgentTrace] M6 next step"
+    },
+    {
+      "t": 9286,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 9286,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":2}"
+    },
+    {
+      "t": 9804,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 9811,
+      "text": "[AgentTrace] harness cycle {\"cycle\":3,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:wikipedia.org\",\"withinScope\":true}"
+    },
+    {
+      "t": 9812,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":5,\"url\":\"https://en.wikipedia.org/wiki/Charminar\"}"
+    },
+    {
+      "t": 10793,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":37,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 10796,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 10798,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 10803,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":24,\"regionsConsidered\":33,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}"
+    },
+    {
+      "t": 10803,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":24,\"ledgerSize\":60,\"generation\":5}"
+    },
+    {
+      "t": 10809,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":5,\"contextUrl\":\"https://en.wikipedia.org/wiki/Charminar\",\"worldModelId\":\"wm-g5-muu8hd5o-j9sq\"}"
+    },
+    {
+      "t": 10809,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1265,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":98,\"privacyFindingsCount\":37}"
+    },
+    {
+      "t": 10809,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"ARTICLE\",\"pageState\":\"populated\",\"pageGeneration\":5,\"entityCount\":5,\"affordanceCount\":6}"
+    },
+    {
+      "t": 10827,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 10835,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":2,\"discoveries\":5,\"actions\":2,\"loop\":false,\"stalled\":false,\"semanticProgress\":false,\"semanticSignals\":[],\"geometry\":\"GEOMETRY_CHANGED\",\"sameDirectionRun\":1,\"stagnation\":\"NONE\",\"evidenceDelta\":0}"
+    },
+    {
+      "t": 10846,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 10847,
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": 10849,
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": 10850,
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": 10862,
+      "text": "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}"
+    },
+    {
+      "t": 10868,
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": 10868,
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 10878,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":500,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 10879,
+      "text": "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:wikipedia.org\"}"
+    },
+    {
+      "t": 10881,
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": 10900,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":0,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 10900,
+      "text": "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED {\"status\":\"SCROLL_CHANGED\",\"details\":\"Scroll up by 500px shifted viewport by 500px.\"}"
+    },
+    {
+      "t": 10929,
+      "text": "[AgentTrace] M6 next step"
+    },
+    {
+      "t": 10930,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 10931,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":3}"
+    },
+    {
+      "t": 11440,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 11446,
+      "text": "[AgentTrace] harness cycle {\"cycle\":4,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:wikipedia.org\",\"withinScope\":true}"
+    },
+    {
+      "t": 11446,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":6,\"url\":\"https://en.wikipedia.org/wiki/Charminar\"}"
+    },
+    {
+      "t": 12001,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":37,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 12009,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 12013,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 12019,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":24,\"regionsConsidered\":33,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}"
+    },
+    {
+      "t": 12026,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":24,\"ledgerSize\":60,\"generation\":6}"
+    },
+    {
+      "t": 12027,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":6,\"contextUrl\":\"https://en.wikipedia.org/wiki/Charminar\",\"worldModelId\":\"wm-g6-muu8hef4-fe0d\"}"
+    },
+    {
+      "t": 12027,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1265,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":98,\"privacyFindingsCount\":37}"
+    },
+    {
+      "t": 12028,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"ARTICLE\",\"pageState\":\"populated\",\"pageGeneration\":6,\"entityCount\":5,\"affordanceCount\":6}"
+    },
+    {
+      "t": 12044,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 12052,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":2,\"discoveries\":5,\"actions\":3,\"loop\":false,\"stalled\":false,\"semanticProgress\":false,\"semanticSignals\":[],\"geometry\":\"GEOMETRY_CHANGED\",\"sameDirectionRun\":1,\"stagnation\":\"NONE\",\"evidenceDelta\":0}"
+    },
+    {
+      "t": 12065,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 12066,
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": 12069,
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": 12069,
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": 12083,
+      "text": "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}"
+    },
+    {
+      "t": 12095,
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": 12095,
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 12100,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":0,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 12100,
+      "text": "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:wikipedia.org\"}"
+    },
+    {
+      "t": 12102,
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": 12117,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":500,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 12117,
+      "text": "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED {\"status\":\"SCROLL_CHANGED\",\"details\":\"Scroll down by 500px shifted viewport by 500px.\"}"
+    },
+    {
+      "t": 12151,
+      "text": "[AgentTrace] M6 next step"
+    },
+    {
+      "t": 12151,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 12152,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":4}"
+    },
+    {
+      "t": 12659,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 12666,
+      "text": "[AgentTrace] harness cycle {\"cycle\":5,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:wikipedia.org\",\"withinScope\":true}"
+    },
+    {
+      "t": 12667,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":7,\"url\":\"https://en.wikipedia.org/wiki/Charminar\"}"
+    },
+    {
+      "t": 13326,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":37,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 13329,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 13331,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 13335,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":24,\"regionsConsidered\":33,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}"
+    },
+    {
+      "t": 13336,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":24,\"ledgerSize\":60,\"generation\":7}"
+    },
+    {
+      "t": 13336,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":7,\"contextUrl\":\"https://en.wikipedia.org/wiki/Charminar\",\"worldModelId\":\"wm-g7-muu8hfcu-zp1r\"}"
+    },
+    {
+      "t": 13362,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1265,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":98,\"privacyFindingsCount\":37}"
+    },
+    {
+      "t": 13363,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"ARTICLE\",\"pageState\":\"populated\",\"pageGeneration\":7,\"entityCount\":5,\"affordanceCount\":6}"
+    },
+    {
+      "t": 13367,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":2,\"discoveries\":5,\"actions\":4,\"loop\":\"ALTERNATING_LOOP\",\"stalled\":true,\"semanticProgress\":false,\"semanticSignals\":[],\"geometry\":\"GEOMETRY_CHANGED\",\"sameDirectionRun\":1,\"stagnation\":\"NONE\",\"evidenceDelta\":0}"
+    },
+    {
+      "t": 13381,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 13394,
+      "text": "[AgentTrace] long-horizon replan {\"reason\":\"Alternating state sequence A → B → A → B detected.\",\"reopened\":[\"goal-muu8hasq-7wrtt-sg1\",\"goal-muu8hasq-7wrtt-sg2\",\"goal-muu8hasq-7wrtt-sg3\"],\"preservedCompleted\":[],\"preservedDiscoveries\":5}"
+    },
+    {
+      "t": 13400,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 13401,
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": 13407,
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": 13409,
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": 13419,
+      "text": "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}"
+    },
+    {
+      "t": 13432,
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": 13433,
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 13445,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":500,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 13445,
+      "text": "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:wikipedia.org\"}"
+    },
+    {
+      "t": 13448,
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": 13453,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"https://en.wikipedia.org/wiki/Charminar\",\"scrollY\":0,\"domElementCount\":4102,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 13453,
+      "text": "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED {\"status\":\"SCROLL_CHANGED\",\"details\":\"Scroll up by 500px shifted viewport by 500px.\"}"
+    },
+    {
+      "t": 13483,
+      "text": "[AgentTrace] M6 next step"
+    },
+    {
+      "t": 13483,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 13484,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":5}"
+    },
+    {
+      "t": 13990,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 13995,
+      "text": "[AgentTrace] harness cycle {\"cycle\":6,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:wikipedia.org\",\"withinScope\":true}"
+    },
+    {
+      "t": 14002,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":8,\"url\":\"https://en.wikipedia.org/wiki/Charminar\"}"
+    },
+    {
+      "t": 14382,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":37,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 14384,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 14392,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 14397,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":24,\"regionsConsidered\":33,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}"
+    },
+    {
+      "t": 14397,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":24,\"ledgerSize\":60,\"generation\":8}"
+    },
+    {
+      "t": 14397,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":8,\"contextUrl\":\"https://en.wikipedia.org/wiki/Charminar\",\"worldModelId\":\"wm-g8-muu8hgdv-c7l4\"}"
+    },
+    {
+      "t": 14398,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1265,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":98,\"privacyFindingsCount\":37}"
+    },
+    {
+      "t": 14398,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"ARTICLE\",\"pageState\":\"populated\",\"pageGeneration\":8,\"entityCount\":5,\"affordanceCount\":6}"
+    },
+    {
+      "t": 14402,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":2,\"discoveries\":5,\"actions\":5,\"loop\":\"REPEATED_STATE\",\"stalled\":true,\"semanticProgress\":false,\"semanticSignals\":[],\"geometry\":\"GEOMETRY_CHANGED\",\"sameDirectionRun\":1,\"stagnation\":\"OSCILLATION\",\"evidenceDelta\":0}"
+    },
+    {
+      "t": 14412,
+      "text": "[AgentTrace] long-horizon replan {\"reason\":\"The same page-state/action fingerprint occurred 3 times (limit 2).\",\"reopened\":[\"goal-muu8hasq-7wrtt-sg1\"],\"preservedCompleted\":[],\"preservedDiscoveries\":5}"
+    },
+    {
+      "t": 14412,
+      "text": "[AgentTrace] recovery record {\"category\":\"OSCILLATION\",\"from\":\"CONTINUE\",\"to\":\"CHANGE_STRATEGY\",\"retryCount\":0,\"reasonCode\":\"ALTERNATING_WITH_NO_GAIN\",\"madeProgress\":false,\"observationState\":\"STALE\",\"exhausted\":false}"
+    },
+    {
+      "t": 14413,
+      "text": "[AgentTrace] I-8 scroll strategy exhausted — no further scrolls will be dispatched {\"stagnation\":\"OSCILLATION\",\"sameDirectionRun\":1,\"geometry\":\"GEOMETRY_CHANGED\",\"evidenceDelta\":0,\"consecutiveNoProgress\":4}"
+    },
+    {
+      "t": 14426,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 14443,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 14444,
+      "text": "[AgentTrace] refused an exhausted-strategy scroll {\"direction\":\"down\",\"stagnation\":\"OSCILLATION\",\"reason\":\"SCROLL_STRATEGY_EXHAUSTED:OSCILLATION\"}"
+    },
+    {
+      "t": 14954,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 14958,
+      "text": "[AgentTrace] harness cycle {\"cycle\":7,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:wikipedia.org\",\"withinScope\":true}"
+    },
+    {
+      "t": 14958,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":9,\"url\":\"https://en.wikipedia.org/wiki/Charminar\"}"
+    },
+    {
+      "t": 15399,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":37,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 15417,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 15430,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 15436,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":24,\"regionsConsidered\":33,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}"
+    },
+    {
+      "t": 15442,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":24,\"ledgerSize\":60,\"generation\":9}"
+    },
+    {
+      "t": 15445,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":9,\"contextUrl\":\"https://en.wikipedia.org/wiki/Charminar\",\"worldModelId\":\"wm-g9-muu8hh4h-kgbc\"}"
+    },
+    {
+      "t": 15446,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1265,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":98,\"privacyFindingsCount\":37}"
+    },
+    {
+      "t": 15446,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"ARTICLE\",\"pageState\":\"populated\",\"pageGeneration\":9,\"entityCount\":5,\"affordanceCount\":6}"
+    },
+    {
+      "t": 15451,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":false,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":2,\"discoveries\":5,\"actions\":6,\"loop\":\"REPEATED_STATE\",\"stalled\":true,\"semanticProgress\":false,\"semanticSignals\":[],\"geometry\":\"GEOMETRY_UNCHANGED\",\"sameDirectionRun\":1,\"stagnation\":\"OSCILLATION\",\"evidenceDelta\":0}"
+    },
+    {
+      "t": 15464,
+      "text": "[AgentTrace] long-horizon replan {\"reason\":\"The same page-state/action fingerprint occurred 4 times (limit 2).\",\"reopened\":[\"goal-muu8hasq-7wrtt-sg1\"],\"preservedCompleted\":[],\"preservedDiscoveries\":5}"
+    },
+    {
+      "t": 15478,
+      "text": "[AgentTrace] M6 failed {\"reason\":\"Long-horizon bounds exhausted: Task accumulated 5 no-progress actions (limit 5).\"}"
+    },
+    {
+      "t": 15501,
+      "text": "[AgentTrace] M6 failed {\"reason\":\"Long-horizon bounds exhausted: Task accumulated 5 no-progress actions (limit 5).\"}"
+    },
+    {
+      "t": 15502,
+      "text": "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\",\"runId\":1}"
+    },
+    {
+      "t": 15503,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 15512,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":6,\"reason\":\"Long-horizon bounds exhausted: Task accumulated 5 no-progress actions (limit 5).\"}"
+    },
+    {
+      "t": 18648,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791143321387\"}"
+    },
+    {
+      "t": 18649,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791143321387\"}"
+    },
+    {
+      "t": 18651,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791143321387\",\"targetFound\":true,\"tabId\":1231753943,\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 18651,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791143321387\",\"targetFound\":true}"
+    },
+    {
+      "t": 33650,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791143336387\"}"
+    },
+    {
+      "t": 33651,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791143336387\"}"
+    },
+    {
+      "t": 33660,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791143336387\",\"targetFound\":true,\"tabId\":1231753943,\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 33661,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791143336387\",\"targetFound\":true}"
+    },
+    {
+      "t": 48650,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791143351387\"}"
+    },
+    {
+      "t": 48651,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791143351387\"}"
+    },
+    {
+      "t": 48662,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791143351387\",\"targetFound\":true,\"tabId\":1231753943,\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 48662,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791143351387\",\"targetFound\":true}"
+    },
+    {
+      "t": 63649,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791143366387\"}"
+    },
+    {
+      "t": 63650,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791143366387\"}"
+    },
+    {
+      "t": 63653,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791143366387\",\"targetFound\":true,\"tabId\":1231753943,\"urlOrigin\":\"https://en.wikipedia.org\"}"
+    },
+    {
+      "t": 63654,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791143366387\",\"targetFound\":true}"
+    }
+  ],
+  "analysis": {
+    "submission": "{\"via\":\"composer\",\"value\":\"tell me about charminar\"}",
+    "bodyText": "PrivAgent\nPRIVACY BROWSER AGENT\nTask Halted · Zero Leakage\nTools\nNew Task\nAlt+N\nCURRENT TASK\ntell me about charminar\nFAILED\nRECENT TASKS\ntell me about charminar\nFAILED · Just now\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\ntell me about charminar\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nFAILED\nFinished.\nStep 6 of 10\nFailed.\nLong-horizon bounds exhausted: Task accumulated 5 no-progress actions (limit 5).\nTry Again\nAGENT ACTIVITY TIMELINE\n9 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\n!\nStep 1: scroll on Scroll up (500px)\nACTION_NO_EFFECT\nValidated scroll up by 500px.\n✓\nStep 2: scroll on Scroll down (500px)\nSCROLL_CHANGED\nValidated scroll down by 500px.\n✓\nStep 3: scroll on Scroll up (500px)\nSCROLL_CHANGED\nValidated scroll up by 500px.\n✓\nStep 4: scroll on Scroll down (500px)\nSCROLL_CHANGED\nValidated scroll down by 500px.\n✓\nStep 5: scroll on Scroll up (500px)\nSCROLL_CHANGED\nValidated scroll up by 500px.\n!\nStep 6: scroll on Scroll down (500px)\nFAILED\nSCROLL_STRATEGY_EXHAUSTED:OSCILLATION\n!\nTask terminated safely\nHALTED\nLong-horizon bounds exhausted: Task accumulated 5 no-progress actions (limit 5).\nBROWSER CONTEXT\nCurrent Page\nen.wikipedia.org/wiki/Charminar\nSemantic Type\narticle\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+    "watchdogLines": [],
+    "requestCount": 11,
+    "gaps": [
+      {
+        "fromStage": null,
+        "toStage": "PERCEPTION",
+        "gapMs": 32
+      },
+      {
+        "fromStage": "PERCEPTION",
+        "toStage": "PLANNING",
+        "gapMs": 64
+      },
+      {
+        "fromStage": "PLANNING",
+        "toStage": "RECOVERY",
+        "gapMs": 641
+      },
+      {
+        "fromStage": "RECOVERY",
+        "toStage": "PLANNING",
+        "gapMs": 1781
+      },
+      {
+        "fromStage": "PLANNING",
+        "toStage": "PLANNING",
+        "gapMs": 1645
+      },
+      {
+        "fromStage": "PLANNING",
+        "toStage": "PLANNING",
+        "gapMs": 1221
+      },
+      {
+        "fromStage": "PLANNING",
+        "toStage": "PLANNING",
+        "gapMs": 1330
+      },
+      {
+        "fromStage": "PLANNING",
+        "toStage": "TERMINAL",
+        "gapMs": 2033
+      }
+    ]
+  }
+}

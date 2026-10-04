@@ -1,0 +1,57 @@
+{
+  "phase": "18.7-A10",
+  "work": "A10 FINAL REAL-WEB EVALUATION — open findings",
+  "note": "Recorded, NOT fixed. A10 is an evaluation pass: a genuine production defect found here is documented and reported to the next implementation pass rather than patched here.",
+  "findings": [
+    {
+      "id": "A10-F1",
+      "severity": "HIGH",
+      "title": "The A1 terminal-proposal (ANSWER) path is unreachable in the production provider wiring",
+      "affectedArchitecture": "A1 terminal proposal path / provider registry / agent loop planning step",
+      "whatHappens": "The service worker constructs the provider as `new ModelRouter(createAgentProvider({ provider: 'backend' }))` (extension/src/background/serviceWorker.ts:1432). `ModelRouter` (extension/src/agent/modelRouter.ts, 121 lines, class spans lines 35-121) implements `requestAction`, `reviewAction` and escalation bookkeeping but does NOT implement the optional `requestStep`. `AgentLoop.requestStepFromProvider` (agentLoop.ts:3485-3494) therefore takes its fallback branch and calls `requestAction`, and `BackendAgentProvider.requestAction` (backendAgentProvider.ts:110-126) throws `ProviderError('Provider returned a terminal proposal where an action was required.', 'missing_action', { category: 'SCHEMA_INVALID' })`.",
+      "consequence": "Any provider ANSWER / PARTIAL / CANNOT_VERIFY proposal becomes a provider failure with category SCHEMA_INVALID and ends the task as PROVIDER_UNAVAILABLE. The A1 verification code (`verifyTerminalProposal`, `TerminalProposalSignal`, `buildSupportedAnswer`) is never reached through the shipped wiring, so an information task can never produce a verified user-facing answer. The system fails SAFE (no false success), but the capability is unreachable.",
+      "reproduction": {
+        "scenario": "S17 (a10_S17.json)",
+        "setup": "Controlled provider serving the real wire contract on 127.0.0.1:8010, mode act_then_answer: calls 1-2 return a valid scroll action, call 3+ returns {success:true, proposal:{kind:'ANSWER', answer:...}}",
+        "observed": "Steps 1-2 executed with EFFECT_VERIFIED; on call 3 the terminal PROVIDER_UNAVAILABLE was emitted with category SCHEMA_INVALID, attempts 3, retryCount 1, reasonCode RETRY_BUDGET_EXHAUSTED. No 'terminal proposal rejected; continuing' and no 'task terminated' line ever appeared.",
+        "codeEvidence": [
+          "extension/src/agent/modelRouter.ts — no requestStep member (grep returns nothing in a 121-line file)",
+          "extension/src/agent/agentLoop.ts:3490-3492 — fallback to requestAction when requestStep is absent",
+          "extension/src/agent/backendAgentProvider.ts:118-126 — throws SCHEMA_INVALID for a terminal proposal"
+        ]
+      },
+      "impactOnA1": "A1 ANSWER is IMPLEMENTED — REAL-VERIFICATION BLOCKED, and this finding is the wiring-level reason it has never been observed live.",
+      "suggestedNextPass": "Implement `requestStep` on ModelRouter as a pass-through that preserves role selection and escalation bookkeeping, and add a wiring-level test that a TERMINAL_PROPOSAL from the backend provider reaches `verifyTerminalProposal` when routed through ModelRouter."
+    },
+    {
+      "id": "A10-F2",
+      "severity": "MEDIUM",
+      "title": "EFFECT_UNVERIFIABLE on a cross-origin navigation is an unmapped recovery code, and its internal message becomes the user-facing reason",
+      "affectedArchitecture": "A7 recovery engine / effect verification / terminal status projection (B1 user-facing surface)",
+      "whatHappens": "A dispatched `navigate` to https://en.wikipedia.org/wiki/Main_Page produced effect status EFFECT_UNVERIFIABLE ('the browser state it would affect could not be observed'). The typed recovery engine has no mapping for that code, so the run ended with the terminal reason 'Recovery engine aborted: Unrecognized failure code 'EFFECT_UNVERIFIABLE'; failing closed.'",
+      "behaviourAssessment": "Failing closed is the correct direction (no dispatch verdict is invented). The defect is that the code is unmapped and the raw internal error string is what the user is shown.",
+      "reproduction": {
+        "scenario": "S18 (a10_S18.json)",
+        "observed": "Navigation itself succeeded (finalUrlFromTimeline https://en.wikipedia.org/wiki/Main_Page, navigationObserved true, one action dispatched), then terminal FAILED with the reason above at step 1.",
+        "codeEvidence": [
+          "extension/src/agent/recoveryEngine.ts — no EFFECT_UNVERIFIABLE entry in the recognised failure-code set",
+          "a10_S18.json actions.history[0].outcome = ACTION history shows EFFECT_UNVERIFIABLE detail"
+        ]
+      },
+      "suggestedNextPass": "Map EFFECT_UNVERIFIABLE to a typed recovery category (it is an observation problem, i.e. STALE_PERCEPTION) and project a user-facing message rather than the internal failure string."
+    },
+    {
+      "id": "A10-H1",
+      "severity": "HARNESS (fixed in the evaluation pass)",
+      "title": "Controlled-provider runs recorded as the live backend",
+      "whatHappens": "The first controlled runs reused the real-Chrome harness, whose artifact header is hardcoded to PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND.",
+      "fix": "scratch/p185_real_run.mjs now takes the header from ST_PHASE / ST_WORK / ST_LABELS; every A10 artifact states the provider that served it. Three earlier mislabelled artifacts were deleted rather than relabelled."
+    },
+    {
+      "id": "A10-H2",
+      "severity": "HARNESS (fixed in the evaluation pass)",
+      "title": "Stale controlled-provider process and a broken scenario-index key",
+      "whatHappens": "Two harness faults, neither of them a product defect: (a) the long-lived stub process was not restarted after new modes were added, so an unknown mode raised SystemExit inside the request thread and the browser saw NETWORK_FAILURE instead of a response — S17/S18 were re-run after the restart; (b) `updateIndex` compared `entry.scenario.scenarioId` (undefined) instead of `entry.scenario.id`, so re-runs appended instead of replacing; fixed, and `--reindex` rebuilds the index from the per-scenario artifacts."
+    }
+  ]
+}
