@@ -1,0 +1,334 @@
+{
+  "phase": "18.5",
+  "work": "PHASE 18.5 — LLM_REASONING watchdog timeout: real Chrome reproduction",
+  "labels": "PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND",
+  "inputs": {
+    "task": "open wikipedia and find information about charminar",
+    "startUrl": null,
+    "settleMs": 75000
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "reasoner": {
+      "mode": "groq",
+      "apiKeyConfigured": true,
+      "model": "openai/gpt-oss-20b",
+      "configuredFallback": "openrouter",
+      "reasonerClass": "GroqReasoner",
+      "keyValueNeverPrinted": true
+    }
+  },
+  "timeline": [],
+  "network": [],
+  "dashboardLogs": [
+    {
+      "t": 17092,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791102759448\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 17101,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791102759448\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 17103,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791102759448\",\"attempt\":1}"
+    },
+    {
+      "t": 17118,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 17118,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 17118,
+      "text": "Target Tab: NOT_FOUND"
+    },
+    {
+      "t": 17119,
+      "text": "Content Script: NOT_INJECTED"
+    },
+    {
+      "t": 17119,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791102759448\",\"attempt\":1,\"targetTab\":\"NOT_FOUND\",\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 17119,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791102759448\",\"connected\":true,\"targetTab\":\"NOT_FOUND\"}"
+    },
+    {
+      "t": 17119,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791102759448\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"NOT_FOUND\",\"contentScript\":\"NOT_INJECTED\"}"
+    },
+    {
+      "t": 17119,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791102759448\",\"connected\":true}"
+    },
+    {
+      "t": 32091,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791102774448\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 32103,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791102774448\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 32103,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791102774448\",\"attempt\":1}"
+    },
+    {
+      "t": 32105,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791102774448\",\"attempt\":1,\"targetTab\":\"NOT_FOUND\",\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 32105,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791102774448\",\"connected\":true,\"targetTab\":\"NOT_FOUND\"}"
+    },
+    {
+      "t": 32107,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 32108,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 32108,
+      "text": "Target Tab: NOT_FOUND"
+    },
+    {
+      "t": 32109,
+      "text": "Content Script: NOT_INJECTED"
+    },
+    {
+      "t": 32109,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791102774448\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"NOT_FOUND\",\"contentScript\":\"NOT_INJECTED\"}"
+    },
+    {
+      "t": 32109,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791102774448\",\"connected\":true}"
+    },
+    {
+      "t": 47090,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791102789448\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 47098,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791102789448\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 47099,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791102789448\",\"attempt\":1}"
+    },
+    {
+      "t": 47113,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 47113,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 47113,
+      "text": "Target Tab: NOT_FOUND"
+    },
+    {
+      "t": 47113,
+      "text": "Content Script: NOT_INJECTED"
+    },
+    {
+      "t": 47113,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791102789448\",\"attempt\":1,\"targetTab\":\"NOT_FOUND\",\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 47113,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791102789448\",\"connected\":true,\"targetTab\":\"NOT_FOUND\"}"
+    },
+    {
+      "t": 47113,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791102789448\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"NOT_FOUND\",\"contentScript\":\"NOT_INJECTED\"}"
+    },
+    {
+      "t": 47114,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791102789448\",\"connected\":true}"
+    },
+    {
+      "t": 62092,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791102804448\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 62110,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791102804448\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 62119,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791102804448\",\"attempt\":1}"
+    },
+    {
+      "t": 62125,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 62125,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 62125,
+      "text": "Target Tab: NOT_FOUND"
+    },
+    {
+      "t": 62135,
+      "text": "Content Script: NOT_INJECTED"
+    },
+    {
+      "t": 62135,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791102804448\",\"attempt\":1,\"targetTab\":\"NOT_FOUND\",\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 62136,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791102804448\",\"connected\":true,\"targetTab\":\"NOT_FOUND\"}"
+    },
+    {
+      "t": 62136,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791102804448\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"NOT_FOUND\",\"contentScript\":\"NOT_INJECTED\"}"
+    },
+    {
+      "t": 62136,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791102804448\",\"connected\":true}"
+    },
+    {
+      "t": 77092,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791102819448\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 77101,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791102819448\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 77107,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791102819448\",\"attempt\":1}"
+    },
+    {
+      "t": 77119,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 77119,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 77119,
+      "text": "Target Tab: NOT_FOUND"
+    },
+    {
+      "t": 77119,
+      "text": "Content Script: NOT_INJECTED"
+    },
+    {
+      "t": 77119,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791102819448\",\"attempt\":1,\"targetTab\":\"NOT_FOUND\",\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 77119,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791102819448\",\"connected\":true,\"targetTab\":\"NOT_FOUND\"}"
+    },
+    {
+      "t": 77119,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791102819448\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"NOT_FOUND\",\"contentScript\":\"NOT_INJECTED\"}"
+    },
+    {
+      "t": 77119,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791102819448\",\"connected\":true}"
+    }
+  ],
+  "swLogs": [
+    {
+      "t": 17115,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791102759448\"}"
+    },
+    {
+      "t": 17116,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791102759448\"}"
+    },
+    {
+      "t": 17117,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791102759448\",\"targetFound\":false,\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 17118,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791102759448\",\"targetFound\":false}"
+    },
+    {
+      "t": 32101,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791102774448\"}"
+    },
+    {
+      "t": 32102,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791102774448\"}"
+    },
+    {
+      "t": 32102,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791102774448\",\"targetFound\":false,\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 32102,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791102774448\",\"targetFound\":false}"
+    },
+    {
+      "t": 47107,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791102789448\"}"
+    },
+    {
+      "t": 47108,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791102789448\"}"
+    },
+    {
+      "t": 47109,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791102789448\",\"targetFound\":false,\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 47113,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791102789448\",\"targetFound\":false}"
+    },
+    {
+      "t": 62123,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791102804448\"}"
+    },
+    {
+      "t": 62124,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791102804448\"}"
+    },
+    {
+      "t": 62124,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791102804448\",\"targetFound\":false,\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 62125,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791102804448\",\"targetFound\":false}"
+    },
+    {
+      "t": 77117,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791102819448\"}"
+    },
+    {
+      "t": 77118,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791102819448\"}"
+    },
+    {
+      "t": 77118,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791102819448\",\"targetFound\":false,\"urlOrigin\":\"\"}"
+    },
+    {
+      "t": 77119,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791102819448\",\"targetFound\":false}"
+    }
+  ],
+  "analysis": {
+    "submission": "{\"via\":\"button\",\"taFound\":true}",
+    "bodyText": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nHow can PrivAgent help?\n\nAutonomous browser navigation with provable on-device privacy. Sensitive data is masked locally before reasoning models ever see the page.\n\nStore Catalog Navigation\nNavigate to shopping catalog, explore listings, verify destination.\nSynthetic Banking Inspection\nCheck account balance & transactions with zero credential leakage.\nLocal DOM Privacy Test\nLocate interactive fields while masking account numbers locally.\nCatalog Exploration\nScroll through listing results and classify destination context.\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+    "watchdogLines": [],
+    "requestCount": 0,
+    "gaps": []
+  }
+}

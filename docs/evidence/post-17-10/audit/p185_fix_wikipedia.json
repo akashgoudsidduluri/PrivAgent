@@ -1,0 +1,585 @@
+{
+  "phase": "18.5",
+  "work": "PHASE 18.5 — LLM_REASONING watchdog timeout: real Chrome reproduction",
+  "labels": "PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND",
+  "inputs": {
+    "task": "open wikipedia",
+    "startUrl": "http://localhost:4174/",
+    "settleMs": 45000
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "reasoner": {
+      "mode": "groq",
+      "apiKeyConfigured": true,
+      "model": "openai/gpt-oss-20b",
+      "configuredFallback": "openrouter",
+      "reasonerClass": "GroqReasoner",
+      "keyValueNeverPrinted": true
+    }
+  },
+  "timeline": [
+    {
+      "t": 4498,
+      "wall": 1791104227776,
+      "status": "RUNNING",
+      "stage": null,
+      "phase": null,
+      "outcome": null,
+      "currentStep": 0,
+      "currentUrl": null
+    },
+    {
+      "t": 4520,
+      "wall": 1791104227798,
+      "status": "RUNNING",
+      "stage": null,
+      "phase": "PERCEPTION",
+      "outcome": "RUNNING",
+      "currentStep": 0,
+      "currentUrl": "https://www.wikipedia.com/"
+    },
+    {
+      "t": 4557,
+      "wall": 1791104227835,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "PLANNING",
+      "outcome": "RUNNING",
+      "currentStep": 0,
+      "currentUrl": "https://www.wikipedia.com/"
+    },
+    {
+      "t": 6243,
+      "wall": 1791104229521,
+      "status": "FAILED",
+      "stage": null,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "currentStep": 1,
+      "currentUrl": "https://www.wikipedia.org/"
+    },
+    {
+      "t": 6247,
+      "wall": 1791104229525,
+      "status": "FAILED",
+      "stage": null,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "currentStep": 1,
+      "currentUrl": "https://www.wikipedia.org/"
+    }
+  ],
+  "network": [
+    {
+      "t": 7824,
+      "kind": "request",
+      "requestId": "1087926.3",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 3360,
+      "status": 503,
+      "tResponse": 9127,
+      "tFinished": 9128,
+      "roundTripMs": 1304,
+      "telemetry": null,
+      "detail": "{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"http_client_error\",\"retryable\":false}"
+    }
+  ],
+  "dashboardLogs": [
+    {
+      "t": 6460,
+      "text": "[Adapter] START_TASK received {\"taskLength\":14}"
+    },
+    {
+      "t": 6461,
+      "text": "[AgentTrace] dashboard START_TASK received {\"taskLength\":14}"
+    },
+    {
+      "t": 6461,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791104226823\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 6481,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791104226823\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 6485,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791104226823\",\"attempt\":1}"
+    },
+    {
+      "t": 6488,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791104226823\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://localhost:4174\"}"
+    },
+    {
+      "t": 6489,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791104226823\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 6492,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 6493,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 6493,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 6494,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 6502,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791104226823\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 6502,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791104226823\",\"connected\":true}"
+    },
+    {
+      "t": 6503,
+      "text": "[AgentTrace] dashboard START_TASK posted to window {\"taskLength\":14,\"runId\":1}"
+    },
+    {
+      "t": 6504,
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": 6505,
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": 6513,
+      "text": "[Extension] message received {\"type\":\"START_TASK\"}"
+    },
+    {
+      "t": 7413,
+      "text": "[Adapter] response received {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":false,\"interactionPhase\":null,\"interactionOutcome\":null}"
+    },
+    {
+      "t": 7428,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":false,\"interactionPhase\":null}"
+    },
+    {
+      "t": 7441,
+      "text": "[Adapter] response received {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PERCEPTION\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 7442,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PERCEPTION\"}"
+    },
+    {
+      "t": 7475,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 7480,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\"}"
+    },
+    {
+      "t": 9157,
+      "text": "[Adapter] response received {\"status\":\"FAILED\",\"currentStep\":1,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\",\"interactionOutcome\":\"FAILED\"}"
+    },
+    {
+      "t": 9159,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"FAILED\",\"currentStep\":1,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\"}"
+    },
+    {
+      "t": 9162,
+      "text": "[Adapter] response received {\"status\":\"FAILED\",\"currentStep\":1,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\",\"interactionOutcome\":\"FAILED\"}"
+    },
+    {
+      "t": 9163,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"FAILED\",\"currentStep\":1,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\"}"
+    },
+    {
+      "t": 18526,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791104238887\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 18540,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791104238887\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 18540,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791104238887\",\"attempt\":1}"
+    },
+    {
+      "t": 18542,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791104238887\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://localhost:4174\"}"
+    },
+    {
+      "t": 18543,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791104238887\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 18545,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 18545,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 18545,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 18546,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 18546,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791104238887\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 18546,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791104238887\",\"connected\":true}"
+    },
+    {
+      "t": 33527,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791104253888\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 33544,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791104253888\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 33545,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791104253888\",\"attempt\":1}"
+    },
+    {
+      "t": 33553,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791104253888\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://localhost:4174\"}"
+    },
+    {
+      "t": 33553,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791104253888\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 33556,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 33556,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 33557,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 33557,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 33558,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791104253888\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 33559,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791104253888\",\"connected\":true}"
+    },
+    {
+      "t": 48526,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791104268887\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 48544,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791104268887\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 48545,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791104268887\",\"attempt\":1}"
+    },
+    {
+      "t": 48554,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791104268887\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://localhost:4174\"}"
+    },
+    {
+      "t": 48555,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791104268887\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 48557,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 48557,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 48558,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 48559,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 48560,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791104268887\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 48560,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791104268887\",\"connected\":true}"
+    }
+  ],
+  "swLogs": [
+    {
+      "t": 6476,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791104226823\"}"
+    },
+    {
+      "t": 6478,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791104226823\"}"
+    },
+    {
+      "t": 6478,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791104226823\",\"targetFound\":true,\"tabId\":547233245,\"urlOrigin\":\"http://localhost:4174\"}"
+    },
+    {
+      "t": 6478,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791104226823\",\"targetFound\":true}"
+    },
+    {
+      "t": 6509,
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": 6510,
+      "text": "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}"
+    },
+    {
+      "t": 6511,
+      "text": "[AgentTrace] service worker START_TASK received {\"taskLength\":14}"
+    },
+    {
+      "t": 6583,
+      "text": "TARGET_TAB_CANDIDATES [{\"id\":547233243,\"origin\":\"null\"},{\"id\":547233244,\"origin\":\"http://localhost:5173\"},{\"id\":547233245,\"origin\":\"http://localhost:4174\"}]"
+    },
+    {
+      "t": 6590,
+      "text": "TARGET_TAB_PROVISIONED {\"tabId\":547233246,\"origin\":\"https://www.wikipedia.com\"}"
+    },
+    {
+      "t": 6590,
+      "text": "[AgentTrace] target tab provisioned {\"tabId\":547233246,\"origin\":\"https://www.wikipedia.com\"}"
+    },
+    {
+      "t": 7366,
+      "text": "[PrivAgent SW] waitForTabLoad: complete event received {\"tabId\":547233246}"
+    },
+    {
+      "t": 7388,
+      "text": "TARGET_TAB_READY {\"tabId\":547233246,\"provisioned\":true}"
+    },
+    {
+      "t": 7388,
+      "text": "[AgentTrace] containment scope established {\"established\":true,\"rootHost\":\"wikipedia.com\",\"tabId\":547233246}"
+    },
+    {
+      "t": 7388,
+      "text": "TARGET_TAB_SELECTED {\"tabId\":547233246,\"origin\":\"https://www.wikipedia.com\",\"reason\":\"Provisioned from task destination: https://www.wikipedia.com\"}"
+    },
+    {
+      "t": 7388,
+      "text": "[AgentTrace] target resolved {\"tabId\":547233246}"
+    },
+    {
+      "t": 7398,
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": 7408,
+      "text": "TARGET_TAB_READY {\"tabId\":547233246}"
+    },
+    {
+      "t": 7409,
+      "text": "[AgentTrace] target content script ready {\"tabId\":547233246}"
+    },
+    {
+      "t": 7409,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PERCEPTION\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 7410,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"RUNNING\",\"currentStep\":0,\"reason\":\"Target tab discovered and ready. Starting visual privacy perception...\"}"
+    },
+    {
+      "t": 7436,
+      "text": "[AgentTrace] agent loop started {\"runId\":1}"
+    },
+    {
+      "t": 7452,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 7454,
+      "text": "[AgentTrace] long-horizon state {\"restoreStatus\":\"FRESH_NO_RECORD\",\"detail\":null,\"actionCount\":0,\"recoveryCount\":0,\"consecutiveNoProgress\":0,\"totalNoProgress\":0}"
+    },
+    {
+      "t": 7456,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 7457,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":0}"
+    },
+    {
+      "t": 7457,
+      "text": "[AgentTrace] harness cycle {\"cycle\":1,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:wikipedia.com\",\"withinScope\":true}"
+    },
+    {
+      "t": 7457,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":1,\"url\":\"https://www.wikipedia.com/\"}"
+    },
+    {
+      "t": 7672,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1265,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":16,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 7682,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 7725,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 7762,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":3,\"regionsConsidered\":3,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}"
+    },
+    {
+      "t": 7769,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":1,\"contextUrl\":\"https://www.wikipedia.org/\",\"worldModelId\":\"wm-g1-mutl7n6b-a9j6\"}"
+    },
+    {
+      "t": 7770,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1265,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":12,\"privacyFindingsCount\":16}"
+    },
+    {
+      "t": 7771,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"SEARCH\",\"pageState\":\"populated\",\"pageGeneration\":1,\"entityCount\":1,\"affordanceCount\":6}"
+    },
+    {
+      "t": 7806,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 7826,
+      "text": "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-mutl7n4a-nst7f-sg1\",\"category\":\"SEARCH\",\"description\":\"Enter search query \\\"wikipedia\\\" into search box\"}"
+    },
+    {
+      "t": 7826,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[\"NEW_PAGE\"],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":1,\"actions\":0,\"loop\":false,\"stalled\":false}"
+    },
+    {
+      "t": 9144,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 9145,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":1,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}"
+    },
+    {
+      "t": 9147,
+      "text": "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}"
+    },
+    {
+      "t": 9155,
+      "text": "[AgentTrace] M6 failed {\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}"
+    },
+    {
+      "t": 9155,
+      "text": "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\",\"runId\":1}"
+    },
+    {
+      "t": 9155,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 9155,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":1,\"reason\":\"Agent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\"}"
+    },
+    {
+      "t": 18537,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791104238887\"}"
+    },
+    {
+      "t": 18538,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791104238887\"}"
+    },
+    {
+      "t": 18539,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791104238887\",\"targetFound\":true,\"tabId\":547233245,\"urlOrigin\":\"http://localhost:4174\"}"
+    },
+    {
+      "t": 18539,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791104238887\",\"targetFound\":true}"
+    },
+    {
+      "t": 33540,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791104253888\"}"
+    },
+    {
+      "t": 33540,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791104253888\"}"
+    },
+    {
+      "t": 33543,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791104253888\",\"targetFound\":true,\"tabId\":547233245,\"urlOrigin\":\"http://localhost:4174\"}"
+    },
+    {
+      "t": 33543,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791104253888\",\"targetFound\":true}"
+    },
+    {
+      "t": 48540,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791104268887\"}"
+    },
+    {
+      "t": 48541,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791104268887\"}"
+    },
+    {
+      "t": 48543,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791104268887\",\"targetFound\":true,\"tabId\":547233245,\"urlOrigin\":\"http://localhost:4174\"}"
+    },
+    {
+      "t": 48544,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791104268887\",\"targetFound\":true}"
+    }
+  ],
+  "analysis": {
+    "submission": "{\"via\":\"composer\",\"value\":\"open wikipedia\"}",
+    "bodyText": "PrivAgent\nPRIVACY BROWSER AGENT\nTask Halted · Zero Leakage\nTools\nNew Task\nAlt+N\nCURRENT TASK\nopen wikipedia\nFAILED\nRECENT TASKS\nopen wikipedia\nFAILED · Just now\nopen wikipedia\nFAILED · Just now\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nopen wikipedia\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nFAILED\nFinished.\nStep 1 of 10\nFailed: the reasoning model was unavailable.\nAgent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\nTry Again\nAGENT ACTIVITY TIMELINE\n3 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\n!\nTask terminated safely\nHALTED\nAgent reasoning failed: Backend agent endpoint failed: HTTP 503: Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\nBROWSER CONTEXT\nCurrent Page\nwww.wikipedia.org/\nSemantic Type\nsearch\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+    "watchdogLines": [],
+    "requestCount": 1,
+    "gaps": [
+      {
+        "fromStage": null,
+        "toStage": "PERCEPTION",
+        "gapMs": 22
+      },
+      {
+        "fromStage": "PERCEPTION",
+        "toStage": "PLANNING",
+        "gapMs": 37
+      },
+      {
+        "fromStage": "PLANNING",
+        "toStage": "TERMINAL",
+        "gapMs": 1686
+      },
+      {
+        "fromStage": "TERMINAL",
+        "toStage": "TERMINAL",
+        "gapMs": 4
+      }
+    ]
+  }
+}

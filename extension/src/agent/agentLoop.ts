@@ -3008,6 +3008,48 @@ export class AgentLoop {
       }
       this.state.providerAttempts++;
       //
+      // PHASE 18.5 (F1) — REASONING LIVENESS.
+      //
+      // THE DEFECT. `notifyProgress()` was never called anywhere between
+      // entering reasoning and the provider resolving, so the dashboard's
+      // watchdog was anchored to the LAST message emitted BEFORE the reasoner
+      // was consulted. Nothing the loop did afterwards could re-arm it.
+      //
+      // The reasoning window is not one provider call. It is the WHOLE bounded
+      // retry budget: up to `providerRetries + 1` attempts, each able to run to
+      // the provider AbortController's 55s, separated by retry delays. With
+      // `providerRetries: 2` that is up to ~165s of legitimate, in-budget
+      // reasoning — against a 60s reasoning watchdog. The watchdog therefore
+      // fired while the loop was still working normally, marking a healthy
+      // slow reasoning run FAILED (WATCHDOG_TIMEOUT) before any action could
+      // execute and long before GoalVerifier was reachable.
+      //
+      // Measured on the real loop: a 5s provider await produced ZERO progress
+      // emissions (probe `p185_progress_during_reasoning.probe.test.ts`).
+      //
+      // THE FIX — one emission per ATTEMPT, immediately before the round trip,
+      // and only when another attempt will actually follow. A single bounded
+      // attempt is <=55s and is therefore already covered by the 60s reasoning
+      // window; the failure mode only exists when attempts ACCUMULATE. So
+      // emitting between attempts is the exact minimum needed, and it is what
+      // keeps the watchdog tracking the loop's real progress instead of a
+      // stale pre-reasoning timestamp.
+      //
+      // This is a LIVENESS signal only. It is the same `onStepProgress`
+      // projection the loop already sends, emitted no earlier than the attempt
+      // it describes. It grants no permission, reorders no gate, and cannot
+      // make a stalled reasoner look healthy: if an attempt never returns, its
+      // own 55s abort still fires and the next attempt's emission does not
+      // happen. Bounded execution and fail-closed behaviour are unchanged.
+      //
+      if (attempt > 0) {
+        this.notifyProgress();
+        console.info('[AgentTrace] reasoning retry attempt starting', {
+          attempt,
+          maxAttempts: this.providerRetries + 1,
+        });
+      }
+      //
       // PHASE 17.5 (F6): the watchdog timer is now CLEARED. It used to be
       // created per attempt and never cleared, leaving up to providerRetries+1
       // live 55s timers holding their closures after the step finished.
