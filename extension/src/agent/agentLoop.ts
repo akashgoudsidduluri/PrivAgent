@@ -66,6 +66,7 @@ import {
   createAgentTaskState,
   advancePageGeneration,
   invalidatePageGenerationState,
+  userFacingMessageForStatus,
 } from './agentState';
 import {
   verifyActionEffect,
@@ -113,6 +114,36 @@ import {
 import { AgentHarness, type HarnessDecision } from './harness';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import type { EvidenceLedger } from '../evidence/evidenceLedger';
+import { truncateClaim } from '../evidence/evidenceLedger';
+import {
+  verifyTerminalProposal,
+  MAX_SUPPORTED_ANSWER_CHARS,
+  type ProposalLedgerView,
+  type ProposalVerdict,
+} from './proposal';
+import type { ProviderStep } from './providerResponse';
+
+/**
+ * PHASE 18.7 / A1 — raised when the model proposed a terminal state and the
+ * local verifier produced a verdict.
+ *
+ * A SIGNAL, not a return value, and that is deliberate: the action dispatch
+ * pipeline is typed on `BrowserAction`, so there is no way to hand this back
+ * into it by accident. Nothing grounded, validated, risk-scored or executed
+ * happens on the way out.
+ */
+class TerminalProposalSignal extends Error {
+  constructor(readonly verdict: ProposalVerdict) {
+    super('Terminal proposal received.');
+    this.name = 'TerminalProposalSignal';
+  }
+}
+
+/** The view used when a loop runs with no ledger: locally observable as empty. */
+const EMPTY_LEDGER_VIEW: ProposalLedgerView = Object.freeze({
+  byIdSafe: () => undefined,
+  citable: () => [],
+});
 import {
   buildSemanticUnderstanding,
   SemanticUnderstandingOutput,
@@ -446,6 +477,12 @@ export class AgentLoop {
    * against rather than being unprovable.
    */
   private previousObservation: AgentContextPayload | undefined = undefined;
+  /**
+   * PHASE 18.7 (A2) — the task's evidence ledger, owned by the service worker and
+   * passed in. Read-only here: the loop never authors a record, it only reports
+   * what the ledger already holds.
+   */
+  private readonly evidenceLedger: EvidenceLedger | null;
   private readonly harness: AgentHarness | null;
   private memoryHints?: MemoryHints;
 
@@ -500,6 +537,10 @@ export class AgentLoop {
     this.longHorizonStore = options.longHorizonStore ?? createNoopStore();
     this.containmentScope = options.containmentScope ?? null;
     this.harness = options.harness ?? null;
+    // PHASE 18.7 / A1+A9 — the single evidence store for this task. Read-only
+    // here: the loop never authors a record, it only reads what the service
+    // worker observed and verifies proposals against it.
+    this.evidenceLedger = options.evidenceLedger ?? null;
     this.taskRunId = options.runId;
 
     this.state = createAgentTaskState('', {
@@ -1289,6 +1330,38 @@ export class AgentLoop {
         }
         action = singleActionCheck.action!;
       } catch (err: unknown) {
+        //        //
+        // PHASE 18.7 / A1 + A9. A terminal proposal is NOT a failure and NOT a
+        // success. It is the agent reporting what the LOCAL verifier could
+        // support, and the status it produces is one of the typed information
+        // states. `goalStatus` is left at the verifier's own verdict: only the
+        // GoalVerifier may report SUCCESS, and it has not run here.
+        //
+        if (err instanceof TerminalProposalSignal) {
+          const { verdict } = err;
+          const status = verdict.status;
+          if (status) {
+            this.state.status = status;
+            this.state.reason = userFacingMessageForStatus(status);
+            this.state.answer = verdict.supportedRecordIds.length
+              ? this.buildSupportedAnswer(verdict)
+              : undefined;
+            this.notifyProgress();
+            console.info('[AgentTrace] task terminated', {
+              status,
+              supportedRecords: verdict.supportedRecordIds.length,
+              downgraded: verdict.downgraded,
+            });
+            break;
+          }
+          // Nothing could be supported locally. The model proposed stopping
+          // without a basis we can reproduce, so the loop keeps acting rather
+          // than reporting a terminal state it cannot justify.
+          console.info('[AgentTrace] terminal proposal rejected; continuing', {
+            rejections: verdict.rejections,
+          });
+          continue;
+        }
         const msg = err instanceof Error ? err.message : String(err);
         this.state.status = 'FAILED';
         this.state.goalStatus = 'FAILED';
@@ -3003,6 +3076,54 @@ export class AgentLoop {
     });
   }
 
+  /**
+   * PHASE 18.7 / A1 — compose the reported answer from LOCAL evidence only.
+   *
+   * The model's `answer` prose is deliberately NOT used. It was a claim, the
+   * claim was checked, and the check is expressed by WHICH records survived it
+   * — so the text the user sees is assembled from the surviving records
+   * themselves. A model therefore cannot place a sentence in the answer that
+   * the device never observed, and the reported answer can never outrun the
+   * evidence that backs it.
+   */
+  private buildSupportedAnswer(verdict: ProposalVerdict): string | undefined {
+    if (!this.evidenceLedger) return undefined;
+    const claims: string[] = [];
+    for (const id of verdict.supportedRecordIds) {
+      const record = this.evidenceLedger.byIdSafe(id);
+      if (!record) continue;
+      // Only records that are still verified, current and sanitized may be
+      // shown. Re-checking here means a record invalidated between the verdict
+      // and the report is not printed.
+      if (record.verificationStatus !== 'VERIFIED') continue;
+      if (record.freshness !== 'CURRENT') continue;
+      if (record.privacyStatus !== 'SANITIZED') continue;
+      claims.push(record.claim);
+    }
+    if (claims.length === 0) return undefined;
+    return truncateClaim(claims.join(' '), MAX_SUPPORTED_ANSWER_CHARS);
+  }
+
+  /**
+   * PHASE 18.7 / A1 — ask the provider for one STEP.
+   *
+   * A provider that implements `requestStep` may answer with an action or an
+   * inert terminal proposal. One that does not (mock, OpenRouter) goes through
+   * the historical `requestAction` and can only ever produce an action, so
+   * adding the proposal path changed nothing for them.
+   */
+  private async requestStepFromProvider(
+    task: string,
+    context: AgentContextPayload,
+    history: BrowserAction[]
+  ): Promise<ProviderStep> {
+    const requestStep = this.provider.requestStep?.bind(this.provider);
+    if (!requestStep) {
+      return { kind: 'ACTION', action: await this.provider.requestAction(task, context, history) };
+    }
+    return requestStep(task, context, history);
+  }
+
   private async requestActionWithBoundedRetry(
     task: string,
     context: AgentContextPayload
@@ -3121,8 +3242,8 @@ export class AgentLoop {
             kept: historyForReasoner.length,
           });
         }
-        const action = await Promise.race([
-          this.provider.requestAction(task, context, historyForReasoner),
+        const providerStep = await Promise.race([
+          this.requestStepFromProvider(task, context, historyForReasoner),
           timeoutPromise,
         ]);
 
@@ -3142,7 +3263,34 @@ export class AgentLoop {
             { retryable: false, category: 'STALE_RESPONSE' }
           );
         }
-        return action;
+        //
+        // PHASE 18.7 / A1 — TERMINAL PROPOSAL.
+        //
+        // A proposal is checked against the evidence ledger THIS device holds,
+        // not against anything the model said about it. The stale-observation
+        // check above runs first, so a proposal computed from a superseded page
+        // is refused before it can be verified against the current one.
+        //
+        // The verdict is raised as a signal rather than returned as an action,
+        // so there is NO code path from a proposal to the dispatch pipeline
+        // below it. Nothing is grounded, validated, risk-scored or executed.
+        //
+        if (providerStep.kind === 'TERMINAL_PROPOSAL') {
+          const verdict = verifyTerminalProposal(
+            providerStep.proposal,
+            this.evidenceLedger ?? EMPTY_LEDGER_VIEW,
+            task
+          );
+          console.info('[AgentTrace] terminal proposal received', {
+            proposed: providerStep.proposal.kind,
+            status: verdict.status,
+            supportedRecords: verdict.supportedRecordIds.length,
+            downgraded: verdict.downgraded,
+          });
+          throw new TerminalProposalSignal(verdict);
+        }
+
+        return providerStep.action;
       } catch (err: unknown) {
         lastError = err;
         this.provider.registerFailure?.();

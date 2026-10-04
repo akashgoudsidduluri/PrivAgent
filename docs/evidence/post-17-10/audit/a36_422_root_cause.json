@@ -1,0 +1,114 @@
+{
+  "phase": "18.6",
+  "work": "A3/A6 — root-cause of the HTTP 422 seen in a36_verify_mine.json",
+  "labels": "PROVEN_REAL_BACKEND / ENVIRONMENTAL",
+  "inputs": {
+    "priorArtifact": "docs/evidence/post-17-10/audit/a36_verify_mine.json",
+    "task": "open wikipedia and find information about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar"
+  },
+  "observation": {
+    "priorNetwork": [
+      {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "method": "POST",
+        "postDataBytes": 9931,
+        "status": 422,
+        "detailPrefix": "[{\"type\":\"extra_forbidden\",\"loc\":[\"body\",\"context\",\"decision_state\"],\"msg\":\"Extra inputs are not permitted\""
+      }
+    ],
+    "dashboardSurfaced": "Agent reasoning failed: Backend agent endpoint failed: HTTP 422"
+  },
+  "rootCause": {
+    "verdict": "STALE_BACKEND_PROCESS",
+    "explanation": "The uvicorn serving port 8010 had etimes=13935s (~3.9h) and was launched WITHOUT --reload. It had been started before the A3/A6 backend change landed, so the in-memory AgentContextPayload still lacked `decision_state`. AgentContextPayload inherits StrictModel with extra='forbid', so a payload carrying the newly added field was rejected before any provider call. This is an environmental staleness artifact, NOT a defect in the A3/A6 payload contract and NOT a weakened schema.",
+    "notAProductBug": true,
+    "notWeakenedSchema": true
+  },
+  "proofs": [
+    {
+      "kind": "MODEL_LEVEL_CURRENT_TREE",
+      "claim": "The current working-tree AgentContextPayload ACCEPTS a payload carrying decision_state.",
+      "script": "scratch/a36_stale_backend_probe.py",
+      "observed": "current model accepts decision_state: True",
+      "roundTrippedKeys": [
+        "activeSubgoal",
+        "completedCriteria",
+        "destination",
+        "evidenceCount",
+        "goal",
+        "intent",
+        "lastAction",
+        "page",
+        "pendingCriteria",
+        "recovery",
+        "requiresEvidence",
+        "task"
+      ],
+      "exitCode": 0
+    },
+    {
+      "kind": "MODEL_LEVEL_HEAD",
+      "claim": "git HEAD backend/app/models.py does NOT contain decision_state at all, which is exactly why the stale process rejected it.",
+      "observed": "HEAD backend/app/models.py has decision_state: False"
+    },
+    {
+      "kind": "STRICTNESS_NOT_WEAKENED",
+      "claim": "extra='forbid' is intact: a genuinely unknown field is still rejected by the current model.",
+      "observed": "unknown field still rejected: True -> totally_unknown_field"
+    },
+    {
+      "kind": "LIVE_SERVER_SCHEMA",
+      "claim": "After restarting the backend, the live OpenAPI schema advertises decision_state and still forbids additional properties.",
+      "observed": {
+        "decision_state_in_live_schema": true,
+        "additionalProperties": false,
+        "allProps": [
+          "decision_state",
+          "detections",
+          "memory_hints",
+          "ocr_metrics",
+          "page_type",
+          "sanitized_status",
+          "screenshot_dimensions",
+          "semantic_context",
+          "sensitive_elements_detected",
+          "timestamp",
+          "total_elements_scanned",
+          "url",
+          "viewport"
+        ]
+      }
+    },
+    {
+      "kind": "REAL_CHROME_RERUN",
+      "artifact": "docs/evidence/post-17-10/audit/a36_verify_rerun.json",
+      "claim": "The identical real request now passes schema validation and fails only at the provider.",
+      "observed": {
+        "url": "http://127.0.0.1:8010/api/v1/agent/action",
+        "method": "POST",
+        "status": 503,
+        "detail": "{\"success\":false,\"reason\":\"Reasoning unavailable: groq (rate_limit) and fallback openrouter (http_client_error) failed.\",\"error_kind\":\"http_client_error\",\"retryable\":false}",
+        "previousStatus": 422
+      },
+      "interpretation": "422 is gone. The request is accepted by the model layer; the run now terminates at the provider. This is a real behavioural change observed in real Chrome against the real backend, not inferred."
+    }
+  ],
+  "concurrentContributorNote": "The A3/A6 implementation (backend/app/models.py, reasoner.py, routes/agent.py, extension/src/agent/decisionState.ts, actionHistory.ts, agentLoop.ts, background/serviceWorker.ts, privacy/types.ts) is the concurrent contributor's uncommitted work. No file belonging to it was modified or staged by this investigation. The probe under scratch/ is diagnostic only.",
+  "stillUnverifiedInRealChrome": {
+    "finding": "A3/A6",
+    "reason": "PROVIDER — Groq rate_limit and OpenRouter http_client_error are both exhausted, so the reasoner never produced a completion and the request envelope was never built. No llm_context capture was written for this run.",
+    "provedInThisRun": [
+      "intent classified MIXED_TASK requiresDestination:true requiresEvidence:true",
+      "evidence ledger updated ingested=24 ledgerSize=24 generation=2",
+      "the agent/action request is now schema-valid (503, not 422)"
+    ],
+    "notProved": [
+      "decision_state is serialized into the reasoner prompt at runtime",
+      "action history is serialized into the reasoner prompt at runtime",
+      "any completed agent step driven by decision state"
+    ],
+    "status": "IMPLEMENTED — NOT YET REAL-VERIFIED"
+  },
+  "classification": "ENVIRONMENTAL"
+}

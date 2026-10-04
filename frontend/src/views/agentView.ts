@@ -332,7 +332,16 @@ export class AgentView {
         state.status === 'NEEDS_USER_CONFIRMATION' ? 'badge-amber' :
         // PHASE 18.7 / I-1 — amber, like confirmation: the user is being asked
         // for something. It must not read as a completed run.
-        state.status === 'NEEDS_CLARIFICATION' ? 'badge-amber' : 'badge-gray'
+        state.status === 'NEEDS_CLARIFICATION' ? 'badge-amber' :
+        // PHASE 18.7 / A9 — information outcomes get their own badge, never the
+        // green of SUCCESS. An answer backed by verified evidence is a
+        // different claim from a verified task goal, and the colour must not
+        // blur the two.
+        state.status === 'ANSWER' ? 'badge-blue' :
+        state.status === 'PARTIAL' ? 'badge-amber' :
+        state.status === 'NEEDS_INFORMATION' ? 'badge-gray' :
+        state.status === 'CANNOT_VERIFY' ? 'badge-gray' :
+        state.status === 'PROVIDER_UNAVAILABLE' ? 'badge-red' : 'badge-gray'
       }`;
     }
 

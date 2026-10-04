@@ -327,6 +327,16 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     // executing browser session. Found by real-browser testing — the extension
     // unit suite passes while the dashboard still shows a running task.
     else if (data.status === 'NEEDS_CLARIFICATION') status = 'NEEDS_CLARIFICATION';
+    // PHASE 18.7 / A9. The typed information-task outcomes. They MUST be
+    // dispatched explicitly, exactly like NEEDS_CLARIFICATION above, because
+    // this mapping falls through to 'RUNNING' for anything unrecognised — which
+    // would render a finished answer as a still-executing browser session.
+    // None of them maps to SUCCESS: an answer is not a task success.
+    else if (data.status === 'ANSWER') status = 'ANSWER';
+    else if (data.status === 'PARTIAL') status = 'PARTIAL';
+    else if (data.status === 'NEEDS_INFORMATION') status = 'NEEDS_INFORMATION';
+    else if (data.status === 'CANNOT_VERIFY') status = 'CANNOT_VERIFY';
+    else if (data.status === 'PROVIDER_UNAVAILABLE') status = 'PROVIDER_UNAVAILABLE';
 
     // The stage MUST be derived before the watchdog is (re)armed. resetWatchdog()
     // chooses its window from `lastLifecycleStage`, so arming it first always
@@ -346,7 +356,9 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     // for SUCCESS/FAILED/STOPPED. Leaving it armed would eventually fire a
     // stall watchdog on a task that never started.
     if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED'
-        || status === 'NEEDS_CLARIFICATION') {
+        || status === 'NEEDS_CLARIFICATION' || status === 'ANSWER'
+        || status === 'PARTIAL' || status === 'NEEDS_INFORMATION'
+        || status === 'CANNOT_VERIFY' || status === 'PROVIDER_UNAVAILABLE') {
       this.clearWatchdog();
     } else if (status === 'RUNNING') {
       this.resetWatchdog();

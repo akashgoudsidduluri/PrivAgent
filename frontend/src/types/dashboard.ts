@@ -34,7 +34,26 @@ export type UIAgentStatus =
    * UNRECOGNISED status to `RUNNING`, which would otherwise have shown a
    * refused "hi" as a task still executing browser actions.
    */
-  | 'NEEDS_CLARIFICATION';
+  | 'NEEDS_CLARIFICATION'
+  /**
+   * PHASE 18.7 / A9 — typed information-task outcomes.
+   *
+   * These are TERMINAL and are NOT successes. An `ANSWER` means PrivAgent
+   * produced an answer backed by evidence it verified locally; it does NOT mean
+   * the task goal was met — only the GoalVerifier may report that, and these
+   * states are mapped so the dashboard can never present them as one.
+   *
+   * They exist because information outcomes previously collapsed into `FAILED`,
+   * which is untrue in both directions: it claims the agent failed when it in
+   * fact answered, and it claims the answer does not exist when in fact this
+   * page simply does not contain it.
+   */
+  | 'ANSWER'
+  | 'PARTIAL'
+  | 'NEEDS_INFORMATION'
+  | 'CANNOT_VERIFY'
+  /** The reasoning service was unreachable. Nothing was changed on the page. */
+  | 'PROVIDER_UNAVAILABLE';
 
 export type PipelineStage =
   | 'IDLE'

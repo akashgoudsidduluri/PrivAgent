@@ -423,17 +423,106 @@ class ReasoningTelemetry(StrictModel):
     clamped_fields: Optional[List[str]] = None
 
 
+class ProposalKind(str, Enum):
+    """
+    PHASE 18.7 / A1 — what the model PROPOSES to do next.
+
+    The model is a PROPOSER. It never decides an outcome. `ANSWER`,
+    `NEEDS_INFORMATION`, `PARTIAL` and `CANNOT_VERIFY` are claims the device
+    must independently check against the evidence ledger before anything is
+    reported to the user. Only the GoalVerifier may mark a task SUCCESS, and
+    an ANSWER proposal is not a SUCCESS.
+    """
+    ACTION = "ACTION"
+    ANSWER = "ANSWER"
+    NEEDS_INFORMATION = "NEEDS_INFORMATION"
+    PARTIAL = "PARTIAL"
+    CANNOT_VERIFY = "CANNOT_VERIFY"
+
+
+# Bounds for proposal text. These are PROPOSAL limits, not new egress limits:
+# the existing MAX_* action bounds are unchanged, and every value here is
+# still scanned by the text-safety layer before it can leave the backend.
+MAX_PROPOSAL_REASON_CHARS = 300
+MAX_PROPOSAL_ANSWER_CHARS = 1500
+MAX_PROPOSAL_QUESTION_CHARS = 300
+MAX_PROPOSAL_CITATIONS = 12
+MAX_PROPOSAL_ITEM_CHARS = 200
+
+
+class AgentProposal(StrictModel):
+    """
+    PHASE 18.7 / A1 — a structured proposal from the reasoner.
+
+    INERT BY CONSTRUCTION. Carrying no authority means, concretely:
+      - it carries no risk score, no Security Critic verdict, no containment
+        decision and no verifier internals;
+      - `citedEvidence` holds ledger RECORD IDS only, so a claim cannot cite
+        its own text — the device resolves the id against the ledger it holds;
+      - `answer` is model prose and is therefore UNTRUSTED: it is scanned by
+        the text-safety layer and re-checked against the ledger on device.
+
+    It is additive: `extra='forbid'` stays in force, so an unknown key is a
+    422 rather than a silently accepted field.
+    """
+    kind: ProposalKind
+    reason: Annotated[str, Field(min_length=1, max_length=MAX_PROPOSAL_REASON_CHARS)]
+    question: Optional[Annotated[str, Field(max_length=MAX_PROPOSAL_QUESTION_CHARS)]] = None
+    answer: Optional[Annotated[str, Field(max_length=MAX_PROPOSAL_ANSWER_CHARS)]] = None
+    cited_evidence: List[Annotated[str, Field(min_length=1, max_length=120)]] = Field(
+        default_factory=list, max_length=MAX_PROPOSAL_CITATIONS
+    )
+    missing: List[Annotated[str, Field(min_length=1, max_length=MAX_PROPOSAL_ITEM_CHARS)]] = Field(
+        default_factory=list, max_length=MAX_PROPOSAL_CITATIONS
+    )
+    # Present and required ONLY when kind == ACTION. The route guarantees it.
+    action: Optional[BrowserActionModel] = None
+
+    @model_validator(mode="after")
+    def _kind_shape(self) -> "AgentProposal":
+        if self.kind == ProposalKind.ACTION and self.action is None:
+            raise ValueError("[PrivAgent Security] An ACTION proposal must carry an action.")
+        if self.kind == ProposalKind.ANSWER and not (self.answer or "").strip():
+            raise ValueError("[PrivAgent Security] An ANSWER proposal must carry answer text.")
+        if self.kind in (ProposalKind.NEEDS_INFORMATION, ProposalKind.CANNOT_VERIFY) and self.action is not None:
+            raise ValueError(
+                "[PrivAgent Security] A non-ACTION proposal must not carry an action."
+            )
+        return self
+
+
 class AgentActionResponse(StrictModel):
     """
     Response containing the structured browser action and reasoning summary.
+
+    PHASE 18.7 / A1: `action` is now Optional and a sibling `proposal` was
+    added. This is WIDENING, not weakening — the response must still carry at
+    least one of the two, exactly one `action` can be executed, and every
+    action-only path is byte-for-byte unchanged because a response that has an
+    action and no proposal is exactly what it was before.
     """
     success: bool = True
-    action: BrowserActionModel
+    action: Optional[BrowserActionModel] = None
     reason: str
+    proposal: Optional[AgentProposal] = None
     telemetry: Optional[ReasoningTelemetry] = None
+
+    @model_validator(mode="after")
+    def _at_least_one(self) -> "AgentActionResponse":
+        if self.action is None and self.proposal is None:
+            raise ValueError(
+                "[PrivAgent Security] Response must carry an action or a proposal."
+            )
+        if self.action is not None and self.proposal is not None:
+            if self.proposal.kind != ProposalKind.ACTION or self.proposal.action is not self.action:
+                raise ValueError(
+                    "[PrivAgent Security] An ACTION proposal must be the same object as the response action."
+                )
+        return self
 
 
 AgentContextPayload.model_rebuild()
 AgentActionRequest.model_rebuild()
+AgentProposal.model_rebuild()
 AgentActionResponse.model_rebuild()
 

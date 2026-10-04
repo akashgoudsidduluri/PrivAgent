@@ -28,6 +28,7 @@
 
 import { AgentContextPayload } from '../privacy/types';
 import { BrowserAction } from './actionTypes';
+import type { ProviderStep } from './providerResponse';
 
 export interface AgentProvider {
   /** Stable display identifier, e.g. 'BackendAgentProvider'. */
@@ -46,6 +47,21 @@ export interface AgentProvider {
     history?: BrowserAction[],
     role?: ModelRole
   ): Promise<BrowserAction>;
+  /**
+   * PHASE 18.7 / A1 — request one step, which may be an action OR an inert
+   * terminal proposal.
+   *
+   * OPTIONAL, so every existing provider (mock, OpenRouter) keeps satisfying
+   * the interface unchanged. When it is absent the loop calls `requestAction`
+   * exactly as before, which means a provider that cannot express a proposal
+   * simply never produces one.
+   */
+  requestStep?(
+    task: string,
+    context: AgentContextPayload,
+    history?: BrowserAction[],
+    role?: ModelRole
+  ): Promise<ProviderStep>;
   reviewAction?(
     action: BrowserAction,
     task: string,

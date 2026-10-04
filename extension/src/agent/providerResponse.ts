@@ -406,6 +406,81 @@ export function validateProviderEnvelope(data: unknown): BrowserAction {
   return validateProviderAction(data.action);
 }
 
+/**
+ * PHASE 18.7 / A1 — one validated step, which is EITHER an action OR an inert
+ * terminal proposal.
+ *
+ * The two cases are mutually exclusive and a response carrying both is
+ * refused: a provider that states two contradictory things has produced an
+ * ambiguous step, and silently preferring one is how a model would smuggle an
+ * action past the terminal path.
+ *
+ * `validateProviderEnvelope` above is deliberately NOT relaxed. Its action-only
+ * rules, including the refusal when no action is present, are unchanged and
+ * still run in full whenever the response is an action.
+ */
+export type ProviderStep =
+  | { readonly kind: 'ACTION'; readonly action: BrowserAction }
+  | { readonly kind: 'TERMINAL_PROPOSAL'; readonly proposal: Readonly<Record<string, unknown>> };
+
+const TERMINAL_PROPOSAL_KEYS: ReadonlySet<string> = Object.freeze(
+  new Set(['kind', 'reason', 'question', 'answer', 'cited_evidence', 'citedEvidence', 'missing'])
+);
+
+export function validateProviderStep(data: unknown): ProviderStep {
+  if (!isPlainObject(data)) {
+    throw new ProviderError('Provider returned a non-object response envelope.', 'invalid_json', {
+      category: 'INVALID_JSON',
+    });
+  }
+  if (data.success !== true) {
+    throw new ProviderError('Provider reported an unsuccessful response.', 'unknown', {
+      category: 'UNKNOWN_PROVIDER_FAILURE',
+    });
+  }
+
+  const hasAction = data.action !== undefined && data.action !== null;
+  const hasProposal = isPlainObject(data.proposal);
+
+  if (hasAction && hasProposal) {
+    throw new ProviderError(
+      'Provider response contains both an action and a terminal proposal.',
+      'missing_action',
+      { category: 'SCHEMA_INVALID' }
+    );
+  }
+
+  if (hasAction) {
+    // Identical path, identical guards, identical exceptions.
+    return Object.freeze({ kind: 'ACTION' as const, action: validateProviderEnvelope(data) });
+  }
+
+  if (hasProposal) {
+    const raw = data.proposal as Record<string, unknown>;
+    // Allowlist at the boundary. An unknown key is REFUSED, not stripped, so a
+    // provider cannot hide a field the device never audits.
+    for (const key of Object.keys(raw)) {
+      if (!TERMINAL_PROPOSAL_KEYS.has(key)) {
+        throw new ProviderError(
+          `Provider terminal proposal carries an unexpected field: ${key}.`,
+          'missing_action',
+          { category: 'SCHEMA_INVALID' }
+        );
+      }
+    }
+    return Object.freeze({
+      kind: 'TERMINAL_PROPOSAL' as const,
+      proposal: Object.freeze({ ...raw }),
+    });
+  }
+
+  throw new ProviderError(
+    'Provider response contains neither an action nor a terminal proposal.',
+    'missing_action',
+    { category: 'SCHEMA_INVALID' }
+  );
+}
+
 // ── Stale-response identity ───────────────────────────────────────────────────
 
 /**
@@ -461,6 +536,6 @@ export interface ProviderTelemetryEvent {
   fallbackUsed: boolean;
   validation: 'PASS' | 'REFUSED' | 'NOT_RUN';
   actionType: string | null;
-  terminalOutcome: 'CONTINUE' | 'FAILED' | 'ABORTED' | 'PENDING';
+  terminalOutcome: 'CONTINUE' | 'FAILED' | 'ABORTED' | 'PENDING' | 'TERMINAL_PROPOSAL';
   latencyMs: number | null;
 }

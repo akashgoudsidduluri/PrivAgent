@@ -26,6 +26,8 @@ import {
   parseRetryAfter,
   readBoundedJsonBody,
   validateProviderEnvelope,
+  validateProviderStep,
+  type ProviderStep,
   type ProviderTelemetryEvent,
 } from './providerResponse';
 import { validateEgressPayload } from '../security/egressFirewall';
@@ -90,6 +92,30 @@ export class BackendAgentProvider implements AgentProvider {
     cycle = 0,
     attempt = 1
   ): Promise<BrowserAction> {
+    // PHASE 18.7 / A1. One request, two possible outcomes. `requestAction` is
+    // now a strict SUBSET of `requestStep`: it accepts an action and refuses
+    // anything else. The egress firewall, the payload stripping and every
+    // telemetry call live in `requestStep` exactly once, so the action path
+    // cannot drift from the terminal path.
+    const step = await this.requestStep(task, context, history, role, cycle, attempt);
+    if (step.kind !== 'ACTION') {
+      throw new ProviderError(
+        'Provider returned a terminal proposal where an action was required.',
+        'missing_action',
+        { category: 'SCHEMA_INVALID' }
+      );
+    }
+    return step.action;
+  }
+
+  async requestStep(
+    task: string,
+    context: AgentContextPayload,
+    history: BrowserAction[] = [],
+    role?: ModelRole,
+    cycle = 0,
+    attempt = 1
+  ): Promise<ProviderStep> {
     // 1. Verify sanitized context safety
     assertSanitizedContextSafe(context);
     //
@@ -200,15 +226,15 @@ export class BackendAgentProvider implements AgentProvider {
       // M5 still runs afterwards and remains the authority. This only means a
       // malformed response is refused HERE, at the boundary, instead of
       // travelling through the loop to be caught later.
-      const validated = validateProviderEnvelope(await readBoundedJsonBody(resp));
+      const validated = validateProviderStep(await readBoundedJsonBody(resp));
       this.recordTelemetry({
         ...base,
         category: 'OK',
         httpStatus: resp.status,
         retryable: false,
         validation: 'PASS',
-        actionType: validated.action,
-        terminalOutcome: 'CONTINUE',
+        actionType: validated.kind === 'ACTION' ? validated.action.action : null,
+        terminalOutcome: validated.kind === 'ACTION' ? 'CONTINUE' : 'TERMINAL_PROPOSAL',
         latencyMs: Date.now() - startedAt,
       });
       return validated;

@@ -623,6 +623,44 @@
   color: var(--text-muted);
 }
 
+/*
+ * PHASE 18.7 / A9 — typed information-task outcomes.
+ *
+ * ANSWER is deliberately BLUE, not green. Green means the GoalVerifier
+ * confirmed the task goal was met, and nothing here may look like that: an
+ * ANSWER means evidence was verified, which is a different and smaller claim.
+ * Using the success colour for it would let a user read "task complete" off a
+ * badge that does not say it.
+ *
+ * NEEDS_INFORMATION and CANNOT_VERIFY are NEUTRAL grey, because "we do not
+ * know" is not an error — nothing failed, the page simply did not contain it.
+ * PROVIDER_UNAVAILABLE is red because the task really did not get done.
+ */
+.agent-status-badge.ANSWER {
+  background: var(--status-blue-bg);
+  border: 1px solid var(--status-blue-border);
+  color: var(--status-blue);
+}
+
+.agent-status-badge.PARTIAL {
+  background: var(--status-amber-bg);
+  border: 1px solid var(--status-amber-border);
+  color: var(--status-amber);
+}
+
+.agent-status-badge.NEEDS_INFORMATION,
+.agent-status-badge.CANNOT_VERIFY {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+}
+
+.agent-status-badge.PROVIDER_UNAVAILABLE {
+  background: var(--status-red-bg);
+  border: 1px solid var(--status-red-border);
+  color: var(--status-red);
+}
+
 /* Safe Activity Bar / Live Status */
 .agent-live-summary-bar {
   display: flex;

@@ -32,6 +32,7 @@ from .. import config
 from ..models import (
     AgentActionRequest,
     AgentActionResponse,
+    AgentProposal,
     BrowserActionModel,
     ReasoningTelemetry,
 )
@@ -94,7 +95,10 @@ def _build_reasoner():
     response_model=AgentActionResponse,
     response_model_exclude_none=True,
     status_code=status.HTTP_200_OK,
-    summary="Agent Reasoning — one structured browser action from sanitized context",
+    summary=(
+        "Agent Reasoning — one structured browser action from sanitized context, "
+        "or an inert terminal proposal (PHASE 18.7 / A1)"
+    ),
 )
 async def generate_action(
     request: Request,
@@ -312,6 +316,54 @@ async def generate_action(
                     "retryable": rate_limited,
                 },
             )
+
+    # PHASE 18.7 / A1 — TERMINAL PROPOSAL RELAY.
+    #
+    # When the model proposed a terminal state instead of a browser action,
+    # NOTHING is dispatched and NOTHING is verified here. This handler's only
+    # job is to relay an inert claim to the device, where the evidence ledger
+    # and the GoalVerifier live.
+    #
+    # Explicitly NOT done here, and deliberately so:
+    #   - the proposal is never turned into SUCCESS (that is the GoalVerifier's
+    #     sole authority, and it is unchanged);
+    #   - a citation is never resolved against a ledger — only the device holds
+    #     one, and resolving it anywhere else would let the model supply both
+    #     the claim and its proof;
+    #   - no gate is skipped, because no action exists to gate.
+    if result.raw_proposal is not None:
+        try:
+            proposal = AgentProposal.model_validate(result.raw_proposal)
+        except PydanticValidationError as err:
+            logger.warning(
+                "Reasoner terminal proposal refused by proposal validation (%d error(s)): %s",
+                err.error_count(),
+                err,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail={
+                    "success": False,
+                    "reason": "Reasoner produced an invalid terminal proposal.",
+                    "error_kind": "invalid_action",
+                    "retryable": False,
+                },
+            )
+        return AgentActionResponse(
+            success=True,
+            action=None,
+            reason=proposal.reason,
+            proposal=proposal,
+            telemetry=ReasoningTelemetry(
+                provider=effective_provider,
+                role=body.model_role or "FAST",
+                latency_ms=round(result.latency_ms, 1),
+                attempts=result.attempts,
+                fallback_used=fallback_used,
+                # Field NAMES only, never content (PHASE 18.5 / I-3).
+                clamped_fields=list(last_clamped_fields) or None,
+            ),
+        )
 
     # 2. LLM output is UNTRUSTED: defensive normalization + strict schema validation.
     try:

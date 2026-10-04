@@ -1,0 +1,84 @@
+{
+  "phase": "18.7",
+  "work": "A1 + A9 — real Chrome run; exposes a FALSE SUCCESS that blocks A5",
+  "labels": "PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND / PROVEN_REAL_PROVIDER",
+  "artifact": "docs/evidence/post-17-10/audit/a19_real_run.json",
+  "inputs": {
+    "task": "tell me about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "settleMs": 50000,
+    "cdpPort": 9985,
+    "dashboard": "http://localhost:5173",
+    "backend": "http://127.0.0.1:8010",
+    "extension": "production dist/, loaded unpacked into real Chromium 153.0.8010.12"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "reasoner": "groq / openai/gpt-oss-20b, key configured",
+    "providerReachable": true,
+    "note": "This is the first run in this pass where BOTH providers had recovered capacity, so the backend was genuinely live rather than failing at the provider."
+  },
+  "whatActuallyHappened": {
+    "intentClassified": {
+      "intent": "INFORMATION_REQUEST",
+      "requiresDestination": false,
+      "requiresEvidence": true,
+      "admitsBrowserAutomation": true
+    },
+    "perception": {
+      "semanticFacts": 24,
+      "regionsConsidered": 33,
+      "visualRegions": 96,
+      "privacyFindings": 37,
+      "pageType": "ARTICLE",
+      "entityCount": 5,
+      "affordanceCount": 6,
+      "droppedSensitive": 0,
+      "quarantinedInjection": 0
+    },
+    "evidenceLedger": { "ingested": 24, "ledgerSize": 24, "generation": 2 },
+    "reasonerCalls": 0,
+    "networkRequestsToApiV1": 0,
+    "browserActionsDispatched": 0,
+    "terminalStatus": "SUCCESS",
+    "terminalReason": "Goal achieved.",
+    "secondaryLine": "Destination verified: article · 99% confidence",
+    "timeline": [
+      { "t": 3694, "status": "RUNNING", "phase": null, "currentStep": 0 },
+      { "t": 3734, "status": "RUNNING", "phase": "PERCEPTION", "currentStep": 0 },
+      { "t": 3757, "status": "IN_PROGRESS", "phase": "PLANNING", "currentStep": 0 },
+      { "t": 4550, "status": "SUCCESS", "phase": "TERMINAL", "currentStep": 0 },
+      { "t": 4556, "status": "SUCCESS", "phase": "TERMINAL", "currentStep": 0 }
+    ]
+  },
+  "finding": {
+    "id": "FALSE-SUCCESS-INFORMATION-TASK",
+    "severity": "HIGH",
+    "statement": "The GoalVerifier reports task SUCCESS for an information task in ~800 ms with ZERO reasoner calls, ZERO dispatched actions and ZERO verified evidence, while the dashboard simultaneously shows 'No result yet.'.",
+    "selfContradictionOnScreen": {
+      "headline": "SUCCESS — Goal achieved.",
+      "sameViewport": "No result yet."
+    },
+    "whyItMatters": "This is the exact failure the architecture forbids. `ANSWER ≠ SUCCESS` is supposed to hold in both directions: an answer must not be reported as task success, AND a task must not be reported as successful when no answer was ever produced. This run violates the second. A user is told the agent accomplished something while the agent did nothing and learned nothing.",
+    "attribution": "Pre-existing GoalVerifier behaviour, NOT introduced by A1/A9. It is what A5 exists to close, and this run is the real-browser proof that A5 is required rather than optional.",
+    "specificMechanism": "The loop exits as soon as the destination is verified and the perceived page satisfies the existing condition-2c rule. Condition 2c is gated on a `reportIntent` regex that matches 'tell me about charminar', so the task is scored satisfied by page evidence alone — before the model has been consulted and before any record has been promoted to VERIFIED."
+  },
+  "a1a9RealBrowserStatus": {
+    "status": "IMPLEMENTED — NOT YET REAL-VERIFIED",
+    "provedInThisRun": [
+      "The new A1/A9 build loads in real Chrome without breaking the extension: perception, privacy fusion, semantic understanding, the evidence ledger and the intent boundary all behaved identically to the previous real runs.",
+      "A4's pageType fix held in the real browser: pageType ARTICLE on the article page.",
+      "A2's evidence ledger ingested 24 records with 0 dropped-sensitive and 0 quarantined-injection.",
+      "No regression: 2541/2541 vitest, 640/640 pytest, tsc 0, both builds 0."
+    ],
+    "notProved": [
+      "That the model can actually return an ANSWER proposal at runtime. The reasoner was never called in this run, so the new prompt contract and the new parser were never exercised end to end in a browser.",
+      "That a terminal proposal reaches the loop and is verified against the ledger.",
+      "That the dashboard renders the ANSWER / PARTIAL / NEEDS_INFORMATION / CANNOT_VERIFY / PROVIDER_UNAVAILABLE badges. Those states were never produced in a browser.",
+      "That `this.state.answer`, composed from verified ledger records, reaches the user."
+    ],
+    "whyNotProved": "The run terminated at step 0 before any reasoner call, so the entire proposal path was bypassed. Reaching it requires A5: until SUCCESS requires verified evidence, an information task exits before the model is ever asked."
+  },
+  "classification": "PROVEN_REAL_CHROME — defect is REAL and must not be presented as closed",
+  "nextRequiredWork": "A5 — generalise GoalVerifier condition 2c into a `requiresEvidence` rule keyed on the I-1 intent, retaining every existing guard, such that SUCCESS is unreachable without at least one VERIFIED + CURRENT ledger record matching the question's subject term. This run is the acceptance test: after A5, this exact task must NOT report SUCCESS with zero reasoner calls."
+}

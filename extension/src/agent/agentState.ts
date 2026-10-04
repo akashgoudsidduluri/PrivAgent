@@ -38,7 +38,74 @@ export type TaskStatus =
   | 'FAILED'
   | 'NEEDS_USER_CONFIRMATION'
   | 'STOPPED'
-  | 'NEEDS_CLARIFICATION';
+  | 'NEEDS_CLARIFICATION'
+  // PHASE 18.7 / A9 — typed terminal states for information tasks.
+  //
+  // These exist because ambiguity had no terminal representation, so every
+  // information outcome collapsed into `FAILED`, which is a lie in both
+  // directions: it claims the agent tried and could not, when in fact the
+  // agent succeeded and answered.
+  //
+  // Two invariants are structural, not documentary:
+  //   ANSWER ≠ SUCCESS — none of these grants goal satisfaction. Only the
+  //     GoalVerifier may report SUCCESS, and it is unchanged.
+  //   UNKNOWN ≠ ABSENCE — `NEEDS_INFORMATION` says the answer is not known
+  //     here; it never says the answer does not exist.
+  | 'ANSWER'
+  | 'PARTIAL'
+  | 'NEEDS_INFORMATION'
+  | 'CANNOT_VERIFY'
+  // A provider that could not be reached is a truthful non-action state. It
+  // exists so a rate limit is never reported as a task outcome.
+  | 'PROVIDER_UNAVAILABLE';
+
+/** Every status the loop can rest in. */
+export const TERMINAL_TASK_STATUSES: readonly TaskStatus[] = Object.freeze([
+  'SUCCESS',
+  'FAILED',
+  'STOPPED',
+  'NEEDS_USER_CONFIRMATION',
+  'NEEDS_CLARIFICATION',
+  'ANSWER',
+  'PARTIAL',
+  'NEEDS_INFORMATION',
+  'CANNOT_VERIFY',
+  'PROVIDER_UNAVAILABLE',
+]);
+
+export function isTerminalTaskStatus(status: TaskStatus): boolean {
+  return TERMINAL_TASK_STATUSES.includes(status);
+}
+
+/**
+ * Exactly one user-facing message per terminal state (A9).
+ *
+ * Each says what actually happened. None of them claims a goal was achieved,
+ * and `NEEDS_INFORMATION` is worded so it cannot be read as "there is no
+ * answer" — only as "this page cannot supply it".
+ */
+const USER_FACING_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
+  SUCCESS: 'The task goal was verified as met.',
+  FAILED: 'The task could not be completed.',
+  STOPPED: 'The task was stopped before it finished.',
+  NEEDS_USER_CONFIRMATION: 'This action needs your confirmation before it can run.',
+  NEEDS_CLARIFICATION:
+    'That request is too vague to act on. Tell me which site, app or thing you mean.',
+  ANSWER: 'Answered from evidence verified on this page.',
+  PARTIAL: 'Partly answered. Some of what was asked could not be verified here.',
+  NEEDS_INFORMATION:
+    'This page does not contain what was asked. Try a different page or add detail.',
+  CANNOT_VERIFY: 'There was nothing on this page that could be checked.',
+  PROVIDER_UNAVAILABLE:
+    'The reasoning service was unavailable, so nothing was changed on the page.',
+});
+
+export function userFacingMessageForStatus(status: TaskStatus): string {
+  const message = USER_FACING_MESSAGES[status];
+  // An unmapped status is a bug, not a licence to invent copy. Fall back to
+  // the honest non-action wording rather than to anything implying success.
+  return message ?? 'The task ended without a verified outcome.';
+}
 
 export type PageCategory =
   | 'search'
@@ -291,6 +358,19 @@ export interface AgentTaskState extends TaskState {
   // Goal tracking
   taskGoal: string;
   normalizedGoal: string;
+
+  /**
+   * PHASE 18.7 / A1 + A9. Set only for the typed information states, and only
+   * with text COMPOSED FROM THE EVIDENCE LEDGER this device verified — never
+   * from the model's own prose.
+   *
+   * This is the difference between "the model said X" and "PrivAgent observed
+   * X". A model's answer is a claim; it is checked against local evidence and
+   * then discarded. What the user is shown is assembled from the records that
+   * passed the local verifier, so a model cannot put words in the answer that
+   * the device never observed.
+   */
+  answer?: string;
 
   // Browser targets
   targetTabId: number | null;

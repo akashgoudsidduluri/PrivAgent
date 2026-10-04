@@ -169,7 +169,7 @@ class ReasoningResult:
     BrowserActionModel (and the extension re-validates again via M5).
     """
 
-    raw_action: Dict[str, Any]
+    raw_action: Optional[Dict[str, Any]]
     model: str
     latency_ms: float
     attempts: int
@@ -177,6 +177,12 @@ class ReasoningResult:
     # clamped to their bound. Empty when nothing was clamped. Carried so the
     # clamp is reported rather than silent.
     clamped_fields: List[str] = field(default_factory=list)
+    # PHASE 18.7 / A1. Set ONLY when the model proposed a terminal state
+    # (ANSWER / PARTIAL / NEEDS_INFORMATION / CANNOT_VERIFY). When present,
+    # `raw_action` is None and NOTHING is dispatched. This is an inert claim:
+    # the route relays it and the extension verifies it against the evidence
+    # ledger before anything is reported to the user.
+    raw_proposal: Optional[Dict[str, Any]] = None
 
 
 # ── Provider contract (server side) ───────────────────────────────────────────
@@ -539,6 +545,11 @@ def _build_user_prompt(
     max_steps: int,
     page_type: Optional[str] = None,
     semantic_context: Optional[Dict[str, Any]] = None,
+    # PHASE 18.7 / A1. Additive and DEFAULTED: absent (None) simply means no
+    # evidence list was rendered, and the closing instruction then truthfully
+    # advertises zero citable ids. Optional on purpose, so this commit does not
+    # depend on, and does not have to modify, the decision-state plumbing.
+    decision_state: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Build the user prompt and, when capture is enabled, record it.
 
@@ -600,6 +611,11 @@ def _render_user_prompt(
     max_steps: int,
     page_type: Optional[str] = None,
     semantic_context: Optional[Dict[str, Any]] = None,
+    # PHASE 18.7 / A1. Additive and DEFAULTED: absent (None) simply means no
+    # evidence list was rendered, and the closing instruction then truthfully
+    # advertises zero citable ids. Optional on purpose, so this commit does not
+    # depend on, and does not have to modify, the decision-state plumbing.
+    decision_state: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Build the user prompt strictly from allowlisted sanitized fields.
 
@@ -876,13 +892,62 @@ def _render_user_prompt(
             "If the task needs an element, scroll to find it; do not guess an ID."
         )
 
-    parts.append('Respond with the single JSON action object now.')
+    # PHASE 18.7 / A1. The model may now PROPOSE a terminal answer, not only a
+    # browser action. The instruction is generated from the evidence list that
+    # was actually rendered above, so the count it quotes cannot go stale.
+    parts.append(_proposal_instruction(_count_evidence_references(decision_state)))
     return "\n\n".join(parts)
 
 
 # ── Output parsing (LLM output is UNTRUSTED) ─────────────────────────────────
 
 _FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$")
+
+
+def _extract_model_json(content: str) -> Dict[str, Any]:
+    """Strip fences, pull out the first JSON object, and bound the completion.
+
+    Shared by the action-only and the proposal-aware parsers so neither can
+    drift from the other on the defensive-parsing rules.
+    """
+    if not content or not content.strip():
+        raise ReasoningError("Model returned an empty response.", kind="empty_response")
+
+    # Phase 3: bounded processing — a huge completion cannot cause unbounded work.
+    if len(content) > MAX_RESPONSE_CONTENT_CHARS:
+        raise ReasoningError(
+            f"Model response exceeds the {MAX_RESPONSE_CONTENT_CHARS}-character limit.",
+            kind="unexpected_format",
+        )
+
+    text = _FENCE_RE.sub("", content.strip()).strip()
+
+    # Prefer a fenced/embedded JSON object if the model added chatter.
+    candidates: List[str] = [text]
+    brace_start = text.find("{")
+    brace_end = text.rfind("}")
+    if brace_start != -1 and brace_end > brace_start:
+        candidates.insert(0, text[brace_start : brace_end + 1])
+
+    parsed: Any = None
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+            break
+        except json.JSONDecodeError:
+            continue
+
+    if parsed is None:
+        snippet = text[:120].replace("\n", " ")
+        raise ReasoningError(
+            f"Model output is not valid JSON: {snippet}",
+            kind="invalid_json",
+        )
+
+    if not isinstance(parsed, dict) or isinstance(parsed, list):
+        raise ReasoningError("Model output is not a JSON object.", kind="invalid_json")
+
+    return parsed
 
 
 def parse_model_action(content: str) -> Dict[str, Any]:
@@ -937,6 +1002,16 @@ def parse_model_action(content: str) -> Dict[str, Any]:
 
     action = parsed.get("action")
     if not isinstance(action, str) or not action.strip():
+        # PHASE 18.7 / A1: the model may legitimately answer instead of acting.
+        # That is NOT a malformed response — it is a proposal. Report it as a
+        # distinct condition rather than as a missing-action contract violation,
+        # but only when a well-formed proposal envelope is actually present.
+        proposal = parsed.get("proposal")
+        if isinstance(proposal, dict) and isinstance(proposal.get("kind"), str):
+            raise ReasoningError(
+                "Model proposed a terminal state instead of an action.",
+                kind="proposal_without_action",
+            )
         raise ReasoningError('Model output missing a valid "action" field.', kind="missing_action")
 
     # Phase 3: reject oversized model-emitted DECISION fields (no silent
@@ -963,6 +1038,242 @@ def parse_model_action(content: str) -> Dict[str, Any]:
     last_clamped_fields[:] = _clamp_diagnostic_fields(parsed)
 
     return parsed
+
+
+# ── PHASE 18.7 / A1 — the proposal contract ───────────────────────────────────
+#
+# The model is a PROPOSER. It may propose what to do next: a browser action, or
+# a terminal answer. What it may NEVER do is decide that the task succeeded.
+# Everything below parses and bounds a proposal; nothing here promotes one,
+# and nothing here grants a permission.
+
+PROPOSAL_KINDS = ("ACTION", "ANSWER", "NEEDS_INFORMATION", "PARTIAL", "CANNOT_VERIFY")
+
+# Text the model authored inside a proposal. Every one of these is UNTRUSTED
+# prose and runs through the same scanner as `reason` — a claim is no safer
+# than a justification.
+_PROPOSAL_TEXT_FIELDS = ("reason", "question", "answer")
+_PROPOSAL_TEXT_LIST_FIELDS = ("missing",)
+_PROPOSAL_ID_LIST_FIELDS = ("citedEvidence",)
+
+
+@dataclass
+class ParsedProposal:
+    """Outcome of parsing one model completion.
+
+    Exactly one of `action` / `proposal` is populated. An ACTION proposal
+    keeps the historical action dict verbatim so every existing action-only
+    code path downstream is byte-for-byte unchanged.
+    """
+
+    action: Optional[Dict[str, Any]] = None
+    proposal: Optional[Dict[str, Any]] = None
+    clamped_fields: List[str] = field(default_factory=list)
+
+
+def _scan_proposal_text(value: Any, label: str) -> None:
+    if not isinstance(value, str):
+        return
+    finding = scan_reason_text(value)
+    if finding:
+        raise ReasoningError(
+            f"Model-emitted proposal {label} rejected by text-safety scan "
+            f"(rule={finding.rule}).",
+            kind="invalid_action",
+        )
+
+
+def parse_model_proposal(content: str) -> ParsedProposal:
+    """Parse one completion into EITHER an action dict OR a terminal proposal.
+
+    Backward compatible by construction: a completion shaped exactly as it was
+    before (`{"action": "...", ...}`) takes the identical code path and yields
+    the identical dict, so no existing action-only behaviour changes.
+
+    The new shape is `{"proposal": {"kind": ..., ...}}`. `kind: ACTION` must
+    carry a nested `action` object and behaves like the legacy shape.
+
+    Deliberately NOT accepted here: any unknown `kind`, an ACTION proposal with
+    no action, a non-ACTION proposal that smuggles an action, or a missing
+    `reason`. Each is a contract violation and is rejected rather than coerced.
+    """
+    parsed = _extract_model_json(content)
+
+    envelope = parsed.get("proposal")
+    if envelope is None:
+        # Legacy action-only completion. Delegate so the rules cannot drift.
+        action = parse_model_action(content)
+        return ParsedProposal(action=action, clamped_fields=list(last_clamped_fields))
+
+    if not isinstance(envelope, dict):
+        raise ReasoningError(
+            "Model output has a non-object 'proposal'.", kind="invalid_json"
+        )
+
+    # A completion carrying BOTH a top-level action and an envelope states two
+    # contradictory things. Rather than silently preferring one — which would
+    # let a model smuggle an action past the terminal-state path — refuse it.
+    top_level_action = parsed.get("action")
+    if isinstance(top_level_action, str) and top_level_action.strip():
+        raise ReasoningError(
+            "Model output has both a top-level action and a proposal envelope.",
+            kind="unexpected_format",
+        )
+
+    kind = envelope.get("kind")
+    if not isinstance(kind, str) or kind not in PROPOSAL_KINDS:
+        raise ReasoningError(
+            f"Model proposed an unknown kind ({kind!r}); allowed: {', '.join(PROPOSAL_KINDS)}.",
+            kind="unknown_proposal_kind",
+        )
+
+    reason = envelope.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        raise ReasoningError(
+            'Model proposal missing a valid "reason".', kind="missing_action"
+        )
+    # Scan the FULL reason before applying its bound, exactly as the action path
+    # does. A bound must never become a way to park unscanned text past the
+    # safety layer.
+    _scan_proposal_text(reason, "reason")
+    if len(reason) > MAX_REASON_CHARS:
+        raise ReasoningError(
+            f"Model proposal reason exceeds the {MAX_REASON_CHARS}-character limit.",
+            kind="unexpected_format",
+        )
+
+    if kind == "ACTION":
+        nested = envelope.get("action")
+        if not isinstance(nested, dict):
+            raise ReasoningError(
+                "ACTION proposal must carry an action object.", kind="missing_action"
+            )
+        if not isinstance(nested.get("action"), str) or not str(nested["action"]).strip():
+            raise ReasoningError(
+                'ACTION proposal is missing a valid "action" field.', kind="missing_action"
+            )
+        # Merge the envelope reason so downstream `reason` handling is identical.
+        nested.setdefault("reason", reason)
+        _enforce_field_limits(nested)
+        # Reuse the canonical action parser for its remaining guards (text/option
+        # scans, field limits, clamping) by feeding it the merged action.
+        action = parse_model_action(json.dumps(nested))
+        return ParsedProposal(action=action, clamped_fields=list(last_clamped_fields))
+
+    # Terminal proposal kinds. Scan EVERY model-authored string BEFORE it can
+    # reach the response, exactly as `reason` is scanned in the action path.
+    for field_name in _PROPOSAL_TEXT_FIELDS:
+        _scan_proposal_text(envelope.get(field_name), field_name)
+    for field_name in _PROPOSAL_TEXT_LIST_FIELDS:
+        for item in envelope.get(field_name) or []:
+            _scan_proposal_text(item, field_name)
+    for field_name in _PROPOSAL_ID_LIST_FIELDS:
+        for item in envelope.get(field_name) or []:
+            _scan_proposal_text(item, field_name)
+
+    if kind == "ANSWER" and not str(envelope.get("answer") or "").strip():
+        raise ReasoningError(
+            "ANSWER proposal must carry answer text.", kind="missing_action"
+        )
+    if envelope.get("action") is not None:
+        raise ReasoningError(
+            f"A {kind} proposal must not carry an action.", kind="unknown_proposal_kind"
+        )
+
+    # Normalize the citation list to short opaque strings. A citation is a
+    # ledger RECORD ID the device resolves itself — never the model's own copy
+    # of the fact, which would let it "prove" a claim it invented.
+    citations: List[str] = []
+    for item in envelope.get("citedEvidence") or []:
+        if isinstance(item, str) and item.strip():
+            citations.append(item.strip()[:120])
+        if len(citations) >= 12:
+            break
+
+    missing: List[str] = []
+    for item in envelope.get("missing") or []:
+        if isinstance(item, str) and item.strip():
+            missing.append(item.strip()[:200])
+        if len(missing) >= 12:
+            break
+
+    normalized: Dict[str, Any] = {
+        "kind": kind,
+        "reason": reason,
+        "cited_evidence": citations,
+        "missing": missing,
+    }
+    if isinstance(envelope.get("question"), str):
+        normalized["question"] = envelope["question"][:300]
+    if isinstance(envelope.get("answer"), str):
+        normalized["answer"] = envelope["answer"][:1500]
+
+    return ParsedProposal(proposal=normalized)
+
+
+def _count_evidence_references(decision_state: Optional[Dict[str, Any]]) -> int:
+    """How many evidence ids the model was actually shown in this prompt.
+
+    Derived from the rendered decision state, never from a hardcoded number, so
+    the instruction cannot advertise ids that were not sent.
+    """
+    if not isinstance(decision_state, dict):
+        return 0
+    evidence = decision_state.get("evidence")
+    if not isinstance(evidence, list):
+        return 0
+    return sum(1 for item in evidence if isinstance(item, dict))
+
+
+def _proposal_instruction(evidence_reference_count: int) -> str:
+    """The closing instruction: propose, never decide.
+
+    Kept as a function so the reference count in the prompt is never a stale
+    hardcoded number.
+    """
+    return (
+        "Respond with ONE JSON object and nothing else. It must be exactly one of:\n"
+        '{"action": "<click|type|scroll|select|navigate|pressKey>", ..., "reason": "..."}\n'
+        'or {"proposal": {"kind": "ACTION|ANSWER|NEEDS_INFORMATION|PARTIAL|CANNOT_VERIFY", '
+        '"reason": "...", '
+        '"answer": "...", "citedEvidence": ["<evidence-record-id>"], "missing": ["..."], '
+        '"action": {<action object>}}}\n\n'
+        "Use kind=ACTION (or the bare action form) whenever another browser step could "
+        "still help. Use a terminal kind ONLY when no further step can help:\n"
+        "  ANSWER            — you can answer now; give `answer` and cite evidence "
+        f"record ids from the evidence list ({evidence_reference_count} available).\n"
+        "  PARTIAL           — you can answer part of it; give `answer`, cite what you "
+        "have, and list what is still missing in `missing`.\n"
+        "  NEEDS_INFORMATION — you need something the page does not contain; say what.\n"
+        "  CANNOT_VERIFY     — verification is impossible on this page.\n\n"
+        "You are proposing, not deciding. An ANSWER is not a success: the device checks "
+        "every cited id against its own evidence ledger and only its GoalVerifier may "
+        "report a task as successful. Never claim a goal is complete. Never invent an "
+        "evidence id — an id you did not read in the evidence list cannot be cited.\n\n"
+        "Respond with the single JSON object now."
+    )
+
+
+def _result_from_content(
+    content: str,
+    model: str,
+    latency_ms: float,
+    attempts: int,
+) -> "ReasoningResult":
+    """Single place a completion becomes a `ReasoningResult`.
+
+    PHASE 18.7 / A1: every provider goes through here, so a proposal is
+    recognised identically no matter which provider answered, and no provider
+    can accidentally reintroduce the action-only assumption.
+    """
+    parsed = parse_model_proposal(content)
+    return ReasoningResult(
+        raw_action=parsed.action,
+        raw_proposal=parsed.proposal,
+        model=model,
+        latency_ms=latency_ms,
+        attempts=attempts,
+    )
 
 
 # ── Provider ──────────────────────────────────────────────────────────────────
@@ -1070,9 +1381,8 @@ class OpenRouterReasoner:
 
             if response.status_code == 200:
                 content = self._extract_content(response.json())
-                raw_action = parse_model_action(content)
-                return ReasoningResult(
-                    raw_action=raw_action,
+                return _result_from_content(
+                    content,
                     model=model or self.model,
                     latency_ms=(time.perf_counter() - started) * 1000.0,
                     attempts=attempts,
@@ -1320,9 +1630,8 @@ class GroqReasoner:
 
         if response.status_code == 200:
             content = self._extract_content(response.json())
-            raw_action = parse_model_action(content)
-            return ReasoningResult(
-                raw_action=raw_action,
+            return _result_from_content(
+                content,
                 model=self.model,
                 latency_ms=(time.perf_counter() - started) * 1000.0,
                 attempts=1,
@@ -1521,9 +1830,8 @@ class NvidiaReasoner:
                 "NVIDIA GLM-5.3 responded in %.0fms (reasoning_effort=low, clear_thinking=True).",
                 latency,
             )
-            raw_action = parse_model_action(content)
-            return ReasoningResult(
-                raw_action=raw_action,
+            return _result_from_content(
+                content,
                 model=self.model,
                 latency_ms=latency,
                 attempts=1,

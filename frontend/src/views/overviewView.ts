@@ -239,7 +239,13 @@ export class OverviewView {
         state.status === 'FAILED' ? 'badge-red' :
         state.status === 'NEEDS_USER_CONFIRMATION' ? 'badge-amber' :
         // PHASE 18.7 / I-1 — a refused task is not a completed run.
-        state.status === 'NEEDS_CLARIFICATION' ? 'badge-amber' : 'badge-gray'
+        state.status === 'NEEDS_CLARIFICATION' ? 'badge-amber' :
+        // PHASE 18.7 / A9 — see agentView.ts. Never the green of SUCCESS.
+        state.status === 'ANSWER' ? 'badge-blue' :
+        state.status === 'PARTIAL' ? 'badge-amber' :
+        state.status === 'NEEDS_INFORMATION' ? 'badge-gray' :
+        state.status === 'CANNOT_VERIFY' ? 'badge-gray' :
+        state.status === 'PROVIDER_UNAVAILABLE' ? 'badge-red' : 'badge-gray'
       }`;
     }
 
