@@ -1,0 +1,1103 @@
+{
+  "phase": "18.7-A7",
+  "work": "A7 real Chrome: typed recovery must be bounded and terminate truthfully before maxSteps (CONTROLLED_PROVIDER mode=scroll_down at the scroll boundary of the ApexCart fixture)",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "inputs": {
+    "task": "open the shopping site and scroll down to find the winter jacket",
+    "startUrl": "http://127.0.0.1:4174/index.html",
+    "settleMs": 60000
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "reasoner": {
+      "mode": "groq",
+      "apiKeyConfigured": true,
+      "model": "openai/gpt-oss-20b",
+      "configuredFallback": "openrouter",
+      "reasonerClass": "GroqReasoner",
+      "keyValueNeverPrinted": true
+    }
+  },
+  "timeline": [
+    {
+      "t": 3620,
+      "wall": 1791139102076,
+      "status": "RUNNING",
+      "stage": null,
+      "phase": null,
+      "outcome": null,
+      "currentStep": 0,
+      "currentUrl": null
+    },
+    {
+      "t": 3638,
+      "wall": 1791139102104,
+      "status": "RUNNING",
+      "stage": null,
+      "phase": "PERCEPTION",
+      "outcome": "RUNNING",
+      "currentStep": 0,
+      "currentUrl": "http://127.0.0.1:4174/index.html"
+    },
+    {
+      "t": 3680,
+      "wall": 1791139102136,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "PLANNING",
+      "outcome": "RUNNING",
+      "currentStep": 0,
+      "currentUrl": "http://127.0.0.1:4174/index.html"
+    },
+    {
+      "t": 3905,
+      "wall": 1791139102361,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "currentStep": 1,
+      "currentUrl": "http://127.0.0.1:4174/index.html"
+    },
+    {
+      "t": 4681,
+      "wall": 1791139103137,
+      "status": "IN_PROGRESS",
+      "stage": null,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "currentStep": 2,
+      "currentUrl": "http://127.0.0.1:4174/index.html"
+    },
+    {
+      "t": 5396,
+      "wall": 1791139103852,
+      "status": "FAILED",
+      "stage": null,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "currentStep": 3,
+      "currentUrl": "http://127.0.0.1:4174/index.html"
+    },
+    {
+      "t": 5403,
+      "wall": 1791139103859,
+      "status": "FAILED",
+      "stage": null,
+      "phase": "TERMINAL",
+      "outcome": "FAILED",
+      "currentStep": 3,
+      "currentUrl": "http://127.0.0.1:4174/index.html"
+    }
+  ],
+  "network": [
+    {
+      "t": 7357,
+      "kind": "request",
+      "requestId": "1239461.3",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 3240,
+      "status": 200,
+      "tResponse": 7366,
+      "tFinished": 7369,
+      "roundTripMs": 12,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    },
+    {
+      "t": 7389,
+      "kind": "request",
+      "requestId": "1239461.4",
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "method": "POST",
+      "postDataBytes": 3958,
+      "status": 200,
+      "tResponse": 7399,
+      "tFinished": 7402,
+      "roundTripMs": 13,
+      "telemetry": null
+    },
+    {
+      "t": 8171,
+      "kind": "request",
+      "requestId": "1239461.5",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 4369,
+      "status": 200,
+      "tResponse": 8175,
+      "tFinished": 8181,
+      "roundTripMs": 10,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    },
+    {
+      "t": 8190,
+      "kind": "request",
+      "requestId": "1239461.6",
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "method": "POST",
+      "postDataBytes": 4247,
+      "status": 200,
+      "tResponse": 8200,
+      "tFinished": 8202,
+      "roundTripMs": 12,
+      "telemetry": null
+    },
+    {
+      "t": 8888,
+      "kind": "request",
+      "requestId": "1239461.7",
+      "url": "http://127.0.0.1:8010/api/v1/agent/action",
+      "method": "POST",
+      "postDataBytes": 5024,
+      "status": 200,
+      "tResponse": 8891,
+      "tFinished": 8897,
+      "roundTripMs": 9,
+      "success": true,
+      "action": "scroll",
+      "telemetry": {
+        "provider": "controlled_stub",
+        "role": "FAST",
+        "latency_ms": 1,
+        "attempts": 1,
+        "fallback_used": false
+      }
+    },
+    {
+      "t": 8905,
+      "kind": "request",
+      "requestId": "1239461.8",
+      "url": "http://127.0.0.1:8010/api/v1/agent/review",
+      "method": "POST",
+      "postDataBytes": 4354,
+      "status": 200,
+      "tResponse": 8907,
+      "tFinished": 8913,
+      "roundTripMs": 8,
+      "telemetry": null
+    }
+  ],
+  "dashboardLogs": [
+    {
+      "t": 7108,
+      "text": "[Adapter] START_TASK received {\"taskLength\":64}"
+    },
+    {
+      "t": 7111,
+      "text": "[AgentTrace] dashboard START_TASK received {\"taskLength\":64}"
+    },
+    {
+      "t": 7114,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791139101992\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 7131,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791139101992\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 7132,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791139101992\",\"attempt\":1}"
+    },
+    {
+      "t": 7134,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791139101992\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 7136,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791139101992\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 7138,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 7138,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 7139,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 7139,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 7147,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791139101992\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 7148,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791139101992\",\"connected\":true}"
+    },
+    {
+      "t": 7148,
+      "text": "[AgentTrace] dashboard START_TASK posted to window {\"taskLength\":64,\"runId\":1}"
+    },
+    {
+      "t": 7150,
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": 7150,
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": 7157,
+      "text": "[Extension] message received {\"type\":\"START_TASK\"}"
+    },
+    {
+      "t": 7191,
+      "text": "[Adapter] response received {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":false,\"interactionPhase\":null,\"interactionOutcome\":null}"
+    },
+    {
+      "t": 7191,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":false,\"interactionPhase\":null}"
+    },
+    {
+      "t": 7220,
+      "text": "[Adapter] response received {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PERCEPTION\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 7221,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"RUNNING\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PERCEPTION\"}"
+    },
+    {
+      "t": 7256,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\",\"interactionOutcome\":\"RUNNING\"}"
+    },
+    {
+      "t": 7269,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":0,\"hasInteraction\":true,\"interactionPhase\":\"PLANNING\"}"
+    },
+    {
+      "t": 7501,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":1,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\",\"interactionOutcome\":\"FAILED\"}"
+    },
+    {
+      "t": 7502,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":1,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\"}"
+    },
+    {
+      "t": 8268,
+      "text": "[Adapter] response received {\"status\":\"IN_PROGRESS\",\"currentStep\":2,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\",\"interactionOutcome\":\"FAILED\"}"
+    },
+    {
+      "t": 8272,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"IN_PROGRESS\",\"currentStep\":2,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\"}"
+    },
+    {
+      "t": 8965,
+      "text": "[Adapter] response received {\"status\":\"FAILED\",\"currentStep\":3,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\",\"interactionOutcome\":\"FAILED\"}"
+    },
+    {
+      "t": 8966,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"FAILED\",\"currentStep\":3,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\"}"
+    },
+    {
+      "t": 8972,
+      "text": "[Adapter] response received {\"status\":\"FAILED\",\"currentStep\":3,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\",\"interactionOutcome\":\"FAILED\"}"
+    },
+    {
+      "t": 8973,
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"FAILED\",\"currentStep\":3,\"hasInteraction\":true,\"interactionPhase\":\"TERMINAL\"}"
+    },
+    {
+      "t": 19034,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791139113918\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 19047,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791139113918\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 19048,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791139113918\",\"attempt\":1}"
+    },
+    {
+      "t": 19050,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791139113918\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 19050,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791139113918\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 19052,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 19052,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 19053,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 19053,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 19053,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791139113918\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 19054,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791139113918\",\"connected\":true}"
+    },
+    {
+      "t": 34035,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791139128919\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 34056,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791139128919\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 34057,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791139128919\",\"attempt\":1}"
+    },
+    {
+      "t": 34069,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791139128919\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 34071,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791139128919\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 34080,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 34081,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 34082,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 34083,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 34084,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791139128919\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 34084,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791139128919\",\"connected\":true}"
+    },
+    {
+      "t": 49034,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791139143918\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 49068,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791139143918\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 49069,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791139143918\",\"attempt\":1}"
+    },
+    {
+      "t": 49082,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791139143918\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 49083,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791139143918\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 49086,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 49087,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 49087,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 49088,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 49088,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791139143918\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 49089,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791139143918\",\"connected\":true}"
+    },
+    {
+      "t": 64038,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791139158919\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 64066,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791139158919\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 64067,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791139158919\",\"attempt\":1}"
+    },
+    {
+      "t": 64070,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791139158919\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 64070,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791139158919\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 64075,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 64079,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 64080,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 64080,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 64081,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791139158919\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 64081,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791139158919\",\"connected\":true}"
+    }
+  ],
+  "swLogs": [
+    {
+      "t": 7120,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791139101992\"}"
+    },
+    {
+      "t": 7122,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791139101992\"}"
+    },
+    {
+      "t": 7124,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791139101992\",\"targetFound\":true,\"tabId\":1544895423,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 7124,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791139101992\",\"targetFound\":true}"
+    },
+    {
+      "t": 7156,
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": 7158,
+      "text": "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}"
+    },
+    {
+      "t": 7158,
+      "text": "[AgentTrace] service worker START_TASK received {\"taskLength\":64}"
+    },
+    {
+      "t": 7164,
+      "text": "[AgentTrace] intent classified {\"intent\":\"MIXED_TASK\",\"confidence\":\"DETERMINISTIC\",\"requiresDestination\":true,\"requiresEvidence\":true,\"admitsBrowserAutomation\":true,\"refusal\":null}"
+    },
+    {
+      "t": 7170,
+      "text": "TARGET_TAB_CANDIDATES [{\"id\":1544895421,\"origin\":\"null\"},{\"id\":1544895422,\"origin\":\"http://localhost:5173\"},{\"id\":1544895423,\"origin\":\"http://127.0.0.1:4174\"}]"
+    },
+    {
+      "t": 7171,
+      "text": "[AgentTrace] containment scope established {\"established\":true,\"rootHost\":\"0.1\",\"tabId\":1544895423}"
+    },
+    {
+      "t": 7171,
+      "text": "TARGET_TAB_SELECTED {\"tabId\":1544895423,\"origin\":\"http://127.0.0.1:4174\",\"reason\":\"Selected active web tab.\"}"
+    },
+    {
+      "t": 7171,
+      "text": "[AgentTrace] target resolved {\"tabId\":1544895423}"
+    },
+    {
+      "t": 7181,
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": 7188,
+      "text": "TARGET_TAB_READY {\"tabId\":1544895423}"
+    },
+    {
+      "t": 7188,
+      "text": "[AgentTrace] target content script ready {\"tabId\":1544895423}"
+    },
+    {
+      "t": 7190,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PERCEPTION\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 7190,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"RUNNING\",\"currentStep\":0,\"reason\":\"Target tab discovered and ready. Starting visual privacy perception...\"}"
+    },
+    {
+      "t": 7214,
+      "text": "[AgentTrace] agent loop started {\"runId\":1}"
+    },
+    {
+      "t": 7234,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 7236,
+      "text": "[AgentTrace] long-horizon state {\"restoreStatus\":\"FRESH_NO_RECORD\",\"detail\":null,\"actionCount\":0,\"recoveryCount\":0,\"consecutiveNoProgress\":0,\"totalNoProgress\":0}"
+    },
+    {
+      "t": 7236,
+      "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"RUNNING\",\"phase\":\"PLANNING\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 7237,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":0}"
+    },
+    {
+      "t": 7237,
+      "text": "[AgentTrace] harness cycle {\"cycle\":1,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:0.1\",\"withinScope\":true}"
+    },
+    {
+      "t": 7237,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":1,\"url\":\"http://127.0.0.1:4174/index.html\"}"
+    },
+    {
+      "t": 7289,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":6,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 7299,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 7314,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 7320,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":3,\"regionsConsidered\":3,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":1}"
+    },
+    {
+      "t": 7322,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":3,\"ledgerSize\":3,\"generation\":2}"
+    },
+    {
+      "t": 7324,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":1,\"contextUrl\":\"http://127.0.0.1:4174/index.html\",\"worldModelId\":\"wm-g2-muu5z4c0-rosy\"}"
+    },
+    {
+      "t": 7324,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":11,\"privacyFindingsCount\":6}"
+    },
+    {
+      "t": 7325,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":2,\"entityCount\":0,\"affordanceCount\":1}"
+    },
+    {
+      "t": 7350,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 7357,
+      "text": "[AgentTrace] subgoal selected {\"subgoalId\":\"goal-muu5z4ax-2faud-sg1\",\"category\":\"NAVIGATE\",\"description\":\"Navigate to commerce catalog or store front\"}"
+    },
+    {
+      "t": 7358,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[\"NEW_PAGE\"],\"completedSubgoals\":0,\"pendingSubgoals\":4,\"discoveries\":0,\"actions\":0,\"loop\":false,\"stalled\":false,\"semanticProgress\":true,\"semanticSignals\":[\"EVIDENCE_DELTA\"],\"geometry\":\"GEOMETRY_UNCHANGED\",\"sameDirectionRun\":0,\"stagnation\":\"NONE\",\"evidenceDelta\":3}"
+    },
+    {
+      "t": 7371,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 7374,
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": 7384,
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": 7385,
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": 7390,
+      "text": "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}"
+    },
+    {
+      "t": 7404,
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": 7405,
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 7418,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://127.0.0.1:4174/index.html\",\"scrollY\":0,\"domElementCount\":34,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 7419,
+      "text": "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:0.1\"}"
+    },
+    {
+      "t": 7423,
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": 7436,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://127.0.0.1:4174/index.html\",\"scrollY\":0,\"domElementCount\":34,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 7437,
+      "text": "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}"
+    },
+    {
+      "t": 7458,
+      "text": "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)"
+    },
+    {
+      "t": 7465,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 7467,
+      "text": "[AgentTrace] recovery record {\"category\":\"NO_EFFECT\",\"from\":\"CONTINUE\",\"to\":\"RE_PERCEIVE\",\"retryCount\":0,\"reasonCode\":\"EFFECT_UNCHANGED\",\"madeProgress\":true,\"observationState\":\"CURRENT\",\"exhausted\":false}"
+    },
+    {
+      "t": 7469,
+      "text": "[AgentTrace] output screen {\"verdict\":\"BLOCKED\",\"audit\":\"OUTPUT_SCREEN_BLOCKED (1 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 7469,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":1}"
+    },
+    {
+      "t": 7470,
+      "text": "[AgentTrace] recovery decision {\"code\":\"ACTION_NO_EFFECT\",\"strategy\":\"REPERCEIVE\",\"attempt\":1,\"reason\":\"Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 2.\"}"
+    },
+    {
+      "t": 7523,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":6,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 7536,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 7539,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":3,\"regionsConsidered\":3,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}"
+    },
+    {
+      "t": 7539,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":3,\"ledgerSize\":6,\"generation\":3}"
+    },
+    {
+      "t": 8045,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 8049,
+      "text": "[AgentTrace] harness cycle {\"cycle\":2,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:0.1\",\"withinScope\":true}"
+    },
+    {
+      "t": 8049,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":4,\"url\":\"http://127.0.0.1:4174/index.html\"}"
+    },
+    {
+      "t": 8099,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":6,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 8104,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 8106,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 8116,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":3,\"regionsConsidered\":3,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}"
+    },
+    {
+      "t": 8116,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":3,\"ledgerSize\":9,\"generation\":4}"
+    },
+    {
+      "t": 8117,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":4,\"contextUrl\":\"http://127.0.0.1:4174/index.html\",\"worldModelId\":\"wm-g4-muu5z4yf-omwm\"}"
+    },
+    {
+      "t": 8117,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":11,\"privacyFindingsCount\":6}"
+    },
+    {
+      "t": 8118,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":4,\"entityCount\":0,\"affordanceCount\":1}"
+    },
+    {
+      "t": 8166,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 8172,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":3,\"discoveries\":0,\"actions\":1,\"loop\":false,\"stalled\":false,\"semanticProgress\":true,\"semanticSignals\":[\"EVIDENCE_DELTA\"],\"geometry\":\"GEOMETRY_UNCHANGED\",\"sameDirectionRun\":0,\"stagnation\":\"NONE\",\"evidenceDelta\":6}"
+    },
+    {
+      "t": 8183,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 8184,
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": 8185,
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": 8186,
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": 8191,
+      "text": "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}"
+    },
+    {
+      "t": 8203,
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": 8204,
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 8216,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://127.0.0.1:4174/index.html\",\"scrollY\":0,\"domElementCount\":34,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 8216,
+      "text": "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:0.1\"}"
+    },
+    {
+      "t": 8218,
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": 8223,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://127.0.0.1:4174/index.html\",\"scrollY\":0,\"domElementCount\":34,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 8223,
+      "text": "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}"
+    },
+    {
+      "t": 8238,
+      "text": "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)"
+    },
+    {
+      "t": 8238,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 8240,
+      "text": "[AgentTrace] recovery record {\"category\":\"NO_EFFECT\",\"from\":\"RE_PERCEIVE\",\"to\":\"CHANGE_STRATEGY\",\"retryCount\":1,\"reasonCode\":\"EFFECT_UNCHANGED\",\"madeProgress\":true,\"observationState\":\"CURRENT\",\"exhausted\":false}"
+    },
+    {
+      "t": 8241,
+      "text": "[AgentTrace] output screen {\"verdict\":\"BLOCKED\",\"audit\":\"OUTPUT_SCREEN_BLOCKED (1 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 8247,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"IN_PROGRESS\",\"currentStep\":2}"
+    },
+    {
+      "t": 8247,
+      "text": "[AgentTrace] recovery decision {\"code\":\"ACTION_NO_EFFECT\",\"strategy\":\"REPERCEIVE\",\"attempt\":1,\"reason\":\"Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 4.\"}"
+    },
+    {
+      "t": 8300,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":6,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 8304,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 8306,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":3,\"regionsConsidered\":3,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":0}"
+    },
+    {
+      "t": 8306,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":3,\"ledgerSize\":12,\"generation\":5}"
+    },
+    {
+      "t": 8810,
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": 8813,
+      "text": "[AgentTrace] harness cycle {\"cycle\":3,\"verdict\":\"CONTINUE\",\"haltCode\":null,\"scope\":\"contained:0.1\",\"withinScope\":true}"
+    },
+    {
+      "t": 8813,
+      "text": "[AgentTrace] perception started {\"perceptionGeneration\":6,\"url\":\"http://127.0.0.1:4174/index.html\"}"
+    },
+    {
+      "t": 8841,
+      "text": "[AgentTrace] multimodal perception complete {\"visualDetections\":0,\"screenshotWidth\":1280,\"screenshotHeight\":757,\"ocrRegions\":0,\"privacyFindings\":6,\"ocrObservationState\":\"NOT_APPLICABLE\"}"
+    },
+    {
+      "t": 8849,
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": 8852,
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": 8856,
+      "text": "[AgentTrace] semantic observation {\"state\":\"OBSERVED\",\"facts\":3,\"regionsConsidered\":3,\"droppedSensitive\":0,\"quarantinedInjection\":0,\"latencyMs\":5}"
+    },
+    {
+      "t": 8856,
+      "text": "[AgentTrace] evidence ledger updated {\"ingested\":3,\"ledgerSize\":15,\"generation\":6}"
+    },
+    {
+      "t": 8856,
+      "text": "[AgentTrace] perception complete {\"perceptionGeneration\":6,\"contextUrl\":\"http://127.0.0.1:4174/index.html\",\"worldModelId\":\"wm-g6-muu5z5jn-1vbj\"}"
+    },
+    {
+      "t": 8857,
+      "text": "[AgentTrace] multimodal perception complete {\"screenshotDimensions\":{\"width\":1280,\"height\":757},\"ocrRegionsCount\":0,\"visualRegionsCount\":11,\"privacyFindingsCount\":6}"
+    },
+    {
+      "t": 8858,
+      "text": "[AgentTrace] semantic understanding complete {\"pageType\":\"UNKNOWN\",\"pageState\":\"populated\",\"pageGeneration\":6,\"entityCount\":0,\"affordanceCount\":1}"
+    },
+    {
+      "t": 8874,
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 8888,
+      "text": "[AgentTrace] long-horizon update {\"meaningfulProgress\":true,\"signals\":[],\"completedSubgoals\":0,\"pendingSubgoals\":3,\"discoveries\":0,\"actions\":2,\"loop\":false,\"stalled\":false,\"semanticProgress\":true,\"semanticSignals\":[\"EVIDENCE_DELTA\"],\"geometry\":\"GEOMETRY_UNCHANGED\",\"sameDirectionRun\":0,\"stagnation\":\"NONE\",\"evidenceDelta\":6}"
+    },
+    {
+      "t": 8899,
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": 8899,
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": 8901,
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": 8901,
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": 8905,
+      "text": "[AgentTrace] security critic {\"verdict\":\"ALLOW\",\"code\":\"NO_OBJECTION\",\"findings\":[]}"
+    },
+    {
+      "t": 8915,
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": 8916,
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 8921,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://127.0.0.1:4174/index.html\",\"scrollY\":0,\"domElementCount\":34,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 8921,
+      "text": "[AgentTrace] containment decision {\"code\":\"WITHIN_SCOPE\",\"contained\":true,\"scope\":\"contained:0.1\"}"
+    },
+    {
+      "t": 8924,
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": 8933,
+      "text": "[AgentTrace] effect snapshot observed {\"phase\":\"untargeted\",\"url\":\"http://127.0.0.1:4174/index.html\",\"scrollY\":0,\"domElementCount\":34,\"openModalsCount\":0,\"targetValueLength\":null}"
+    },
+    {
+      "t": 8933,
+      "text": "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {\"status\":\"ACTION_NO_EFFECT\",\"details\":\"Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.\"}"
+    },
+    {
+      "t": 8941,
+      "text": "[AgentTrace] recovery record {\"category\":\"NO_EFFECT\",\"from\":\"CHANGE_STRATEGY\",\"to\":\"STOP\",\"retryCount\":2,\"reasonCode\":\"RETRY_BUDGET_EXHAUSTED\",\"madeProgress\":true,\"observationState\":\"CURRENT\",\"exhausted\":true}"
+    },
+    {
+      "t": 8947,
+      "text": "[AgentTrace] output screen {\"verdict\":\"BLOCKED\",\"audit\":\"OUTPUT_SCREEN_BLOCKED (1 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 8948,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":3,\"reason\":\"Recovery limit exceeded for NO_EFFECT after 2 bounded attempts.\"}"
+    },
+    {
+      "t": 8949,
+      "text": "[AgentTrace] M6 failed {\"reason\":\"Recovery limit exceeded for NO_EFFECT after 2 bounded attempts.\"}"
+    },
+    {
+      "t": 8955,
+      "text": "[AgentTrace] M6 failed {\"reason\":\"Recovery limit exceeded for NO_EFFECT after 2 bounded attempts.\"}"
+    },
+    {
+      "t": 8957,
+      "text": "[AgentTrace] terminal progress emitted {\"status\":\"FAILED\",\"runId\":1}"
+    },
+    {
+      "t": 8957,
+      "text": "[AgentTrace] output screen {\"verdict\":\"BLOCKED\",\"audit\":\"OUTPUT_SCREEN_BLOCKED (1 finding(s))\",\"outcome\":\"FAILED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
+    },
+    {
+      "t": 8957,
+      "text": "[ServiceWorker] response forwarded {\"status\":\"FAILED\",\"currentStep\":3,\"reason\":\"Recovery limit exceeded for NO_EFFECT after 2 bounded attempts.\"}"
+    },
+    {
+      "t": 19039,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791139113918\"}"
+    },
+    {
+      "t": 19039,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791139113918\"}"
+    },
+    {
+      "t": 19046,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791139113918\",\"targetFound\":true,\"tabId\":1544895423,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 19046,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791139113918\",\"targetFound\":true}"
+    },
+    {
+      "t": 34052,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791139128919\"}"
+    },
+    {
+      "t": 34053,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791139128919\"}"
+    },
+    {
+      "t": 34056,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791139128919\",\"targetFound\":true,\"tabId\":1544895423,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 34056,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791139128919\",\"targetFound\":true}"
+    },
+    {
+      "t": 49054,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791139143918\"}"
+    },
+    {
+      "t": 49055,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791139143918\"}"
+    },
+    {
+      "t": 49068,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791139143918\",\"targetFound\":true,\"tabId\":1544895423,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 49068,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791139143918\",\"targetFound\":true}"
+    },
+    {
+      "t": 64062,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791139158919\"}"
+    },
+    {
+      "t": 64065,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791139158919\"}"
+    },
+    {
+      "t": 64065,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791139158919\",\"targetFound\":true,\"tabId\":1544895423,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 64065,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791139158919\",\"targetFound\":true}"
+    }
+  ],
+  "analysis": {
+    "submission": "{\"via\":\"composer\",\"value\":\"open the shopping site and scroll down to find the winter jacket\"}",
+    "bodyText": "PrivAgent\nPRIVACY BROWSER AGENT\nTask Halted · Zero Leakage\nTools\nNew Task\nAlt+N\nCURRENT TASK\nopen the shopping site and scroll down to find the winter jacket\nFAILED\nRECENT TASKS\nopen the shopping site and scroll down to find the winter jacket\nFAILED · Just now\nopen the shopping site and scroll down to find the winter jacket\nFAILED · Just now\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nopen the shopping site and scroll down to find the winter jacket\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nFAILED\nFinished.\nStep 3 of 10\nFailed.\nRecovery limit exceeded for NO_EFFECT after 2 bounded attempts.\nTry Again\nAGENT ACTIVITY TIMELINE\n6 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\n!\nStep 1: scroll on Scroll down (500px)\nACTION_NO_EFFECT\nValidated scroll down by 500px.\n!\nStep 2: scroll on Scroll down (500px)\nACTION_NO_EFFECT\nValidated scroll down by 500px.\n!\nStep 3: scroll on Scroll down (500px)\nACTION_NO_EFFECT\nValidated scroll down by 500px.\n!\nTask terminated safely\nHALTED\nRecovery limit exceeded for NO_EFFECT after 2 bounded attempts.\nBROWSER CONTEXT\nCurrent Page\n127.0.0.1/index.html\nSemantic Type\nlanding\nDestination\nVerified\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+    "watchdogLines": [],
+    "requestCount": 6,
+    "gaps": [
+      {
+        "fromStage": null,
+        "toStage": "PERCEPTION",
+        "gapMs": 28
+      },
+      {
+        "fromStage": "PERCEPTION",
+        "toStage": "PLANNING",
+        "gapMs": 32
+      },
+      {
+        "fromStage": "PLANNING",
+        "toStage": "TERMINAL",
+        "gapMs": 225
+      },
+      {
+        "fromStage": "TERMINAL",
+        "toStage": "TERMINAL",
+        "gapMs": 776
+      },
+      {
+        "fromStage": "TERMINAL",
+        "toStage": "TERMINAL",
+        "gapMs": 715
+      },
+      {
+        "fromStage": "TERMINAL",
+        "toStage": "TERMINAL",
+        "gapMs": 7
+      }
+    ]
+  }
+}

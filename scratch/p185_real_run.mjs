@@ -18,6 +18,11 @@
  *   ST_OUT        output filename under docs/evidence/post-17-10/audit
  *   ST_START_URL  optional pre-existing fixture tab to adopt
  *   ST_KEEP_TABS  1 = keep pre-existing fixture tabs
+ *   ST_PHASE/ST_WORK/ST_LABELS
+ *                 override the artifact header. The defaults describe the
+ *                 LIVE-BACKEND 18.5 run; a run against the controlled stub is
+ *                 NOT that, so it must say so in its own header rather than
+ *                 borrowing the live-backend label.
  */
 import fs from 'fs';
 import path from 'path';
@@ -43,9 +48,9 @@ const KEEP_TABS = process.env.ST_KEEP_TABS === '1';
 const OUT = process.env.ST_OUT || 'p185_real_run.json';
 
 const out = {
-  phase: '18.5',
-  work: 'PHASE 18.5 — LLM_REASONING watchdog timeout: real Chrome reproduction',
-  labels: 'PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND',
+  phase: process.env.ST_PHASE || '18.5',
+  work: process.env.ST_WORK || 'PHASE 18.5 — LLM_REASONING watchdog timeout: real Chrome reproduction',
+  labels: process.env.ST_LABELS || 'PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND',
   inputs: { task: TASK, startUrl: START_URL || null, settleMs: SETTLE_MS },
   environment: {},
   timeline: [],
