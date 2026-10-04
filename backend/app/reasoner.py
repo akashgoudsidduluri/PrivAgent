@@ -540,6 +540,67 @@ def _build_user_prompt(
     page_type: Optional[str] = None,
     semantic_context: Optional[Dict[str, Any]] = None,
 ) -> str:
+    """Build the user prompt and, when capture is enabled, record it.
+
+    PHASE 18.5 / TIER 1.3 — INSTRUMENTATION ONLY.
+
+    The rendering itself is delegated unchanged to `_render_user_prompt`, and
+    the value returned here is byte-for-byte what that function returns. The
+    capture happens AFTER the prompt is built and BEFORE it is returned; it
+    does not modify, filter, reorder or re-render a single character of what
+    the model receives.
+
+    Gated on `PRIVAGENT_CAPTURE_DIR`, so when capture is off — which is the
+    production default — this wrapper adds no I/O, no allocation of
+    consequence, and no change in behaviour whatsoever. Capture failures are
+    swallowed deliberately: an audit aid must never be able to fail a live
+    reasoning call.
+    """
+    prompt = _render_user_prompt(
+        task, url, viewport, screenshot_dimensions,
+        detections, history, steps_used, max_steps,
+        page_type, semantic_context,
+    )
+
+    try:
+        from .context_capture import capture_enabled, record_prompt
+
+        if capture_enabled():
+            record_prompt(
+                prompt,
+                {
+                    "task": task,
+                    "url": url,
+                    "viewport": viewport,
+                    # Dimensions only. Image DATA never reaches this boundary.
+                    "screenshotDimensions": screenshot_dimensions,
+                    "detectionCount": len(detections),
+                    "detections": detections,
+                    "history": history,
+                    "stepsUsed": steps_used,
+                    "maxSteps": max_steps,
+                    "pageType": page_type,
+                    "semanticContext": semantic_context,
+                },
+            )
+    except Exception:  # pragma: no cover
+        pass
+
+    return prompt
+
+
+def _render_user_prompt(
+    task: str,
+    url: str,
+    viewport: Optional[Dict[str, Any]],
+    screenshot_dimensions: Optional[Dict[str, Any]],
+    detections: List[Dict[str, Any]],
+    history: List[Dict[str, Any]],
+    steps_used: int,
+    max_steps: int,
+    page_type: Optional[str] = None,
+    semantic_context: Optional[Dict[str, Any]] = None,
+) -> str:
     """Build the user prompt strictly from allowlisted sanitized fields.
 
     Only safe metadata is serialized: id, type, confidence, bbox geometry,

@@ -1,0 +1,215 @@
+{
+  "seq": 5,
+  "capturedAt": 1791108563.6161587,
+  "layer": "backend_prompt_boundary",
+  "note": "Exact model-facing text. INSTRUMENTATION ONLY - does not alter the prompt. Anything present here reached the real LLM.",
+  "task": "open wikipedia and find information about charminar",
+  "promptChars": 1989,
+  "exactModelFacingPrompt": "User task: \"open wikipedia and find information about charminar\"\n\nCurrent page URL: https://en.wikipedia.org/wiki/Charminar\n\nSemantic Understanding (on-device local inference):\n{\n \"pageType\": \"search\"\n}\n\nViewport: {\"width\": 1265, \"height\": 757, \"scroll_x\": 0.0, \"scroll_y\": 0.0}\n\nScreenshot dimensions: {\"width\": 1265, \"height\": 757}\n\nLoop status: step 1 of max 10. If the task cannot progress, choose the action most likely to reveal the next needed element.\n\nPrevious actions this task (safe metadata only):\n\n[\n {\n  \"action\": \"scroll\",\n  \"direction\": \"down\",\n  \"amount\": 500,\n  \"reason\": \"The Charminar Wikipedia page is already loaded; scrolling down reveals the article content to find information about Charminar.\",\n  \"effect\": \"ACTION_NO_EFFECT\",\n  \"scroll_delta\": 0\n }\n]\n\nEXECUTION FEEDBACK (SAFE METADATA): The previous scroll down produced no observable movement (scroll_delta: 0, effect: ACTION_NO_EFFECT) - viewport reached boundary. Do NOT repeat the exact same scroll down. Choose a different valid action (e.g. scroll opposite direction, interact with visible elements, or navigate if applicable).\n\nDetected sensitive elements (sanitized metadata ONLY \u2014 values are redacted on device):\n\n[\n {\n  \"id\": \"inter-input-14\",\n  \"type\": \"input\",\n  \"confidence\": 0.95,\n  \"bbox\": {\n   \"x\": 749.0,\n   \"y\": 836.0,\n   \"width\": 13.0,\n   \"height\": 13.0\n  },\n  \"length\": 0,\n  \"source\": \"dom_attribute\",\n  \"selector\": \"input[name=\\\"switcher-0\\\"]\"\n },\n {\n  \"id\": \"searchInput\",\n  \"type\": \"search\",\n  \"confidence\": 0.95,\n  \"bbox\": {\n   \"x\": 266.0,\n   \"y\": 17.0,\n   \"width\": 397.0,\n   \"height\": 32.0\n  },\n  \"length\": 16,\n  \"source\": \"dom_attribute\",\n  \"selector\": \"#searchInput\"\n },\n {\n  \"id\": \"inter-button-3\",\n  \"type\": \"button\",\n  \"confidence\": 0.95,\n  \"bbox\": {\n   \"x\": 662.0,\n   \"y\": 17.0,\n   \"width\": 78.0,\n   \"height\": 32.0\n  },\n  \"length\": 6,\n  \"source\": \"dom_attribute\",\n  \"selector\": \"button.cdx-button.cdx-search-input__end-button\"\n }\n]\n\nRespond with the single JSON action object now.",
+  "allowlistedInputsToPromptBuilder": {
+    "task": "open wikipedia and find information about charminar",
+    "url": "https://en.wikipedia.org/wiki/Charminar",
+    "viewport": {
+      "width": 1265,
+      "height": 757,
+      "scroll_x": 0.0,
+      "scroll_y": 0.0
+    },
+    "screenshotDimensions": {
+      "width": 1265,
+      "height": 757
+    },
+    "detectionCount": 3,
+    "detections": [
+      {
+        "id": "inter-input-14",
+        "type": "input",
+        "confidence": 0.95,
+        "bbox": {
+          "x": 749.0,
+          "y": 836.0,
+          "width": 13.0,
+          "height": 13.0
+        },
+        "length": 0,
+        "source": "dom_attribute",
+        "selector": "input[name=\"switcher-0\"]",
+        "is_partially_visible": false,
+        "label": ""
+      },
+      {
+        "id": "searchInput",
+        "type": "search",
+        "confidence": 0.95,
+        "bbox": {
+          "x": 266.0,
+          "y": 17.0,
+          "width": 397.0,
+          "height": 32.0
+        },
+        "length": 16,
+        "source": "dom_attribute",
+        "selector": "#searchInput",
+        "is_partially_visible": false,
+        "label": ""
+      },
+      {
+        "id": "inter-button-3",
+        "type": "button",
+        "confidence": 0.95,
+        "bbox": {
+          "x": 662.0,
+          "y": 17.0,
+          "width": 78.0,
+          "height": 32.0
+        },
+        "length": 6,
+        "source": "dom_attribute",
+        "selector": "button.cdx-button.cdx-search-input__end-button",
+        "is_partially_visible": false,
+        "label": ""
+      }
+    ],
+    "history": [
+      {
+        "action": "scroll",
+        "direction": "down",
+        "amount": 500,
+        "reason": "The Charminar Wikipedia page is already loaded; scrolling down reveals the article content to find information about Charminar.",
+        "effect": "ACTION_NO_EFFECT",
+        "scroll_delta": 0
+      }
+    ],
+    "stepsUsed": 0,
+    "maxSteps": 10,
+    "pageType": "search",
+    "semanticContext": null
+  },
+  "requestEnvelope": {
+    "task": "open wikipedia and find information about charminar",
+    "context": {
+      "url": "https://en.wikipedia.org/wiki/Charminar",
+      "timestamp": 1791108562802,
+      "viewport": {
+        "width": 1265,
+        "height": 757,
+        "scroll_x": 0.0,
+        "scroll_y": 0.0
+      },
+      "screenshot_dimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "detections": [
+        {
+          "id": "inter-input-14",
+          "type": "input",
+          "confidence": 0.95,
+          "bbox": {
+            "x": 749.0,
+            "y": 836.0,
+            "width": 13.0,
+            "height": 13.0
+          },
+          "length": 0,
+          "source": "dom_attribute",
+          "selector": "input[name=\"switcher-0\"]",
+          "is_partially_visible": false,
+          "label": ""
+        },
+        {
+          "id": "searchInput",
+          "type": "search",
+          "confidence": 0.95,
+          "bbox": {
+            "x": 266.0,
+            "y": 17.0,
+            "width": 397.0,
+            "height": 32.0
+          },
+          "length": 16,
+          "source": "dom_attribute",
+          "selector": "#searchInput",
+          "is_partially_visible": false,
+          "label": ""
+        },
+        {
+          "id": "inter-button-3",
+          "type": "button",
+          "confidence": 0.95,
+          "bbox": {
+            "x": 662.0,
+            "y": 17.0,
+            "width": 78.0,
+            "height": 32.0
+          },
+          "length": 6,
+          "source": "dom_attribute",
+          "selector": "button.cdx-button.cdx-search-input__end-button",
+          "is_partially_visible": false,
+          "label": ""
+        }
+      ],
+      "total_elements_scanned": 1547,
+      "sensitive_elements_detected": 1,
+      "sanitized_status": "sanitized_only",
+      "ocr_metrics": {
+        "regions_scanned": 0,
+        "sensitive_detected": 0,
+        "latency_ms": 0.0
+      },
+      "page_type": "search",
+      "semantic_context": null,
+      "memory_hints": {
+        "workingMemory": [
+          "[Working] INITIAL_GOAL: open wikipedia and find information about charminar",
+          "[Working] long-horizon-progress: {  \"completedSubgoals\": 0,  \"pendingSubgoals\": 4,  \"failedSubgoals\": 0,  \"discoveries\": 0,  \"actionsTaken\": 0,  \"recoveryAttempts\": 0 }"
+        ],
+        "semanticHints": [],
+        "failureHints": [
+          "[Past Failure] Type: POLICY_REJECTION, Context: unknown, Recovery Strategy: NONE, Result: FAILURE"
+        ],
+        "userPreferences": []
+      }
+    },
+    "history": [
+      {
+        "action": "scroll",
+        "target": null,
+        "direction": "down",
+        "amount": 500,
+        "text": null,
+        "option": null,
+        "url": null,
+        "key": null,
+        "reason": "The Charminar Wikipedia page is already loaded; scrolling down reveals the article content to find information about Charminar.",
+        "effect": "ACTION_NO_EFFECT",
+        "scroll_delta": 0
+      }
+    ],
+    "model_role": "VISION"
+  },
+  "privacySelfCheck": {
+    "forbiddenKeyMarkersFound": [],
+    "rawValueMarkersFound": [],
+    "screenshotDataFieldsFound": [],
+    "rawScreenshotsTransmitted": 0,
+    "clean": true
+  },
+  "providerResponse": {
+    "provider": "groq",
+    "model": "openai/gpt-oss-20b",
+    "latencyMs": 516.2,
+    "attempts": 1,
+    "rawAction": {
+      "action": "scroll",
+      "amount": 500,
+      "direction": "up",
+      "option": "down",
+      "reason": "Scrolling down produced no movement (boundary reached); scrolling up may reveal the article content or a different scrollable region to find information about Charminar.",
+      "target": "searchInput",
+      "text": "down",
+      "url": "down"
+    }
+  }
+}

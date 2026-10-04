@@ -168,6 +168,28 @@ async def generate_action(
             page_type=context.page_type,
             semantic_context=context.semantic_context,
         )
+        # PHASE 18.5 / TIER 1.3 — INSTRUMENTATION ONLY. Writes one capture
+        # artifact binding the exact model-facing prompt to the request
+        # envelope that produced it. No behaviour change; no-op unless
+        # PRIVAGENT_CAPTURE_DIR is set. Failures never affect the response.
+        try:
+            from ..context_capture import take_prompt, write_capture
+
+            if write_capture.__doc__ is not None:  # always true; kept explicit
+                write_capture(
+                    task=body.task,
+                    envelope=body.model_dump(),
+                    prompt_bundle=take_prompt(),
+                    response_summary={
+                        "provider": effective_provider,
+                        "model": result.model,
+                        "latencyMs": round(result.latency_ms, 1),
+                        "attempts": result.attempts,
+                        "rawAction": result.raw_action,
+                    },
+                )
+        except Exception:  # pragma: no cover
+            pass
     except ReasoningError as err:
         fallback_name = (config.REASONER_FALLBACK_PROVIDER or "").strip().lower()
         can_fallback = (
