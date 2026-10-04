@@ -1454,6 +1454,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           // decision state and information completion read the SAME store —
           // there is no parallel evidence store anywhere in the system.
           evidenceLedger: activeEvidenceLedger,
+          //
+          // PHASE 18.7 (A3). The SAME frozen decision object from the boundary —
+          // carried, never re-derived, so the model-facing decision state cannot
+          // disagree with what admission actually decided.
+          //
+          intentDecision,
           initialUrl: targetTab.url || (targetTab as any).pendingUrl || undefined,
         });
         activeLoop = thisLoop;

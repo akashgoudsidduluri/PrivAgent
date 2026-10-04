@@ -299,6 +299,18 @@ export interface AgentContextPayload {
   memory_hints?: import('../memory/memoryRetriever').MemoryHints;
   semantic_context?: import('../semanticUnderstanding/semanticTypes').SanitizedSemanticContext;
   /**
+   * PHASE 18.7 (A3) — the model-facing structured decision state.
+   *
+   * Declared here rather than cast in, so the egress firewall and the backend
+   * schema both can see it. It is INFORMATIONAL: it carries what is currently
+   * believed (intent, page observation state, last action's dispatch/effect
+   * status, evidence references, recovery), never what is permitted. No risk
+   * score, no critic verdict, no containment decision and no verifier internals
+   * are present, by construction — `projectDecisionStateForModel` rebuilds from
+   * an explicit allowlist rather than spreading.
+   */
+  decision_state?: import('../agent/decisionState').ModelFacingDecisionState;
+  /**
    * Post-17.9. LOCAL ONLY — stripped at the egress boundary, exactly like
    * `ocr_observation` above.
    *

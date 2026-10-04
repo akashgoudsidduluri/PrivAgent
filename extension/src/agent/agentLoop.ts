@@ -26,6 +26,22 @@
 
 import { BrowserAction, ActionType } from './actionTypes';
 import { filterToHistoryContract } from './historyContract';
+import {
+  assertTruthfulHistory,
+  buildActionHistoryEntry,
+  toWireAction,
+  type ActionHistoryEntry,
+} from './actionHistory';
+import {
+  buildDecisionState,
+  goalStatusFromTaskStatus,
+  projectDecisionStateForModel,
+  type DecisionDestinationStatus,
+  type DecisionRecoveryState,
+  type EvidenceReference,
+  type PageObservationState,
+  type ModelFacingDecisionState,
+} from './decisionState';
 import { validateAction } from './actionValidator';
 import { groundProposedTarget } from './groundingEngine';
 import { canPerformAction, assertSanitizedContextSafe } from './privacyPolicy';
@@ -248,6 +264,15 @@ export interface AgentLoopCallbacks {
 export interface AgentLoopOptions {
   /** Phase 18.1: Task run correlation identifier for single active task ownership */
   runId?: number | string;
+  /**
+   * PHASE 18.7 (I-1/A3) — the deterministic intent decision for this run.
+   *
+   * Minted ONCE at the intent boundary and passed through, never re-derived.
+   * It is `Object.freeze`d there, so nothing downstream — including the model —
+   * can change it. Absent for callers that predate I-1; the decision state then
+   * reports `requiresEvidence: false` and the run behaves exactly as before.
+   */
+  intentDecision?: import('./intentBoundary').IntentDecision;
   maxSteps?: number;
   /**
    * PHASE 17.4 D5. Where long-horizon RELIABILITY state is persisted so a
@@ -477,13 +502,64 @@ export class AgentLoop {
    * against rather than being unprovable.
    */
   private previousObservation: AgentContextPayload | undefined = undefined;
+  private readonly harness: AgentHarness | null;
+  /** PHASE 18.7 (A3) — the frozen intent decision for this run, if present. */
+  private readonly intentDecision: import('./intentBoundary').IntentDecision | null;
   /**
    * PHASE 18.7 (A2) — the task's evidence ledger, owned by the service worker and
    * passed in. Read-only here: the loop never authors a record, it only reports
    * what the ledger already holds.
    */
   private readonly evidenceLedger: EvidenceLedger | null;
-  private readonly harness: AgentHarness | null;
+
+  /**
+   * PHASE 18.7 (A3) — assemble this cycle's model-facing decision state.
+   *
+   * Reads the SAME stores the authorities use: `state` for page/goal/recovery,
+   * `evidenceLedger` for evidence, `state.steps` for the last action. It adds
+   * no new truth — it only reports what those already hold.
+   *
+   * `destination` is reported as `UNVERIFIED` rather than guessed: this module
+   * does not run DestinationVerifier, and inferring it from a URL would
+   * manufacture a verdict. DestinationVerifier remains the only source of a
+   * destination verdict, and it stays authoritative.
+   */
+  private buildDecisionStateForCycle(context: AgentContextPayload): ModelFacingDecisionState {
+    const lastStep = this.state.steps.length > 0 ? this.state.steps[this.state.steps.length - 1] : undefined;
+    const lastAction: ActionHistoryEntry | null = lastStep
+      ? buildActionHistoryEntry(lastStep, { currentPageGeneration: this.state.currentPageGeneration })
+      : null;
+
+    const evidence: EvidenceReference[] = this.evidenceLedger
+      ? this.evidenceLedger.toModelFacing().map((r) => ({
+          id: r.id,
+          verificationStatus: r.verification === 'CONFLICTED' ? 'CONFLICTED' : r.verification,
+          freshness: r.verification === 'INVALIDATED' ? 'STALE' : 'CURRENT',
+        }))
+      : [];
+
+    const observationState: PageObservationState = context ? 'OBSERVED' : 'UNAVAILABLE';
+
+    return buildDecisionState({
+      task: this.state.taskGoal || this.state.normalizedGoal || '',
+      intent: this.intentDecision?.intent ?? 'UNSUPPORTED',
+      requiresEvidence: this.intentDecision?.requiresEvidence ?? false,
+      activeSubgoal: this.state.activeSubgoal?.description ?? null,
+      pendingCriteria: this.state.pendingSubgoals.map((s) => s.description),
+      completedCriteria: this.state.completedSteps,
+      url: context?.url ?? this.state.currentUrl,
+      pageType: (context?.page_type as PageCategory | undefined) ?? this.state.pageType,
+      pageObservationState: observationState,
+      pageGeneration: this.state.currentPageGeneration,
+      lastAction,
+      destinationStatus: 'UNVERIFIED' satisfies DecisionDestinationStatus,
+      goalStatus: goalStatusFromTaskStatus(this.state.status),
+      evidence,
+      recoveryState: (this.state.recoveryStrategy ?? 'NONE') as DecisionRecoveryState,
+      recoveryAttempts: this.state.totalRecoveryAttempts ?? 0,
+      retryCount: this.state.retryCount ?? 0,
+    });
+  }
   private memoryHints?: MemoryHints;
 
   private extractOrigin(url?: string): string {
@@ -537,11 +613,13 @@ export class AgentLoop {
     this.longHorizonStore = options.longHorizonStore ?? createNoopStore();
     this.containmentScope = options.containmentScope ?? null;
     this.harness = options.harness ?? null;
-    // PHASE 18.7 / A1+A9 — the single evidence store for this task. Read-only
-    // here: the loop never authors a record, it only reads what the service
-    // worker observed and verifies proposals against it.
-    this.evidenceLedger = options.evidenceLedger ?? null;
     this.taskRunId = options.runId;
+    //
+    // PHASE 18.7 (A3). Carried, never re-derived. Frozen at the boundary, so
+    // nothing here can rewrite it. Absent for pre-I-1 callers.
+    //
+    this.intentDecision = options.intentDecision ?? null;
+    this.evidenceLedger = options.evidenceLedger ?? null;
 
     this.state = createAgentTaskState('', {
       maxSteps: this.maxSteps,
@@ -1330,7 +1408,7 @@ export class AgentLoop {
         }
         action = singleActionCheck.action!;
       } catch (err: unknown) {
-        //        //
+        //
         // PHASE 18.7 / A1 + A9. A terminal proposal is NOT a failure and NOT a
         // success. It is the agent reporting what the LOCAL verifier could
         // support, and the status it produces is one of the typed information
@@ -3200,20 +3278,35 @@ export class AgentLoop {
             55000
           );
         });
-        const rawHistory: BrowserAction[] = [...this.state.previousActions];
-        const lastStep = this.state.steps.length > 0 ? this.state.steps[this.state.steps.length - 1] : undefined;
-        if (lastStep && !lastStep.effectVerified) {
-          const alreadyIncluded = rawHistory.some(
-            (a) => a === lastStep.action
-          );
-          if (!alreadyIncluded) {
-            rawHistory.push({
-              ...lastStep.action,
-              effect: lastStep.effectStatus || 'ACTION_NO_EFFECT',
-              ...(lastStep.action.action === 'scroll' ? { scrollDelta: 0 } : {}),
-            } as BrowserAction);
-          }
-        }
+        //
+        // PHASE 18.7 (A6) — TRUTHFUL TYPED HISTORY.
+        //
+        // The previous code pushed `state.previousActions` and, for an
+        // unverified last step, appended a hand-built copy carrying
+        // `effect: lastStep.effectStatus || 'ACTION_NO_EFFECT'`. That conflated
+        // three independent facts — refused by a gate, ran and threw, ran and
+        // changed the page — into one `effect` string, so the reasoner could not
+        // tell "nothing happened because I was blocked" from "the page did not
+        // move", and would re-propose the blocked action.
+        //
+        // The projection below derives DISPATCH status and EFFECT status from
+        // separate, typed signals. A policy-blocked action reports
+        // `POLICY_BLOCKED` + `NOT_APPLICABLE`; it can never look executed.
+        //
+        // This is strictly more conservative than what it replaces: the
+        // invariant assertion refuses to emit a history claiming an effect
+        // nobody verified. It grants no permission and reorders no gate.
+        //
+        const stepEntries = this.state.steps.map((step) =>
+          buildActionHistoryEntry(step, {
+            currentPageGeneration: this.state.currentPageGeneration,
+          }),
+        );
+        assertTruthfulHistory(stepEntries);
+        const rawHistory: BrowserAction[] = stepEntries.map(toWireAction);
+        // An action with no step record was never recorded, so its outcome is
+        // genuinely unknown. It is NOT promoted into the typed history; the
+        // typed projection above is the single source of truth for this run.
         //
         // PHASE 18.5 (I-2). The effect/scrollDelta enrichment above is
         // preserved exactly — it is what lets the model distinguish a scroll
@@ -3242,8 +3335,25 @@ export class AgentLoop {
             kept: historyForReasoner.length,
           });
         }
-        const providerStep = await Promise.race([
-          this.requestStepFromProvider(task, context, historyForReasoner),
+        //
+        // PHASE 18.7 (A3) — STRUCTURED DECISION STATE ON THE WIRE.
+        //
+        // The reasoner previously had to guess whether its last proposal ran,
+        // was refused by a gate, or moved the page. That information existed
+        // locally and never crossed the boundary. It is now projected through an
+        // explicit allowlist and attached to THIS cycle's context.
+        //
+        // It is informational only: it grants no permission, reorders no gate,
+        // and cannot move any verifier's verdict. The destination and goal
+        // statuses are the verifiers' OWN verdicts being reported, never
+        // replaced.
+        //
+        const contextWithDecisionState: AgentContextPayload = {
+          ...context,
+          decision_state: projectDecisionStateForModel(this.buildDecisionStateForCycle(context)),
+        };
+        const action = await Promise.race([
+          this.requestStepFromProvider(task, contextWithDecisionState, historyForReasoner),
           timeoutPromise,
         ]);
 
@@ -3256,13 +3366,25 @@ export class AgentLoop {
         // from `expectedIdentity`; if the browser moved since, it is REFUSED.
         // Fail closed: no dispatch, no goal evidence.
         //
-        if (!isObservationCurrent(expectedIdentity, this.observationIdentityFor(context))) {
+        //
+        // PHASE 17.5 (F3) — STALE RESPONSE REJECTION, re-checked AFTER the call.
+        //
+        // The identity is read from `contextWithDecisionState` — the object that
+        // was ACTUALLY handed to the provider — not from `context`. When A3
+        // started passing an enriched copy, reading the original instead made
+        // this check blind: a provider that mutated the context it was given
+        // (the exact thing this check exists to catch) no longer changed what
+        // the loop compared against, and a proposal computed from a superseded
+        // observation was DISPATCHED. Caught by the post-17.9 generation test.
+        //
+        if (!isObservationCurrent(expectedIdentity, this.observationIdentityFor(contextWithDecisionState))) {
           throw new ProviderError(
             'Provider response is stale: the observed page changed while the request was in flight.',
             'timeout',
             { retryable: false, category: 'STALE_RESPONSE' }
           );
         }
+
         //
         // PHASE 18.7 / A1 — TERMINAL PROPOSAL.
         //
@@ -3275,14 +3397,14 @@ export class AgentLoop {
         // so there is NO code path from a proposal to the dispatch pipeline
         // below it. Nothing is grounded, validated, risk-scored or executed.
         //
-        if (providerStep.kind === 'TERMINAL_PROPOSAL') {
+        if (action.kind === 'TERMINAL_PROPOSAL') {
           const verdict = verifyTerminalProposal(
-            providerStep.proposal,
+            action.proposal,
             this.evidenceLedger ?? EMPTY_LEDGER_VIEW,
             task
           );
           console.info('[AgentTrace] terminal proposal received', {
-            proposed: providerStep.proposal.kind,
+            proposed: action.proposal.kind,
             status: verdict.status,
             supportedRecords: verdict.supportedRecordIds.length,
             downgraded: verdict.downgraded,
@@ -3290,7 +3412,7 @@ export class AgentLoop {
           throw new TerminalProposalSignal(verdict);
         }
 
-        return providerStep.action;
+        return action.action;
       } catch (err: unknown) {
         lastError = err;
         this.provider.registerFailure?.();

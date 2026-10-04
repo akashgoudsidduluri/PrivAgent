@@ -53,6 +53,12 @@ SANITIZED = {
     "sensitive_elements_detected": 0,
     "sanitized_status": "sanitized_only",
     "page_type": "article",
+    "decision_state": {
+        "task": "open wikipedia and find information about charminar",
+        "intent": "MIXED_TASK",
+        "requiresEvidence": True,
+        "evidence": [{"id": "ev-1", "verification": "VERIFIED"}],
+    },
 }
 
 SECRET = "Contact telephone 9876543210 now"
@@ -410,7 +416,7 @@ class TestPromptContract:
             max_steps=10,
             page_type="article",
             semantic_context={},
-            decision_state={"evidence": [{"id": "ev-1"}]},
+            decision_state=SANITIZED["decision_state"],
         )
 
     def test_prompt_offers_the_terminal_kinds(self):

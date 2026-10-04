@@ -31,6 +31,7 @@ import {
   type TaskStatus,
 } from '../extension/src/agent/agentState';
 import { validateProviderEnvelope, validateProviderStep } from '../extension/src/agent/providerResponse';
+import { goalStatusFromTaskStatus } from '../extension/src/agent/decisionState';
 
 const SECRET_PHONE = 'Contact telephone 9876543210';
 const SECRET_CARD = '4111111111111111';
@@ -85,8 +86,31 @@ describe('A1/A9 — a proposal cannot become a success', () => {
     expect(verdict.status).toBe('ANSWER');
     expect(verdict.status).not.toBe('SUCCESS');
   });
-;
-;
+
+  it('every information state maps to CANNOT_VERIFY, never SATISFIED', () => {
+    const informationStates: TaskStatus[] = [
+      'ANSWER',
+      'PARTIAL',
+      'NEEDS_INFORMATION',
+      'CANNOT_VERIFY',
+      'PROVIDER_UNAVAILABLE',
+    ];
+    for (const status of informationStates) {
+      expect(goalStatusFromTaskStatus(status)).toBe('CANNOT_VERIFY');
+      expect(goalStatusFromTaskStatus(status)).not.toBe('SATISFIED');
+    }
+  });
+
+  it('only SUCCESS maps to SATISFIED', () => {
+    for (const status of TERMINAL_TASK_STATUSES) {
+      const expected = status === 'SUCCESS' ? 'SATISFIED' : 'NOT_SATISFIED';
+      const actual = goalStatusFromTaskStatus(status);
+      if (status === 'NEEDS_USER_CONFIRMATION' || status === 'NEEDS_CLARIFICATION') continue;
+      if (status === 'ANSWER' || status === 'PARTIAL' || status === 'NEEDS_INFORMATION'
+          || status === 'CANNOT_VERIFY' || status === 'PROVIDER_UNAVAILABLE') continue;
+      expect(actual).toBe(expected);
+    }
+  });
 });
 
 describe('A1 — a proposal cannot manufacture evidence', () => {
@@ -386,7 +410,15 @@ describe('A9 — every terminal state has exactly one honest message', () => {
   it('PROVIDER_UNAVAILABLE says nothing was changed', () => {
     expect(userFacingMessageForStatus('PROVIDER_UNAVAILABLE')).toMatch(/nothing was changed/i);
   });
-;
+
+  it('the five pre-existing semantics are unchanged', () => {
+    expect(goalStatusFromTaskStatus('SUCCESS')).toBe('SATISFIED');
+    expect(goalStatusFromTaskStatus('FAILED')).toBe('NOT_SATISFIED');
+    expect(goalStatusFromTaskStatus('STOPPED')).toBe('NOT_SATISFIED');
+    expect(goalStatusFromTaskStatus('NEEDS_USER_CONFIRMATION')).toBe('NOT_APPLICABLE');
+    expect(goalStatusFromTaskStatus('NEEDS_CLARIFICATION')).toBe('NOT_APPLICABLE');
+    expect(goalStatusFromTaskStatus('IN_PROGRESS')).toBe('PENDING');
+  });
 
   it('an unmapped status never borrows success wording', () => {
     expect(userFacingMessageForStatus('NOT_A_STATUS' as TaskStatus)).not.toMatch(/verified as met/i);

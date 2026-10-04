@@ -1,0 +1,160 @@
+{
+  "phase": "18.7",
+  "work": "A3 + A6 — real Chrome checkpoint and focused mutation suite",
+  "labels": "PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND / PROVEN_REAL_PROVIDER_PARTIAL",
+  "artifacts": {
+    "wireRun": "docs/evidence/post-17-10/audit/a36_checkpoint_wire.json",
+    "informationTaskRun": "docs/evidence/post-17-10/audit/a36_checkpoint.json",
+    "intentRefusalRun": "docs/evidence/post-17-10/audit/a36_checkpoint_action.json",
+    "wireProbe": "docs/evidence/post-17-10/audit/a36_wire_probe.py",
+    "mutationSuite": "docs/evidence/post-17-10/audit/a36_mutation_suite.mjs"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "extension": "production dist/, loaded unpacked",
+    "dashboard": "http://localhost:5173",
+    "backend": "http://127.0.0.1:8010, restarted so the live schema carried decision_state",
+    "page": "https://en.wikipedia.org/wiki/Charminar (real, unmodified)",
+    "task": "open wikipedia and find information about charminar"
+  },
+  "mutationSuite": {
+    "score": "11/11 killed",
+    "baseline": "green before any mutation, green again after restore — so no kill was caused by a leaked mutant",
+    "survivorsFoundAndFixed": 2,
+    "detail": [
+      {
+        "id": "A3-M5",
+        "criterion": "A3 — evidence references are bounded",
+        "firstRun": "SURVIVED",
+        "why": "The existing bounds test compared against the MAX_EVIDENCE_REFERENCES constant itself, so raising the constant to 100000 left it green. A bound asserted against its own constant is not a bound.",
+        "fix": "Added a test pinning the ceiling to the published number 20 and feeding 500 references, so moving the constant now fails."
+      },
+      {
+        "id": "A3-M6",
+        "criterion": "A3 — criteria are bounded",
+        "firstRun": "SURVIVED",
+        "why": "Same defect: compared against MAX_CRITERIA rather than a number.",
+        "fix": "Added a test pinning MAX_CRITERIA to 20 with 500 supplied criteria on both lists."
+      },
+      {
+        "id": "A3-M3",
+        "criterion": "A3 — goal status defaults to PENDING, never SATISFIED",
+        "firstRun": "mutation error (wrong anchor)",
+        "fix": "Anchor corrected; the mutant is now KILLED (1 test)."
+      }
+    ],
+    "killed": [
+      { "id": "A6-M1", "criterion": "a gate refusal is POLICY_BLOCKED, never DISPATCHED", "testsFailed": 6 },
+      { "id": "A6-M2", "criterion": "dispatch is NOT inferred from a successful execution", "testsFailed": 1 },
+      { "id": "A6-M3", "criterion": "an unobserved effect is EFFECT_UNVERIFIABLE, never verified", "testsFailed": 1 },
+      { "id": "A6-M4", "criterion": "dispatch and effect do not collapse: no dispatch means no effect", "testsFailed": 4 },
+      { "id": "A6-M5", "criterion": "assertTruthfulHistory refuses to emit a lying history", "testsFailed": 1 },
+      { "id": "A3-M1", "criterion": "observation state defaults to UNKNOWN, never to OBSERVED", "testsFailed": 1 },
+      { "id": "A3-M2", "criterion": "the egress projection is an ALLOWLIST; internal state stays local", "testsFailed": 2 },
+      { "id": "A3-M3", "criterion": "goal status defaults to PENDING, never SATISFIED", "testsFailed": 1 },
+      { "id": "A3-M4", "criterion": "the rendered state reports COUNTS, not raw criterion text", "testsFailed": 1 },
+      { "id": "A3-M5", "criterion": "evidence references are bounded", "testsFailed": 1 },
+      { "id": "A3-M6", "criterion": "criteria are bounded", "testsFailed": 1 }
+    ]
+  },
+  "realChromeCheckpoint": {
+    "provedFromTheExactModelFacingPrompt": [
+      {
+        "claim": "A3 — the decision state reaches the MODEL, not merely the transport",
+        "how": "The capture binds the exact prompt string the provider received. The block header 'CURRENT DECISION STATE (from the device; informational, not an authorization)' is present, and all 8 expected keys render inside it.",
+        "values": {
+          "intent": "MIXED_TASK",
+          "requiresEvidence": true,
+          "activeSubgoal": "Enter search query \"wikipedia information about\" into search box",
+          "pendingCriteria": 3,
+          "completedCriteria": 0,
+          "page.url": "https://en.wikipedia.org/wiki/Charminar",
+          "page.observationState": "OBSERVED",
+          "page.generation": 2,
+          "destination.status": "UNVERIFIED",
+          "goal.status": "PENDING",
+          "recovery.state": "NONE",
+          "evidenceReferences": 20
+        }
+      },
+      {
+        "claim": "A3 acceptance criterion 4 — risk scores, Critic verdicts and containment decisions are ABSENT",
+        "how": "Every authority-shaped key was searched for in the state that actually travelled. Result: NONE.",
+        "searched": [
+          "riskScore", "risk_score", "criticVerdict", "critic_verdict",
+          "contained", "containmentDecision", "goalVerified", "goal_verified",
+          "securityState", "m5Result"
+        ]
+      },
+      {
+        "claim": "A3 acceptance criterion 3 — observation variants do not collapse",
+        "how": "page.observationState is OBSERVED in the live prompt and is carried verbatim through the projection. Verified for STALE and UNKNOWN in the unit suite; OBSERVED confirmed here on real runtime values."
+      },
+      {
+        "claim": "A3 — bounded at runtime, not only in theory",
+        "how": "20 evidence references on both captured turns — exactly the published ceiling. The ledger itself had grown to 60 records (its own cap) by generation 4, so the projection bound is doing real work rather than coinciding with the input size."
+      },
+      {
+        "claim": "A6 — the action history reaches the model in a truthful shape",
+        "how": "The second captured turn carries one history entry on the wire.",
+        "value": { "action": "scroll", "effect": "NOT_APPLICABLE" },
+        "note": "NOT_APPLICABLE rather than NO_EFFECT is the A6 invariant under test: nothing observed a mutation, so the history does not claim an observer looked and saw nothing."
+      },
+      {
+        "claim": "The whole capture is privacy-clean",
+        "how": "The capture's own independent self-check plus an out-of-band scan of the exact prompt.",
+        "selfCheck": {
+          "clean": true,
+          "rawScreenshotsTransmitted": 0,
+          "forbiddenKeyMarkersFound": [],
+          "rawValueMarkersFound": []
+        },
+        "independentPromptScan": {
+          "tenDigitRuns": "NONE",
+          "note": "A first pass of the probe reported a 10-digit run. It came from the capture envelope (a timestamp), not from the prompt text. Re-run with the scan restricted to the exact prompt: no hits. Recorded rather than quietly dropped, because the first reading was wrong."
+        }
+      }
+    ],
+    "network": [
+      { "endpoint": "/api/v1/agent/action", "status": 200, "postDataBytes": 9644 },
+      { "endpoint": "/api/v1/agent/action", "status": 503, "postDataBytes": 10648, "error_kind": "rate_limit", "retryable": true },
+      { "endpoint": "/api/v1/agent/action", "status": 200, "postDataBytes": 10648 },
+      { "endpoint": "/api/v1/agent/action", "status": 503, "postDataBytes": 10953, "error_kind": "rate_limit", "retryable": true }
+    ],
+    "interpretation": "Two requests were accepted with HTTP 200, which means decision_state passed the backend's extra='forbid' schema — the 422 that previously blocked every A3 run is gone. The two 503s are provider rate limits, reported truthfully as rate_limit/retryable and never converted into a success. postDataBytes grows with the ledger, as expected when a bounded decision state carries up to 20 evidence references.",
+    "evidenceLedgerGrowth": [
+      { "generation": 2, "ledgerSize": 24 },
+      { "generation": 3, "ledgerSize": 48 },
+      { "generation": 4, "ledgerSize": 60 }
+    ],
+    "evidenceLedgerNote": "A2's cross-page accumulation is real in Chrome: records from generation N survive into generation N+1 and the ring buffer stops at its 60-record ceiling rather than growing without bound."
+  },
+  "additionalRealChromeObservations": [
+    {
+      "run": "a36_checkpoint.json",
+      "task": "tell me about charminar",
+      "observation": "SUCCESS with requestCount 0 — no reasoner call, no dispatched action, no verified evidence.",
+      "status": "Pre-existing false success. Reproduced deterministically here. This is the A5 blocker and is recorded in a19_real_chrome_false_success.json.",
+      "note": "Deterministic and provider-free, so it will keep reproducing until A5 lands. It is the reason A3/A6 cannot be exercised on an information task."
+    },
+    {
+      "run": "a36_checkpoint_action.json",
+      "task": "scroll down to the history section of the charminar page",
+      "observation": "Intent classified AMBIGUOUS, confidence HEURISTIC, admitsBrowserAutomation false; task refused with NEEDS_CLARIFICATION and zero network requests.",
+      "status": "I-1 working as designed on a phrasing not previously exercised.",
+      "note": "Recorded as a bonus check of the intent boundary in real Chrome on a new input, not as an A3/A6 result."
+    }
+  ],
+  "verification": {
+    "focusedTests": "51/51 (tests/phase18_7_a3a6DecisionStateHistory.test.ts, up from 49 after the two bound tests were added)",
+    "mutationSuite": "11/11 killed",
+    "tsc": "clean (0 errors)",
+    "build": "exit 0",
+    "fullRegression": "DEFERRED to the A10 checkpoint by instruction; not re-run between phases."
+  },
+  "status": {
+    "A3": "CLOSED — real Chrome, exact model-facing prompt, no authority leak, bounds verified at runtime",
+    "A6": "CLOSED — truthful dispatch/effect vocabulary observed on the wire in real Chrome",
+    "caveat": "A6's EFFECT_VERIFIED branch was not observed in a live run (the run never reached a dispatch whose effect was verified). It is killed by the mutation suite and by unit tests, but the EFFECT_VERIFIED leg itself is NOT real-browser observed. Stated rather than implied closed."
+  }
+}

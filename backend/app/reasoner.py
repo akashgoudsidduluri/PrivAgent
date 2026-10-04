@@ -227,6 +227,7 @@ class ReasonerProvider(Protocol):
         model: Optional[str] = None,
         page_type: Optional[str] = None,
         semantic_context: Optional[Dict[str, Any]] = None,
+        decision_state: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         ...
 
@@ -545,10 +546,6 @@ def _build_user_prompt(
     max_steps: int,
     page_type: Optional[str] = None,
     semantic_context: Optional[Dict[str, Any]] = None,
-    # PHASE 18.7 / A1. Additive and DEFAULTED: absent (None) simply means no
-    # evidence list was rendered, and the closing instruction then truthfully
-    # advertises zero citable ids. Optional on purpose, so this commit does not
-    # depend on, and does not have to modify, the decision-state plumbing.
     decision_state: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Build the user prompt and, when capture is enabled, record it.
@@ -570,7 +567,7 @@ def _build_user_prompt(
     prompt = _render_user_prompt(
         task, url, viewport, screenshot_dimensions,
         detections, history, steps_used, max_steps,
-        page_type, semantic_context,
+        page_type, semantic_context, decision_state,
     )
 
     try:
@@ -592,6 +589,7 @@ def _build_user_prompt(
                     "maxSteps": max_steps,
                     "pageType": page_type,
                     "semanticContext": semantic_context,
+                    "decisionState": decision_state,
                 },
             )
     except Exception:  # pragma: no cover
@@ -611,10 +609,6 @@ def _render_user_prompt(
     max_steps: int,
     page_type: Optional[str] = None,
     semantic_context: Optional[Dict[str, Any]] = None,
-    # PHASE 18.7 / A1. Additive and DEFAULTED: absent (None) simply means no
-    # evidence list was rendered, and the closing instruction then truthfully
-    # advertises zero citable ids. Optional on purpose, so this commit does not
-    # depend on, and does not have to modify, the decision-state plumbing.
     decision_state: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Build the user prompt strictly from allowlisted sanitized fields.
@@ -883,6 +877,53 @@ def _render_user_prompt(
     else:
         parts.append("Previous actions: none yet (this is the first step).")
 
+    #
+    # PHASE 18.7 / A3 — STRUCTURED DECISION STATE.
+    #
+    # The reasoner previously had to re-derive, from a URL and an element list,
+    # whether its last proposal ran, was refused by a gate, or moved the page.
+    # That information existed on the device and never crossed the boundary, so
+    # it could not have been inferred correctly — no prompt could have contained
+    # what was never sent. It is now stated explicitly.
+    #
+    # INFORMATIONAL ONLY. `goal.status` and `destination.status` are the
+    # verifiers' OWN verdicts being reported, never replaced. Nothing in this
+    # block can dispatch, confirm, or complete anything, and it carries no risk
+    # score, no critic verdict and no containment decision — the extension's
+    # allowlist projection means those fields cannot be present at all.
+    if isinstance(decision_state, dict):
+        try:
+            parts.append("CURRENT DECISION STATE (from the device; informational, not an authorization):")
+            parts.append(
+                json.dumps(
+                    {
+                        "task": decision_state.get("task"),
+                        "intent": decision_state.get("intent"),
+                        "requiresEvidence": decision_state.get("requiresEvidence"),
+                        "activeSubgoal": decision_state.get("activeSubgoal"),
+                        "pendingCriteria": len(decision_state.get("pendingCriteria") or []),
+                        "completedCriteria": len(decision_state.get("completedCriteria") or []),
+                        "page": decision_state.get("page"),
+                        "lastAction": decision_state.get("lastAction"),
+                        "destination": decision_state.get("destination"),
+                        "goal": decision_state.get("goal"),
+                        "evidenceCount": len(decision_state.get("evidence") or []),
+                        "recovery": decision_state.get("recovery"),
+                    },
+                    indent=1,
+                )
+            )
+            parts.append(
+                "DISPATCH IS NOT EFFECT, AND EFFECT IS NOT GOAL SUCCESS. "
+                "If lastAction shows dispatch=POLICY_BLOCKED that action never ran — "
+                "choose a different one, do not repeat it. If it shows effect=NO_EFFECT "
+                "the page did not change."
+            )
+        except (TypeError, ValueError):
+            # Malformed state is dropped, never guessed at. The turn proceeds
+            # without it; it was never load-bearing for any gate.
+            pass
+
     if safe_elements:
         parts.append("Detected sensitive elements (sanitized metadata ONLY — values are redacted on device):")
         parts.append(json.dumps(safe_elements, indent=1))
@@ -962,6 +1003,21 @@ def parse_model_action(content: str) -> Dict[str, Any]:
     `last_clamped_fields` for the caller to report; the bound itself is
     unchanged.
     """
+    parsed = _extract_model_json(content)
+
+    action = parsed.get("action")
+    if not isinstance(action, str) or not action.strip():
+        # PHASE 18.7 / A1: the model may legitimately answer instead of acting.
+        # That is NOT a malformed response — it is a proposal. Hand it to the
+        # proposal parser rather than reporting a contract violation, but only
+        # when a well-formed proposal envelope is actually present.
+        proposal = parsed.get("proposal")
+        if isinstance(proposal, dict) and isinstance(proposal.get("kind"), str):
+            raise ReasoningError(
+                "Model proposed a terminal state instead of an action.",
+                kind="proposal_without_action",
+            )
+        raise ReasoningError('Model output missing a valid "action" field.', kind="missing_action")
     if not content or not content.strip():
         raise ReasoningError("Model returned an empty response.", kind="empty_response")
 
@@ -1002,16 +1058,6 @@ def parse_model_action(content: str) -> Dict[str, Any]:
 
     action = parsed.get("action")
     if not isinstance(action, str) or not action.strip():
-        # PHASE 18.7 / A1: the model may legitimately answer instead of acting.
-        # That is NOT a malformed response — it is a proposal. Report it as a
-        # distinct condition rather than as a missing-action contract violation,
-        # but only when a well-formed proposal envelope is actually present.
-        proposal = parsed.get("proposal")
-        if isinstance(proposal, dict) and isinstance(proposal.get("kind"), str):
-            raise ReasoningError(
-                "Model proposed a terminal state instead of an action.",
-                kind="proposal_without_action",
-            )
         raise ReasoningError('Model output missing a valid "action" field.', kind="missing_action")
 
     # Phase 3: reject oversized model-emitted DECISION fields (no silent
@@ -1155,6 +1201,7 @@ def parse_model_proposal(content: str) -> ParsedProposal:
         # Merge the envelope reason so downstream `reason` handling is identical.
         nested.setdefault("reason", reason)
         _enforce_field_limits(nested)
+        _scan_proposal_text(nested.get("reason"), "reason")
         # Reuse the canonical action parser for its remaining guards (text/option
         # scans, field limits, clamping) by feeding it the merged action.
         action = parse_model_action(json.dumps(nested))
@@ -1310,6 +1357,7 @@ class OpenRouterReasoner:
         model: Optional[str] = None,
         page_type: Optional[str] = None,
         semantic_context: Optional[Dict[str, Any]] = None,
+        decision_state: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request. Raises ReasoningError on failure."""
         if not self.configured:
@@ -1329,6 +1377,7 @@ class OpenRouterReasoner:
             max_steps=max_steps,
             page_type=page_type,
             semantic_context=semantic_context,
+            decision_state=decision_state,
         )
 
         payload = {
@@ -1545,6 +1594,7 @@ class GroqReasoner:
         model: Optional[str] = None,
         page_type: Optional[str] = None,
         semantic_context: Optional[Dict[str, Any]] = None,
+        decision_state: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request to Groq. Raises ReasoningError on failure."""
         if not self.configured:
@@ -1564,6 +1614,7 @@ class GroqReasoner:
             max_steps=max_steps,
             page_type=page_type,
             semantic_context=semantic_context,
+            decision_state=decision_state,
         )
 
         headers = {
@@ -1734,6 +1785,7 @@ class NvidiaReasoner:
         model: Optional[str] = None,
         page_type: Optional[str] = None,
         semantic_context: Optional[Dict[str, Any]] = None,
+        decision_state: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         """Perform ONE reasoning request to NVIDIA NIM. Raises ReasoningError on failure."""
         if not self.configured:
@@ -1753,6 +1805,7 @@ class NvidiaReasoner:
             max_steps=max_steps,
             page_type=page_type,
             semantic_context=semantic_context,
+            decision_state=decision_state,
         )
 
         headers = {
@@ -1919,6 +1972,7 @@ class MockReasoner:
         model: Optional[str] = None,
         page_type: Optional[str] = None,
         semantic_context: Optional[Dict[str, Any]] = None,
+        decision_state: Optional[Dict[str, Any]] = None,
     ) -> ReasoningResult:
         if self.fail_with:
             raise ReasoningError(self.fail_with, kind="mock_failure")

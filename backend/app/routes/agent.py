@@ -171,6 +171,10 @@ async def generate_action(
             model=model_id,
             page_type=context.page_type,
             semantic_context=context.semantic_context,
+            # PHASE 18.7 / A3: the model-facing decision state, passed
+            # through unchanged. It is built by an allowlist projection on
+            # the device; nothing here derives, validates or upgrades it.
+            decision_state=context.decision_state,
         )
         # PHASE 18.5 / TIER 1.3 — INSTRUMENTATION ONLY. Writes one capture
         # artifact binding the exact model-facing prompt to the request
@@ -225,6 +229,10 @@ async def generate_action(
                     model=model_id,
                     page_type=context.page_type,
                     semantic_context=context.semantic_context,
+                    # PHASE 18.7 / A3: the model-facing decision state, passed
+                    # through unchanged. It is built by an allowlist projection on
+                    # the device; nothing here derives, validates or upgrades it.
+                    decision_state=context.decision_state,
                 )
                 fallback_used = True
                 effective_provider = fallback_name

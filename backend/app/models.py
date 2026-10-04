@@ -168,6 +168,19 @@ class AgentContextPayload(StrictModel):
     page_type: Optional[str] = "general"
     semantic_context: Optional[Dict[str, Any]] = None
     memory_hints: Optional[Dict[str, Any]] = None
+    #
+    # PHASE 18.7 / A3 — model-facing structured decision state.
+    #
+    # Optional and additive: a payload without it validates exactly as before,
+    # so an older extension talking to this backend is unaffected. It follows
+    # the same `Optional[Dict[str, Any]]` shape as `memory_hints`, which keeps
+    # the strictness of `extra='forbid'` intact — this is one explicitly
+    # declared field, NOT a relaxation of the model.
+    #
+    # It carries NO authority: no risk score, no critic verdict, no containment
+    # decision, no verifier internals. It tells the reasoner what is currently
+    # believed, never what is permitted.
+    decision_state: Optional[Dict[str, Any]] = None
 
     @field_validator("sanitized_status")
     @classmethod
