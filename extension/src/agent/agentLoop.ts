@@ -112,6 +112,7 @@ import {
 } from './recoveryEngine';
 import { AgentHarness, type HarnessDecision } from './harness';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
+import type { EvidenceLedger } from '../evidence/evidenceLedger';
 import {
   buildSemanticUnderstanding,
   SemanticUnderstandingOutput,
@@ -264,6 +265,16 @@ export interface AgentLoopOptions {
    * environmental claim is made and no boundary is asserted.
    */
   harness?: AgentHarness | null;
+
+  /**
+   * PHASE 18.7 / A2 — the task's evidence ledger.
+   *
+   * Owned by the service worker (one per task) and passed in, so the decision
+   * state and information completion read the SAME store rather than keeping a
+   * private copy. It grants no authority: it records what was observed and
+   * nothing more.
+   */
+  evidenceLedger?: EvidenceLedger;
 }
 
 // Complete normalized forbidden key set that must never appear anywhere in TaskState

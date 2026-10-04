@@ -7,6 +7,7 @@ import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
 import { resolveTargetWebTab, isEligibleWebTab, isDashboardUrl } from './targetResolver';
 import { classifyIntent, refusalUserMessage } from '../agent/intentBoundary';
+import { EvidenceLedger } from '../evidence/evidenceLedger';
 import {
   establishContainmentScope,
   evaluateContainment,
@@ -601,6 +602,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     activeTaskRunId = currentRunId;
     const taskOwnershipToken = currentRunId;
 
+    // PHASE 18.7 / A2 — a FRESH ledger per task. Reusing the previous task's
+    // ledger would let evidence from a different page and a different
+    // generation be cited for this one, which is exactly the cross-task
+    // contamination the ledger's provenance exists to prevent.
+    const activeEvidenceLedger = new EvidenceLedger();
+
     if (activeLoop) {
       console.info('[PrivAgent SW] Halting and superseding previous active loop for new task run', {
         supersededRunId: activeLoop.getRunId?.(),
@@ -1049,6 +1056,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 latencyMs: semanticObservation.latencyMs,
               });
 
+              // PHASE 18.7 / A2 — ingest into the task's evidence ledger. Counts
+              // and rule-free metadata only; no claim text is ever logged.
+              const ingested = activeEvidenceLedger.ingestObservation(
+                semanticObservation,
+                String(semanticObservation.provenance?.documentUrl ?? '')
+              );
+              console.info('[AgentTrace] evidence ledger updated', {
+                ingested,
+                ledgerSize: activeEvidenceLedger.size,
+                generation: semanticObservation.provenance?.pageGeneration ?? null,
+              });
+
               console.info('[ServiceWorker] response forwarded');
               const built = buildAgentPayload(scanRes.report, visualReport, semanticContext);
               if (!built) return null;
@@ -1430,6 +1449,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           containmentScope,
           harness: new AgentHarness(),
           longHorizonStore: createSessionStore(),
+          // PHASE 18.7 / A2. One ledger per task, created at task start and
+          // ingested on every perception below. It is handed to the loop so the
+          // decision state and information completion read the SAME store —
+          // there is no parallel evidence store anywhere in the system.
+          evidenceLedger: activeEvidenceLedger,
           initialUrl: targetTab.url || (targetTab as any).pendingUrl || undefined,
         });
         activeLoop = thisLoop;
