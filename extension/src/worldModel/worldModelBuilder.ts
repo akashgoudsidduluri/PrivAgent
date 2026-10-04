@@ -10,6 +10,7 @@
  *  3. Computes deterministic spatial and semantic graphs on-device.
  */
 
+import { truncateAtWordBoundary } from '../util/textBounds';
 import {
   BrowserWorldModel,
   PageModel,
@@ -202,7 +203,11 @@ export function buildBrowserWorldModel(options: BuildWorldModelOptions = {}): Br
   headingElements.slice(0, 30).forEach((el, idx) => {
     const text = (el.textContent || '').trim();
     if (text.length > 2 && isElementVisible(el)) {
-      let preview = text.slice(0, 40);
+      // PHASE 18.7 / A4 — word-boundary truncation at the SOURCE. This raw
+      // `.slice(0, 40)` was the real mid-word cut; fixing the downstream fact
+      // extractor alone changed nothing because by then the string was already
+      // 40 characters long.
+      let preview = truncateAtWordBoundary(text, 40);
       if (scanForRawSensitiveValues(preview).length > 0) {
         preview = 'Protected Text';
       }

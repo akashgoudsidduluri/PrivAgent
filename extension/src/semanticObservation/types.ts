@@ -179,15 +179,6 @@ export const MAX_FACT_LABEL_CHARS = 40;
  * completion rule. Truncating on a word boundary is strictly more useful and
  * keeps the bound.
  */
-export function truncateAtWordBoundary(value: string, maxChars: number): string {
-  const text = value.trim();
-  if (text.length <= maxChars) return text;
-  const clipped = text.slice(0, maxChars);
-  const lastSpace = clipped.lastIndexOf(' ');
-  // Only accept a break that keeps most of the budget; otherwise a very long
-  // first word is returned intact rather than mangled to nothing.
-  const cut = lastSpace > maxChars * 0.5 ? clipped.slice(0, lastSpace) : clipped;
-  return cut.replace(/[\s\-,;:.]+$/, '');
-}
+export { truncateAtWordBoundary } from '../util/textBounds';
 /** Maximum age (ms) before an observation is treated as STALE. */
 export const MAX_SEMANTIC_OBSERVATION_AGE_MS = 15_000;
