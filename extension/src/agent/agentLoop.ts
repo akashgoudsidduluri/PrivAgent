@@ -143,11 +143,77 @@ import type { EvidenceLedger } from '../evidence/evidenceLedger';
 import { truncateClaim } from '../evidence/evidenceLedger';
 import {
   verifyTerminalProposal,
+  subjectTermsFromTask,
   MAX_SUPPORTED_ANSWER_CHARS,
   type ProposalLedgerView,
   type ProposalVerdict,
 } from './proposal';
 import type { ProviderStep } from './providerResponse';
+
+/**
+ * PHASE 18.8 / B1 — bounded claim count for an answer composed from evidence.
+ * The same 1500-char bound as the proposal path applies on top.
+ */
+export const MAX_EVIDENCE_ANSWER_CLAIMS = 8;
+
+/**
+ * PHASE 18.8 / B1 — compose a user-facing answer from LOCAL verified evidence.
+ *
+ * This is the SUCCESS-side sibling of `buildSupportedAnswer`: when the
+ * GoalVerifier certifies an information task because the device holds verified,
+ * current evidence about the question's subject (A5), the user must actually
+ * SEE that answer. Before B1 the system reported SUCCESS beside "No result
+ * yet."
+ *
+ * Same rules as every other answer surface, because it is the same ledger:
+ *   * VERIFIED + CURRENT records only — never UNVERIFIED, stale, conflicted or
+ *     quarantined ones;
+ *   * on-subject records only, matched against the USER'S OWN task text via
+ *     `subjectTermsFromTask` (the model cannot widen the subject);
+ *   * claims are the ledger's sanitized text, joined and word-boundary
+ *     truncated; the model's prose is never consulted.
+ *
+ * Pure and deterministic: no I/O, no clock, no model.
+ */
+export function composeEvidenceAnswerFromLedger(
+  ledger: ProposalLedgerView | null | undefined,
+  task: string,
+  maxClaims: number = MAX_EVIDENCE_ANSWER_CLAIMS
+): { answer: string; verifiedRecords: number } | undefined {
+  if (!ledger) return undefined;
+  const terms = subjectTermsFromTask(task);
+  if (terms.length === 0) return undefined;
+
+  const claims: string[] = [];
+  for (const record of ledger.citable()) {
+    if (record.verificationStatus !== 'VERIFIED') continue;
+    if (record.freshness !== 'CURRENT') continue;
+    if (record.privacyStatus !== 'SANITIZED') continue;
+    const key = record.key.toLowerCase();
+    const onSubject = terms.some((term) => key.includes(term) || term.includes(key));
+    if (!onSubject) continue;
+    if (claims.includes(record.claim)) continue;
+    claims.push(record.claim);
+    if (claims.length >= maxClaims) break;
+  }
+
+  if (claims.length === 0) return undefined;
+  return {
+    answer: truncateClaim(claims.join(' '), MAX_SUPPORTED_ANSWER_CHARS),
+    verifiedRecords: claims.length,
+  };
+}
+
+/** Hostname only — never a path, query or fragment. Fails closed to null. */
+function hostFromUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const host = new URL(url).host;
+    return host || null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * PHASE 18.7 / A1 — raised when the model proposed a terminal state and the
@@ -1587,11 +1653,23 @@ export class AgentLoop {
             this.state.answer = verdict.supportedRecordIds.length
               ? this.buildSupportedAnswer(verdict)
               : undefined;
+            // PHASE 18.8 / B1 — value-free provenance for the result layer.
+            // Count and host only; record ids never leave the device.
+            if (this.state.answer) {
+              this.state.answerProvenance = {
+                verifiedRecords: verdict.supportedRecordIds.length,
+                sourceHost: hostFromUrl(this.state.currentUrl),
+              };
+            }
             this.notifyProgress();
             console.info('[AgentTrace] task terminated', {
               status,
               supportedRecords: verdict.supportedRecordIds.length,
               downgraded: verdict.downgraded,
+              // PHASE 18.8 / B1 — a LENGTH, never the text: it proves a
+              // user-facing answer was composed from local verified claims
+              // without putting any claim into a log line.
+              answerChars: this.state.answer?.length ?? 0,
             });
             break;
           }
@@ -2511,12 +2589,21 @@ export class AgentLoop {
           });
           this.state.decisionTraceSummary = tracer.getSummary();
           this.notifyProgress();
-          if (this.state.retryCount > this.maxRetries) {
+          //
+          // PHASE 18.8 / A10-F2. Same rule as the sibling path below: an
+          // unreadable effect is bounded by the TYPED budget of one fresh
+          // perception, never by `maxRetries`, and it never re-dispatches.
+          const bothSidesRecovery = this.planRecoveryForLastStep('EFFECT_UNVERIFIABLE');
+          if (bothSidesRecovery?.exhausted) {
             unobservableRecord.finalState = 'FAILED';
             this.state.status = 'FAILED';
             this.state.goalStatus = 'FAILED';
-            this.state.reason = `Effect verification unavailable repeatedly: ${unobservableRecord.reason}`;
-            console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+            this.state.reason =
+              "I couldn't verify whether the action took effect, so I stopped without repeating it.";
+            console.info('[AgentTrace] M6 failed', {
+              reason: this.state.reason,
+              recoveryCategory: 'EFFECT_UNVERIFIABLE',
+            });
             break;
           }
           await this.delay(this.delayBetweenStepsMs);
@@ -2575,12 +2662,34 @@ export class AgentLoop {
         );
         this.state.decisionTraceSummary = tracer.getSummary();
         this.notifyProgress();
-        if (this.state.retryCount > this.maxRetries) {
+        //
+        // PHASE 18.8 / A10-F2. An UNOBSERVABLE effect is not a retryable one.
+        //
+        // This used to be bounded by `retryCount > maxRetries`, which is a
+        // blind repeat: it re-enters the loop and may re-dispatch the SAME
+        // action. For a navigation that is merely wasteful; for any future
+        // side-effecting action it is a duplicate of something whose effect we
+        // already cannot establish. "I don't know whether it worked" must never
+        // mean "do it again".
+        //
+        // The typed planner expresses that directly: EFFECT_UNVERIFIABLE has a
+        // budget of ONE and a chain of exactly [RE_PERCEIVE], so the single
+        // allowed retry takes a FRESH observation, and a second unobservable
+        // effect terminates truthfully instead of dispatching anything.
+        //
+        const unobservableRecovery = this.planRecoveryForLastStep('EFFECT_UNVERIFIABLE');
+        if (unobservableRecovery?.exhausted) {
           unobservableRecord.finalState = 'FAILED';
           this.state.status = 'FAILED';
           this.state.goalStatus = 'FAILED';
-          this.state.reason = `Effect verification unavailable repeatedly: ${unobservableRecord.reason}`;
-          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+          // A user-facing sentence, not the device's internal explanation. The
+          // typed reason code carries the detail for the audit trail.
+          this.state.reason =
+            "I couldn't verify whether the action took effect, so I stopped without repeating it.";
+          console.info('[AgentTrace] M6 failed', {
+            reason: this.state.reason,
+            recoveryCategory: 'EFFECT_UNVERIFIABLE',
+          });
           break;
         }
         await this.delay(this.delayBetweenStepsMs);
@@ -2736,13 +2845,19 @@ export class AgentLoop {
         //
         // PHASE 18.7 / A7 — TRUTHFUL TYPED RECOVERY FOR A NO-EFFECT STEP.
         //
-        // The category is DERIVED, never asserted by the caller: OSCILLATION
-        // when the I-8 semantic-progress authority has detected an alternating
-        // run, otherwise NO_EFFECT from the EffectVerifier's own verdict.
-        // `madeProgress` inside the record comes from `assessProgress`, so it
-        // can never be confused with the fact that this action did dispatch.
+        // The category is DERIVED, never asserted by the caller: the
+        // EffectVerifier's own verdict when it could not establish an effect at
+        // all (EFFECT_UNVERIFIABLE), then OSCILLATION when the I-8
+        // semantic-progress authority has detected an alternating run,
+        // otherwise NO_EFFECT. `madeProgress` inside the record comes from
+        // `assessProgress`, so it can never be confused with the fact that this
+        // action did dispatch.
         const noEffectRecovery = this.planRecoveryForLastStep(
-          this.longHorizon.semanticProgressVerdict().stagnation === 'OSCILLATION' ? 'OSCILLATION' : 'NO_EFFECT'
+          effectResult.status === 'EFFECT_UNVERIFIABLE'
+            ? 'EFFECT_UNVERIFIABLE'
+            : this.longHorizon.semanticProgressVerdict().stagnation === 'OSCILLATION'
+              ? 'OSCILLATION'
+              : 'NO_EFFECT'
         );
         if (noEffectRecovery?.exhausted) {
           // Bounded recovery is spent for this category. Terminate TRUTHFULLY
@@ -2751,9 +2866,10 @@ export class AgentLoop {
           // keeps the repository's EXISTING vocabulary, so every existing
           // consumer of it reads this exactly as it reads the older paths.
           const record = this.lastRecoveryRecord();
+          const exhaustedCategory = record?.failureCategory;
           const exhaustedRecord: FailureRecord = {
             category: 'RECOVERY_EXHAUSTED',
-            reason: `Recovery limit exceeded for ${record?.failureCategory ?? 'NO_EFFECT'} after ${record?.retryCount ?? 0} bounded attempts.`,
+            reason: `Recovery limit exceeded for ${exhaustedCategory ?? 'NO_EFFECT'} after ${record?.retryCount ?? 0} bounded attempts.`,
             pageGeneration: this.state.currentPageGeneration,
             attemptedAction: action,
             recoveryAttempted: true,
@@ -2764,7 +2880,14 @@ export class AgentLoop {
           this.state.failureHistory.push(exhaustedRecord);
           this.state.status = 'FAILED';
           this.state.goalStatus = 'FAILED';
-          this.state.reason = exhaustedRecord.reason;
+          // Same rule as the two unobservable-effect sites: the device's
+          // internal explanation stays in the failure record for the audit
+          // trail, while the user-facing reason carries the truthful sentence.
+          // NO_EFFECT / OSCILLATION keep their existing vocabulary here.
+          this.state.reason =
+            exhaustedCategory === 'EFFECT_UNVERIFIABLE'
+              ? "I couldn't verify whether the action took effect, so I stopped without repeating it."
+              : exhaustedRecord.reason;
           this.notifyProgress();
           console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
           break;
@@ -3820,6 +3943,30 @@ export class AgentLoop {
       state.goalStatus = 'SUCCESS';
       if (res.reason) {
         state.reason = res.reason;
+      }
+      //
+      // PHASE 18.8 / B1 — an evidence-based SUCCESS must also carry the ANSWER.
+      //
+      // A5 certifies this task because the device holds verified, current
+      // evidence about the subject. Until B1 the dashboard then showed
+      // "Goal achieved" beside "No result yet." — the completion was truthful
+      // and the user was told nothing. The answer is composed from the SAME
+      // ledger the completion rule reads, with the same subject match, and the
+      // model's prose is not consulted. When no answer can be composed the
+      // field simply stays absent; nothing is fabricated.
+      //
+      if (!this.state.answer) {
+        const composed = composeEvidenceAnswerFromLedger(
+          this.evidenceLedger,
+          this.state.taskGoal || this.state.normalizedGoal || ''
+        );
+        if (composed) {
+          this.state.answer = composed.answer;
+          this.state.answerProvenance = {
+            verifiedRecords: composed.verifiedRecords,
+            sourceHost: hostFromUrl(this.state.currentUrl),
+          };
+        }
       }
       // PHASE 18.7 / A5. The rule id only — `res.reason` quotes the observed
       // fact and its value, so it must never reach a log line. Without this,

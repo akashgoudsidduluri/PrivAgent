@@ -373,6 +373,15 @@ export interface AgentTaskState extends TaskState {
   answer?: string;
 
   /**
+   * PHASE 18.8 / B1 — value-free provenance for the displayed answer.
+   *
+   * A COUNT and a HOST, nothing else: never record ids, never claim text,
+   * never a URL path. The projection layer may show it; the loop can only ever
+   * write it from records that passed the local verifier.
+   */
+  answerProvenance?: { verifiedRecords: number; sourceHost: string | null };
+
+  /**
    * PHASE 18.7 / A5 — the I-1 intent decision's `requiresEvidence`, carried
    * through unchanged and never re-derived here.
    *

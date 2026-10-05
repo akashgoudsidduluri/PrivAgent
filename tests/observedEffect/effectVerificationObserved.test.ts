@@ -255,7 +255,21 @@ describe('P0-1 observed effect verification', () => {
     );
     const state = await loop.runTask('click the control');
     expect(state.status).toBe('FAILED');
-    expect(state.reason).toContain('Effect verification unavailable');
+    //
+    // PHASE 18.8 / A10-F2 — the typed contract for an unobservable effect.
+    //
+    // `state.reason` used to render the device's internal string
+    // ("Effect verification unavailable repeatedly: …"). It now carries the
+    // truthful user sentence, because "I could not read the effect" must never
+    // reach the user as internal prose; the typed detail stays in the failure
+    // record for the audit trail. The safety properties this test exists for
+    // are unchanged and asserted above and below.
+    expect(state.reason).toBe(
+      "I couldn't verify whether the action took effect, so I stopped without repeating it."
+    );
+    expect(state.reason ?? '').not.toMatch(
+      /Effect verification unavailable|browser state could not be observed|effect treated as unverified/i
+    );
     expect(state.steps[0]?.effectStatus).toBe('ACTION_NO_EFFECT');
   });
 

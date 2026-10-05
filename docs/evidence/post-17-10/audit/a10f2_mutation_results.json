@@ -1,0 +1,93 @@
+{
+  "phase": "18.8-A10-F2",
+  "work": "A10-F2 EFFECT_UNVERIFIABLE typed recovery — mutation suite",
+  "total": 9,
+  "killed": 9,
+  "survived": 0,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "file": "extension/src/agent/recoveryEngine.ts",
+      "name": "EFFECT_UNVERIFIABLE unmapped again (the original defect)",
+      "find": "  EFFECT_UNVERIFIABLE: 'REPERCEIVE',\n\n  // ── Grounding",
+      "replace": "\n  // ── Grounding",
+      "verdict": "KILLED",
+      "detail": "Tests  5 failed | 15 passed (20)"
+    },
+    {
+      "id": "M2",
+      "file": "extension/src/agent/recoveryEngine.ts",
+      "name": "category folded back into NO_EFFECT (truthfulness regression)",
+      "find": "  if (input.effectStatus === 'EFFECT_UNVERIFIABLE') return 'EFFECT_UNVERIFIABLE';",
+      "replace": "  if (input.effectStatus === 'EFFECT_UNVERIFIABLE') return 'NO_EFFECT';",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M3",
+      "file": "extension/src/agent/recoveryEngine.ts",
+      "name": "unknown effect may reach CHANGE_STRATEGY (blind re-dispatch)",
+      "find": "    EFFECT_UNVERIFIABLE: Object.freeze(['RE_PERCEIVE'] as const),",
+      "replace": "    EFFECT_UNVERIFIABLE: Object.freeze(['RE_PERCEIVE', 'CHANGE_STRATEGY'] as const),",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M4",
+      "file": "extension/src/agent/recoveryEngine.ts",
+      "name": "budget raised so the retry is no longer bounded to one",
+      "find": "  EFFECT_UNVERIFIABLE: 1,",
+      "replace": "  EFFECT_UNVERIFIABLE: 5,",
+      "verdict": "KILLED",
+      "detail": "Tests  2 failed | 18 passed (20)"
+    },
+    {
+      "id": "M5",
+      "file": "extension/src/agent/recoveryEngine.ts",
+      "name": "strategy degrades to REPERCEIVE without requiring fresh perception",
+      "find": "  EFFECT_UNVERIFIABLE: 'REPERCEIVE',\n\n  // ── Grounding",
+      "replace": "  EFFECT_UNVERIFIABLE: 'ABORT',\n\n  // ── Grounding",
+      "verdict": "KILLED",
+      "detail": "Tests  3 failed | 17 passed (20)"
+    },
+    {
+      "id": "M6",
+      "file": "extension/src/agent/agentLoop.ts",
+      "name": "loop falls back to the blind maxRetries bound (repeat an unknown effect)",
+      "all": true,
+      "find": "= this.planRecoveryForLastStep('EFFECT_UNVERIFIABLE');",
+      "replace": "= { exhausted: this.state.retryCount > this.maxRetries } as never;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M7",
+      "file": "extension/src/agent/agentLoop.ts",
+      "name": "loop re-emits the internal engine string as the user-facing reason",
+      "all": true,
+      "find": "\"I couldn't verify whether the action took effect, so I stopped without repeating it.\";",
+      "replace": "`Effect verification unavailable repeatedly: ${unobservableRecord.reason}`;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M8",
+      "file": "extension/src/agent/agentLoop.ts",
+      "name": "verifier verdict downgraded to NO_EFFECT at the effect-verifier site",
+      "find": "          effectResult.status === 'EFFECT_UNVERIFIABLE'\n            ? 'EFFECT_UNVERIFIABLE'\n            : this.longHorizon.semanticProgressVerdict().stagnation === 'OSCILLATION'\n              ? 'OSCILLATION'\n              : 'NO_EFFECT'",
+      "replace": "          this.longHorizon.semanticProgressVerdict().stagnation === 'OSCILLATION' ? 'OSCILLATION' : 'NO_EFFECT'",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M9",
+      "file": "extension/src/agent/agentLoop.ts",
+      "name": "exhausted EFFECT_UNVERIFIABLE falls back to the internal engine string",
+      "find": "            exhaustedCategory === 'EFFECT_UNVERIFIABLE'\n              ? \"I couldn't verify whether the action took effect, so I stopped without repeating it.\"\n              : exhaustedRecord.reason;",
+      "replace": "            exhaustedRecord.reason;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    }
+  ]
+}

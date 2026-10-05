@@ -546,6 +546,22 @@ export class ExtensionAgentAdapter implements AgentAdapter {
             riskLevel: String(raw.awaitingConfirmation.riskLevel ?? 'HIGH'),
           }
         : null,
+      // PHASE 18.8 / B1 — defensive shape check only (screening already ran in
+      // the service worker): a malformed card degrades to `undefined`, and the
+      // workspace falls back to its legacy rendering.
+      finalResult:
+        raw.finalResult && typeof raw.finalResult === 'object' && typeof raw.finalResult.kind === 'string'
+          ? {
+              kind: raw.finalResult.kind,
+              headline: String(raw.finalResult.headline ?? ''),
+              body: typeof raw.finalResult.body === 'string' ? raw.finalResult.body : null,
+              provenance:
+                typeof raw.finalResult.provenance === 'string' ? raw.finalResult.provenance : null,
+              remaining: Array.isArray(raw.finalResult.remaining)
+                ? raw.finalResult.remaining.slice(0, 10).map((r: any) => String(r ?? ''))
+                : [],
+            }
+          : undefined,
     } as AgentInteractionState;
   }
 

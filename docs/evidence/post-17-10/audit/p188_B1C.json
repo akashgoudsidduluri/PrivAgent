@@ -1,0 +1,429 @@
+{
+  "phase": "18.7-A10",
+  "work": "A10 FINAL REAL-WEB EVALUATION — B1C USER_FACING_RESULT_RECOVERY: B1 checkpoint 3: an exhausted recovery shows a user-safe explanation with no internal codes",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "scenario": {
+    "id": "B1C",
+    "category": "USER_FACING_RESULT_RECOVERY",
+    "title": "B1 checkpoint 3: an exhausted recovery shows a user-safe explanation with no internal codes",
+    "task": "scroll down the shopping home page to find winter jackets",
+    "startUrl": "http://127.0.0.1:4174/index.html",
+    "harnessExit": 0,
+    "rawArtifact": "docs/evidence/post-17-10/audit/_a10_raw_B1C.json"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "settleMs": 60000,
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://127.0.0.1:4174 (ApexCart), http://127.0.0.1:4175 (synthetic banking)",
+    "gateway": "http://127.0.0.1:8010 (FastAPI)",
+    "startedAt": "2026-10-05T18:19:52.677Z",
+    "endedAt": "2026-10-05T18:20:59.158Z"
+  },
+  "provider": {
+    "type": "CONTROLLED_STUB",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "stubMode": "scroll_down",
+    "model": "openai/gpt-oss-20b",
+    "gatewayRequests": [
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      },
+      {
+        "path": "/api/v1/agent/action",
+        "status": 200,
+        "action": "scroll",
+        "telemetryProvider": "controlled_stub"
+      },
+      {
+        "path": "/api/v1/agent/review",
+        "status": 200,
+        "action": null,
+        "telemetryProvider": null
+      }
+    ],
+    "unavailable": []
+  },
+  "intent": {
+    "intent": "INFORMATION_REQUEST",
+    "confidence": "DETERMINISTIC",
+    "requiresDestination": false,
+    "requiresEvidence": true,
+    "admitsBrowserAutomation": true,
+    "refusal": null
+  },
+  "perception": [
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1280,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 6,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1280,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 11,
+      "privacyFindingsCount": 6
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1280,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 6,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1280,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 6,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1280,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 11,
+      "privacyFindingsCount": 6
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1280,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 6,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1280,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 6,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1280,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 11,
+      "privacyFindingsCount": 6
+    }
+  ],
+  "semanticObservation": {
+    "state": "OBSERVED",
+    "facts": 3,
+    "regionsConsidered": 3,
+    "droppedSensitive": 0,
+    "quarantinedInjection": 0,
+    "latencyMs": 1
+  },
+  "semanticUnderstanding": {
+    "pageType": "UNKNOWN",
+    "pageState": "populated",
+    "pageGeneration": 6,
+    "entityCount": 0,
+    "affordanceCount": 1
+  },
+  "actions": {
+    "executedCount": 3,
+    "history": [
+      {
+        "index": 1,
+        "outcome": "ACTION_NO_EFFECT",
+        "detail": {
+          "status": "ACTION_NO_EFFECT",
+          "details": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "t": 6593
+      },
+      {
+        "index": 2,
+        "outcome": "ACTION_NO_EFFECT",
+        "detail": {
+          "status": "ACTION_NO_EFFECT",
+          "details": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "t": 7238
+      },
+      {
+        "index": 3,
+        "outcome": "ACTION_NO_EFFECT",
+        "detail": {
+          "status": "ACTION_NO_EFFECT",
+          "details": "Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary."
+        },
+        "t": 7889
+      }
+    ],
+    "statuses": [
+      "ACTION_NO_EFFECT",
+      "ACTION_NO_EFFECT",
+      "ACTION_NO_EFFECT"
+    ],
+    "effectVerifiedCount": 0,
+    "noEffectCount": 3,
+    "refusedNotDispatched": [],
+    "gatesExecuted": {
+      "m5": 3,
+      "privacyPolicy": 3,
+      "safetyReview": 3,
+      "containment": 3,
+      "grounding": 0
+    },
+    "scrollStrategyExhausted": []
+  },
+  "evidence": {
+    "ledgerUpdates": 5,
+    "ledgerSize": 15,
+    "lastIngested": 3,
+    "verifiedCitable": 3,
+    "requiresEvidence": true,
+    "verification": {
+      "effectVerifiedSteps": 0,
+      "answerVerified": null,
+      "note": "This trace vocabulary emits effect verdicts (EFFECT_VERIFIED / ACTION_NO_EFFECT / EFFECT_UNVERIFIABLE); it does not emit a separate answer-verifier line, so answer verification is read from the terminal status only."
+    }
+  },
+  "destination": {
+    "required": false,
+    "startUrl": "http://127.0.0.1:4174/index.html",
+    "finalUrlFromTimeline": "http://127.0.0.1:4174/index.html",
+    "navigationObserved": false
+  },
+  "goalState": {
+    "longHorizonFinal": {
+      "meaningfulProgress": true,
+      "signals": [],
+      "completedSubgoals": 0,
+      "pendingSubgoals": 3,
+      "discoveries": 0,
+      "actions": 2,
+      "loop": false,
+      "stalled": false,
+      "semanticProgress": true,
+      "semanticSignals": [
+        "EVIDENCE_DELTA"
+      ],
+      "geometry": "GEOMETRY_UNCHANGED",
+      "sameDirectionRun": 0,
+      "stagnation": "NONE",
+      "evidenceDelta": 6
+    },
+    "pendingSubgoals": 3,
+    "replans": 0
+  },
+  "recovery": {
+    "records": [
+      {
+        "category": "NO_EFFECT",
+        "from": "CONTINUE",
+        "to": "RE_PERCEIVE",
+        "retryCount": 0,
+        "reasonCode": "EFFECT_UNCHANGED",
+        "madeProgress": true,
+        "observationState": "CURRENT",
+        "exhausted": false
+      },
+      {
+        "category": "NO_EFFECT",
+        "from": "RE_PERCEIVE",
+        "to": "CHANGE_STRATEGY",
+        "retryCount": 1,
+        "reasonCode": "EFFECT_UNCHANGED",
+        "madeProgress": true,
+        "observationState": "CURRENT",
+        "exhausted": false
+      },
+      {
+        "category": "NO_EFFECT",
+        "from": "CHANGE_STRATEGY",
+        "to": "STOP",
+        "retryCount": 2,
+        "reasonCode": "RETRY_BUDGET_EXHAUSTED",
+        "madeProgress": true,
+        "observationState": "CURRENT",
+        "exhausted": true
+      }
+    ],
+    "decisions": [
+      {
+        "code": "ACTION_NO_EFFECT",
+        "strategy": "REPERCEIVE",
+        "attempt": 1,
+        "reason": "Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 2."
+      },
+      {
+        "code": "ACTION_NO_EFFECT",
+        "strategy": "REPERCEIVE",
+        "attempt": 1,
+        "reason": "Discard stale perception and re-observe the live page — classified 'ACTION_NO_EFFECT' at page generation 4."
+      }
+    ],
+    "boundedTermination": true
+  },
+  "providerOutcome": {
+    "requestCount": 6,
+    "statuses": [
+      200,
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "unavailable": 0
+  },
+  "privacy": {
+    "independent": false,
+    "source": null,
+    "capturedAt": null,
+    "markersSearched": 0,
+    "rawMarkerHits": [],
+    "rawMarkerCount": 0,
+    "forbiddenKeyHits": [],
+    "screenshotDataUriHits": 0,
+    "ocrRawTextHits": 0,
+    "note": "no gateway model-facing capture for this run (CONTROLLED provider does not traverse the FastAPI gateway, so no model-facing payload exists to inspect)",
+    "scenarioNote": "CONTROLLED provider: the scripted stub answers the extension directly, so this run has no gateway model-facing payload. Independent raw-value verification for this action shape is carried by the LIVE privacy scenario."
+  },
+  "falseSuccessChecks": {
+    "evaluated": [
+      {
+        "id": "SUCCESS_WITH_ZERO_ACTIONS",
+        "violated": false,
+        "evidence": "terminal=FAILED executedActions=3 verifiedCitable=3"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_VERIFIED_EVIDENCE_FOR_EVIDENCE_TASK",
+        "violated": false,
+        "evidence": "requiresEvidence=true effectVerified=0 verifiedCitable=3 ledgerSize=15"
+      },
+      {
+        "id": "SUCCESS_AFTER_PROVIDER_FAILURE",
+        "violated": false,
+        "evidence": "providerUnavailableRecords=0"
+      },
+      {
+        "id": "SUCCESS_AFTER_NO_EFFECT_ACTION",
+        "violated": false,
+        "evidence": "noEffectActions=3"
+      },
+      {
+        "id": "SUCCESS_WITH_STALE_OR_NON_PROGRESSING_OBSERVATION",
+        "violated": false,
+        "evidence": "stagnation=NONE evidenceDelta=6"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_DESTINATION_VERIFICATION_WHEN_REQUIRED",
+        "violated": false,
+        "evidence": "requiresDestination=false navigationObserved=false"
+      }
+    ],
+    "violations": [],
+    "critical": false
+  },
+  "userFacing": {
+    "outputScreens": {
+      "verdict": "BLOCKED",
+      "audit": "OUTPUT_SCREEN_BLOCKED (1 finding(s))",
+      "outcome": "FAILED",
+      "phase": "TERMINAL",
+      "resultKind": "NONE"
+    },
+    "finalResult": {
+      "kind": "FAILED",
+      "headline": "Task not completed",
+      "body": "The task could not be completed. I stopped safely without repeating actions.",
+      "provenance": null,
+      "remaining": []
+    },
+    "dashboardHeadline": null,
+    "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nTask Halted · Zero Leakage\nTools\nNew Task\nAlt+N\nCURRENT TASK\nscroll down the shopping home page to find winter jackets\nFAILED\nRECENT TASKS\nscroll down the shopping home page to find winter jackets\nFAILED · Just now\nscroll down the shopping home page to find winter jackets\nFAILED · Just now\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nscroll down the shopping home page to find winter jackets\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nFAILED\nFinished.\nStep 3 of 10\nTask not completed\nThe task could not be completed. I stopped safely without repeating actions.\nTry Again\nAGENT ACTIVITY TIMELINE\n6 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\n!\nStep 1: scroll on Scroll down (500px)\nACTION_NO_EFFECT\nValidated scroll down by 500px.\n!\nStep 2: scroll on Scroll down (500px)\nACTION_NO_EFFECT\nValidated scroll down by 500px.\n!\nStep 3: scroll on Scroll down (500px)\nACTION_NO_EFFECT\nValidated scroll do",
+    "timelineStatuses": [
+      {
+        "status": "RUNNING",
+        "phase": null,
+        "outcome": null
+      },
+      {
+        "status": "RUNNING",
+        "phase": "PERCEPTION",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "PLANNING",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "FAILED",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      },
+      {
+        "status": "FAILED",
+        "phase": "TERMINAL",
+        "outcome": "FAILED"
+      }
+    ]
+  },
+  "result": {
+    "scenarioId": "B1C",
+    "category": "USER_FACING_RESULT_RECOVERY",
+    "title": "B1 checkpoint 3: an exhausted recovery shows a user-safe explanation with no internal codes",
+    "task": "scroll down the shopping home page to find winter jackets",
+    "startUrl": "http://127.0.0.1:4174/index.html",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "verdict": "FAILED",
+    "terminal": {
+      "status": "FAILED",
+      "reason": "Recovery limit exceeded for NO_EFFECT after 2 bounded attempts.",
+      "currentStep": 3,
+      "observed": true
+    },
+    "blocker": null
+  }
+}

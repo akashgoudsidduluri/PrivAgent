@@ -183,7 +183,11 @@ export interface PrivacyReceipt {
  * values. Rendering them grants no authority whatsoever.
  */
 export type AgentOutcome =
-  | 'IDLE' | 'RUNNING' | 'AWAITING_CONFIRMATION' | 'SUCCEEDED' | 'FAILED' | 'STOPPED';
+  | 'IDLE' | 'RUNNING' | 'AWAITING_CONFIRMATION' | 'SUCCEEDED' | 'FAILED' | 'STOPPED'
+  // PHASE 18.8 / B1 — the A9 information outcomes, separate from SUCCEEDED.
+  // An answer is not a task success, and neither is treated as one. Older
+  // service workers never send these, so the UI degrades cleanly.
+  | 'ANSWERED' | 'UNANSWERED';
 
 export type AgentActivityPhase =
   | 'IDLE' | 'PERCEPTION' | 'PLANNING' | 'VALIDATION' | 'EXECUTION'
@@ -192,7 +196,9 @@ export type AgentActivityPhase =
 export type AgentTerminalReason =
   | 'GOAL_ACHIEVED' | 'STOPPED_BY_USER' | 'CONTAINMENT_DENIED' | 'HARNESS_HALTED'
   | 'RECOVERY_EXHAUSTED' | 'STEP_BOUND_EXHAUSTED' | 'REASONER_FAILED'
-  | 'PERCEPTION_FAILED' | 'CONFIRMATION_DECLINED' | 'UNKNOWN';
+  | 'PERCEPTION_FAILED' | 'CONFIRMATION_DECLINED' | 'UNKNOWN'
+  // PHASE 18.8 / B1 — an information run's typed end.
+  | 'ANSWERED' | 'NO_VERIFIABLE_RESULT';
 
 export interface AgentActivity {
   phase: AgentActivityPhase;
@@ -203,7 +209,7 @@ export interface AgentActivity {
 }
 
 export interface AgentTerminal {
-  outcome: 'SUCCEEDED' | 'FAILED' | 'STOPPED';
+  outcome: 'SUCCEEDED' | 'FAILED' | 'STOPPED' | 'ANSWERED' | 'UNANSWERED';
   reason: AgentTerminalReason;
   headline: string;
 }
@@ -232,6 +238,32 @@ export interface AgentTimelineEntry {
   outcome: 'EXECUTED' | 'BLOCKED' | 'FAILED' | 'CONFIRMED';
 }
 
+/**
+ * PHASE 18.8 / B1 — the final result the user reads.
+ *
+ * Mirrors `extension/src/agent/agentOutput.ts`. Optional here so a payload from
+ * an older service worker still renders; the UI then falls back to the legacy
+ * result box.
+ */
+export type AgentResultKind =
+  | 'NONE'
+  | 'ANSWER'
+  | 'PARTIAL'
+  | 'CANNOT_VERIFY'
+  | 'NEEDS_INFORMATION'
+  | 'SUCCESS'
+  | 'FAILED'
+  | 'PROVIDER_UNAVAILABLE'
+  | 'STOPPED';
+
+export interface AgentFinalResult {
+  kind: AgentResultKind;
+  headline: string;
+  body: string | null;
+  provenance: string | null;
+  remaining: string[];
+}
+
 export interface AgentInteractionState {
   outcome: AgentOutcome;
   activity: AgentActivity;
@@ -244,6 +276,8 @@ export interface AgentInteractionState {
     description: string;
     riskLevel: string;
   } | null;
+  /** The final answer/explanation card (B1). Absent on older payloads. */
+  finalResult?: AgentFinalResult;
 }
 
 export interface DashboardAgentState {

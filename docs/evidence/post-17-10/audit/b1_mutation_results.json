@@ -1,0 +1,73 @@
+{
+  "phase": "18.8-B1",
+  "work": "B1 typed user-facing result — mutation suite",
+  "total": 7,
+  "killed": 7,
+  "survived": 0,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "file": "extension/src/agent/agentOutput.ts",
+      "name": "FAILED renders the internal reason (the original B1 defect)",
+      "find": "      body: userSafeFailureExplanation(s),",
+      "replace": "      body: s.reason ?? userSafeFailureExplanation(s),",
+      "verdict": "KILLED",
+      "detail": "Tests  6 failed | 14 passed (20)"
+    },
+    {
+      "id": "M2",
+      "file": "extension/src/agent/agentOutput.ts",
+      "name": "ANSWER body dropped (an answered task shows nothing)",
+      "find": "    return { kind: 'ANSWER', headline: FINAL_HEADLINE.ANSWER, body: answer, provenance, remaining: [] };",
+      "replace": "    return { kind: 'ANSWER', headline: FINAL_HEADLINE.ANSWER, body: null, provenance: null, remaining: [] };",
+      "verdict": "KILLED",
+      "detail": "Tests  2 failed | 18 passed (20)"
+    },
+    {
+      "id": "M3",
+      "file": "extension/src/agent/agentOutput.ts",
+      "name": "egress screening of the result body disabled (privacy bypass)",
+      "find": "    if (finalResult.body && isTripped(finalResult.body)) {",
+      "replace": "    if (false) {",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M4",
+      "file": "extension/src/agent/agentOutput.ts",
+      "name": "card headline/remaining no longer structurally checked",
+      "find": "    o.finalResult?.kind ?? '',\n    o.finalResult?.headline ?? '',\n    ...(o.finalResult?.remaining ?? []),",
+      "replace": "    o.finalResult?.kind ?? '',",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M5",
+      "file": "extension/src/agent/agentOutput.ts",
+      "name": "recovery-exhausted record lookup disabled (wrong fixed sentence)",
+      "find": "  if (category === 'RECOVERY_EXHAUSTED') {",
+      "replace": "  if (false) {",
+      "verdict": "KILLED",
+      "detail": "Tests  2 failed | 18 passed (20)"
+    },
+    {
+      "id": "M6",
+      "file": "extension/src/agent/agentOutput.ts",
+      "name": "information statuses no longer terminal (answered task looks IDLE)",
+      "find": "    status === 'ANSWER' ||\n    status === 'PARTIAL' ||\n    status === 'CANNOT_VERIFY' ||\n    status === 'NEEDS_INFORMATION'",
+      "replace": "    false",
+      "verdict": "KILLED",
+      "detail": "Tests  5 failed | 15 passed (20)"
+    },
+    {
+      "id": "M7",
+      "file": "extension/src/agent/agentLoop.ts",
+      "name": "composed answer accepts UNVERIFIED evidence",
+      "find": "    if (record.verificationStatus !== 'VERIFIED') continue;",
+      "replace": "    if (record.verificationStatus === 'QUARANTINED') continue;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    }
+  ]
+}

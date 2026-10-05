@@ -315,6 +315,13 @@ function terminalProjection(): AgentInteractionState {
     terminal: { outcome: 'FAILED', reason: 'REASONER_FAILED', headline: 'Failed: the reasoning model was unavailable.' },
     result: { kind: 'NONE', summary: 'No result yet.', count: 0, items: [] },
     artifacts: [], timeline: [], awaitingConfirmation: null,
+    finalResult: {
+      kind: 'FAILED',
+      headline: 'Task not completed',
+      body: 'The task could not be completed. I stopped safely without repeating actions.',
+      provenance: null,
+      remaining: [],
+    },
   };
 }
 function runningProjection(phase: AgentActivityPhase): AgentInteractionState {
@@ -324,6 +331,7 @@ function runningProjection(phase: AgentActivityPhase): AgentInteractionState {
     terminal: null,
     result: { kind: 'NONE', summary: 'No result yet.', count: 0, items: [] },
     artifacts: [], timeline: [], awaitingConfirmation: null,
+    finalResult: { kind: 'NONE', headline: '', body: null, provenance: null, remaining: [] },
   };
 }
 

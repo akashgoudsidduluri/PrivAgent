@@ -989,6 +989,13 @@
   background: linear-gradient(180deg, rgba(239, 68, 68, 0.06) 0%, var(--bg-card-subtle) 100%);
 }
 
+/* PHASE 18.8 / B1 — partly-answered / could-not-verify / needs-information
+   are neither success nor failure, and are styled as neither. */
+.final-response-panel.notice {
+  border-color: var(--status-amber-border);
+  background: linear-gradient(180deg, var(--status-amber-bg) 0%, var(--bg-card-subtle) 100%);
+}
+
 .final-response-header {
   display: flex;
   align-items: center;
@@ -1009,6 +1016,10 @@
 
 .final-headline-group.failure {
   color: var(--status-red);
+}
+
+.final-headline-group.notice {
+  color: var(--status-amber);
 }
 
 .destination-verified-badge {

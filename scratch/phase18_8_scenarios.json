@@ -1,0 +1,82 @@
+{
+  "_comment": "PHASE 18.8 real-Chrome checkpoints for A10-F1, A10-F2 and B1. A10 is NOT re-run: its table (scratch/a10_scenarios.json) and its committed artifacts stay as they are. Each scenario here is driven by scratch/a10_eval.mjs with ST_TABLE/ST_INDEX/ST_ARTIFACT_PREFIX pointed at this file.",
+  "scenarios": [
+    {
+      "id": "F1",
+      "category": "INFORMATION_ANSWER_PATH",
+      "title": "A10-F1 checkpoint: the PRODUCTION ModelRouter path delivers a terminal ANSWER proposal to the verifier",
+      "task": "tell me about charminar",
+      "provider": "CONTROLLED",
+      "stubMode": "act_then_answer",
+      "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+      "settleMs": 60000,
+      "cdpPort": 9841
+    },
+    {
+      "id": "F1B",
+      "category": "INFORMATION_ANSWER_PATH",
+      "title": "A10-F1 checkpoint 2: the production path asks the provider, the terminal ANSWER citing device-verified evidence is ACCEPTED, and a user-facing answer becomes available",
+      "task": "history of charminar",
+      "provider": "CONTROLLED",
+      "stubMode": "act_then_answer",
+      "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+      "settleMs": 60000,
+      "cdpPort": 9847
+    },
+    {
+      "id": "F2",
+      "category": "EFFECT_UNVERIFIABLE_RECOVERY",
+      "title": "A10-F2 checkpoint: cross-origin navigation effect cannot be observed; recovery handles it truthfully",
+      "task": "open wikipedia",
+      "provider": "CONTROLLED",
+      "stubMode": "navigate_wikipedia",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 60000,
+      "cdpPort": 9842
+    },
+    {
+      "id": "B1A",
+      "category": "USER_FACING_RESULT_ANSWER",
+      "title": "B1 checkpoint 1: a verified answer reaches a visible final result card",
+      "task": "tell me about charminar",
+      "provider": "CONTROLLED",
+      "stubMode": "act_then_answer",
+      "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+      "settleMs": 60000,
+      "cdpPort": 9843
+    },
+    {
+      "id": "B1B",
+      "category": "USER_FACING_RESULT_PROVIDER_FAILURE",
+      "title": "B1 checkpoint 2: a provider failure is reported as a provider failure, not a task failure",
+      "task": "history of charminar",
+      "provider": "CONTROLLED",
+      "stubMode": "malformed",
+      "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+      "settleMs": 60000,
+      "cdpPort": 9844
+    },
+    {
+      "id": "B1C",
+      "category": "USER_FACING_RESULT_RECOVERY",
+      "title": "B1 checkpoint 3: an exhausted recovery shows a user-safe explanation with no internal codes",
+      "task": "scroll down the shopping home page to find winter jackets",
+      "provider": "CONTROLLED",
+      "stubMode": "scroll_down",
+      "startUrl": "http://127.0.0.1:4174/index.html",
+      "settleMs": 60000,
+      "cdpPort": 9845
+    },
+    {
+      "id": "B1D",
+      "category": "USER_FACING_RESULT_PRIVACY",
+      "title": "B1 checkpoint 4: synthetic sensitive values never appear in the final result",
+      "task": "open the banking page and tell me about the checking account",
+      "provider": "CONTROLLED",
+      "stubMode": "click_fixture",
+      "startUrl": "http://127.0.0.1:4175/index.html",
+      "settleMs": 60000,
+      "cdpPort": 9846
+    }
+  ]
+}

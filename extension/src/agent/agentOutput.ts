@@ -58,6 +58,7 @@
  */
 
 import type { AgentTaskState } from './agentState';
+import { userFacingMessageForStatus } from './agentState';
 import type { PlanningEngineState } from '../hierarchicalPlanning/hierarchicalTypes';
 import type { ContainmentCode } from './containment';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
@@ -71,7 +72,16 @@ export type AgentOutcome =
   | 'AWAITING_CONFIRMATION'
   | 'SUCCEEDED'
   | 'FAILED'
-  | 'STOPPED';
+  | 'STOPPED'
+  /**
+   * PHASE 18.8 / B1 — the A9 information outcomes, additively and separately
+   * from SUCCEEDED. `ANSWERED` means the device produced an answer (in full or
+   * in part) from verified evidence; `UNANSWERED` means this page could not
+   * verify anything. NEITHER is a task SUCCESS — only the GoalVerifier may
+   * report that, and it is untouched.
+   */
+  | 'ANSWERED'
+  | 'UNANSWERED';
 
 /**
  * Where the agent is, as a coarse operational phase. Derived from the EXISTING
@@ -103,6 +113,10 @@ export type AgentTerminalReason =
   | 'REASONER_FAILED'
   | 'PERCEPTION_FAILED'
   | 'CONFIRMATION_DECLINED'
+  /** PHASE 18.8 / B1 — an information run ended with verified evidence. */
+  | 'ANSWERED'
+  /** PHASE 18.8 / B1 — an information run ended without a verifiable result. */
+  | 'NO_VERIFIABLE_RESULT'
   | 'UNKNOWN';
 
 export interface AgentActivity {
@@ -116,7 +130,7 @@ export interface AgentActivity {
 }
 
 export interface AgentTerminal {
-  outcome: Extract<AgentOutcome, 'SUCCEEDED' | 'FAILED' | 'STOPPED'>;
+  outcome: Extract<AgentOutcome, 'SUCCEEDED' | 'FAILED' | 'STOPPED' | 'ANSWERED' | 'UNANSWERED'>;
   reason: AgentTerminalReason;
   /** Composed headline. Never the internal `state.reason` string. */
   headline: string;
@@ -170,6 +184,48 @@ export interface AgentInteractionState {
     description: string;
     riskLevel: string;
   } | null;
+  /**
+   * PHASE 18.8 / B1 — THE FINAL RESULT. Always present; `kind: 'NONE'` before
+   * there is one.
+   *
+   * This is the layer that answers the user: the ANSWER for an information
+   * task, the partial result, the cannot-verify notice, the needs-information
+   * prompt, or a user-safe failure/provider explanation composed from fixed
+   * copy. It is a PROJECTION of typed state, never a channel for the loop's
+   * internal `reason` prose — the timeline and this card are complementary and
+   * both survive.
+   */
+  finalResult: AgentFinalResult;
+}
+
+/**
+ * The terminal result vocabulary (B1). Mirrors the A9 typed statuses plus the
+ * always-present `NONE` for "nothing final yet". `ANSWER` is NOT `SUCCESS`: an
+ * information answer never claims the goal was verified, and only the
+ * GoalVerifier may produce `SUCCESS`.
+ */
+export type AgentResultKind =
+  | 'NONE'
+  | 'ANSWER'
+  | 'PARTIAL'
+  | 'CANNOT_VERIFY'
+  | 'NEEDS_INFORMATION'
+  | 'SUCCESS'
+  | 'FAILED'
+  | 'PROVIDER_UNAVAILABLE'
+  | 'STOPPED';
+
+export interface AgentFinalResult {
+  kind: AgentResultKind;
+  /** Fixed copy per kind. Never internal prose. */
+  headline: string;
+  /** The answer or explanation. Composed from local verified claims or fixed
+   *  copy; never raw `state.reason`, never model prose, never an internal code. */
+  body: string | null;
+  /** Privacy-safe provenance: a count and a host only. */
+  provenance: string | null;
+  /** Bounded, fixed-copy list of what remains unresolved. */
+  remaining: string[];
 }
 
 // ── Fixed copy tables ────────────────────────────────────────────────────────
@@ -196,6 +252,8 @@ const TERMINAL_HEADLINE: Record<AgentTerminalReason, string> = {
   REASONER_FAILED: 'Failed: the reasoning model was unavailable.',
   PERCEPTION_FAILED: 'Failed: the page could not be read.',
   CONFIRMATION_DECLINED: 'Stopped: the action was declined.',
+  ANSWERED: 'Answered from evidence verified on this page.',
+  NO_VERIFIABLE_RESULT: 'No verified result was available on this page.',
   UNKNOWN: 'Failed.',
 };
 
@@ -205,6 +263,165 @@ const REASONER_FAILURES: ReadonlySet<string> = new Set([
   'LLM_RATE_LIMIT',
   'INVALID_MODEL_RESPONSE',
 ]);
+
+/** PHASE 18.8 / B1 — fixed headline per result kind. */
+const FINAL_HEADLINE: Record<AgentResultKind, string> = {
+  NONE: '',
+  ANSWER: 'Answer',
+  PARTIAL: 'Partly answered',
+  CANNOT_VERIFY: 'Could not verify',
+  NEEDS_INFORMATION: 'More information needed',
+  SUCCESS: 'Task completed',
+  FAILED: 'Task not completed',
+  PROVIDER_UNAVAILABLE: 'Reasoning service unavailable',
+  STOPPED: 'Stopped',
+};
+
+/**
+ * PHASE 18.8 / B1 — user-safe failure explanations, keyed by the DEVICE'S OWN
+ * typed failure category.
+ *
+ * This table is why the loop's internal `reason` can stay internal forever: the
+ * user-facing sentence is selected from the typed category (and the typed
+ * recovery record) rather than copied out of prose. A category with no entry
+ * gets the generic sentence, so an unknown failure can never leak its raw text
+ * through this card.
+ */
+const FAILURE_EXPLANATION = Object.freeze({
+  DEFAULT: 'The task could not be completed. I stopped safely without repeating actions.',
+  RECOVERY_EXHAUSTED:
+    'The page stopped responding to the actions I tried, so I stopped instead of repeating them.',
+  NO_EFFECT:
+    'The page did not change when I acted on it, so I stopped instead of repeating the same action.',
+  EFFECT_UNVERIFIABLE:
+    "I couldn't verify whether the action took effect, so I stopped without repeating it.",
+  OSCILLATION:
+    'I kept going back and forth without making progress, so I stopped instead of looping.',
+  STALE_PERCEPTION:
+    'The page kept changing while I was working, so I stopped rather than act on a stale reading.',
+  POLICY_BLOCKED: 'I stopped because the task would have left the site it was allowed to work in.',
+  CONTAINMENT_DENIED: 'I stopped because the task would have left the site it was allowed to work in.',
+  EXECUTION_FAILED: 'An action could not be completed on the page, so I stopped safely.',
+  PROVIDER_TIMEOUT: userFacingMessageForStatus('PROVIDER_UNAVAILABLE'),
+  LLM_RATE_LIMIT: userFacingMessageForStatus('PROVIDER_UNAVAILABLE'),
+  INVALID_MODEL_RESPONSE: userFacingMessageForStatus('PROVIDER_UNAVAILABLE'),
+  PERCEPTION_FAILED: "I couldn't read the page, so I stopped without changing anything.",
+});
+
+/**
+ * Indexed lookup on the frozen explanation table.
+ *
+ * An unknown or absent category resolves to `undefined` so the caller can
+ * apply its own fallback — the table has no catch-all entry of its own.
+ */
+function failureExplanationFor(category: string | undefined): string | undefined {
+  if (!category) return undefined;
+  const table: Readonly<Record<string, string | undefined>> = FAILURE_EXPLANATION;
+  return table[category];
+}
+
+/**
+ * Select the user-safe explanation for a failed run.
+ *
+ * Reads ONLY typed fields: the failure category and the last typed recovery
+ * record. `state.reason` is deliberately never consulted — that string is
+ * internal by contract, and B1 exists so it cannot reach the user.
+ */
+function userSafeFailureExplanation(s: AgentTaskState): string {
+  const category = s.lastFailure?.category;
+  if (category === 'RECOVERY_EXHAUSTED') {
+    const records = Array.isArray(s.recoveryRecords) ? s.recoveryRecords : [];
+    const last = records.length > 0 ? records[records.length - 1] : undefined;
+    const fromRecord = failureExplanationFor(last?.failureCategory);
+    return fromRecord ?? FAILURE_EXPLANATION.RECOVERY_EXHAUSTED;
+  }
+  return failureExplanationFor(category) ?? FAILURE_EXPLANATION.DEFAULT;
+}
+
+/** Hostname only from the current URL; fails closed to no provenance. */
+function provenanceFor(s: AgentTaskState): string | null {
+  const p = s.answerProvenance;
+  if (!p || typeof p.verifiedRecords !== 'number' || p.verifiedRecords <= 0) return null;
+  const host = typeof p.sourceHost === 'string' && p.sourceHost ? ` from ${p.sourceHost}` : '';
+  return `Based on ${p.verifiedRecords} locally verified observation(s)${host}.`;
+}
+
+/**
+ * Build the final result card. Pure, deterministic and read-only.
+ *
+ * Every sentence here is either fixed copy from the tables above, the A9
+ * approved user-facing message for a typed status, or the answer the loop
+ * composed from LOCAL verified evidence. There is no path from
+ * `state.reason` (or any other internal prose, code, stack or file name) into
+ * this object.
+ */
+function buildFinalResult(s: AgentTaskState): AgentFinalResult {
+  const status = s.status as AgentTaskState['status'] | 'RUNNING';
+  const answer = typeof s.answer === 'string' && s.answer.trim() ? s.answer.trim() : null;
+  const provenance = provenanceFor(s);
+
+  if (status === 'ANSWER') {
+    return { kind: 'ANSWER', headline: FINAL_HEADLINE.ANSWER, body: answer, provenance, remaining: [] };
+  }
+  if (status === 'PARTIAL') {
+    return {
+      kind: 'PARTIAL',
+      headline: FINAL_HEADLINE.PARTIAL,
+      body: answer,
+      provenance,
+      remaining: ['Some of what was asked could not be verified on this page.'],
+    };
+  }
+  if (status === 'CANNOT_VERIFY') {
+    return {
+      kind: 'CANNOT_VERIFY',
+      headline: FINAL_HEADLINE.CANNOT_VERIFY,
+      body: userFacingMessageForStatus('CANNOT_VERIFY'),
+      provenance: null,
+      remaining: [],
+    };
+  }
+  if (status === 'NEEDS_INFORMATION') {
+    return {
+      kind: 'NEEDS_INFORMATION',
+      headline: FINAL_HEADLINE.NEEDS_INFORMATION,
+      body: userFacingMessageForStatus('NEEDS_INFORMATION'),
+      provenance: null,
+      remaining: [],
+    };
+  }
+  if (status === 'SUCCESS') {
+    return { kind: 'SUCCESS', headline: FINAL_HEADLINE.SUCCESS, body: answer, provenance, remaining: [] };
+  }
+  if (status === 'STOPPED') {
+    return {
+      kind: 'STOPPED',
+      headline: FINAL_HEADLINE.STOPPED,
+      body: userFacingMessageForStatus('STOPPED'),
+      provenance: null,
+      remaining: [],
+    };
+  }
+  if (status === 'PROVIDER_UNAVAILABLE' || (isTerminalStatus(status) && classifyTerminalReason(s) === 'REASONER_FAILED')) {
+    return {
+      kind: 'PROVIDER_UNAVAILABLE',
+      headline: FINAL_HEADLINE.PROVIDER_UNAVAILABLE,
+      body: userFacingMessageForStatus('PROVIDER_UNAVAILABLE'),
+      provenance: null,
+      remaining: [],
+    };
+  }
+  if (status === 'FAILED') {
+    return {
+      kind: 'FAILED',
+      headline: FINAL_HEADLINE.FAILED,
+      body: userSafeFailureExplanation(s),
+      provenance: null,
+      remaining: [],
+    };
+  }
+  return { kind: 'NONE', headline: FINAL_HEADLINE.NONE, body: null, provenance: null, remaining: [] };
+}
 
 /** Bounded timelines. A task cannot exceed maxSteps, but the bound is explicit. */
 export const MAX_AGENT_TIMELINE_ENTRIES = 32;
@@ -249,7 +466,14 @@ function isTerminalStatus(status: string): boolean {
     // PHASE 18.7 / A8. A provider failure is a TYPED terminal state, so the
     // dashboard must be able to report it as an outcome rather than leaving
     // the panel in a running shape forever.
-    status === 'PROVIDER_UNAVAILABLE'
+    status === 'PROVIDER_UNAVAILABLE' ||
+    // PHASE 18.8 / B1. The A9 information states are terminal too: the run has
+    // ENDED, it just did not end in SUCCESS or FAILED. Before this they fell
+    // through to IDLE, so an answered task looked like it had never started.
+    status === 'ANSWER' ||
+    status === 'PARTIAL' ||
+    status === 'CANNOT_VERIFY' ||
+    status === 'NEEDS_INFORMATION'
   );
 }
 
@@ -262,6 +486,8 @@ function isTerminalStatus(status: string): boolean {
  */
 function classifyTerminalReason(s: AgentTaskState): AgentTerminalReason {
   if (s.status === 'SUCCESS') return 'GOAL_ACHIEVED';
+  if (s.status === 'ANSWER' || s.status === 'PARTIAL') return 'ANSWERED';
+  if (s.status === 'CANNOT_VERIFY' || s.status === 'NEEDS_INFORMATION') return 'NO_VERIFIABLE_RESULT';
   if (s.status === 'STOPPED') {
     return /declin|reject/i.test(s.reason ?? '') ? 'CONFIRMATION_DECLINED' : 'STOPPED_BY_USER';
   }
@@ -413,7 +639,16 @@ export function projectAgentOutput(state: AgentTaskState): AgentInteractionState
   if (status === 'IN_PROGRESS' || status === 'RUNNING') outcome = 'RUNNING';
   if (status === 'NEEDS_USER_CONFIRMATION') outcome = 'AWAITING_CONFIRMATION';
   if (isTerminalStatus(status)) {
-    outcome = status === 'SUCCESS' ? 'SUCCEEDED' : status === 'STOPPED' ? 'STOPPED' : 'FAILED';
+    outcome =
+      status === 'SUCCESS'
+        ? 'SUCCEEDED'
+        : status === 'STOPPED'
+          ? 'STOPPED'
+          : status === 'ANSWER' || status === 'PARTIAL'
+            ? 'ANSWERED'
+            : status === 'CANNOT_VERIFY' || status === 'NEEDS_INFORMATION'
+              ? 'UNANSWERED'
+              : 'FAILED';
   }
 
   const terminal: AgentTerminal | null = isTerminalStatus(status)
@@ -459,6 +694,7 @@ export function projectAgentOutput(state: AgentTaskState): AgentInteractionState
     artifacts: buildArtifacts(state),
     timeline: buildTimeline(state),
     awaitingConfirmation: awaiting,
+    finalResult: buildFinalResult(state),
   };
 }
 
@@ -487,6 +723,15 @@ function safeBlockedProjection(reason: AgentTerminalReason): AgentInteractionSta
     artifacts: [],
     timeline: [],
     awaitingConfirmation: null,
+    // Fixed, internal-free copy: a blocked payload must never fall back to
+    // anything the original state carried.
+    finalResult: {
+      kind: 'FAILED',
+      headline: FINAL_HEADLINE.FAILED,
+      body: FAILURE_EXPLANATION.DEFAULT,
+      provenance: null,
+      remaining: [],
+    },
   };
 }
 
@@ -505,6 +750,9 @@ function structureIsClean(o: AgentInteractionState): boolean {
     o.terminal?.reason ?? '',
     o.result.kind,
     o.result.summary,
+    o.finalResult?.kind ?? '',
+    o.finalResult?.headline ?? '',
+    ...(o.finalResult?.remaining ?? []),
     ...o.timeline.map((t) => `${t.action}:${t.outcome}`),
     ...o.artifacts.map((a) => `${a.kind}:${a.label}`),
   ].some(isTripped);
@@ -558,10 +806,36 @@ export function screenAgentOutput(output: AgentInteractionState): OutputScreenRe
     return item;
   });
 
+  //
+  // PHASE 18.8 / B1 — the final result card crosses the SAME boundary.
+  //
+  // Its body is composed from ledger claims (already screened at ledger write
+  // time), and it is re-screened here at EGRESS exactly like a result item, so
+  // the answer renderer is strictly downstream of the privacy rules. `kind`
+  // and `headline` are closed vocabulary and were checked structurally above;
+  // `remaining` is fixed copy but is checked anyway, because a future edit
+  // could make it derived.
+  //
+  let finalResult = output.finalResult;
+  if (finalResult) {
+    if (finalResult.body && isTripped(finalResult.body)) {
+      findings += 1;
+      finalResult = { ...finalResult, body: 'withheld by output screening' };
+    }
+    if (finalResult.provenance && isTripped(finalResult.provenance)) {
+      findings += 1;
+      finalResult = { ...finalResult, provenance: null };
+    }
+    if (Array.isArray(finalResult.remaining) && finalResult.remaining.some((r) => isTripped(r))) {
+      findings += 1;
+      finalResult = { ...finalResult, remaining: [] };
+    }
+  }
+
   if (findings > 0) {
     return {
       verdict: 'REDACTED',
-      output: { ...output, result: { ...output.result, items } },
+      output: { ...output, result: { ...output.result, items }, finalResult },
       findings,
       reason: `${findings} result field(s) redacted by output screening.`,
     };

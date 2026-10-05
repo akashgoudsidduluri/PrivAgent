@@ -21,20 +21,33 @@ import { AgentContextPayload } from '../extension/src/privacy/types';
 import { BrowserAction } from '../extension/src/agent/actionTypes';
 
 /**
- * PHASE 17.2A. The transaction control is not rendered until the account-details
- * section has been opened, which is what a real portal does.
+ * PHASE 17.2A fixture, repaired for the corrected action/verification ordering
+ * (PHASE 18.8 / A10-F2).
  *
- * Previously BOTH controls were present in every perception, so "find the
- * recent transactions" was already satisfied by observation on the very first
- * perception and the loop correctly stopped at once. This test exists to prove
- * that a THREE-ACTION multi-step plan survives M5 validation, so its fixture has
- * to actually require those actions. It previously appeared to need them only
- * because the goal verifier counted dispatched clicks.
+ * The page changes as the plan progresses, which is what a real portal does,
+ * and the plan is genuinely required for the goal to become verifiable:
+ *
+ *   after 0 actions — the details section is closed: only its control exists;
+ *   after 1 action  — details opened: the ACCOUNT-HISTORY CONTROL appears;
+ *   after 2 actions — the scroll has revealed that control; clicking it is the
+ *                     third action;
+ *   after 3 actions — the TRANSACTION SURFACE has loaded, and the GoalVerifier
+ *                     (rule 4) can finally observe it.
+ *
+ * The actionable control and the observed surface are deliberately DIFFERENT
+ * detections. When they were one detection the fixture could not require the
+ * plan at all: the moment the target became clickable, "a transaction surface
+ * is in the current perception" was already true, so the loop correctly
+ * verified the goal and stopped after one action. The goal state now lags the
+ * action that produces it, which is the only honest way for a three-action plan
+ * to be necessary.
  *
  * No M5 assertion is touched: the test still proves that click, scroll and click
  * are all dispatched and all pass the action allowlist.
  */
-function contextAfterDetailsOpened(detailsOpened: boolean): AgentContextPayload {
+function contextForProgress(executed: number): AgentContextPayload {
+  const detailsOpened = executed >= 1;
+  const historySurfaceLoaded = executed >= 3;
   return {
     url: 'https://bank.example.com/portal',
     timestamp: 1720000000000,
@@ -54,14 +67,28 @@ function contextAfterDetailsOpened(detailsOpened: boolean): AgentContextPayload 
       ...(detailsOpened
         ? [
             {
-              id: 'element_transactions',
-              type: 'account_number',
+              id: 'element_history_link',
+              type: 'button',
               confidence: 0.95,
               bbox: { x: 100, y: 320, width: 180, height: 30 },
               length: 12,
               source: 'dom_label',
-              selector: '#btn-transactions',
+              selector: '#btn-history',
               is_partially_visible: false,
+            },
+          ]
+        : []),
+      ...(historySurfaceLoaded
+        ? [
+            {
+              id: 'element_transactions_surface',
+              type: 'table',
+              confidence: 0.95,
+              bbox: { x: 60, y: 400, width: 520, height: 240 },
+              length: 0,
+              source: 'dom_label',
+              selector: '#transactions-list',
+              is_partially_visible: true,
             },
           ]
         : []),
@@ -73,7 +100,7 @@ function contextAfterDetailsOpened(detailsOpened: boolean): AgentContextPayload 
   } as AgentContextPayload;
 }
 
-const CONTEXT: AgentContextPayload = contextAfterDetailsOpened(false);
+const CONTEXT: AgentContextPayload = contextForProgress(0);
 
 function completion(content: string): unknown {
   return { choices: [{ message: { role: 'assistant', content } }] };
@@ -88,11 +115,11 @@ afterEach(() => {
 });
 
 describe('Extension full pipeline: fabricated LLM response → validated action', () => {
-  it('multi-step: click details → scroll → click transactions, all validated', async () => {
+  it('multi-step: click details → scroll → click the account history control, all validated', async () => {
     const completions = [
       '{"action":"click","target":"element_details","reason":"Open the account details section."}',
-      '{"action":"scroll","direction":"down","amount":500,"reason":"Transactions not visible yet."}',
-      '{"action":"click","target":"element_transactions","reason":"Open the transactions list."}',
+      '{"action":"scroll","direction":"down","amount":500,"reason":"Account history not visible yet."}',
+      '{"action":"click","target":"element_history_link","reason":"Open the transaction history."}',
     ];
     let call = 0;
     const bodies: string[] = [];
@@ -106,13 +133,38 @@ describe('Extension full pipeline: fabricated LLM response → validated action'
 
     const provider = new OpenRouterProvider({ apiKey: 'test-key' });
     const executed: BrowserAction[] = [];
+    let snapshotCall = 0;
 
     const loop = new AgentLoop(provider, {
-      // The transactions control appears only after the details click lands.
-      perceivePage: async () => contextAfterDetailsOpened(executed.length >= 1),
+      // The page genuinely advances with the plan: the history control appears
+      // after the details click lands and the transaction surface only after it
+      // has been activated (see `contextForProgress`).
+      perceivePage: async () => contextForProgress(executed.length),
       executeAction: async (action) => {
         executed.push(action);
         return { success: true };
+      },
+      //
+      // PHASE 18.8 / A10-F2 — the host MUST supply an effect observation
+      // channel for a multi-step run. The production service worker always
+      // does (it reads the live target tab before and after dispatch), and the
+      // typed contract now bounds an UNOBSERVABLE effect to a single
+      // re-perception: with no channel every step would be
+      // `EFFECT_UNVERIFIABLE` and the loop would correctly stop after the first
+      // bounded retry rather than continue acting blind. These snapshots change
+      // on every observation, so each action's effect is genuinely observed.
+      getEffectSnapshot: async () => {
+        const n = snapshotCall++;
+        return {
+          url: 'http://localhost:4197/',
+          scrollX: 0,
+          scrollY: n * 100,
+          targetValueLength: 0,
+          openModalsCount: 0,
+          activeElementSelector: 'body',
+          domElementCount: 100 + n,
+          timestamp: 1 + n,
+        };
       },
     }, {
       maxSteps: 6,

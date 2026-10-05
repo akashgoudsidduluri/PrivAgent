@@ -1065,6 +1065,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               console.info('[AgentTrace] evidence ledger updated', {
                 ingested,
                 ledgerSize: activeEvidenceLedger.size,
+                // PHASE 18.8 / A10-F1. Counts only — no claim text is ever
+                // logged. This is the number the A5 evidence gate and the
+                // terminal ANSWER verifier read from the same ledger.
+                verifiedCurrent: activeEvidenceLedger
+                  .citable()
+                  .filter((r) => r.verificationStatus === 'VERIFIED').length,
                 generation: semanticObservation.provenance?.pageGeneration ?? null,
               });
 

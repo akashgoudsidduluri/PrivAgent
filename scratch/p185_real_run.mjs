@@ -204,6 +204,10 @@ try {
             outcome: p.interaction ? p.interaction.outcome : null,
             currentStep: p.currentStep,
             currentUrl: p.currentUrl || p.targetUrl || null,
+            // PHASE 18.8 / B1 — capture the typed final result card the service
+            // worker emitted, so the artifact can prove what the user was shown
+            // rather than only what status was reached.
+            finalResult: p.interaction && p.interaction.finalResult ? p.interaction.finalResult : null,
           });
         }
       });

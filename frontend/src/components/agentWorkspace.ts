@@ -314,17 +314,68 @@ export class AgentWorkspace {
   }
 
   private renderFinalResponsePanel(state: DashboardAgentState): string {
-    const isSuccess = state.status === 'SUCCESS' || state.interaction?.outcome === 'SUCCEEDED';
-    const isFailed = state.status === 'FAILED' || state.interaction?.outcome === 'FAILED';
+    const ix = state.interaction;
+    const final = ix?.finalResult;
+    const legacySuccess = state.status === 'SUCCESS' || ix?.outcome === 'SUCCEEDED';
+    const legacyFailed = state.status === 'FAILED' || ix?.outcome === 'FAILED';
+    const hasFinal = !!final && final.kind !== 'NONE';
 
-    if (!isSuccess && !isFailed) {
+    //
+    // PHASE 18.8 / B1 — the final result panel renders for EVERY typed terminal
+    // kind: answer, partial, cannot-verify, needs-information, success,
+    // failure, provider-unavailable and stopped. Before B1 only SUCCESS/FAILED
+    // had a panel at all, so an ANSWER left the user with the timeline and no
+    // result. The body comes from the projection's `finalResult` — never
+    // `state.reason`, which is internal by contract.
+    //
+    if (!hasFinal && !legacySuccess && !legacyFailed) {
       return '';
     }
 
     const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
-    const ix = state.interaction;
 
-    if (isSuccess) {
+    if (hasFinal && final) {
+      const ok = final.kind === 'ANSWER' || final.kind === 'SUCCESS' || final.kind === 'PARTIAL';
+      const notice =
+        final.kind === 'PARTIAL' || final.kind === 'CANNOT_VERIFY' || final.kind === 'NEEDS_INFORMATION';
+      const panelClass = ok ? 'success' : notice ? 'notice' : 'failure';
+      const iconSvg = ok
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+      const destTag =
+        state.pageType && ok
+          ? `<div class="destination-verified-badge">
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+               <span>Destination verified: ${escape(state.pageType)}</span>
+             </div>`
+          : '';
+      const remaining =
+        Array.isArray(final.remaining) && final.remaining.length
+          ? `<ul style="margin: 4px 0 0; padding-left: 16px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">${final.remaining
+              .map((r) => `<li>${escape(r)}</li>`)
+              .join('')}</ul>`
+          : '';
+      const retry = ok || notice ? '' : `<button id="btn-retry-task" class="retry-action-btn">Try Again</button>`;
+
+      return `
+        <div class="final-response-panel ${panelClass}">
+          <div class="final-response-header">
+            <div class="final-headline-group ${panelClass}">
+              ${iconSvg}
+              <span>${escape(final.headline)}</span>
+            </div>
+            ${destTag}
+          </div>
+
+          <div class="final-summary-prose" data-final-result="body">${final.body ? escape(final.body) : ''}</div>
+          ${remaining}
+          ${final.provenance ? `<div style="font-size: 11px; color: var(--text-muted);">${escape(final.provenance)}</div>` : ''}
+          ${retry}
+        </div>
+      `;
+    }
+
+    if (legacySuccess) {
       const headline = ix?.terminal?.headline || 'Task completed successfully';
       const summaryText = ix?.result?.summary || 'The requested action has been completed and verified.';
       const items = ix?.result?.items || [];
@@ -378,9 +429,12 @@ export class AgentWorkspace {
       `;
     }
 
-    // Failure case
+    // Failure case — legacy fallback for a payload with no finalResult.
+    // PHASE 18.8 / B1: `state.reason` is internal by contract and is never
+    // rendered; the typed terminal headline is the user-safe fallback.
     const headline = ix?.terminal?.headline || 'Task could not be completed';
-    const explanation = state.reason || ix?.terminal?.headline || 'The requested goal could not be completed with the current page state.';
+    const explanation =
+      ix?.terminal?.headline || 'The requested goal could not be completed with the current page state.';
 
     return `
       <div class="final-response-panel failure">
@@ -482,7 +536,9 @@ export class AgentWorkspace {
         title: 'Task terminated safely',
         badgeText: 'HALTED',
         badgeClass: 'badge-warning',
-        detail: state.reason || 'Safety containment or boundary held.',
+        // PHASE 18.8 / B1 — a user-safe detail only. `state.reason` is the
+        // loop's internal prose and must never be rendered.
+        detail: state.interaction?.finalResult?.body || state.interaction?.terminal?.headline || 'Safety containment or boundary held.',
       });
     } else if (state.status === 'RUNNING') {
       entries.push({

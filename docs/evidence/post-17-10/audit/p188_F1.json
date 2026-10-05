@@ -1,0 +1,243 @@
+{
+  "phase": "18.7-A10",
+  "work": "A10 FINAL REAL-WEB EVALUATION — F1 INFORMATION_ANSWER_PATH: A10-F1 checkpoint: the PRODUCTION ModelRouter path delivers a terminal ANSWER proposal to the verifier",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "scenario": {
+    "id": "F1",
+    "category": "INFORMATION_ANSWER_PATH",
+    "title": "A10-F1 checkpoint: the PRODUCTION ModelRouter path delivers a terminal ANSWER proposal to the verifier",
+    "task": "tell me about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "harnessExit": 0,
+    "rawArtifact": "docs/evidence/post-17-10/audit/_a10_raw_F1.json"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12",
+    "settleMs": 60000,
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://127.0.0.1:4174 (ApexCart), http://127.0.0.1:4175 (synthetic banking)",
+    "gateway": "http://127.0.0.1:8010 (FastAPI)",
+    "startedAt": "2026-10-05T17:07:09.765Z",
+    "endedAt": "2026-10-05T17:08:16.342Z"
+  },
+  "provider": {
+    "type": "CONTROLLED_STUB",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "stubMode": "act_then_answer",
+    "model": "openai/gpt-oss-20b",
+    "gatewayRequests": [],
+    "unavailable": []
+  },
+  "intent": {
+    "intent": "INFORMATION_REQUEST",
+    "confidence": "DETERMINISTIC",
+    "requiresDestination": false,
+    "requiresEvidence": true,
+    "admitsBrowserAutomation": true,
+    "refusal": null
+  },
+  "perception": [
+    {
+      "visualDetections": 0,
+      "screenshotWidth": 1265,
+      "screenshotHeight": 757,
+      "ocrRegions": 0,
+      "privacyFindings": 37,
+      "ocrObservationState": "NOT_APPLICABLE"
+    },
+    {
+      "screenshotDimensions": {
+        "width": 1265,
+        "height": 757
+      },
+      "ocrRegionsCount": 0,
+      "visualRegionsCount": 96,
+      "privacyFindingsCount": 37
+    }
+  ],
+  "semanticObservation": {
+    "state": "OBSERVED",
+    "facts": 24,
+    "regionsConsidered": 33,
+    "droppedSensitive": 0,
+    "quarantinedInjection": 0,
+    "latencyMs": 9
+  },
+  "semanticUnderstanding": {
+    "pageType": "ARTICLE",
+    "pageState": "populated",
+    "pageGeneration": 2,
+    "entityCount": 5,
+    "affordanceCount": 6
+  },
+  "actions": {
+    "executedCount": 0,
+    "history": [],
+    "statuses": [],
+    "effectVerifiedCount": 0,
+    "noEffectCount": 0,
+    "refusedNotDispatched": [],
+    "gatesExecuted": {
+      "m5": 0,
+      "privacyPolicy": 0,
+      "safetyReview": 0,
+      "containment": 0,
+      "grounding": 0
+    },
+    "scrollStrategyExhausted": []
+  },
+  "evidence": {
+    "ledgerUpdates": 1,
+    "ledgerSize": 24,
+    "lastIngested": 24,
+    "verifiedCitable": 24,
+    "requiresEvidence": true,
+    "verification": {
+      "effectVerifiedSteps": 0,
+      "answerVerified": null,
+      "note": "This trace vocabulary emits effect verdicts (EFFECT_VERIFIED / ACTION_NO_EFFECT / EFFECT_UNVERIFIABLE); it does not emit a separate answer-verifier line, so answer verification is read from the terminal status only."
+    }
+  },
+  "destination": {
+    "required": false,
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "finalUrlFromTimeline": "https://en.wikipedia.org/wiki/Charminar",
+    "navigationObserved": false
+  },
+  "goalState": {
+    "longHorizonFinal": {
+      "meaningfulProgress": true,
+      "signals": [
+        "NEW_PAGE"
+      ],
+      "completedSubgoals": 0,
+      "pendingSubgoals": 3,
+      "discoveries": 5,
+      "actions": 0,
+      "loop": false,
+      "stalled": false,
+      "semanticProgress": true,
+      "semanticSignals": [
+        "EVIDENCE_DELTA"
+      ],
+      "geometry": "GEOMETRY_UNCHANGED",
+      "sameDirectionRun": 0,
+      "stagnation": "NONE",
+      "evidenceDelta": 24
+    },
+    "pendingSubgoals": 3,
+    "replans": 0
+  },
+  "recovery": {
+    "records": [],
+    "decisions": [],
+    "boundedTermination": false
+  },
+  "providerOutcome": {
+    "requestCount": 0,
+    "statuses": [],
+    "unavailable": 0
+  },
+  "privacy": {
+    "independent": false,
+    "source": null,
+    "capturedAt": null,
+    "markersSearched": 0,
+    "rawMarkerHits": [],
+    "rawMarkerCount": 0,
+    "forbiddenKeyHits": [],
+    "screenshotDataUriHits": 0,
+    "ocrRawTextHits": 0,
+    "note": "no gateway model-facing capture for this run (CONTROLLED provider does not traverse the FastAPI gateway, so no model-facing payload exists to inspect)",
+    "scenarioNote": "CONTROLLED provider: the scripted stub answers the extension directly, so this run has no gateway model-facing payload. Independent raw-value verification for this action shape is carried by the LIVE privacy scenario."
+  },
+  "falseSuccessChecks": {
+    "evaluated": [
+      {
+        "id": "SUCCESS_WITH_ZERO_ACTIONS",
+        "violated": false,
+        "evidence": "terminal=SUCCESS executedActions=0 verifiedCitable=24"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_VERIFIED_EVIDENCE_FOR_EVIDENCE_TASK",
+        "violated": false,
+        "evidence": "requiresEvidence=true effectVerified=0 verifiedCitable=24 ledgerSize=24"
+      },
+      {
+        "id": "SUCCESS_AFTER_PROVIDER_FAILURE",
+        "violated": false,
+        "evidence": "providerUnavailableRecords=0"
+      },
+      {
+        "id": "SUCCESS_AFTER_NO_EFFECT_ACTION",
+        "violated": false,
+        "evidence": "noEffectActions=0"
+      },
+      {
+        "id": "SUCCESS_WITH_STALE_OR_NON_PROGRESSING_OBSERVATION",
+        "violated": false,
+        "evidence": "stagnation=NONE evidenceDelta=24"
+      },
+      {
+        "id": "SUCCESS_WITHOUT_DESTINATION_VERIFICATION_WHEN_REQUIRED",
+        "violated": false,
+        "evidence": "requiresDestination=false navigationObserved=false"
+      }
+    ],
+    "violations": [],
+    "critical": false
+  },
+  "userFacing": {
+    "outputScreens": {
+      "verdict": "CLEAR",
+      "audit": "OUTPUT_SCREEN_CLEAR (0 finding(s))",
+      "outcome": "SUCCEEDED",
+      "phase": "TERMINAL",
+      "resultKind": "NONE"
+    },
+    "dashboardHeadline": null,
+    "timelineStatuses": [
+      {
+        "status": "RUNNING",
+        "phase": null,
+        "outcome": null
+      },
+      {
+        "status": "RUNNING",
+        "phase": "PERCEPTION",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "IN_PROGRESS",
+        "phase": "PLANNING",
+        "outcome": "RUNNING"
+      },
+      {
+        "status": "SUCCESS",
+        "phase": "TERMINAL",
+        "outcome": "SUCCEEDED"
+      },
+      {
+        "status": "SUCCESS",
+        "phase": "TERMINAL",
+        "outcome": "SUCCEEDED"
+      }
+    ]
+  },
+  "result": {
+    "scenarioId": "F1",
+    "category": "INFORMATION_ANSWER_PATH",
+    "title": "A10-F1 checkpoint: the PRODUCTION ModelRouter path delivers a terminal ANSWER proposal to the verifier",
+    "task": "tell me about charminar",
+    "startUrl": "https://en.wikipedia.org/wiki/Charminar",
+    "proofLevel": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+    "verdict": "SUCCESS",
+    "terminal": {
+      "status": "SUCCESS",
+      "reason": "Display fact verified from fresh authoritative observation: 'Charminar' is 'Charminar' (source DOM_TEXT_REGION, page generation 2, sole candidate for 'charminar' on the observed page).",
+      "currentStep": 0,
+      "observed": true
+    },
+    "blocker": null
+  }
+}

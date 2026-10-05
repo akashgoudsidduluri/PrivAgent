@@ -1,0 +1,76 @@
+{
+  "phase": "18.8-A10-F1",
+  "work": "A10-F1 production ANSWER wiring — mutation suite",
+  "total": 8,
+  "killed": 8,
+  "survived": 0,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "name": "requestStep removed from ModelRouter (the original defect)",
+      "find": "  async requestStep(\n    task: string,",
+      "replace": "  async requestStepDISABLED(\n    task: string,",
+      "verdict": "KILLED",
+      "detail": "Tests  12 failed | 8 passed (20)"
+    },
+    {
+      "id": "M2",
+      "name": "terminal proposal coerced into an action (ANSWER becomes a dispatch)",
+      "find": "    return requestStep(task, context, history, role);",
+      "replace": "    const s = await requestStep(task, context, history, role);\n    return s.kind === 'TERMINAL_PROPOSAL' ? { kind: 'ACTION', action: SCROLL_MUTANT } : s;",
+      "verdict": "KILLED",
+      "detail": "Tests  6 failed | 14 passed (20)"
+    },
+    {
+      "id": "M3",
+      "name": "router inspects and repairs a malformed backend step",
+      "find": "    return requestStep(task, context, history, role);",
+      "replace": "    const s = await requestStep(task, context, history, role);\n    if (s.kind === 'ACTION' && (s.action as { direction?: string }).direction === 'sideways') {\n      return { kind: 'ACTION', action: { action: 'scroll', direction: 'down', amount: 100 } };\n    }\n    return s;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M4",
+      "name": "role selection skipped on the step path (router no longer routes)",
+      "find": "    const requestStep = this.backendProvider.requestStep?.bind(this.backendProvider);\n    if (!requestStep) {",
+      "replace": "    const requestStep = this.backendProvider.requestStep?.bind(this.backendProvider);\n    if (requestStep) {\n      const direct = await requestStep(task, context, history);\n      this.previousRole = this.previousRole;\n      return direct;\n    }\n    if (!requestStep) {",
+      "verdict": "KILLED",
+      "detail": "Tests  2 failed | 18 passed (20)"
+    },
+    {
+      "id": "M5",
+      "name": "action-only backends break (fallback path removed)",
+      "find": "      return { kind: 'ACTION', action: await this.backendProvider.requestAction(task, context, history, role) };",
+      "replace": "      throw new Error('mutant: no step provider');",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M6",
+      "name": "escalation bookkeeping no longer recorded on the step path",
+      "find": "    this.previousRole = role;\n    return role;",
+      "replace": "    return role;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    },
+    {
+      "id": "M7",
+      "file": "LEDGER",
+      "name": "the verification PROMOTION is removed (records stay UNVERIFIED — the second half of the defect)",
+      "find": "        this.verify(rec.id);",
+      "replace": "        void rec;",
+      "verdict": "KILLED",
+      "detail": "Tests  3 failed | 17 passed (20)"
+    },
+    {
+      "id": "M8",
+      "file": "LEDGER",
+      "name": "promotion bypasses the verify() gate (a conflicted record can be marked VERIFIED)",
+      "find": "        this.verify(rec.id);",
+      "replace": "        const rec2 = this.byIdSafe(rec.id);\n        if (rec2) { this.byId.set(rec.id, { ...rec2, verificationStatus: 'VERIFIED' }); this.records = this.records.map((r) => (r.id === rec.id ? this.byId.get(rec.id)! : r)); }",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 19 passed (20)"
+    }
+  ]
+}

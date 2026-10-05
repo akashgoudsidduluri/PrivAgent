@@ -265,7 +265,32 @@ export class EvidenceLedger {
         confidence: Math.max(0, Math.min(1, fact.confidence ?? 0.9)),
         observedAt,
       });
-      if (rec) added += 1;
+      if (rec) {
+        added += 1;
+        //
+        // PHASE 18.8 / A10-F1 — THE VERIFICATION PROMOTION.
+        //
+        // Until this call existed, NOTHING in production called `verify()`:
+        // every record stayed UNVERIFIED, `citable().filter(VERIFIED)` was
+        // always empty, and a terminal ANSWER could never be accepted (it
+        // downgraded to NEEDS_INFORMATION forever). The missing piece was never
+        // a model check; it is this provenance check.
+        //
+        // A fact reaches this line ONLY from a genuinely OBSERVED
+        // `SemanticObservation` (the guard above), carrying real provenance,
+        // observed at the live generation, having already passed the
+        // world-model choke point, the write-time privacy screen and the
+        // injection screen. That is the DEVICE'S OWN reading of the live
+        // document, so it is verifiable evidence.
+        //
+        // The promotion is delegated to `verify()` itself, so the one
+        // promotion gate — not a second copy of its rules — decides: a record
+        // that is conflicted, stale, non-sanitized or out-of-generation is
+        // refused here exactly as it is refused on any other path. Emphatically
+        // NOT model-driven: the model cannot reach this method, and the status
+        // is never read from a proposal, a dispatch outcome or a goal verdict.
+        this.verify(rec.id);
+      }
     }
     return added;
   }

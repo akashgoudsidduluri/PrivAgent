@@ -68,6 +68,10 @@ export class AgentView {
       AWAITING_CONFIRMATION: 'var(--status-amber-bright)',
       RUNNING: 'var(--status-blue-bright, #60a5fa)',
       IDLE: 'var(--text-muted)',
+      // PHASE 18.8 / B1 — the A9 information outcomes. An answer is not a
+      // SUCCESS, and an unanswerable page is not a FAILURE.
+      ANSWERED: 'var(--status-green-bright, #34d399)',
+      UNANSWERED: 'var(--status-amber-bright)',
     };
 
     const stepText =
@@ -89,6 +93,32 @@ export class AgentView {
                )
                .join('')}
            </ul>`;
+
+    //
+    // PHASE 18.8 / B1 — the final result card, rendered VERBATIM from the
+    // projection (already projected and screened in the service worker). It
+    // appears ABOVE the supplementary result box, and the timeline below stays
+    // exactly as it was.
+    //
+    const fr = ix.finalResult;
+    const finalResultHtml =
+      fr && fr.kind !== 'NONE'
+        ? `<div style="margin-bottom: 10px; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-panel); border-radius: var(--radius-xs);">
+             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+               <span class="badge mono" style="background: transparent; color: ${
+                 fr.kind === 'FAILED' || fr.kind === 'PROVIDER_UNAVAILABLE'
+                   ? 'var(--status-red-bright, #f87171)'
+                   : fr.kind === 'PARTIAL' || fr.kind === 'CANNOT_VERIFY' || fr.kind === 'NEEDS_INFORMATION'
+                     ? 'var(--status-amber-bright)'
+                     : 'var(--status-green-bright, #34d399)'
+               }; border: 1px solid currentColor;">${escape(fr.kind)}</span>
+               <span style="font-size: 11px; font-weight: 600; color: var(--text-primary);">${escape(fr.headline)}</span>
+             </div>
+             ${fr.body ? `<div style="font-size: 11px; color: var(--text-primary); line-height: 1.5;">${escape(fr.body)}</div>` : ''}
+             ${fr.remaining.length ? `<ul style="margin: 6px 0 0; padding-left: 16px; font-size: 10px; color: var(--text-secondary); line-height: 1.5;">${fr.remaining.map((r) => `<li>${escape(r)}</li>`).join('')}</ul>` : ''}
+             ${fr.provenance ? `<div style="margin-top: 6px; font-size: 10px; color: var(--text-muted);">${escape(fr.provenance)}</div>` : ''}
+           </div>`
+        : '';
 
     // Structured terminal outcome
     const terminalHtml = ix.terminal
@@ -118,6 +148,7 @@ export class AgentView {
         <span style="margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">${escape(stepText)}${escape(cycleText)}</span>
       </div>
       ${terminalHtml}
+      ${finalResultHtml}
       <div style="margin-top: 10px; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-panel); border-radius: var(--radius-xs);">
         <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Result</div>
         ${resultHtml}

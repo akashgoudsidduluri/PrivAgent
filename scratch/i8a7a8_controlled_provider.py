@@ -149,14 +149,43 @@ def next_action(mode: str, n: int, payload: dict) -> dict:
     raise SystemExit(f"unknown stub mode {mode}")
 
 
+def _verified_evidence_ids(payload: dict) -> list:
+    """Evidence ids the DEVICE reports as VERIFIED and CURRENT.
+
+    These come from the sanitized `decision_state` the loop attaches to this very
+    request — the same ids a real model is shown, and the same ones
+    `verifyTerminalProposal` resolves against the local ledger. Citing them here
+    is honest: a controlled provider must not invent an id the device never sent.
+    """
+    context = (payload or {}).get("context") or {}
+    ds = context.get("decision_state") or context.get("decisionState") or {}
+    ids = []
+    for ref in ds.get("evidence") or []:
+        if not isinstance(ref, dict):
+            continue
+        if ref.get("verificationStatus") == "VERIFIED" and ref.get("freshness") == "CURRENT":
+            ids.append(ref.get("id"))
+    return [i for i in ids if isinstance(i, str)][:12]
+
+
 def terminal_proposal(mode: str, n: int, payload: dict):
     if mode == "answer":
-        return {"kind": "ANSWER", "answer": _answer_from_context(payload)}
+        return {
+            "kind": "ANSWER",
+            "reason": "controlled: answering from the verified evidence on this page",
+            "answer": _answer_from_context(payload),
+            "cited_evidence": _verified_evidence_ids(payload),
+        }
     if mode == "act_then_answer" and n >= 3:
         # A model that gathers evidence first and only then answers. The device
         # requires an ACTION from the planning step, so answering on the very
         # first cycle is correctly refused; this mode reproduces the real shape.
-        return {"kind": "ANSWER", "answer": _answer_from_context(payload)}
+        return {
+            "kind": "ANSWER",
+            "reason": "controlled: answering from the verified evidence on this page",
+            "answer": _answer_from_context(payload),
+            "cited_evidence": _verified_evidence_ids(payload),
+        }
     return None
 
 

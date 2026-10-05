@@ -74,7 +74,14 @@ export type RecoveryFailureCategory =
   | 'EXECUTION_FAILED'
   | 'PROVIDER_UNAVAILABLE'
   | 'STALE_PERCEPTION'
-  | 'OSCILLATION';
+  | 'OSCILLATION'
+  // PHASE 18.8 / A10-F2. "The action was dispatched, and the browser state it
+  // would be measured on was never observed." This is an OBSERVATION failure,
+  // not an effect failure: it says nothing about whether the action worked, so
+  // it is deliberately NOT folded into NO_EFFECT. Folding them together was how
+  // a navigation to a cross-origin page became an unmapped recovery code and
+  // the raw internal error reached the user.
+  | 'EFFECT_UNVERIFIABLE';
 
 /**
  * Strategy CLASSES, not actions. Recovery may only choose between these; what
@@ -127,7 +134,10 @@ export type RecoveryReasonCode =
   | 'SAME_DIRECTION_BUDGET_DRAINED'
   | 'RETRY_BUDGET_EXHAUSTED'
   | 'SAME_ACTION_RETRY_FORBIDDEN'
-  | 'STRATEGY_CHAIN_COMPLETE';
+  | 'STRATEGY_CHAIN_COMPLETE'
+  // PHASE 18.8 / A10-F2. The effect could not be READ, as distinct from having
+  // been read and found unchanged. A fixed code, never free text.
+  | 'EFFECT_NOT_OBSERVABLE';
 
 export const RECOVERY_REASON_CODES: readonly RecoveryReasonCode[] = Object.freeze([
   'EFFECT_UNCHANGED',
@@ -140,6 +150,7 @@ export const RECOVERY_REASON_CODES: readonly RecoveryReasonCode[] = Object.freez
   'RETRY_BUDGET_EXHAUSTED',
   'SAME_ACTION_RETRY_FORBIDDEN',
   'STRATEGY_CHAIN_COMPLETE',
+  'EFFECT_NOT_OBSERVABLE',
 ]);
 
 /** Bounds per category. Every one is small, hard, and checked before use. */
@@ -158,6 +169,15 @@ export const DEFAULT_TYPED_RECOVERY_BUDGET: Readonly<Record<RecoveryFailureCateg
   PROVIDER_UNAVAILABLE: 1,
   // The page moved under us. Re-perceive BEFORE anything else is even proposed.
   STALE_PERCEPTION: 1,
+  // PHASE 18.8 / A10-F2. EXACTLY ONE re-perception, and nothing else.
+  //
+  // The effect is unknown, which is NOT the same as absent. Re-reading the page
+  // can resolve an unknown into a verified or a no-effect verdict, so one fresh
+  // observation is the correct and sufficient response. What must never happen
+  // is REPEATING the action: for a side-effecting action an unknown outcome
+  // means the effect may already have happened, and a second dispatch would be a
+  // blind duplicate. So the chain is a single RE_PERCEIVE and then STOP.
+  EFFECT_UNVERIFIABLE: 1,
 });
 
 /**
@@ -174,6 +194,9 @@ const STRATEGY_CHAIN: Readonly<Record<RecoveryFailureCategory, readonly Recovery
     EXECUTION_FAILED: Object.freeze(['RE_PERCEIVE', 'CHANGE_STRATEGY'] as const),
     PROVIDER_UNAVAILABLE: Object.freeze(['CONTINUE'] as const),
     STALE_PERCEPTION: Object.freeze(['RE_PERCEIVE'] as const),
+    // PHASE 18.8 / A10-F2. Fresh perception only — never CHANGE_STRATEGY, which
+    // would re-propose an action whose effect is already unknown.
+    EFFECT_UNVERIFIABLE: Object.freeze(['RE_PERCEIVE'] as const),
   });
 
 /** The record's default reason for each strategy a category can move to. */
@@ -184,6 +207,7 @@ const REASON_FOR: Readonly<Record<RecoveryFailureCategory, RecoveryReasonCode>> 
   EXECUTION_FAILED: 'DISPATCH_THREW',
   PROVIDER_UNAVAILABLE: 'PROVIDER_COULD_NOT_ANSWER',
   STALE_PERCEPTION: 'OBSERVATION_SUPERSEDED',
+  EFFECT_UNVERIFIABLE: 'EFFECT_NOT_OBSERVABLE',
 });
 
 /**
@@ -391,7 +415,13 @@ export function recoveryCategoryFor(input: {
   if (input.staleObservation) return 'STALE_PERCEPTION';
   if (input.dispatchStatus === 'POLICY_BLOCKED' || input.dispatchStatus === 'NOT_DISPATCHED') return 'POLICY_BLOCKED';
   if (input.dispatchStatus === 'EXECUTION_FAILED') return 'EXECUTION_FAILED';
-  if (input.effectStatus === 'NO_EFFECT' || input.effectStatus === 'EFFECT_UNVERIFIABLE') return 'NO_EFFECT';
+  // PHASE 18.8 / A10-F2. An unreadable effect is its OWN category. It was
+  // folded into NO_EFFECT, which was both a truthfulness error ("nothing
+  // changed" is not what was observed — nothing could be observed) and a safety
+  // error: NO_EFFECT's chain reaches CHANGE_STRATEGY, so an unknown outcome
+  // could lead to re-proposing an action that may already have taken effect.
+  if (input.effectStatus === 'EFFECT_UNVERIFIABLE') return 'EFFECT_UNVERIFIABLE';
+  if (input.effectStatus === 'NO_EFFECT') return 'NO_EFFECT';
   return 'NO_EFFECT';
 }
 
@@ -490,6 +520,20 @@ const STRATEGY_BY_CODE: Record<string, RecoveryStrategy> = {
   // A scroll that hits the boundary usually means content is hidden below.
   // Look further down before concluding the target is gone.
   SCROLL_CHANGED: 'REPERCEIVE',
+  //
+  // PHASE 18.8 / A10-F2. THE UNMAPPED CODE.
+  //
+  // `EffectStatus` includes `EFFECT_UNVERIFIABLE`, so `RecoveryFailureCode`
+  // already admitted it and TypeScript was satisfied — but it had NO entry here.
+  // `classifyFailure` therefore returned `UNKNOWN` ("Unrecognized failure code
+  // 'EFFECT_UNVERIFIABLE'; failing closed"), the engine aborted, and the abort
+  // reason became the user-visible terminal reason. A type-level admission is
+  // not a runtime mapping; the map is what actually runs.
+  //
+  // REPERCEIVE, never RETRY_SAME_TARGET: the action was dispatched and its
+  // outcome is unknown, so re-reading the page is safe while repeating the
+  // action is not.
+  EFFECT_UNVERIFIABLE: 'REPERCEIVE',
 
   // ── Grounding (Stage 5) ──────────────────────────────────────────────────
   // The target existed in an earlier generation: the page moved on. A fresh

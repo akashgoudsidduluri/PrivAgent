@@ -27,7 +27,17 @@ import { spawnSync } from 'child_process';
 
 const CAPTURE_DIR = process.env.ST_CAPTURE_DIR || '/tmp/p185_capture';
 const OUT_DIR = process.env.A10_OUT_DIR || 'docs/evidence/post-17-10/audit';
-const TABLE = JSON.parse(fs.readFileSync('scratch/a10_scenarios.json', 'utf8')).scenarios;
+// The scenario table and the artifact labelling are configurable so a LATER
+// phase can reuse this driver without editing it. The defaults are the A10
+// table and the A10 labels, so A10 behaviour is unchanged.
+const TABLE_PATH = process.env.ST_TABLE || 'scratch/a10_scenarios.json';
+// A later phase reuses this driver with its own artifact/index names so an
+// earlier phase's committed evidence is never rewritten by a later run.
+const ARTIFACT_PREFIX = process.env.ST_ARTIFACT_PREFIX || 'a10_';
+const INDEX_PATH = process.env.ST_INDEX || 'a10_index.json';
+const PHASE = process.env.ST_PHASE || '18.7-A10';
+const WORK_PREFIX = process.env.ST_WORK_PREFIX || 'A10 FINAL REAL-WEB EVALUATION';
+const TABLE = JSON.parse(fs.readFileSync(TABLE_PATH, 'utf8')).scenarios;
 
 /* ------------------------------------------------------------------ parsing */
 
@@ -260,17 +270,31 @@ function assemble(scenario, raw, harnessExit, runStartedAt) {
   const actionStatuses = executed.map((e) => e.outcome);
   const terminalSuccess = terminal.status === 'SUCCESS';
   const requiresEvidence = intent ? intent.requiresEvidence === true : null;
+  //
+  // PHASE 18.8 / A10-F1. The ledger now PROMOTES evidence (it always should have:
+  // nothing in production called `verify()`). A terminal SUCCESS therefore has
+  // TWO legitimate bases, and each check must accept either one:
+  //   * an action whose effect was independently observed (effectVerified), or
+  //   * at least one VERIFIED + CURRENT ledger record — the A5 evidence gate,
+  //     which is the GoalVerifier's own authority for an information task.
+  // Zero actions AND zero verified evidence is still a violation.
+  const ledgerVerified =
+    ledgerLast && typeof ledgerLast.verifiedCurrent === 'number' ? ledgerLast.verifiedCurrent : null;
 
   const falseSuccess = [
     {
       id: 'SUCCESS_WITH_ZERO_ACTIONS',
-      violated: terminalSuccess && executed.length === 0,
-      evidence: `terminal=${terminal.status} executedActions=${executed.length}`,
+      violated: terminalSuccess && executed.length === 0 && (ledgerVerified ?? 0) === 0,
+      evidence: `terminal=${terminal.status} executedActions=${executed.length} verifiedCitable=${ledgerVerified}`,
     },
     {
       id: 'SUCCESS_WITHOUT_VERIFIED_EVIDENCE_FOR_EVIDENCE_TASK',
-      violated: terminalSuccess && requiresEvidence === true && effectVerified === 0,
-      evidence: `requiresEvidence=${requiresEvidence} effectVerified=${effectVerified} ledgerSize=${ledgerLast ? ledgerLast.ledgerSize : null}`,
+      violated:
+        terminalSuccess &&
+        requiresEvidence === true &&
+        effectVerified === 0 &&
+        (ledgerVerified ?? 0) === 0,
+      evidence: `requiresEvidence=${requiresEvidence} effectVerified=${effectVerified} verifiedCitable=${ledgerVerified} ledgerSize=${ledgerLast ? ledgerLast.ledgerSize : null}`,
     },
     {
       id: 'SUCCESS_AFTER_PROVIDER_FAILURE',
@@ -373,6 +397,7 @@ function assemble(scenario, raw, harnessExit, runStartedAt) {
       ledgerUpdates: ledger.length,
       ledgerSize: ledgerLast ? ledgerLast.ledgerSize : null,
       lastIngested: ledgerLast ? ledgerLast.ingested : null,
+      verifiedCitable: ledgerVerified,
       requiresEvidence,
       verification: {
         effectVerifiedSteps: effectVerified,
@@ -405,7 +430,24 @@ function assemble(scenario, raw, harnessExit, runStartedAt) {
     },
     userFacing: {
       outputScreens: outputScreens.length ? outputScreens[outputScreens.length - 1] : null,
+      //
+      // PHASE 18.8 / B1 — what the USER actually saw.
+      //
+      // `finalResult` is the typed card the service worker emitted (the last
+      // progress message that carried one); `dashboardBodyExcerpt` is the text
+      // the REAL dashboard rendered inside its own DOM, captured from the page
+      // after the settle window. The second one is what proves the card reached
+      // the screen rather than merely the wire.
+      //
+      finalResult: (() => {
+        const withCard = timeline.filter((t) => t && t.finalResult);
+        return withCard.length ? withCard[withCard.length - 1].finalResult : null;
+      })(),
       dashboardHeadline: raw.analysis && raw.analysis.submission ? null : null,
+      dashboardBodyExcerpt:
+        raw.analysis && typeof raw.analysis.bodyText === 'string'
+          ? raw.analysis.bodyText.slice(0, 1200)
+          : null,
       timelineStatuses: timeline.map((t) => ({ status: t.status, phase: t.phase, outcome: t.outcome })),
     },
     result,
@@ -415,7 +457,7 @@ function assemble(scenario, raw, harnessExit, runStartedAt) {
 /* --------------------------------------------------------------------- main */
 
 function updateIndex(entry) {
-  const p = path.join(OUT_DIR, 'a10_index.json');
+  const p = path.join(OUT_DIR, INDEX_PATH);
   let idx = { phase: '18.7-A10', work: 'A10 scenario index', scenarios: [] };
   if (fs.existsSync(p)) {
     try {
@@ -441,7 +483,7 @@ function updateIndex(entry) {
     falseSuccessViolations: entry.falseSuccessChecks.violations,
     privacyRawMarkerHits: entry.privacy.rawMarkerCount,
     blocker: entry.result.blocker,
-    artifact: path.join(OUT_DIR, `a10_${entry.scenario.id}.json`),
+    artifact: path.join(OUT_DIR, `${ARTIFACT_PREFIX}${entry.scenario.id}.json`),
   });
   idx.scenarios.sort((a, b) => a.scenarioId.localeCompare(b.scenarioId));
   fs.writeFileSync(p, JSON.stringify(idx, null, 2));
@@ -455,8 +497,8 @@ function runScenario(s) {
   env.ST_SETTLE_MS = String(s.settleMs || 60000);
   env.ST_CDP_PORT = String(s.cdpPort || 9801);
   env.ST_OUT = rawOut;
-  env.ST_PHASE = '18.7-A10';
-  env.ST_WORK = `A10 FINAL REAL-WEB EVALUATION — ${s.id} ${s.category}: ${s.title}`;
+  env.ST_PHASE = PHASE;
+  env.ST_WORK = `${WORK_PREFIX} — ${s.id} ${s.category}: ${s.title}`;
   env.ST_LABELS =
     s.provider === 'LIVE'
       ? 'PROVEN_REAL_CHROME / PROVEN_REAL_BACKEND'
@@ -477,7 +519,7 @@ function runScenario(s) {
   }
   const raw = JSON.parse(fs.readFileSync(rawPath, 'utf8'));
   const entry = assemble(s, raw, r.status, startedAt);
-  const outPath = path.join(OUT_DIR, `a10_${s.id}.json`);
+  const outPath = path.join(OUT_DIR, `${ARTIFACT_PREFIX}${s.id}.json`);
   fs.writeFileSync(outPath, JSON.stringify(entry, null, 2));
   updateIndex(entry);
   console.log(
@@ -491,11 +533,12 @@ if (arg === '--reindex') {
   // source of truth. Used after a re-run so a superseded attempt is replaced
   // rather than appended.
   const entries = [];
+  const re = new RegExp(`^${ARTIFACT_PREFIX}[A-Za-z0-9]+\\.json$`);
   for (const name of fs.readdirSync(OUT_DIR).sort()) {
-    if (!/^a10_S\d+\.json$/.test(name)) continue;
+    if (!re.test(name)) continue;
     entries.push(JSON.parse(fs.readFileSync(path.join(OUT_DIR, name), 'utf8')));
   }
-  fs.writeFileSync(path.join(OUT_DIR, 'a10_index.json'), JSON.stringify({ phase: '18.7-A10', work: 'A10 scenario index', scenarios: [] }, null, 2));
+  fs.writeFileSync(path.join(OUT_DIR, INDEX_PATH), JSON.stringify({ phase: PHASE, work: `${WORK_PREFIX} scenario index`, scenarios: [] }, null, 2));
   for (const e of entries) updateIndex(e);
   console.log(`reindexed ${entries.length} scenarios`);
 } else if (arg === '--list') {
