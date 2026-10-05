@@ -1,0 +1,345 @@
+{
+  "phase": "18.8-B2/A13/A15",
+  "work": "Continuous multi-turn conversation, deterministic reference resolution, cross-page entity identity",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "provider": "CONTROLLED (scratch/i8a7a8_controlled_provider.py, STUB_MODE=multiturn)",
+  "honesty": "CONTROLLED_PROVIDER. The live groq route was not used: it was rate-limited and returned malformed action payloads, so no live leg is claimed.",
+  "source": "p188_mt10_raw.json",
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "fixture": {
+    "origin": "http://localhost:4174",
+    "listingDetectionIds": {
+      "detectionIds": [
+        "product-xxl-black-baggy-bag-899",
+        "product-office-bag-1499",
+        "product-red-bag-699",
+        "product-blue-bag-950"
+      ],
+      "dataProductIds": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "titles": [
+        "XXL Black Baggy Travel Bag",
+        "Executive Leather Office Bag",
+        "Red Canvas Baggy Gym Bag",
+        "XXL Blue Baggy Duffel Bag"
+      ]
+    },
+    "detailDetectionIds": {
+      "detectionIds": [
+        "product-detail-card"
+      ],
+      "dataProductIds": [
+        "3"
+      ],
+      "titles": [
+        "Red Canvas Baggy Gym Bag"
+      ]
+    }
+  },
+  "turns": [
+    {
+      "id": "T1",
+      "task": "Find the top 5 products under 1000 with good ratings.",
+      "status": "ANSWER",
+      "urlBefore": "http://localhost:4174/results.html",
+      "urlAfter": "http://localhost:4174/results.html",
+      "conversationId": "conv-ddbbf8ba",
+      "turnIndex": 0,
+      "turnCount": 1,
+      "candidateCount": 4,
+      "selectedOrdinal": null,
+      "selectedIdentityKey": null,
+      "selectedProductId": null,
+      "selectedEntityType": null,
+      "revalidation": null,
+      "referenceOutcome": "NOT_A_REFERENCE",
+      "clarificationCode": null,
+      "finalResult": {
+        "kind": "ANSWER",
+        "headline": "Answer",
+        "body": "Spacious lightweight travel duffel with",
+        "provenance": "Based on 1 locally verified observation(s) from localhost:4174.",
+        "remaining": []
+      },
+      "dashboardHeadline": null
+    },
+    {
+      "id": "T2",
+      "task": "Tell me about the third one.",
+      "status": "PARTIAL",
+      "urlBefore": "http://localhost:4174/results.html",
+      "urlAfter": "http://localhost:4174/results.html",
+      "conversationId": "conv-ddbbf8ba",
+      "turnIndex": 1,
+      "turnCount": 2,
+      "candidateCount": 4,
+      "selectedOrdinal": 3,
+      "selectedIdentityKey": "5ab99510",
+      "selectedProductId": "3",
+      "selectedEntityType": "PRODUCT",
+      "revalidation": "REVALIDATED",
+      "referenceOutcome": "RESOLVED",
+      "clarificationCode": null,
+      "finalResult": {
+        "kind": "PARTIAL",
+        "headline": "Partly answered",
+        "body": null,
+        "provenance": null,
+        "remaining": [
+          "Some of what was asked could not be verified on this page."
+        ]
+      },
+      "dashboardHeadline": null
+    },
+    {
+      "id": "T3",
+      "task": "Open it.",
+      "status": "PARTIAL",
+      "urlBefore": "http://localhost:4174/results.html",
+      "urlAfter": "http://localhost:4174/product.html?id=3",
+      "conversationId": "conv-ddbbf8ba",
+      "turnIndex": 2,
+      "turnCount": 3,
+      "candidateCount": 1,
+      "selectedOrdinal": 1,
+      "selectedIdentityKey": "4f9df7b7",
+      "selectedProductId": "3",
+      "selectedEntityType": "PRODUCT",
+      "revalidation": "REVALIDATED",
+      "referenceOutcome": "RESOLVED",
+      "clarificationCode": null,
+      "finalResult": {
+        "kind": "PARTIAL",
+        "headline": "Partly answered",
+        "body": null,
+        "provenance": null,
+        "remaining": [
+          "Some of what was asked could not be verified on this page."
+        ]
+      },
+      "dashboardHeadline": null
+    },
+    {
+      "id": "T4",
+      "task": "Get details about it.",
+      "status": "PARTIAL",
+      "urlBefore": "http://localhost:4174/product.html?id=3",
+      "urlAfter": "http://localhost:4174/product.html?id=3",
+      "conversationId": "conv-ddbbf8ba",
+      "turnIndex": 3,
+      "turnCount": 4,
+      "candidateCount": 1,
+      "selectedOrdinal": 1,
+      "selectedIdentityKey": "4f9df7b7",
+      "selectedProductId": "3",
+      "selectedEntityType": "PRODUCT",
+      "revalidation": "REVALIDATED",
+      "referenceOutcome": "RESOLVED",
+      "clarificationCode": null,
+      "finalResult": {
+        "kind": "PARTIAL",
+        "headline": "Partly answered",
+        "body": null,
+        "provenance": null,
+        "remaining": [
+          "Some of what was asked could not be verified on this page."
+        ]
+      },
+      "dashboardHeadline": null
+    },
+    {
+      "id": "T5",
+      "task": "Show me the products under 1000 with good ratings.",
+      "status": "ANSWER",
+      "urlBefore": "http://localhost:4174/product.html?id=3",
+      "urlAfter": "http://localhost:4174/results.html",
+      "conversationId": "conv-1588a32d",
+      "turnIndex": 0,
+      "turnCount": 1,
+      "candidateCount": 4,
+      "selectedOrdinal": null,
+      "selectedIdentityKey": null,
+      "selectedProductId": null,
+      "selectedEntityType": null,
+      "revalidation": null,
+      "referenceOutcome": "NOT_A_REFERENCE",
+      "clarificationCode": null,
+      "finalResult": {
+        "kind": "ANSWER",
+        "headline": "Answer",
+        "body": "Spacious lightweight travel duffel with",
+        "provenance": "Based on 1 locally verified observation(s) from localhost:4174.",
+        "remaining": []
+      },
+      "dashboardHeadline": null
+    },
+    {
+      "id": "T6",
+      "task": "Tell me about it.",
+      "status": "NEEDS_CLARIFICATION",
+      "urlBefore": "http://localhost:4174/results.html",
+      "urlAfter": "http://localhost:4174/results.html",
+      "conversationId": "conv-1588a32d",
+      "turnIndex": 1,
+      "turnCount": 2,
+      "candidateCount": 4,
+      "selectedOrdinal": null,
+      "selectedIdentityKey": null,
+      "selectedProductId": null,
+      "selectedEntityType": null,
+      "revalidation": null,
+      "referenceOutcome": "NEEDS_CLARIFICATION",
+      "clarificationCode": "AMBIGUOUS_REFERENCE",
+      "finalResult": {
+        "kind": "NEEDS_CLARIFICATION",
+        "headline": "One detail is missing",
+        "body": "I found several items here, so I cannot tell which one you mean. Tell me a position, such as “the third one”, or describe it.",
+        "provenance": null,
+        "remaining": []
+      },
+      "dashboardHeadline": null
+    }
+  ],
+  "checks": [
+    {
+      "id": "B2-1",
+      "claim": "a first turn creates a conversation and captures observed candidates",
+      "pass": true,
+      "observed": {
+        "conversationId": "conv-ddbbf8ba",
+        "candidateCount": 4
+      }
+    },
+    {
+      "id": "B2-2",
+      "claim": "a follow-up turn CONTINUES the same conversation",
+      "pass": true,
+      "observed": {
+        "turnIndex": 2,
+        "turnCount": 3,
+        "conversationId": "conv-ddbbf8ba"
+      }
+    },
+    {
+      "id": "B2-3",
+      "claim": "a turn with no reference starts a NEW conversation (isolation)",
+      "pass": true,
+      "observed": {
+        "previous": "conv-ddbbf8ba",
+        "next": "conv-1588a32d",
+        "turnIndex": 0
+      }
+    },
+    {
+      "id": "A13-1",
+      "claim": "\"the third one\" resolves to the THIRD observed candidate",
+      "pass": true,
+      "observed": {
+        "selectedOrdinal": 3,
+        "outcome": "RESOLVED",
+        "revalidation": "REVALIDATED"
+      }
+    },
+    {
+      "id": "A13-2",
+      "claim": "\"it\" resolves to the SELECTION, not to a guess",
+      "pass": true,
+      "observed": {
+        "outcome": "RESOLVED",
+        "listingProductId": "3",
+        "detailProductId": "3"
+      }
+    },
+    {
+      "id": "A13-3",
+      "claim": "an ambiguous \"it\" with several candidates and no selection is REFUSED",
+      "pass": true,
+      "observed": {
+        "status": "NEEDS_CLARIFICATION",
+        "code": "AMBIGUOUS_REFERENCE",
+        "candidates": 4,
+        "selection": null
+      }
+    },
+    {
+      "id": "A15-1",
+      "claim": "NAVIGATION OCCURRED between the listing and the detail page",
+      "pass": true,
+      "observed": {
+        "urlBefore": "http://localhost:4174/results.html",
+        "urlAfter": "http://localhost:4174/product.html?id=3"
+      }
+    },
+    {
+      "id": "A15-2",
+      "claim": "the DOM detection ids are DIFFERENT on the two pages",
+      "pass": true,
+      "observed": {
+        "listing": [
+          "product-xxl-black-baggy-bag-899",
+          "product-office-bag-1499",
+          "product-red-bag-699",
+          "product-blue-bag-950"
+        ],
+        "detail": [
+          "product-detail-card"
+        ]
+      }
+    },
+    {
+      "id": "A15-3",
+      "claim": "the perception is a DIFFERENT world model (new page generation)",
+      "pass": true,
+      "observed": {
+        "listingWorldModel": "wm-g3-muvof4i2-aw9f",
+        "detailWorldModel": "wm-g4-muvof5gd-tzqv"
+      }
+    },
+    {
+      "id": "A15-4",
+      "claim": "the SAME entity was re-established across the navigation (productId carried over)",
+      "pass": true,
+      "observed": {
+        "listingProductId": "3",
+        "detailProductId": "3",
+        "revalidation": "REVALIDATED"
+      }
+    },
+    {
+      "id": "A15-5",
+      "claim": "\"it\" on the NEXT page still resolves to that entity (not the page index)",
+      "pass": true,
+      "observed": {
+        "outcome": "RESOLVED",
+        "productId": "3",
+        "type": "PRODUCT"
+      }
+    },
+    {
+      "id": "A15-6",
+      "claim": "the page-scoped identity hash CHANGED, so revalidation is a re-establishment, not a stale carry-over",
+      "pass": true,
+      "observed": {
+        "listingIdentityKey": "5ab99510",
+        "detailIdentityKey": "4f9df7b7"
+      }
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "failed": 0
+  },
+  "privacy": {
+    "markersScanned": 7,
+    "hits": [],
+    "rawPageTextStored": false,
+    "screenshotOrOcrStored": false,
+    "pass": true
+  }
+}

@@ -35,11 +35,71 @@ import type { OCRObservation } from '../ocr/ocrObservationContract';
 import { observedSnapshotFields, tabOnlySnapshotFields } from '../agent/effectVerifier';
 import type { ObservationState } from '../agent/effectVerifier';
 import type { ViewportGeometry } from '../capture/coordinateMapper';
+import {
+  nextConversationId,
+  isUsableContext,
+  eligibleCandidates,
+  type ConversationContext,
+} from '../agent/conversationContext';
+import { createConversationStore } from '../agent/conversationPersistence';
+import { planConversation, detectReference } from '../agent/referenceResolver';
+
+/**
+ * PHASE 18.8 / B2 + A13 — MAY A CONVERSATIONAL TURN PAST THE INTENT BOUNDARY?
+ *
+ * The intent boundary is deterministic, local and runs before any provider
+ * call, so it cannot know what "it" or "the third one" points at. For the ONE
+ * refusal a conversation can genuinely settle (`AMBIGUOUS_NO_GUESS`), the
+ * active conversation is consulted — still locally, still with no model:
+ *
+ *   admitted  ⇔ the turn carries a conversational reference AND the active
+ *               conversation is usable AND it holds something a reference
+ *               could point at — a SELECTED entity, or observed candidates.
+ *
+ * Admitting a candidate set is not admitting a guess: the resolver in the loop
+ * still decides, deterministically, between RESOLVED and NEEDS_CLARIFICATION,
+ * and revalidates the anchor against the freshly perceived page BEFORE anything
+ * is planned. A pronoun over four candidates therefore still ends in a typed
+ * clarification — it just ends there, with the reason, instead of being
+ * refused earlier with no context at all.
+ *
+ * Nothing else is admitted: no selection, no usable context, no reference in
+ * the turn, or any other refusal code all stop at the boundary with zero
+ * provider calls and zero tabs. Because the check is keyed on the refusal CODE,
+ * it cannot touch a consequential intent (a purchase classifies as a
+ * transaction, never as ambiguity), so Risk/Confirmation is unaffected.
+ */
+function conversationSettlesAmbiguity(
+  task: string,
+  context: ConversationContext | null,
+  now: number
+): boolean {
+  if (!context || typeof task !== 'string' || task.length === 0) return false;
+  if (!detectReference(task)) return false;
+  const hasAnchor =
+    context.selection !== null ||
+    context.selection !== undefined ||
+    eligibleCandidates(context).length > 0;
+  if (!hasAnchor) return false;
+  return isUsableContext(context, { conversationId: context.conversationId, now });
+}
 
 // PrivAgent Background Service Worker (Manifest V3)
 let activeLoop: AgentLoop | null = null;
 let activeTaskRunId = 0;
 let currentDashboardTabId: number | null = null;
+//
+// PHASE 18.8 / B2 — the ONE active conversation, owned by the worker.
+//
+// The worker is the only place that decides whether a turn continues a
+// conversation: the loop never re-derives it, and the dashboard never asserts
+// it. Persistence is `chrome.storage.session` (in-memory), degrading explicitly
+// to in-memory when the area is absent.
+//
+let activeConversation: ConversationContext | null = null;
+const conversationStore = createConversationStore();
+let conversationCounter = 0;
+
 const sharedOffscreenOcrEngine = new OffscreenOCREngine({ timeoutMs: 15_000 });
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -549,7 +609,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       refusal: intentDecision.refusal ?? null,
     });
 
-    if (!intentDecision.admitsBrowserAutomation) {
+    if (
+      !intentDecision.admitsBrowserAutomation &&
+      !(intentDecision.refusal === 'AMBIGUOUS_NO_GUESS' &&
+        conversationSettlesAmbiguity(task, activeConversation, Date.now()))
+    ) {
       console.info('[AgentTrace] task not admitted by the intent boundary', {
         intent: intentDecision.intent,
         refusal: intentDecision.refusal ?? null,
@@ -594,6 +658,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       );
       return;
     }
+    if (!intentDecision.admitsBrowserAutomation) {
+      console.info('[AgentTrace] conversational turn admitted past the intent boundary', {
+        intent: intentDecision.intent,
+        refusal: intentDecision.refusal ?? null,
+        conversationId: activeConversation?.conversationId ?? null,
+        selection: activeConversation?.selection?.identity?.entityType ?? null,
+      });
+    }
     if (sender.tab?.id) currentDashboardTabId = sender.tab.id;
 
     // ── Phase 18.1: Single Active Task Ownership ───────────────────────────
@@ -607,6 +679,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // generation be cited for this one, which is exactly the cross-task
     // contamination the ledger's provenance exists to prevent.
     const activeEvidenceLedger = new EvidenceLedger();
+
+    // ── PHASE 18.8 / B2: THE CONVERSATION ─────────────────────────────────
+    //
+    // Deterministic and local — no provider call, no tab, no gate. It answers
+    // one question: does this turn CONTINUE the active conversation, or start
+    // a new one?
+    //
+    // A follow-up inherits context only when it carries a conversational
+    // reference AND that conversation has something the reference could point
+    // at. Everything else — a new task, a reset, a turn with no reference, a
+    // context that is stale, foreign or too old — starts a NEW, empty context.
+    // Isolation is the default, so a previous run's candidates can never leak
+    // into an unrelated task.
+    conversationCounter += 1;
+    const conversationPlan = planConversation({
+      task,
+      current: activeConversation,
+      conversationId: nextConversationId(`${taskOwnershipToken}:${conversationCounter}:${Date.now()}`),
+      now: Date.now(),
+    });
+    activeConversation = conversationPlan.context;
+    const turnConversation = activeConversation;
+    if (activeConversation) void conversationStore.save(activeConversation);
+    console.info('[AgentTrace] conversation planned', {
+      mode: conversationPlan.mode,
+      reason: conversationPlan.reason,
+      conversationId: activeConversation?.conversationId ?? null,
+      contextGeneration: activeConversation?.contextGeneration ?? null,
+      persistenceAvailable: conversationStore.persistenceAvailable,
+    });
 
     if (activeLoop) {
       console.info('[PrivAgent SW] Halting and superseding previous active loop for new task run', {
@@ -1424,6 +1526,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             sendToDashboard({ ...state, runId: taskOwnershipToken }, dashboardTabId);
           },
+          // PHASE 18.8 / B2. The loop reports its bounded conversation updates;
+          // the worker owns the lifetime. A superseded turn can never write one,
+          // which is what keeps an old run from overwriting the current
+          // conversation.
+          onConversationUpdate: (context: ConversationContext) => {
+            if (taskOwnershipToken !== activeTaskRunId) return;
+            activeConversation = context;
+            void conversationStore.save(context);
+          },
         };
 
         if (taskOwnershipToken !== activeTaskRunId) {
@@ -1460,6 +1571,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           // decision state and information completion read the SAME store —
           // there is no parallel evidence store anywhere in the system.
           evidenceLedger: activeEvidenceLedger,
+          // PHASE 18.8 / B2. The conversation this turn belongs to, decided above
+          // by `planConversation`. `null` for a one-shot task, which leaves every
+          // single-turn path exactly as it was.
+          conversationContext: turnConversation,
           //
           // PHASE 18.7 (A3). The SAME frozen decision object from the boundary —
           // carried, never re-derived, so the model-facing decision state cannot
@@ -1499,6 +1614,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             steps: activeLoop?.getState().steps || [],
             reason: errReason,
             runId: taskOwnershipToken,
+            conversation: activeLoop?.getState().conversation ?? null,
           },
           dashboardTabId
         );

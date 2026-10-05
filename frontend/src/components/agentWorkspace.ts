@@ -337,7 +337,11 @@ export class AgentWorkspace {
     if (hasFinal && final) {
       const ok = final.kind === 'ANSWER' || final.kind === 'SUCCESS' || final.kind === 'PARTIAL';
       const notice =
-        final.kind === 'PARTIAL' || final.kind === 'CANNOT_VERIFY' || final.kind === 'NEEDS_INFORMATION';
+        final.kind === 'PARTIAL' ||
+        final.kind === 'CANNOT_VERIFY' ||
+        final.kind === 'NEEDS_INFORMATION' ||
+        // PHASE 18.8 / A13 — a clarification is a question, not a failure.
+        final.kind === 'NEEDS_CLARIFICATION';
       const panelClass = ok ? 'success' : notice ? 'notice' : 'failure';
       const iconSvg = ok
         ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`

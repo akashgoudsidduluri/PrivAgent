@@ -8,6 +8,16 @@
  *   - Form:    FILL_FIELD | SELECT_OPTION | SUBMIT_FORM | CANCEL_FORM
  *   - Checkout:REVIEW_ORDER | SELECT_ADDRESS | SELECT_PAYMENT | SUBMIT_ORDER
  *
+ * NARRATION WORDING (PHASE 18.8 / A13, found in REAL CHROME):
+ *  These descriptions are AGENT-AUTHORED narration, but the security critic
+ *  scans the sanitized context's affordance text with the PAGE-hijack signature
+ *  set, which contains `/navigate to/i`. Our own template therefore tripped the
+ *  injection rule and blocked every action on a product detail page — the very
+ *  page a conversation reference navigates to. The wording below no longer
+ *  contains a hijack phrase. NOTHING was whitelisted: a page label
+ *  interpolated into these strings is still scanned as page text, and every
+ *  signature stays active.
+ *
  * CRITICAL ARCHITECTURAL INVARIANT:
  *  Understanding that an action affordance exists is STRICTLY DESCRIPTIVE.
  *  Affordance discovery does NOT authorize execution.
@@ -80,7 +90,7 @@ export function discoverActionAffordances(
       } else if (el.type === 'button' && (lowerLabel.includes('buy now') || lowerLabel.includes('proceed to buy'))) {
         addAffordance('BUY_NOW', el.id, 'Proceed directly to checkout purchase', 0.95, true);
       } else if (el.type === 'link' && (lowerSel.includes('result') || lowerLabel.includes('result'))) {
-        addAffordance('SELECT_RESULT', el.id, `Navigate to search result candidate (${el.label.slice(0, 30)})`, 0.90);
+        addAffordance('SELECT_RESULT', el.id, `Open search result candidate (${el.label.slice(0, 30)})`, 0.90);
       } else if (el.type === 'select') {
         addAffordance('SELECT_OPTION', el.id, `Select option for ${el.label.slice(0, 30) || 'selection control'}`, 0.85);
       } else if (el.type === 'input') {
@@ -119,7 +129,7 @@ export function discoverActionAffordances(
     addAffordance(
       'SELECT_RESULT',
       link.id || `result-link-${idx + 1}`,
-      `Navigate to search result candidate #${idx + 1}`,
+      `Open search result candidate #${idx + 1}`,
       0.90
     );
   });
@@ -268,7 +278,7 @@ export function discoverActionAffordances(
     addAffordance(
       'PAGINATE',
       pg.id || 'next-page-link',
-      'Navigate to subsequent page of catalog results',
+      'Open subsequent page of catalog results',
       0.88
     );
   });

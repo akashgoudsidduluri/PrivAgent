@@ -117,6 +117,8 @@ export type AgentTerminalReason =
   | 'ANSWERED'
   /** PHASE 18.8 / B1 — an information run ended without a verifiable result. */
   | 'NO_VERIFIABLE_RESULT'
+  /** PHASE 18.8 / A13 — a reference the local resolver refused to guess. */
+  | 'NEEDS_CLARIFICATION'
   | 'UNKNOWN';
 
 export interface AgentActivity {
@@ -210,6 +212,8 @@ export type AgentResultKind =
   | 'PARTIAL'
   | 'CANNOT_VERIFY'
   | 'NEEDS_INFORMATION'
+  // PHASE 18.8 / A13. A reference the local resolver would not guess at.
+  | 'NEEDS_CLARIFICATION'
   | 'SUCCESS'
   | 'FAILED'
   | 'PROVIDER_UNAVAILABLE'
@@ -254,6 +258,7 @@ const TERMINAL_HEADLINE: Record<AgentTerminalReason, string> = {
   CONFIRMATION_DECLINED: 'Stopped: the action was declined.',
   ANSWERED: 'Answered from evidence verified on this page.',
   NO_VERIFIABLE_RESULT: 'No verified result was available on this page.',
+  NEEDS_CLARIFICATION: 'Stopped: one detail in your request could not be resolved.',
   UNKNOWN: 'Failed.',
 };
 
@@ -271,6 +276,7 @@ const FINAL_HEADLINE: Record<AgentResultKind, string> = {
   PARTIAL: 'Partly answered',
   CANNOT_VERIFY: 'Could not verify',
   NEEDS_INFORMATION: 'More information needed',
+  NEEDS_CLARIFICATION: 'One detail is missing',
   SUCCESS: 'Task completed',
   FAILED: 'Task not completed',
   PROVIDER_UNAVAILABLE: 'Reasoning service unavailable',
@@ -381,6 +387,25 @@ function buildFinalResult(s: AgentTaskState): AgentFinalResult {
       remaining: [],
     };
   }
+  if (status === 'NEEDS_CLARIFICATION') {
+    //
+    // PHASE 18.8 / A13. The question the LOCAL resolver asked, from the typed
+    // clarification record. Never `state.reason`, never model prose: the user
+    // gets the ambiguity explained and nothing about how it was decided.
+    //
+    const asked = s.clarification;
+    const question =
+      asked && typeof asked.question === 'string' && asked.question.trim()
+        ? asked.question.trim().slice(0, 240)
+        : userFacingMessageForStatus('NEEDS_CLARIFICATION');
+    return {
+      kind: 'NEEDS_CLARIFICATION',
+      headline: FINAL_HEADLINE.NEEDS_CLARIFICATION,
+      body: question,
+      provenance: null,
+      remaining: [],
+    };
+  }
   if (status === 'NEEDS_INFORMATION') {
     return {
       kind: 'NEEDS_INFORMATION',
@@ -473,7 +498,9 @@ function isTerminalStatus(status: string): boolean {
     status === 'ANSWER' ||
     status === 'PARTIAL' ||
     status === 'CANNOT_VERIFY' ||
-    status === 'NEEDS_INFORMATION'
+    status === 'NEEDS_INFORMATION' ||
+    // PHASE 18.8 / A13. A clarification ends the run too; it is not a pause.
+    status === 'NEEDS_CLARIFICATION'
   );
 }
 
@@ -488,6 +515,7 @@ function classifyTerminalReason(s: AgentTaskState): AgentTerminalReason {
   if (s.status === 'SUCCESS') return 'GOAL_ACHIEVED';
   if (s.status === 'ANSWER' || s.status === 'PARTIAL') return 'ANSWERED';
   if (s.status === 'CANNOT_VERIFY' || s.status === 'NEEDS_INFORMATION') return 'NO_VERIFIABLE_RESULT';
+  if (s.status === 'NEEDS_CLARIFICATION') return 'NEEDS_CLARIFICATION';
   if (s.status === 'STOPPED') {
     return /declin|reject/i.test(s.reason ?? '') ? 'CONFIRMATION_DECLINED' : 'STOPPED_BY_USER';
   }
@@ -646,7 +674,9 @@ export function projectAgentOutput(state: AgentTaskState): AgentInteractionState
           ? 'STOPPED'
           : status === 'ANSWER' || status === 'PARTIAL'
             ? 'ANSWERED'
-            : status === 'CANNOT_VERIFY' || status === 'NEEDS_INFORMATION'
+            : status === 'CANNOT_VERIFY' ||
+                status === 'NEEDS_INFORMATION' ||
+                status === 'NEEDS_CLARIFICATION'
               ? 'UNANSWERED'
               : 'FAILED';
   }

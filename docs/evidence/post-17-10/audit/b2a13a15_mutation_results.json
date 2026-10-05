@@ -1,0 +1,127 @@
+{
+  "phase": "18.8-B2/A13/A15",
+  "work": "B2 conversation context, A13 reference resolution, A15 entity identity — mutation suite",
+  "total": 13,
+  "killed": 13,
+  "survived": 0,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "file": "extension/src/agent/conversationContext.ts",
+      "name": "conversation turns grow without bound",
+      "find": "const turns = [...ctx.turns, next].slice(-MAX_CONVERSATION_TURNS).map((t, i) =>",
+      "replace": "const turns = [...ctx.turns, next].map((t, i) =>",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 60 passed (61)"
+    },
+    {
+      "id": "M2",
+      "file": "extension/src/agent/referenceResolver.ts",
+      "name": "a reference continues a conversation even with nothing to refer to",
+      "find": "if (!hasReference || !hasAnchor) {",
+      "replace": "if (!hasReference) {",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 60 passed (61)"
+    },
+    {
+      "id": "M3",
+      "file": "extension/src/agent/conversationContext.ts",
+      "name": "sensitive attributes are kept (identity carries raw values)",
+      "find": "    if (tripsPrivacy(text)) continue;\n    out[normalizedKey] = text;",
+      "replace": "    out[normalizedKey] = text;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 60 passed (61)"
+    },
+    {
+      "id": "M4",
+      "file": "extension/src/agent/conversationPersistence.ts",
+      "name": "persistence writes without screening the context",
+      "find": "return conversationPrivacyViolations(context).length === 0;",
+      "replace": "return true;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 60 passed (61)"
+    },
+    {
+      "id": "M5",
+      "file": "extension/src/agent/referenceResolver.ts",
+      "name": "reference resolution removed entirely (every turn is \"not a reference\")",
+      "find": "  if (!ctx) return clarification('NO_CANDIDATES', reference, 'NEEDS_INFORMATION');",
+      "replace": "  return { outcome: 'NOT_A_REFERENCE', reference: null, candidate: null, identity: null, clarificationCode: null, question: null, basis: 'NONE' };\n  if (!ctx) return clarification('NO_CANDIDATES', reference, 'NEEDS_INFORMATION');",
+      "verdict": "KILLED",
+      "detail": "Tests  13 failed | 48 passed (61)"
+    },
+    {
+      "id": "M6",
+      "file": "extension/src/agent/referenceResolver.ts",
+      "name": "always resolve: ambiguity answered by picking the first candidate",
+      "find": "  return clarification('AMBIGUOUS_REFERENCE', reference, 'NEEDS_CLARIFICATION');",
+      "replace": "  return { outcome: 'RESOLVED', reference, candidate: live[0], identity: live[0].identity, clarificationCode: null, question: null, basis: 'UNIQUE_CANDIDATE' };",
+      "verdict": "KILLED",
+      "detail": "Tests  2 failed | 59 passed (61)"
+    },
+    {
+      "id": "M7",
+      "file": "extension/src/agent/referenceResolver.ts",
+      "name": "an out-of-range ordinal is clamped to the last candidate",
+      "find": "    if (!target) return clarification('OUT_OF_RANGE_ORDINAL', reference, 'NEEDS_CLARIFICATION');",
+      "replace": "    if (!target) return { outcome: 'RESOLVED', reference, candidate: live[live.length - 1], identity: live[live.length - 1].identity, clarificationCode: null, question: null, basis: 'ORDINAL' };",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 60 passed (61)"
+    },
+    {
+      "id": "M8",
+      "file": "extension/src/agent/entityIdentity.ts",
+      "name": "identity taken from the page-local DOM detection id",
+      "find": "      title: entity.title,",
+      "replace": "      title: entity.title,\n      productId: entity.id,",
+      "verdict": "KILLED",
+      "detail": "Tests  4 failed | 57 passed (61)"
+    },
+    {
+      "id": "M9",
+      "file": "extension/src/agent/entityIdentity.ts",
+      "name": "a stale identity is accepted without re-establishing it",
+      "find": "  return { verdict: 'NOT_FOUND', identity: null, ordinal: null, code: 'IDENTITY_ABSENT' };\n}",
+      "replace": "  return { verdict: 'REVALIDATED', identity: recorded, ordinal: recordedOrdinal, code: 'TITLE_AND_ID_MATCH' };\n}",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 60 passed (61)"
+    },
+    {
+      "id": "M10",
+      "file": "extension/src/agent/entityIdentity.ts",
+      "name": "cross-entity substitution: any observed entity stands in for the selection",
+      "find": "  const titleMatches = observed.filter(",
+      "replace": "  if (observed.length > 0) {\n    return { verdict: 'REVALIDATED', identity: observed[0].identity, ordinal: observed[0].ordinal, code: 'IDENTITY_KEY_MATCH' };\n  }\n  const titleMatches = observed.filter(",
+      "verdict": "KILLED",
+      "detail": "Tests  4 failed | 57 passed (61)"
+    },
+    {
+      "id": "M11",
+      "file": "extension/src/agent/conversationContext.ts",
+      "name": "titles admitted without the raw-value screen",
+      "find": "  if (tripsPrivacy(collapsed)) return null;\n  return collapsed;",
+      "replace": "  return collapsed;",
+      "verdict": "KILLED",
+      "detail": "Tests  3 failed | 58 passed (61)"
+    },
+    {
+      "id": "M12",
+      "file": "extension/src/agent/conversationContext.ts",
+      "name": "numeric attributes accepted without the raw-value screen (a card number becomes an identity attribute)",
+      "find": "      if (digits.replace(/[-.]/g, '').length > MAX_NUMERIC_ATTRIBUTE_DIGITS) continue;\n      if (tripsPrivacy(digits)) continue;",
+      "replace": "      if (digits.replace(/[-.]/g, '').length > MAX_NUMERIC_ATTRIBUTE_DIGITS) continue;",
+      "verdict": "KILLED",
+      "detail": "Tests  1 failed | 60 passed (61)"
+    },
+    {
+      "id": "M13",
+      "file": "extension/src/agent/conversationContext.ts",
+      "name": "numeric catalog identifiers ignored again (identity cannot cross a navigation)",
+      "find": "          : typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 1e15\n            ? String(value)\n            : '';",
+      "replace": "          : '';",
+      "verdict": "KILLED",
+      "detail": "Tests  4 failed | 57 passed (61)"
+    }
+  ]
+}

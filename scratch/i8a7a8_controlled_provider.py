@@ -106,6 +106,46 @@ def _answer_from_context(payload: dict) -> str:
     return "Based on the observed page state — " + "; ".join(lines)
 
 
+def _task_text(payload: dict) -> str:
+    for key in ("task", "prompt", "instruction", "user_task"):
+        value = (payload or {}).get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+    return ""
+
+
+def _wants_open(payload: dict) -> bool:
+    """Does THIS turn ask to open/navigate somewhere? Local text check only."""
+    text = _task_text(payload).lower()
+    return any(k in text for k in ("open", "go to", "goto", "visit", "navigate", "launch"))
+
+
+def _resolved_anchor(payload: dict) -> tuple[str | None, str | None]:
+    """The anchor the LOCAL resolver produced, as the reasoner sees it.
+
+    PHASE 18.8 / A13 + A15. The anchor is `[RESOLVED REFERENCE] title | id: N |
+    on: host`. A controlled provider may act on it exactly as a real reasoner
+    would; it may never invent one, which is why this parses the anchor instead
+    of picking a product itself.
+    """
+    text = _task_text(payload)
+    if "[RESOLVED REFERENCE]" not in text:
+        return None, None
+    anchor = text.split("[RESOLVED REFERENCE]", 1)[1].strip().splitlines()[0]
+    title = anchor.split("|")[0].strip() or None
+    product_id = None
+    for part in anchor.split("|")[1:]:
+        if part.strip().startswith("id:"):
+            product_id = part.split(":", 1)[1].strip()
+    return title, product_id
+
+
+def _page_url(payload: dict) -> str:
+    context = (payload or {}).get("context") or {}
+    url = context.get("url")
+    return url if isinstance(url, str) else ""
+
+
 def next_action(mode: str, n: int, payload: dict) -> dict:
     if mode == "scroll_down":
         return {"action": "scroll", "direction": "down", "amount": 500,
@@ -146,6 +186,23 @@ def next_action(mode: str, n: int, payload: dict) -> dict:
     if mode == "act_then_answer":
         return {"action": "scroll", "direction": "down", "amount": 400,
                 "reason": "controlled: gather evidence before answering"}
+    if mode == "multiturn":
+        _, product_id = _resolved_anchor(payload)
+        url = _page_url(payload)
+        if product_id and _wants_open(payload) and "product.html" not in url:
+            # The anchor is the ONLY source of which product to open, and the
+            # user must actually have ASKED to open something: "tell me about
+            # the third one" is a reporting request, not a navigation.
+            return {"action": "navigate",
+                    "url": f"http://localhost:4174/product.html?id={product_id}",
+                    "reason": "controlled: open the entity the local resolver selected"}
+        if not product_id and "product" in _task_text(payload).lower() and "results.html" not in url:
+            # A fresh turn that asks for the catalog goes back to the catalog, so
+            # the next turn can be asked about several items again.
+            return {"action": "navigate", "url": "http://localhost:4174/results.html",
+                    "reason": "controlled: return to the catalog listing"}
+        return {"action": "scroll", "direction": "down", "amount": 300,
+                "reason": "controlled: observe the page the user referred to"}
     raise SystemExit(f"unknown stub mode {mode}")
 
 
@@ -176,6 +233,32 @@ def terminal_proposal(mode: str, n: int, payload: dict):
             "answer": _answer_from_context(payload),
             "cited_evidence": _verified_evidence_ids(payload),
         }
+    if mode == "multiturn":
+        _, product_id = _resolved_anchor(payload)
+        url = _page_url(payload)
+        text = _task_text(payload).lower()
+        wants_details = any(k in text for k in ("detail", "tell me about", "what is", "price"))
+        if "results.html" in url and not _wants_open(payload):
+            # The catalog turn is a LISTING request: the page already shows the
+            # products, so the honest terminal move is to report what the device
+            # verified on it. No anchor is claimed here — the next turn's ordinal
+            # is resolved locally, by the device.
+            return {
+                "kind": "ANSWER",
+                "reason": "controlled: listing the products this device verified on the catalog page",
+                "answer": _answer_from_context(payload),
+                "cited_evidence": _verified_evidence_ids(payload),
+            }
+        if product_id and "product.html" in url:
+            # Answer about the SAME entity the resolver selected, citing only
+            # evidence the DEVICE reports as verified.
+            return {
+                "kind": "ANSWER",
+                "reason": "controlled: answering about the selected entity from verified evidence",
+                "answer": _answer_from_context(payload),
+                "cited_evidence": _verified_evidence_ids(payload),
+            }
+        return None
     if mode == "act_then_answer" and n >= 3:
         # A model that gathers evidence first and only then answers. The device
         # requires an ACTION from the planning step, so answering on the very

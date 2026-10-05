@@ -238,6 +238,30 @@ const COMMON_TLDS = new Set([
 ]);
 
 /**
+ * Words that name a conversational object rather than a destination. Matched
+ * case-insensitively; the set is fixed vocabulary, never model output.
+ */
+const CONVERSATIONAL_OBJECTS = [
+  'it',
+  'them',
+  'these',
+  'those',
+  'one',
+  'product',
+  'item',
+  'items',
+  'result',
+  'results',
+  'account',
+  'order',
+  'orders',
+  'listing',
+  'listings',
+  'detail',
+  'details',
+];
+
+/**
  * Parses generic target references from task text locally and deterministically.
  * Supports explicit URLs, domain names, localhost ports, and open/visit/already-opened intents.
  * Zero hardcoding of specific websites.
@@ -322,7 +346,17 @@ export function parseTaskTargetReference(task: string): TaskTargetReference | nu
   if (openVerbMatch && openVerbMatch[1]) {
     const rawName = openVerbMatch[1];
     const rawTld = openVerbMatch[2];
-    const STOP_WORDS = new Set(['tab', 'the', 'a', 'an', 'this', 'that', 'page', 'new', 'browser', 'link', 'url', 'window']);
+    const STOP_WORDS = new Set([
+      'tab', 'the', 'a', 'an', 'this', 'that', 'page', 'new', 'browser', 'link', 'url', 'window',
+      // PHASE 18.8 / A13 — a CONVERSATIONAL object after an open verb is not a
+      // site name. "Open it." asks the agent to work on the entity the
+      // conversation selected, not to find a host called "it"; treating the
+      // pronoun as a target reference made the turn fail with
+      // DESTINATION_REQUIRED and never reach target resolution at all. These
+      // words now fall through to the generic branch, which uses the active web
+      // tab — the page the conversation was actually observed on.
+      ...CONVERSATIONAL_OBJECTS,
+    ]);
     if (!STOP_WORDS.has(rawName)) {
       if (rawTld) {
         return {

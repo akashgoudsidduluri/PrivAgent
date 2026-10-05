@@ -108,7 +108,10 @@ export class AgentView {
                <span class="badge mono" style="background: transparent; color: ${
                  fr.kind === 'FAILED' || fr.kind === 'PROVIDER_UNAVAILABLE'
                    ? 'var(--status-red-bright, #f87171)'
-                   : fr.kind === 'PARTIAL' || fr.kind === 'CANNOT_VERIFY' || fr.kind === 'NEEDS_INFORMATION'
+                   : fr.kind === 'PARTIAL' ||
+                    fr.kind === 'CANNOT_VERIFY' ||
+                    fr.kind === 'NEEDS_INFORMATION' ||
+                    fr.kind === 'NEEDS_CLARIFICATION'
                      ? 'var(--status-amber-bright)'
                      : 'var(--status-green-bright, #34d399)'
                }; border: 1px solid currentColor;">${escape(fr.kind)}</span>

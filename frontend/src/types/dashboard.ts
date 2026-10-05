@@ -197,8 +197,10 @@ export type AgentTerminalReason =
   | 'GOAL_ACHIEVED' | 'STOPPED_BY_USER' | 'CONTAINMENT_DENIED' | 'HARNESS_HALTED'
   | 'RECOVERY_EXHAUSTED' | 'STEP_BOUND_EXHAUSTED' | 'REASONER_FAILED'
   | 'PERCEPTION_FAILED' | 'CONFIRMATION_DECLINED' | 'UNKNOWN'
-  // PHASE 18.8 / B1 — an information run's typed end.
-  | 'ANSWERED' | 'NO_VERIFIABLE_RESULT';
+  // PHASE 18.8 / B1 — an information run's typed end.| 'ANSWERED'
+  | 'NO_VERIFIABLE_RESULT'
+  /** PHASE 18.8 / A13 — a reference the local resolver refused to guess. */
+  | 'NEEDS_CLARIFICATION';
 
 export interface AgentActivity {
   phase: AgentActivityPhase;
@@ -251,6 +253,8 @@ export type AgentResultKind =
   | 'PARTIAL'
   | 'CANNOT_VERIFY'
   | 'NEEDS_INFORMATION'
+  // PHASE 18.8 / A13. The local resolver refused to guess a reference.
+  | 'NEEDS_CLARIFICATION'
   | 'SUCCESS'
   | 'FAILED'
   | 'PROVIDER_UNAVAILABLE'

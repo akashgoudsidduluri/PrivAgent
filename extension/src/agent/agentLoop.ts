@@ -86,6 +86,7 @@ import {
   advancePageGeneration,
   invalidatePageGenerationState,
   userFacingMessageForStatus,
+  type ConversationSummary,
 } from './agentState';
 import {
   verifyActionEffect,
@@ -149,6 +150,30 @@ import {
   type ProposalVerdict,
 } from './proposal';
 import type { ProviderStep } from './providerResponse';
+import {
+  appendTurn,
+  closeTurn,
+  eligibleCandidates,
+  observeCandidates,
+  stableHash,
+  withClarification,
+  withPage,
+  withSelection,
+  withTerminal,
+  type ConversationContext,
+  type ConversationTurn,
+  type EntityCandidate,
+  type EntityIdentity,
+} from './conversationContext';
+import {
+  candidatesFromWorldModel,
+  revalidateSelection,
+} from './entityIdentity';
+import {
+  detectReference,
+  resolveReference,
+  type EntityReference,
+} from './referenceResolver';
 
 /**
  * PHASE 18.8 / B1 — bounded claim count for an answer composed from evidence.
@@ -322,6 +347,16 @@ export interface AgentLoopCallbacks {
   onStepProgress?: (state: AgentTaskState) => void;
 
   /**
+   * PHASE 18.8 / B2 — the bounded, privacy-safe conversation context after an
+   * update. The service worker owns persistence; the loop only reports.
+   *
+   * The context is INFORMATIONAL. It cannot authorize an action and is never an
+   * input to grounding, M5, the security critic, risk/confirmation, containment,
+   * effect verification or goal verification.
+   */
+  onConversationUpdate?: (context: ConversationContext) => void;
+
+  /**
    * Called immediately after a successful NAVIGATE action is executed.
    * The implementation must:
    *   1. Wait for the target tab to finish loading (bounded timeout).
@@ -350,6 +385,14 @@ export interface AgentLoopOptions {
    */
   intentDecision?: import('./intentBoundary').IntentDecision;
   maxSteps?: number;
+  /**
+   * PHASE 18.8 / B2 — an existing conversation to continue, or null for a
+   * one-shot task. The service worker decides which (see
+   * `conversationPersistence.ts`); the loop never re-derives that decision and
+   * never accepts a context whose conversation id or generation it did not
+   * receive.
+   */
+  conversationContext?: ConversationContext | null;
   /**
    * PHASE 17.4 D5. Where long-horizon RELIABILITY state is persisted so a
    * service-worker restart cannot silently reset the bounds. Defaults to an
@@ -465,6 +508,19 @@ export class AgentLoop {
   private targetTabId: number | null = null;
   private state: AgentTaskState;
   private isStopped = false;
+  /**
+   * PHASE 18.8 / B2 + A13 + A15 — conversation context for THIS turn.
+   *
+   * `null` means there is no conversation (a one-shot task), which keeps the
+   * existing single-turn behaviour exactly as it was.
+   */
+  private conversation: ConversationContext | null = null;
+  /** Index of the current turn inside the conversation, or -1. */
+  private conversationTurnIndex = -1;
+  /** Bounded identities recorded this conversation, for revalidation. */
+  private conversationIdentities = new Map<string, EntityIdentity>();
+  /** Last page URL observed in the conversation, for the navigation signal. */
+  private lastConversationUrl: string | null = null;
   private hierarchicalGoal?: HighLevelGoal;
   private subgoalGraph?: SubgoalGraph;
   private planStateMachine?: PlanStateMachine;
@@ -728,6 +784,11 @@ export class AgentLoop {
     //
     this.intentDecision = options.intentDecision ?? null;
     this.evidenceLedger = options.evidenceLedger ?? null;
+    // PHASE 18.8 / B2. The conversation context is injected by the service
+    // worker, which owns its lifetime and its persistence. Absent means a
+    // one-shot task: every reference check below then fails closed to
+    // "not a reference" and nothing changes.
+    this.conversation = options.conversationContext ?? null;
 
     this.state = createAgentTaskState('', {
       maxSteps: this.maxSteps,
@@ -809,9 +870,14 @@ export class AgentLoop {
     }
     this.state.reason = undefined;
     this.state.requiresUserConfirmationAction = undefined;
+    this.state.clarification = null;
 
     // Clear working memory for task isolation
     WorkingMemoryManager.clearAll();
+
+    // PHASE 18.8 / B2 — open this turn inside the conversation, if any. A
+    // one-shot task has no conversation and this is a no-op.
+    this.beginConversationTurn(task);
 
     // Feature 3 & 7: Multi-Step Task Planner and Explainable Decision Tracer
     const tracer = new AgentDecisionTracer(`task-${Date.now().toString(36)}`);
@@ -1136,6 +1202,11 @@ export class AgentLoop {
           this.state.pageType = 'unknown';
         }
       }
+
+      // PHASE 18.8 / B2 + A15 — record the entities OBSERVED on this page and
+      // REVALIDATE any selection against it. Runs before goal verification and
+      // before the reasoner, and grants nothing.
+      this.observeConversation(worldModel, context);
 
       // 2b. Phase 4 Memory Retrieval & Subgoal Selection
       // SECURITY INVARIANT: Fresh live perception ALWAYS has authority over stale memory.
@@ -1557,6 +1628,17 @@ export class AgentLoop {
 
       // 4. Agent Reasoning Layer (M6 calls the provider ONCE per step; a
       // bounded retry wraps ONLY retryable provider/transport failures)
+      //
+      // PHASE 18.8 / A13 — deterministic reference resolution happens HERE:
+      // after perception (so "the third one" means the third row of the page in
+      // front of us) and BEFORE the reasoner is consulted. An unresolvable
+      // reference ends the turn with a typed clarification and zero provider
+      // calls, rather than asking the model to guess what "it" meant.
+      const referenceBlocked = this.resolveConversationReference(task);
+      if (referenceBlocked) {
+        break;
+      }
+
       this.state.currentStep++;
       let action: BrowserAction;
       //
@@ -3358,6 +3440,7 @@ export class AgentLoop {
     } else if (this.state.status === 'STOPPED') {
       console.info('[AgentTrace] M6 stopped', { reason: this.state.reason });
     }
+    this.closeConversationTurn();
     return this.getState();
   }
 
@@ -3771,8 +3854,12 @@ export class AgentLoop {
           ...context,
           decision_state: projectDecisionStateForModel(this.buildDecisionStateForCycle(context)),
         };
+        // PHASE 18.8 / B2 — the reasoner sees a bounded, sanitized anchor for the
+        // reference the LOCAL resolver already settled. It is a hint, not an
+        // instruction, and it never replaces the resolved identity locally.
+        const providerTask = this.providerTaskLine() ? `${task}\n${this.providerTaskLine()}` : task;
         const action = await Promise.race([
-          this.requestStepFromProvider(task, contextWithDecisionState, historyForReasoner),
+          this.requestStepFromProvider(providerTask, contextWithDecisionState, historyForReasoner),
           timeoutPromise,
         ]);
 
@@ -3932,6 +4019,229 @@ export class AgentLoop {
           .filter((r) => r.verificationStatus === 'VERIFIED')
           .map((r) => r.key)
       : [];
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // PHASE 18.8 / B2 + A13 + A15 — CONVERSATION CONTEXT AND REFERENCES.
+  //
+  // Everything below is INFORMATIONAL. It decides what the agent BELIEVES the
+  // user referred to, and nothing else: a resolved reference is not an
+  // authorization, and an unresolved one can only end the turn with a question.
+  // Grounding, M5, the privacy firewall, the security critic, risk/confirmation,
+  // containment, effect verification and goal verification are untouched and
+  // still run on whatever the reasoner proposes.
+  // ───────────────────────────────────────────────────────────────────────
+
+  /** Open a turn inside the conversation. No conversation ⇒ nothing happens. */
+  private beginConversationTurn(task: string): void {
+    if (!this.conversation) return;
+    const now = Date.now();
+    const opened = appendTurn(this.conversation, {
+      intentClass: this.intentDecision?.intent ?? 'UNKNOWN',
+      // A digest, never the text: the user's words may contain PII.
+      intentDigest: stableHash(task),
+      taskLength: task.length,
+      now,
+    });
+    this.conversation = opened.context;
+    this.conversationTurnIndex = opened.index;
+    this.publishConversation('TURN_OPENED');
+  }
+
+  private publishConversation(event: string): void {
+    if (!this.conversation) return;
+    this.state.conversation = this.conversationSummary();
+    this.callbacks.onConversationUpdate?.(this.conversation);
+    const selection = this.conversation.selection;
+    console.info('[AgentTrace] conversation updated', {
+      event,
+      conversationId: this.conversation.conversationId,
+      contextGeneration: this.conversation.contextGeneration,
+      turnIndex: this.conversationTurnIndex,
+      candidates: eligibleCandidates(this.conversation).length,
+      selectedOrdinal: selection?.ordinal ?? null,
+      selectedIdentity: selection?.identityKey ?? null,
+      revalidation: selection?.revalidation ?? null,
+      clarificationCode: this.conversation.clarification?.code ?? null,
+    });
+  }
+
+  /** The bounded projection that leaves the loop (dashboard, logs, evidence). */
+  private conversationSummary(): ConversationSummary | null {
+    if (!this.conversation) return null;
+    const selection = this.conversation.selection;
+    return {
+      conversationId: this.conversation.conversationId,
+      contextGeneration: this.conversation.contextGeneration,
+      turnIndex: this.conversationTurnIndex,
+      turnCount: this.conversation.turns.length,
+      candidateCount: eligibleCandidates(this.conversation).length,
+      selectedOrdinal: selection?.ordinal ?? null,
+      selectedIdentityKey: selection?.identityKey ?? null,
+      selectedProductId: selection?.identity.productId ?? null,
+      selectedEntityType: selection?.identity.entityType ?? null,
+      revalidation: selection?.revalidation ?? null,
+      referenceOutcome: this.state.conversation?.referenceOutcome ?? 'NOT_A_REFERENCE',
+      clarificationCode: this.conversation.clarification?.code ?? null,
+    };
+  }
+
+  /**
+   * Refresh the observed candidates after every perception, and REVALIDATE any
+   * existing selection against the page now on screen (A15).
+   */
+  private observeConversation(
+    worldModel: BrowserWorldModel | null | undefined,
+    context: AgentContextPayload | null | undefined
+  ): void {
+    if (!this.conversation) return;
+    const now = Date.now();
+    const pageGeneration = worldModel?.page?.pageGeneration ?? this.state.currentPageGeneration ?? 0;
+    const url = context?.url ?? worldModel?.page?.url ?? this.state.currentUrl ?? null;
+    const candidates: EntityCandidate[] = candidatesFromWorldModel(worldModel, now, { url });
+    for (const candidate of candidates) {
+      this.conversationIdentities.set(candidate.identity.identityKey, candidate.identity);
+    }
+    let next = withPage(
+      this.conversation,
+      {
+        url,
+        role: this.state.pageType ?? null,
+        pageGeneration,
+        navigated: this.lastConversationUrl !== null && this.lastConversationUrl !== url,
+      },
+      now
+    );
+    next = observeCandidates(next, candidates, now, pageGeneration);
+    const selection = next.selection;
+    if (selection) {
+      const revalidated = revalidateSelection(
+        { identityKey: selection.identityKey, ordinal: selection.ordinal, identity: selection.identity },
+        eligibleCandidates(next),
+        url
+      );
+      const identity = revalidated.identity ?? selection.identity;
+      next = withSelection(
+        next,
+        {
+          identityKey:
+            revalidated.verdict === 'REVALIDATED' ? identity.identityKey : selection.identityKey,
+          ordinal: revalidated.ordinal ?? selection.ordinal,
+          identity,
+          resolvedAt: selection.resolvedAt,
+          revalidatedAt: revalidated.verdict === 'REVALIDATED' ? now : selection.revalidatedAt,
+          revalidation: revalidated.verdict,
+        },
+        now
+      );
+    }
+    this.lastConversationUrl = url;
+    this.conversation = next;
+    this.publishConversation('OBSERVED');
+  }
+
+  /**
+   * Deterministic reference resolution (A13), run ONCE per cycle BEFORE the
+   * reasoner is consulted and before anything can be dispatched.
+   */
+  private resolveConversationReference(task: string): boolean {
+    if (!this.conversation) return false;
+    const reference: EntityReference | null = detectReference(task);
+    const now = Date.now();
+    if (!reference) {
+      this.publishConversation('NO_REFERENCE');
+      return false;
+    }
+
+    const result = resolveReference(reference, this.conversation);
+    if (result.outcome === 'RESOLVED' && result.identity) {
+      const identity = result.identity;
+      this.conversationIdentities.set(identity.identityKey, identity);
+      this.conversation = withSelection(
+        this.conversation,
+        {
+          identityKey: identity.identityKey,
+          ordinal: result.candidate?.ordinal ?? this.conversation.selection?.ordinal ?? 1,
+          identity,
+          resolvedAt: now,
+          revalidatedAt: result.candidate ? now : this.conversation.selection?.revalidatedAt ?? null,
+          revalidation: 'REVALIDATED',
+        },
+        now
+      );
+      this.state.conversation = {
+        ...(this.conversationSummary() as ConversationSummary),
+        referenceOutcome: 'RESOLVED',
+        referencePhrase: reference.phrase,
+        referenceBasis: result.basis,
+      };
+      this.publishConversation(`REFERENCE_RESOLVED_${result.basis}`);
+      return false;
+    }
+
+    if (result.outcome === 'NEEDS_CLARIFICATION' || result.outcome === 'NEEDS_INFORMATION') {
+      this.conversation = withClarification(
+        this.conversation,
+        result.clarificationCode ?? 'AMBIGUOUS_REFERENCE',
+        result.question ?? 'Tell me which item you mean.',
+        reference.phrase,
+        now
+      );
+      this.state.conversation = {
+        ...(this.conversationSummary() as ConversationSummary),
+        referenceOutcome: result.outcome,
+        referencePhrase: reference.phrase,
+        referenceBasis: 'NONE',
+      };
+      this.publishConversation(`REFERENCE_${result.outcome}`);
+      // Fail closed. No provider call, no dispatch, no gate is bypassed: the
+      // turn simply stops and the user is asked.
+      this.state.status = result.outcome;
+      this.state.goalStatus = result.outcome;
+      this.state.reason = result.question ?? undefined;
+      this.state.clarification = {
+        code: result.clarificationCode ?? 'AMBIGUOUS_REFERENCE',
+        question: result.question ?? 'Tell me which item you mean.',
+        reference: reference.phrase,
+      };
+      this.notifyProgress();
+      console.info('[AgentTrace] reference not resolvable', {
+        outcome: result.outcome,
+        code: result.clarificationCode,
+        phrase: reference.phrase,
+      });
+      return true;
+    }
+    return false;
+  }
+
+  /** Bounded, sanitized anchor line handed to the REASONER only. */
+  private providerTaskLine(): string | null {
+    if (!this.conversation) return null;
+    const selection = this.conversation.selection;
+    if (!selection) return null;
+    if (selection.revalidation !== 'REVALIDATED' && selection.revalidation !== 'SELECTED') return null;
+    const identity = selection.identity;
+    const parts = [identity.normalizedTitle];
+    if (identity.productId) parts.push(`id: ${identity.productId}`);
+    if (identity.origin) parts.push(`on: ${identity.origin}`);
+    return `[RESOLVED REFERENCE] ${parts.join(' | ')}`;
+  }
+
+  /** Close the turn with the terminal state, bounded and typed. */
+  private closeConversationTurn(): void {
+    if (!this.conversation) return;
+    const now = Date.now();
+    const status = this.state.status;
+    this.conversation = closeTurn(
+      this.conversation,
+      this.conversationTurnIndex,
+      status === 'IN_PROGRESS' || status === 'NEEDS_USER_CONFIRMATION' ? 'FAILED' : (status as ConversationTurn['status']),
+      now,
+      eligibleCandidates(this.conversation).length
+    );
+    this.conversation = withTerminal(this.conversation, status, null, now);
+    this.publishConversation('TURN_CLOSED');
   }
 
   private isTaskGoalSatisfied(task: string, state: AgentTaskState, context: AgentContextPayload): boolean {

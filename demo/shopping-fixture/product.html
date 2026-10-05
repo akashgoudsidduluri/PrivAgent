@@ -19,7 +19,7 @@
   <main>
     <div class="card" style="max-width: 700px;" id="product-detail-card" data-product-id="1">
       <span class="product-badge" style="background-color: var(--accent); color: #0f172a; font-weight: 700;">VERIFIED SPECIFICATIONS</span>
-      <h1 style="font-size: 1.75rem; margin: 1rem 0 0.5rem;" id="product-detail-title">XXL Black Baggy Travel Bag</h1>
+      <h1 class="product-title" style="font-size: 1.75rem; margin: 1rem 0 0.5rem;" id="product-detail-title">XXL Black Baggy Travel Bag</h1>
       <div class="product-price" style="font-size: 1.75rem;" id="product-detail-price">₹899</div>
       
       <div style="margin: 1.5rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1rem 0;">
@@ -41,5 +41,37 @@
   <footer>
     <p>&copy; 2026 ApexCart Demo Shopping Portal — PrivAgent Test Environment</p>
   </footer>
+  <script>
+    //
+    // PHASE 18.8 / A15 fixture support.
+    //
+    // The detail page renders the product named by `?id=`, so a catalog row and
+    // its detail page describe the SAME entity under DIFFERENT DOM ids — which
+    // is exactly the condition cross-page identity has to survive. The page id
+    // is published as `data-product-id` on both pages.
+    //
+    (function () {
+      var PRODUCTS = {
+        '1': { title: 'XXL Black Baggy Travel Bag', price: '₹899', category: 'Travel Bag', size: 'XXL (65 Liters Capacity)', color: 'Matte Black', style: 'Baggy / Expandable' },
+        '2': { title: 'Executive Leather Office Bag', price: '₹1,499', category: 'Office Bag', size: 'L (22 Liters Capacity)', color: 'Espresso Brown', style: 'Formal' },
+        '3': { title: 'Red Canvas Baggy Gym Bag', price: '₹699', category: 'Gym Bag', size: 'S (12 Liters Capacity)', color: 'Crimson Red', style: 'Baggy' },
+        '4': { title: 'XXL Blue Baggy Duffel Bag', price: '₹950', category: 'Duffel Bag', size: 'XXL (70 Liters Capacity)', color: 'Navy Blue', style: 'Baggy' }
+      };
+      var id = new URLSearchParams(window.location.search).get('id') || '1';
+      var product = PRODUCTS[id];
+      var card = document.getElementById('product-detail-card');
+      if (!product || !card) return;
+      card.setAttribute('data-product-id', id);
+      card.classList.add('product-card');
+      document.getElementById('product-detail-title').textContent = product.title;
+      document.getElementById('product-detail-price').textContent = product.price;
+      document.getElementById('spec-category').textContent = product.category;
+      document.getElementById('spec-size').textContent = product.size;
+      document.getElementById('spec-color').textContent = product.color;
+      document.getElementById('spec-style').textContent = product.style;
+      document.getElementById('btn-buy-now').textContent = 'Buy Now (' + product.price + ')';
+      document.title = 'ApexCart — ' + product.title;
+    })();
+  </script>
 </body>
 </html>

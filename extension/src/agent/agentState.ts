@@ -194,6 +194,29 @@ export interface CandidateProductItem {
   confidence: number;
 }
 
+/**
+ * PHASE 18.8 / B2 — the bounded conversation projection that leaves the loop.
+ *
+ * Metadata only: counts, an opaque identity key, an identifier, a typed
+ * outcome. No user text, no page text, no model output, no raw value.
+ */
+export interface ConversationSummary {
+  conversationId: string;
+  contextGeneration: number;
+  turnIndex: number;
+  turnCount: number;
+  candidateCount: number;
+  selectedOrdinal: number | null;
+  selectedIdentityKey: string | null;
+  selectedProductId: string | null;
+  selectedEntityType: string | null;
+  revalidation: 'SELECTED' | 'REVALIDATED' | 'UNCONFIRMED' | 'NOT_FOUND' | null;
+  referenceOutcome: 'NOT_A_REFERENCE' | 'RESOLVED' | 'NEEDS_CLARIFICATION' | 'NEEDS_INFORMATION';
+  referencePhrase?: string | null;
+  referenceBasis?: 'NONE' | 'ORDINAL' | 'REVALIDATED_SELECTION' | 'UNIQUE_CANDIDATE';
+  clarificationCode?: string | null;
+}
+
 export interface ExpectedStateChange {
   actionType: ActionType;
   expectedTransition: 'URL_CHANGE' | 'DOM_UPDATE' | 'MODAL_OPEN' | 'PAGE_SETTLED';
@@ -380,6 +403,15 @@ export interface AgentTaskState extends TaskState {
    * write it from records that passed the local verifier.
    */
   answerProvenance?: { verifiedRecords: number; sourceHost: string | null };
+  /** PHASE 18.8 / B2. Absent for a one-shot task. */
+  conversation?: ConversationSummary | null;
+  /**
+   * PHASE 18.8 / A13. The typed clarification the resolver asked for: a closed
+   * code and FIXED user-facing copy. Bounded, never model prose, never an
+   * internal error string — this is the field the user-facing result card reads
+   * (it deliberately does NOT read `reason`).
+   */
+  clarification?: { code: string; question: string; reference: string | null } | null;
 
   /**
    * PHASE 18.7 / A5 — the I-1 intent decision's `requiresEvidence`, carried
