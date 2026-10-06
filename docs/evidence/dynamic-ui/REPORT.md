@@ -81,7 +81,10 @@ never read; unknown/malformed input fails closed to the smallest honest surface.
 **Symptom:** live tests A/B/F stayed on the typing indicator forever (`assistantBody=null`,
 67/67 samples) although the SW forwarded `{status:ANSWER}`.
 
-**Evidence (dashboard console, `real_chrome_ui_live.json` pre-fix):**
+**Evidence — dashboard console captured by the harness during the pre-fix run
+(observed verbatim; that capture was superseded by the passing re-run now stored
+in `real_chrome_ui_live.json`, which shows the same case with the drop line
+absent):**
 
 ```
 [AgentTrace] Dropping stale progress from superseded runId
