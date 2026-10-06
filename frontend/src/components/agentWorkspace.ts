@@ -340,6 +340,12 @@ export class AgentWorkspace {
         final.kind === 'PARTIAL' ||
         final.kind === 'CANNOT_VERIFY' ||
         final.kind === 'NEEDS_INFORMATION' ||
+        // PHASE 18.8 / A14 — an unconfirmed commit is a "check this yourself",
+        // not a claimed failure. It must never render as one.
+        final.kind === 'COMMIT_UNKNOWN' ||
+        // PHASE 18.8 / A16 — the run stopped without acting because the view
+        // moved. A refusal to act on a stale view is a notice, not a failure.
+        final.kind === 'FRESHNESS_UNVERIFIED' ||
         // PHASE 18.8 / A13 — a clarification is a question, not a failure.
         final.kind === 'NEEDS_CLARIFICATION';
       const panelClass = ok ? 'success' : notice ? 'notice' : 'failure';

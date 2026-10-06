@@ -223,6 +223,14 @@ export function goalStatusFromTaskStatus(status: TaskStatus): DecisionGoalStatus
     case 'NEEDS_INFORMATION':
     case 'CANNOT_VERIFY':
     case 'PROVIDER_UNAVAILABLE':
+    // PHASE 18.8 / A14 + A16. An unconfirmed commit and a view whose freshness
+    // could not be established have exactly the shape described above: the run
+    // ended without the goal being verified as met AND without it being verified
+    // as unattainable. Mapping them to NOT_SATISFIED would convert "we could not
+    // confirm it" into "it did not happen" — the precise claim the A14 contract
+    // refuses to make. They must not fall through to `PENDING` either.
+    case 'COMMIT_UNKNOWN':
+    case 'FRESHNESS_UNVERIFIED':
       return 'CANNOT_VERIFY';
     case 'IN_PROGRESS':
     default:

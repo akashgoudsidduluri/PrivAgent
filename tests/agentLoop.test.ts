@@ -30,6 +30,11 @@ import { BrowserAction } from '../extension/src/agent/actionTypes';
 import { buildBrowserWorldModel } from '../extension/src/worldModel/worldModelBuilder';
 import { worldModelStore } from '../extension/src/worldModel/worldModelStore';
 import { assertWorldModelSafe } from '../extension/src/worldModel/worldModelSanitizer';
+//
+// PHASE 18.8 / A12 — a stop is a TYPED cancellation with one fixed user-facing
+// sentence per code, so the assertion below pins the sentence the product
+// actually renders rather than a substring of the older wording.
+import { CANCELLATION_MESSAGES } from '../extension/src/agent/agentState';
 
 function createMockContext(step = 0): AgentContextPayload {
   // PHASE 17.2A. The transaction ledger is revealed only once the agent has
@@ -513,7 +518,11 @@ describe('PrivAgent M6 Autonomous Agent Loop', () => {
 
     const state = await loopInstance.runTask('Complex multi-step investigation');
     expect(state.status).toBe('STOPPED');
-    expect(state.reason).toContain('stopped by user');
+    // The user-facing sentence for a user stop, exactly as the product renders
+    // it — and never an internal code.
+    expect(state.reason).toBe(CANCELLATION_MESSAGES.USER_CANCELLED);
+    expect(state.cancellationCode).toBe('USER_CANCELLED');
+    expect(state.reason).not.toMatch(/USER_CANCELLED|SUPERSEDED|_ERROR/);
   });
 });
 

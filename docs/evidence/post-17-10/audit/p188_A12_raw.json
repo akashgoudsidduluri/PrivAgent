@@ -1,0 +1,690 @@
+{
+  "phase": "18.8-A12",
+  "work": "Cancellation / interruption under a late provider response — real Chrome",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "inputs": {
+    "taskA": "Go down the page slowly step by step.",
+    "taskB": "Tell me about the products.",
+    "gapMs": 2500,
+    "catalog": "http://localhost:4174/results.html"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "swLogs": [
+    {
+      "t": "6.00s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791234534351}"
+    },
+    {
+      "t": "6.00s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791234534351}"
+    },
+    {
+      "t": "6.00s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791234534351,targetFound:true,tabId:563524645,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "6.00s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791234534351,targetFound:true}"
+    },
+    {
+      "t": "6.01s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "6.01s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:37}"
+    },
+    {
+      "t": "6.01s",
+      "text": "[AgentTrace] intent classified {intent:NAVIGATION_REQUEST,confidence:DETERMINISTIC,requiresDestination:true,requiresEvidence:false,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "6.01s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-98504955,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "6.01s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "6.02s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "6.02s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:563524645}"
+    },
+    {
+      "t": "6.02s",
+      "text": "TARGET_TAB_SELECTED {tabId:563524645,origin:http://localhost:4174,reason:Selected first eligible web tab.}"
+    },
+    {
+      "t": "6.03s",
+      "text": "[AgentTrace] target resolved {tabId:563524645}"
+    },
+    {
+      "t": "6.10s",
+      "text": "TARGET_TAB_READY {tabId:563524645}"
+    },
+    {
+      "t": "6.10s",
+      "text": "[AgentTrace] target content script ready {tabId:563524645}"
+    },
+    {
+      "t": "6.10s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "6.10s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "6.11s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "6.14s",
+      "text": "[AgentTrace] agent loop started {runId:1}"
+    },
+    {
+      "t": "6.16s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-98504955,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "6.17s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "6.17s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "6.17s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "6.17s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+    },
+    {
+      "t": "6.17s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/results.html}"
+    },
+    {
+      "t": "6.18s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "6.23s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+    },
+    {
+      "t": "6.24s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:16,regionsConsidered:16,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "6.25s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:16,ledgerSize:16,verifiedCurrent:16,generation:2}"
+    },
+    {
+      "t": "6.25s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "6.25s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "6.26s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/results.html,worldModelId:wm-g2-muvqskgu-24w6}"
+    },
+    {
+      "t": "6.26s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:16,privacyFindingsCount:6}"
+    },
+    {
+      "t": "6.26s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:LISTING,pageState:results_available,pageGeneration:2,entityCount:4,affordanceCount:1}"
+    },
+    {
+      "t": "6.27s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-98504955,contextGeneration:4,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "6.27s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muvqskga-l7zsr-sg1,category:LOCATE,description:Perceive page and locate candidate controls relevant to \"Go down the page slowly step by step.\"}"
+    },
+    {
+      "t": "6.28s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:3,discoveries:4}"
+    },
+    {
+      "t": "6.28s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-98504955,contextGeneration:4,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "6.28s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "6.30s",
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": "6.30s",
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": "6.30s",
+      "text": "[AgentTrace] security critic {verdict:ALLOW,code:NO_OBJECTION,findings:Array(0)}"
+    },
+    {
+      "t": "6.30s",
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": "6.30s",
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": "6.32s",
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": "6.32s",
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": "6.32s",
+      "text": "[AgentTrace] effect snapshot observed {phase:untargeted,url:http://localhost:4174/results.html,scrollY:0,domElementCount:68,openModalsCount:0}"
+    },
+    {
+      "t": "6.33s",
+      "text": "[AgentTrace] containment decision {code:WITHIN_SCOPE,contained:true,scope:contained:localhost}"
+    },
+    {
+      "t": "6.33s",
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "t": "6.33s",
+      "text": "[AgentTrace] effect snapshot observed {phase:untargeted,url:http://localhost:4174/results.html,scrollY:0,domElementCount:68,openModalsCount:0}"
+    },
+    {
+      "t": "6.33s",
+      "text": "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT {status:ACTION_NO_EFFECT,details:Scroll down produced zero viewport movement (scrollDelta: 0px). Viewport likely hit scroll boundary.}"
+    },
+    {
+      "t": "6.34s",
+      "text": "[AgentTrace] recovery record {category:NO_EFFECT,from:CONTINUE,to:RE_PERCEIVE,retryCount:0,reasonCode:EFFECT_UNCHANGED}"
+    },
+    {
+      "t": "6.34s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:RECOVERY,resultKind:NONE}"
+    },
+    {
+      "t": "6.34s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:1,reason:undefined}"
+    },
+    {
+      "t": "6.35s",
+      "text": "[AgentTrace] recovery decision {code:ACTION_NO_EFFECT,strategy:REPERCEIVE,attempt:1,reason:Discard stale perception and re-observe the live p…assified 'ACTION_NO_EFFECT' at page generation 2.}"
+    },
+    {
+      "t": "6.35s",
+      "text": "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)"
+    },
+    {
+      "t": "6.35s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "6.39s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+    },
+    {
+      "t": "6.39s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:16,regionsConsidered:16,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "6.39s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:16,ledgerSize:32,verifiedCurrent:16,generation:3}"
+    },
+    {
+      "t": "6.39s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "6.90s",
+      "text": "[AgentTrace] harness cycle {cycle:2,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+    },
+    {
+      "t": "6.90s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:4,url:http://localhost:4174/results.html}"
+    },
+    {
+      "t": "6.90s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "6.93s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+    },
+    {
+      "t": "6.93s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:16,regionsConsidered:16,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "6.93s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:16,ledgerSize:48,verifiedCurrent:16,generation:4}"
+    },
+    {
+      "t": "6.93s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "6.93s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "6.93s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:4,contextUrl:http://localhost:4174/results.html,worldModelId:wm-g4-muvqsl0u-gsfe}"
+    },
+    {
+      "t": "6.93s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:16,privacyFindingsCount:6}"
+    },
+    {
+      "t": "6.94s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:LISTING,pageState:results_available,pageGeneration:4,entityCount:4,affordanceCount:1}"
+    },
+    {
+      "t": "6.94s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-98504955,contextGeneration:6,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "6.95s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(0),completedSubgoals:0,pendingSubgoals:2,discoveries:4}"
+    },
+    {
+      "t": "6.95s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-98504955,contextGeneration:6,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "6.95s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "8.51s",
+      "text": "[AgentTrace] run cancelled {reason:SUPERSEDED_BY_NEW_TASK,lifecycle:SUPERSEDED,runId:1}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791234536888}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791234536888}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791234536888,targetFound:true,tabId:563524645,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791234536888,targetFound:true}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:27}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] intent classified {intent:INFORMATION_REQUEST,confidence:DETERMINISTIC,requiresDestination:false,requiresEvidence:true,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_REFERENCE_IN_TURN,conversationId:conv-6288235e,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "8.53s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "8.54s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "8.54s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:563524645}"
+    },
+    {
+      "t": "8.54s",
+      "text": "TARGET_TAB_SELECTED {tabId:563524645,origin:http://localhost:4174,reason:Selected active web tab.}"
+    },
+    {
+      "t": "8.54s",
+      "text": "[AgentTrace] target resolved {tabId:563524645}"
+    },
+    {
+      "t": "8.54s",
+      "text": "TARGET_TAB_READY {tabId:563524645}"
+    },
+    {
+      "t": "8.54s",
+      "text": "[AgentTrace] target content script ready {tabId:563524645}"
+    },
+    {
+      "t": "8.54s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "8.54s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "8.54s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "8.55s",
+      "text": "[AgentTrace] agent loop started {runId:2}"
+    },
+    {
+      "t": "8.55s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-6288235e,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "8.55s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:REJECTED_TASK_MISMATCH,detail:record belongs to a different run,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "8.55s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "8.55s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "8.55s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+    },
+    {
+      "t": "8.56s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/results.html}"
+    },
+    {
+      "t": "8.56s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "8.60s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+    },
+    {
+      "t": "8.60s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:16,regionsConsidered:16,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "8.60s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:16,ledgerSize:16,verifiedCurrent:16,generation:5}"
+    },
+    {
+      "t": "8.60s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "8.60s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "8.60s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/results.html,worldModelId:wm-g5-muvqsmb0-wuhw}"
+    },
+    {
+      "t": "8.60s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:16,privacyFindingsCount:6}"
+    },
+    {
+      "t": "8.60s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:LISTING,pageState:results_available,pageGeneration:5,entityCount:4,affordanceCount:1}"
+    },
+    {
+      "t": "8.60s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-6288235e,contextGeneration:4,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "8.61s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muvqsmal-foix2-sg1,category:NAVIGATE,description:Navigate to commerce catalog or store front}"
+    },
+    {
+      "t": "8.61s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:4,discoveries:4}"
+    },
+    {
+      "t": "8.62s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-6288235e,contextGeneration:4,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "8.62s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "8.63s",
+      "text": "[AgentTrace] terminal proposal received {proposed:ANSWER,status:PARTIAL,supportedRecords:0,downgraded:true}"
+    },
+    {
+      "t": "8.63s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "8.63s",
+      "text": "[ServiceWorker] response forwarded {status:PARTIAL,currentStep:1,reason:Partly answered. Some of what was asked could not be verified here.}"
+    },
+    {
+      "t": "8.63s",
+      "text": "[AgentTrace] task terminated {status:PARTIAL,supportedRecords:0,downgraded:true,answerChars:0}"
+    },
+    {
+      "t": "8.64s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-6288235e,contextGeneration:6,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "8.64s",
+      "text": "[AgentTrace] terminal progress emitted {status:PARTIAL,runId:2}"
+    },
+    {
+      "t": "8.64s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "8.64s",
+      "text": "[ServiceWorker] response forwarded {status:PARTIAL,currentStep:1,reason:Partly answered. Some of what was asked could not be verified here.}"
+    },
+    {
+      "t": "10.97s",
+      "text": "[AgentTrace] run ownership lost — stopping without dispatch {lifecycle:SUPERSEDED}"
+    },
+    {
+      "t": "10.97s",
+      "text": "[AgentTrace] M6 stopped {reason:Stopped because a newer task took over.}"
+    },
+    {
+      "t": "10.97s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-98504955,contextGeneration:8,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "10.97s",
+      "text": "[AgentTrace] terminal progress suppressed (task superseded) {taskOwnershipToken:1,activeTaskRunId:2}"
+    },
+    {
+      "t": "18.18s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791234546546}"
+    },
+    {
+      "t": "18.18s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791234546546}"
+    },
+    {
+      "t": "18.18s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791234546546,targetFound:true,tabId:563524645,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "18.18s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791234546546,targetFound:true}"
+    },
+    {
+      "t": "33.18s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791234561546}"
+    },
+    {
+      "t": "33.18s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791234561546}"
+    },
+    {
+      "t": "33.18s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791234561546,targetFound:true,tabId:563524645,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "33.18s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791234561546,targetFound:true}"
+    }
+  ],
+  "events": [
+    {
+      "t": 1791234534537,
+      "runId": 1,
+      "status": "RUNNING",
+      "task": "Go down the page slowly step by step.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": null
+    },
+    {
+      "t": 1791234534547,
+      "runId": 1,
+      "status": "RUNNING",
+      "task": "Go down the page slowly step by step.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234534576,
+      "runId": 1,
+      "status": "IN_PROGRESS",
+      "task": "Go down the page slowly step by step.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234534735,
+      "runId": 1,
+      "status": "IN_PROGRESS",
+      "task": "Go down the page slowly step by step.",
+      "steps": 1,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234536944,
+      "runId": 2,
+      "status": "RUNNING",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": null
+    },
+    {
+      "t": 1791234536950,
+      "runId": 2,
+      "status": "RUNNING",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234536971,
+      "runId": 2,
+      "status": "IN_PROGRESS",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234537021,
+      "runId": 2,
+      "status": "PARTIAL",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "PARTIAL",
+        "headline": "Partly answered",
+        "body": null,
+        "provenance": null,
+        "remaining": [
+          "Some of what was asked could not be verified on this page."
+        ]
+      }
+    },
+    {
+      "t": 1791234537024,
+      "runId": 2,
+      "status": "PARTIAL",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "PARTIAL",
+        "headline": "Partly answered",
+        "body": null,
+        "provenance": null,
+        "remaining": [
+          "Some of what was asked could not be verified on this page."
+        ]
+      }
+    }
+  ],
+  "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nTell me about the products.\nPARTIAL\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nTell me about the products.\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nPARTIAL\nFinished.\nStep 1 of 10\nPartly answered\nDestination verified: listing\nSome of what was asked could not be verified on this page.\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nlocalhost/results.html\nSemantic Type\nlisting\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+}

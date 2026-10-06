@@ -20,6 +20,8 @@ CONTROLLED_PROVIDER, and the live-model proofs are labelled separately.
 Modes (chosen by the env var, never by model output):
   scroll_down       — always propose scroll/down
   oscillate         — alternate scroll/down, scroll/up
+    interrupt_demo    — A12: the "slowly" task is answered late, so its provider
+                       response lands after the next task superseded it
   malformed         — HTTP 200 with the exact observed live-model defect class
   bad_enum          — 200 whose action-specific enum value is not in the enum
   missing_field     — 200 missing a required action field
@@ -28,16 +30,33 @@ Modes (chosen by the env var, never by model output):
   click_fixture     — click a REAL affordance target read out of the posted
                       sanitized context (never a hard-coded id)
   navigate_fixture  — navigate to a route of the same fixture origin
+  commit_demo       — A14: always propose the SAME consequential control, so a
+                      second dispatch would be a second commit
+  freshness_demo    — A16: propose the consequential control, but hold the FIRST
+                      answer open long enough for the same fixture page that A14
+                      uses to move to a new document before the plan comes back
 """
 
 import json
 import os
 import sys
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MODE = os.environ.get("STUB_MODE", "scroll_down")
+# PHASE 18.8 / A12. How long the FIRST reasoning call of a scenario is held open,
+# so the browser test can start a SECOND task while the first is provably still
+# waiting for an answer — the exact window in which a stale response could
+# dispatch.
+SLOW_FIRST_SECONDS = float(os.environ.get("STUB_SLOW_FIRST_SECONDS", "12"))
+# PHASE 18.8 / A16. How long the FIRST reasoning call of the freshness scenario is
+# held open, so the fixture page can really navigate to a new document while the
+# step the agent is preparing still belongs to the old one.
+FRESHNESS_HOLD_SECONDS = float(os.environ.get("STUB_FRESHNESS_HOLD_SECONDS", "14"))
 PORT = int(os.environ.get("STUB_PORT", "8010"))
 SERVED = {"n": 0}
+# Per-task call counter, so a mode can treat one task differently from another.
+CALLS_BY_TASK: dict[str, int] = {}
 
 CONTEXT = {
     "task": "scroll",
@@ -80,6 +99,37 @@ def _first_target(payload: dict) -> str | None:
     for d in context.get("detections") or []:
         if d.get("id") and str(d.get("type", "")).lower() in interactive:
             return d["id"]
+    return None
+
+
+def _commit_target(payload: dict) -> str | None:
+    """Pick the CONSEQUENTIAL control out of what the device actually offered.
+
+    PHASE 18.8 / A14. Only ids the extension itself reported are considered: a
+    controlled provider must not invent a target, or a successful dispatch would
+    be evidence about the fixture rather than about the loop.
+    """
+    context = (payload or {}).get("context") or {}
+    semantic = context.get("semantic_context") or context.get("semanticContext") or {}
+    #
+    # A CLICKABLE control only. The send control is what this scenario is about;
+    # answering with a text field would exercise a different (and much older)
+    # risk path, and would say nothing about the commit contract.
+    #
+    clickable = ("button", "link")
+    for word in ("send", "enquiry", "enquiry", "question"):
+        for d in context.get("detections") or []:
+            if str(d.get("type", "")).lower() not in clickable:
+                continue
+            blob = f"{d.get('label', '')} {d.get('id', '')} {d.get('text', '')}".lower()
+            if word in blob and d.get("id"):
+                return d["id"]
+        for a in semantic.get("affordances") or []:
+            if a.get("type") != "CLICK":
+                continue
+            blob = f"{a.get('description', '')} {a.get('type', '')}".lower()
+            if word in blob and a.get("targetElementId"):
+                return a["targetElementId"]
     return None
 
 
@@ -150,6 +200,11 @@ def next_action(mode: str, n: int, payload: dict) -> dict:
     if mode == "scroll_down":
         return {"action": "scroll", "direction": "down", "amount": 500,
                 "reason": "controlled: scroll down"}
+    if mode == "interrupt_demo":
+        # Every call scrolls, so task A keeps running and can be interrupted
+        # mid-flight. The LATE response is produced in the POST handler below.
+        return {"action": "scroll", "direction": "down", "amount": 200,
+                "reason": "controlled: keep working through the page"}
     if mode == "oscillate":
         direction = "down" if n % 2 == 0 else "up"
         return {"action": "scroll", "direction": direction, "amount": 500,
@@ -177,6 +232,27 @@ def next_action(mode: str, n: int, payload: dict) -> dict:
                     "reason": "controlled: no clickable affordance was offered"}
         return {"action": "click", "target": target,
                 "reason": "controlled: click a real affordance from the sanitized context"}
+    if mode == "commit_demo":
+        # Every call proposes the SAME consequential control. If the agent
+        # re-dispatches it, that is a second send; if A14 holds, the first one
+        # blocks the class and the run stops.
+        target = _commit_target(payload)
+        if not target:
+            return {"action": "scroll", "direction": "down", "amount": 300,
+                    "reason": "controlled: no consequential control was offered"}
+        return {"action": "click", "target": target,
+                "reason": "controlled: send the enquiry the user asked for"}
+    if mode == "freshness_demo":
+        # PHASE 18.8 / A16. The SAME consequential control A14 uses, proposed the
+        # same honest way: only an id the device itself reported is considered.
+        # The difference is on the wire, not here — the POST handler holds this
+        # first answer long enough for the page under it to move.
+        target = _commit_target(payload)
+        if not target:
+            return {"action": "scroll", "direction": "down", "amount": 300,
+                    "reason": "controlled: no consequential control was offered"}
+        return {"action": "click", "target": target,
+                "reason": "controlled: send the enquiry the user asked for"}
     if mode == "navigate_fixture":
         return {"action": "navigate", "url": "http://127.0.0.1:4174/product.html",
                 "reason": "controlled: navigate to a route of the same origin"}
@@ -186,6 +262,9 @@ def next_action(mode: str, n: int, payload: dict) -> dict:
     if mode == "act_then_answer":
         return {"action": "scroll", "direction": "down", "amount": 400,
                 "reason": "controlled: gather evidence before answering"}
+    if mode == "slow_then_normal":
+        return {"action": "scroll", "direction": "down", "amount": 300,
+                "reason": "controlled: observe the page the user asked about"}
     if mode == "multiturn":
         _, product_id = _resolved_anchor(payload)
         url = _page_url(payload)
@@ -233,6 +312,17 @@ def terminal_proposal(mode: str, n: int, payload: dict):
             "answer": _answer_from_context(payload),
             "cited_evidence": _verified_evidence_ids(payload),
         }
+    if mode == "interrupt_demo":
+        # The interrupting task terminates promptly from verified evidence; the
+        # "slowly" task never proposes a terminal state.
+        if "slowly" not in _task_text(payload).lower():
+            return {
+                "kind": "ANSWER",
+                "reason": "controlled: reporting the products this device verified",
+                "answer": _answer_from_context(payload),
+                "cited_evidence": _verified_evidence_ids(payload),
+            }
+        return None
     if mode == "multiturn":
         _, product_id = _resolved_anchor(payload)
         url = _page_url(payload)
@@ -300,6 +390,33 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         SERVED["n"] += 1
+        if os.environ.get("STUB_DUMP_TARGETS"):
+            # Debug aid: what did the DEVICE say it could see? Sanitized ids and
+            # screened labels only; this never prints a raw value.
+            ctx = payload.get("context") or {}
+            sem = ctx.get("semantic_context") or ctx.get("semanticContext") or {}
+            print("TARGETS", json.dumps({
+                "task": _task_text(payload)[:80],
+                "detections": [{k: d.get(k) for k in ("id", "type", "selector", "label")}
+                               for d in (ctx.get("detections") or [])][:8],
+                "affordances": [{k: a.get(k) for k in ("type", "targetElementId", "description")}
+                                for a in (sem.get("affordances") or [])][:8],
+            }), flush=True)
+        if MODE == "freshness_demo" and SERVED["n"] == 1:
+            # PHASE 18.8 / A16. The FIRST call of the scenario is held open while
+            # the fixture page performs a real navigation. The plan that comes
+            # back therefore belongs to a document that no longer exists, which
+            # is exactly the condition the pre-action freshness gate must catch
+            # BEFORE anything is dispatched. A controlled hold, never a claim
+            # about a live model.
+            time.sleep(FRESHNESS_HOLD_SECONDS)
+        if MODE == "slow_then_normal" and SERVED["n"] == 1:
+            # PHASE 18.8 / A12. The FIRST reasoning call of a scenario is held
+            # open long enough for the browser test to start a SECOND task while
+            # this one is provably still waiting for an answer — the exact window
+            # in which a stale response could dispatch. The counter resets when
+            # the mode is set, so "first call" is per scenario, not per process.
+            time.sleep(SLOW_FIRST_SECONDS)
         if MODE == "server_503":
             # Transient upstream failure, declared retryable with a Retry-After.
             # A10 checks that this is retried WITHIN BOUNDS and then reported
@@ -315,6 +432,16 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(detail)
             return
+        # PHASE 18.8 / A12 — a genuinely LATE provider response. The FIRST call
+        # of the long task answers promptly (so the run really dispatches an
+        # action before the interrupt); every later call is held back until
+        # after the dashboard has started the second task, which is exactly the
+        # race the cancellation contract must survive.
+        _task_key = _task_text(payload).strip()[:60]
+        CALLS_BY_TASK[_task_key] = CALLS_BY_TASK.get(_task_key, 0) + 1
+        if (MODE == "interrupt_demo" and "slowly" in _task_key.lower()
+                and CALLS_BY_TASK[_task_key] >= 2):
+            time.sleep(4.0)
         proposal = terminal_proposal(MODE, SERVED["n"], payload)
         envelope = {
             "success": True,
@@ -343,6 +470,7 @@ class Handler(BaseHTTPRequestHandler):
             q = parse_qs(urlparse(self.path).query)
             if "set" in q:
                 MODE = q["set"][0]
+                SERVED["n"] = 0
         body = json.dumps({"success": True, "stub_mode": MODE,
                            "calls_served": SERVED["n"]}).encode()
         self.send_response(200)

@@ -1,0 +1,49 @@
+{
+  "phase": "18.8-A12",
+  "work": "A12 cancellation / interruption — mutation suite",
+  "total": 6,
+  "killed": 4,
+  "survived": 0,
+  "maskedBySiblingGuard": 2,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "name": "cancel() does nothing — a cancelled run keeps running",
+      "outcome": "KILLED",
+      "detail": "     → expected 'FAILED' to be 'STOPPED' // Object.is equality |      → expected 'FAILED' to be 'STOPPED' // Object.is equality |      → expected 'FAILED' to be 'STOPPED' // Object.is equality"
+    },
+    {
+      "id": "M2",
+      "name": "cancellation is no longer idempotent (a second cancel re-arms the run)",
+      "outcome": "KILLED",
+      "detail": "      Tests  1 failed | 14 passed (15)"
+    },
+    {
+      "id": "M3",
+      "name": "a perception that lands after cancellation is ingested anyway",
+      "outcome": "KILLED",
+      "detail": "      Tests  1 failed | 14 passed (15)"
+    },
+    {
+      "id": "M4",
+      "name": "a superseded run keeps pushing progress into the dashboard the new task owns",
+      "outcome": "KILLED",
+      "detail": "      Tests  1 failed | 14 passed (15)"
+    },
+    {
+      "id": "M5",
+      "name": "the cycle-top ownership gate is removed (a cancelled run takes another step)",
+      "outcome": "MASKED_BY_SIBLING_GUARD",
+      "detail": "",
+      "note": "covered by test 2.1 — a provider response landing after cancel() dispatches nothing (the provider-site ownership guard raises RunOwnershipLostError first)"
+    },
+    {
+      "id": "M6",
+      "name": "a late provider response is no longer checked for ownership (a superseded run acts on it)",
+      "outcome": "MASKED_BY_SIBLING_GUARD",
+      "detail": "",
+      "note": "covered by test 2.1 — same property, from the cycle-end re-check"
+    }
+  ]
+}

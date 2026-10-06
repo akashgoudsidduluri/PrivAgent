@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ApexCart — Order Enquiry (session refreshed)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a href="index.html" class="brand">ApexCart</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="search.html">Search</a>
+      <span style="color: var(--accent); margin-left: 1.5rem;">Hello, shopper</span>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card" id="enquiry-card" style="max-width: 700px;">
+      <h1 class="product-title" id="enquiry-heading" style="font-size: 1.5rem; margin: 0 0 0.5rem;">Order Enquiry</h1>
+      <p id="session-note" style="color: var(--text-secondary);">
+        Your session was refreshed, so the page moved. This is a new document.
+      </p>
+
+      <p id="freshness-counter" style="margin: 1rem 0; font-size: 0.9rem;">
+        Enquiries sent in this session: <strong id="a16-count">0</strong>
+      </p>
+
+      <div style="margin: 1.5rem 0;">
+        <label for="enquiry-reference" style="display:block; margin-bottom: 0.5rem;"><strong>Enquiry reference</strong></label>
+        <input id="enquiry-reference" type="text" placeholder="e.g. AX-10482"
+               style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px;">
+      </div>
+
+      <div style="display: flex; gap: 1rem;">
+        <button id="btn-send-enquiry" class="btn" onmousedown="event.preventDefault()">Send Enquiry</button>
+        <a href="index.html" class="btn" style="text-decoration:none; text-align:center;">Back to Shop</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 ApexCart Demo Shopping Portal — PrivAgent Test Environment</p>
+  </footer>
+
+  <script>
+    //
+    // PHASE 18.8 / A16 FIXTURE SUPPORT — THE DOCUMENT THE PAGE MOVED TO.
+    //
+    // The point of this page is that it carries the SAME consequential control id
+    // (`#btn-send-enquiry`) as the page the plan was made on. A stale plan that
+    // was dispatched blindly would therefore land here and visibly send a second
+    // enquiry — so "the counter is still 0" is evidence that nothing was
+    // dispatched, not merely that a click failed to find its target.
+    //
+    // The counter is read from `sessionStorage`, which survives the navigation.
+    //
+    (function () {
+      var count = document.getElementById('a16-count');
+      function render() {
+        try { count.textContent = String(Number(sessionStorage.getItem('__a16Clicks') || 0)); }
+        catch (e) { count.textContent = 'unreadable'; }
+      }
+      render();
+      document.getElementById('btn-send-enquiry').addEventListener('click', function () {
+        try {
+          sessionStorage.setItem('__a16Clicks', String(Number(sessionStorage.getItem('__a16Clicks') || 0) + 1));
+        } catch (e) { /* ignore */ }
+        render();
+      });
+    })();
+  </script>
+</body>
+</html>

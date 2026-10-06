@@ -815,6 +815,7 @@ window.addEventListener('message', (event) => {
       chrome.runtime.sendMessage({
         type: 'PRIVAGENT_DASHBOARD_STOP_TASK',
         runId: (event.data as any)?.runId,
+        reason: (event.data as any)?.reason,
       });
     } else if (type === 'CONFIRM_ACTION') {
       chrome.runtime.sendMessage({

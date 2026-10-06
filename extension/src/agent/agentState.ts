@@ -11,6 +11,8 @@
  */
 
 import { BrowserAction, ActionType } from './actionTypes';
+import type { CommitRecord } from './commitCertainty';
+import type { FreshnessRecord } from './actionFreshness';
 import { ActionRiskAssessment } from './riskEngine';
 import { SemanticVerificationResult } from './semanticVerifier';
 import { ConfidenceEvaluation } from './confidenceScorer';
@@ -57,7 +59,29 @@ export type TaskStatus =
   | 'CANNOT_VERIFY'
   // A provider that could not be reached is a truthful non-action state. It
   // exists so a rate limit is never reported as a task outcome.
-  | 'PROVIDER_UNAVAILABLE';
+  | 'PROVIDER_UNAVAILABLE'
+  //
+  // PHASE 18.8 / A14 — THE OUTCOME OF A CONSEQUENTIAL ACTION IS UNCONFIRMED.
+  //
+  // This is terminal and it is not a failure: the device dispatched a purchase,
+  // submission, send, deletion or transfer and could not establish whether the
+  // world changed. It exists because the honest end of that run is neither
+  // SUCCESS (nothing was verified) nor FAILED (nothing proved that it failed) —
+  // and because `NEEDS_USER_CONFIRMATION` is a PAUSE the loop waits inside,
+  // whereas this run has already ended. Reporting a paused run would invite a
+  // resume that could duplicate the commit.
+  | 'COMMIT_UNKNOWN'
+  //
+  // PHASE 18.8 / A16 — THE STATE THE ACTION WAS PLANNED ON IS NOT THE STATE
+  // OBSERVED NOW.
+  //
+  // Also terminal, and also not a failure: the page moved (or could not be
+  // observed) between planning and dispatch. It exists because dispatching a
+  // consequential action against a view nobody is looking at is how the wrong
+  // control gets clicked — and because "invalid time to act" is neither SUCCESS
+  // nor FAILED. The per-state detail (STALE / CONFLICT / UNKNOWN) lives in the
+  // typed freshness record, not in this status.
+  | 'FRESHNESS_UNVERIFIED';
 
 /** Every status the loop can rest in. */
 export const TERMINAL_TASK_STATUSES: readonly TaskStatus[] = Object.freeze([
@@ -71,11 +95,64 @@ export const TERMINAL_TASK_STATUSES: readonly TaskStatus[] = Object.freeze([
   'NEEDS_INFORMATION',
   'CANNOT_VERIFY',
   'PROVIDER_UNAVAILABLE',
+  // PHASE 18.8 / A14 — the run ended because a commit could not be confirmed.
+  'COMMIT_UNKNOWN',
+  // PHASE 18.8 / A16 — the run ended because the page was no longer the page
+  // the action was planned on.
+  'FRESHNESS_UNVERIFIED',
 ]);
 
 export function isTerminalTaskStatus(status: TaskStatus): boolean {
   return TERMINAL_TASK_STATUSES.includes(status);
 }
+
+/**
+ * PHASE 18.8 / A12 — TASK LIFECYCLE.
+ *
+ * `status` answers "what did this task conclude?"; `lifecycle` answers "is this
+ * task still entitled to act?". They are different questions, and collapsing
+ * them is how a cancelled run keeps dispatching: a run can be cancelled while
+ * its status is still `IN_PROGRESS`, and a status of `STOPPED` says nothing
+ * about whether an in-flight provider response may still be applied.
+ *
+ *   ACTIVE       → may plan, request and dispatch
+ *   CANCELLING   → cancellation requested; nothing new may start
+ *   CANCELLED    → stopped by the user (idempotent terminal)
+ *   SUPERSEDED   → replaced by a newer task (idempotent terminal)
+ *   COMPLETED    → reached a terminal status on its own
+ *
+ * Once a run leaves ACTIVE it can never return: cancellation is one-way, so a
+ * late async continuation cannot "un-cancel" itself.
+ */
+export type TaskLifecycle =
+  | 'ACTIVE'
+  | 'CANCELLING'
+  | 'CANCELLED'
+  | 'SUPERSEDED'
+  | 'COMPLETED';
+
+/** Fixed vocabulary. Never model prose, never an internal stack or code. */
+export type CancellationCode = 'USER_CANCELLED' | 'SUPERSEDED_BY_NEW_TASK';
+
+export const TERMINAL_LIFECYCLES: readonly TaskLifecycle[] = Object.freeze([
+  'CANCELLED',
+  'SUPERSEDED',
+  'COMPLETED',
+]);
+
+/** True once the run may not plan, request, dispatch or apply any result. */
+export function isTerminalLifecycle(lifecycle: TaskLifecycle): boolean {
+  return TERMINAL_LIFECYCLES.includes(lifecycle);
+}
+
+/**
+ * User-facing cancellation copy. Two sentences, no codes: the dashboard and the
+ * final result say what happened, never why the internals decided it.
+ */
+export const CANCELLATION_MESSAGES: Readonly<Record<CancellationCode, string>> = Object.freeze({
+  USER_CANCELLED: 'Stopped at your request.',
+  SUPERSEDED_BY_NEW_TASK: 'Stopped because a newer task took over.',
+});
 
 /**
  * Exactly one user-facing message per terminal state (A9).
@@ -98,6 +175,15 @@ const USER_FACING_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   CANNOT_VERIFY: 'There was nothing on this page that could be checked.',
   PROVIDER_UNAVAILABLE:
     'The reasoning service was unavailable, so nothing was changed on the page.',
+  // PHASE 18.8 / A14. Deliberately does NOT say it failed: the truthful claim
+  // is that the outcome is unknown and the agent stopped rather than risk a
+  // duplicate. The per-action sentence (which action) is composed from the
+  // typed commit record, never from prose.
+  COMMIT_UNKNOWN:
+    'The outcome of the last action could not be confirmed, so the task stopped short of repeating it.',
+  // PHASE 18.8 / A16. Nothing was attempted: the page had already moved on.
+  FRESHNESS_UNVERIFIED:
+    'The page changed while the step was being prepared, so nothing was done with the view it was planned on.',
 });
 
 export function userFacingMessageForStatus(status: TaskStatus): string {
@@ -403,6 +489,16 @@ export interface AgentTaskState extends TaskState {
    * write it from records that passed the local verifier.
    */
   answerProvenance?: { verifiedRecords: number; sourceHost: string | null };
+  /**
+   * PHASE 18.8 / A12 — the run's lifecycle, and WHY it stopped if it did.
+   *
+   * `lifecycle` is separate from `status` on purpose: a cancelled run can still
+   * be `IN_PROGRESS`, and it is the lifecycle — not the status — that decides
+   * whether an in-flight async result may be applied.
+   */
+  lifecycle?: TaskLifecycle;
+  /** Fixed vocabulary; null unless the run was cancelled or superseded. */
+  cancellationCode?: CancellationCode | null;
   /** PHASE 18.8 / B2. Absent for a one-shot task. */
   conversation?: ConversationSummary | null;
   /**
@@ -451,6 +547,15 @@ export interface AgentTaskState extends TaskState {
 
   // Dynamic page context
   currentPageGeneration: number;
+  /**
+   * PHASE 18.8 / A16 — the page generation the CURRENT action was grounded
+   * against. Recorded at the grounding gate, so the pre-dispatch freshness check
+   * compares against the view the action was planned on rather than against
+   * itself.
+   */
+  plannedActionGeneration?: number | null;
+  /** The last typed freshness verdict for a consequential action. */
+  actionFreshness?: FreshnessRecord | null;
   pageType: PageCategory;
 
   // Constraints & subgoals
@@ -462,6 +567,17 @@ export interface AgentTaskState extends TaskState {
   recentActions: BrowserAction[];
   lastAction: BrowserAction | null;
   lastActionResult: { success: boolean; error?: string } | null;
+  /**
+   * PHASE 18.8 / A14 — what is KNOWN about each externally mutating action this
+   * run dispatched. Content-free: the action class and a fixed code, never the
+   * model's own account of what happened. An entry with `unresolved: true` is a
+   * commit the device has NOT established, and it blocks the same class of
+   * action from being dispatched again.
+   */
+  commitRecords?: CommitRecord[];
+  lastCommit?: CommitRecord | null;
+  /** True when a dispatch was refused because a commit was unresolved. */
+  commitBlocked?: boolean;
   expectedStateChange: ExpectedStateChange | null;
 
   /**
@@ -638,10 +754,21 @@ export function createAgentTaskState(
     recentActions: [],
     lastAction: null,
     lastActionResult: null,
+    // PHASE 18.8 / A14 — no commit is outstanding at the start of a run.
+    commitRecords: [],
+    lastCommit: null,
+    commitBlocked: false,
+    // PHASE 18.8 / A16 — no action has been grounded yet.
+    plannedActionGeneration: null,
+    actionFreshness: null,
     expectedStateChange: null,
     currentFindings: [],
     candidateItems: [],
     candidateEntities: [],
+    // PHASE 18.8 / A12 — a run starts ACTIVE; only an explicit cancellation or
+    // supersession moves it, and nothing moves it back.
+    lifecycle: 'ACTIVE',
+    cancellationCode: null,
     semanticGroups: [],
     goalStatus: 'IN_PROGRESS',
     failureCount: 0,

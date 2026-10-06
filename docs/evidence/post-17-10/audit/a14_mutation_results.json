@@ -1,0 +1,64 @@
+{
+  "phase": "18.8-A14",
+  "work": "A14 uncertain commit / side-effect idempotency — mutation suite",
+  "total": 9,
+  "killed": 9,
+  "survived": 0,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "name": "the dispatch gate is removed — an unresolved commit does not block a duplicate",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 1ms |    × A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 18ms |       Tests  5 failed | 24 passed (29)"
+    },
+    {
+      "id": "M2",
+      "name": "the effect verifier settles an UNOBSERVED commit as committed",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 1ms |    × A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 24ms |       Tests  6 failed | 23 passed (29)"
+    },
+    {
+      "id": "M3",
+      "name": "execution success is taken as proof of the commit (the original defect)",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 1ms |    × A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 17ms |       Tests  6 failed | 23 passed (29)"
+    },
+    {
+      "id": "M4",
+      "name": "an inconclusive re-perception is allowed to CLOSE the commit",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 1ms |    ✓ A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 16ms |       Tests  2 failed | 27 passed (29)"
+    },
+    {
+      "id": "M5",
+      "name": "a page that merely fails to mention the outcome is read as a FAILED commit",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 1ms |    ✓ A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 16ms |       Tests  5 failed | 24 passed (29)"
+    },
+    {
+      "id": "M6",
+      "name": "the effect-verifier settlement is not written back (the commit stays open after an observed effect)",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 1ms |    ✓ A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 13ms |       Tests  1 failed | 28 passed (29)"
+    },
+    {
+      "id": "M9",
+      "name": "a CONFIRMED re-perception is not written back to the commit records",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 1ms |    × A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 20ms |       Tests  1 failed | 28 passed (29)"
+    },
+    {
+      "id": "M7",
+      "name": "a resolved commit still blocks its class",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 1ms |    ✓ A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 13ms |       Tests  1 failed | 28 passed (29)"
+    },
+    {
+      "id": "M8",
+      "name": "task wording may turn a non-mutating action (a scroll) into a commit",
+      "outcome": "KILLED",
+      "detail": "   ✓ A14 — what is known after a dispatch > 2.2 a FAILED consequential dispatch is COMMIT_UNKNOWN, not a failure to retry 0ms |    ✓ A14 — the loop refuses a duplicate consequential dispatch > 5.4 FAILURE wording on the re-perceived page justifies exactly one retry 13ms |       Tests  2 failed | 27 passed (29)"
+    }
+  ]
+}

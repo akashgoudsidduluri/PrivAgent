@@ -53,7 +53,26 @@ export type UIAgentStatus =
   | 'NEEDS_INFORMATION'
   | 'CANNOT_VERIFY'
   /** The reasoning service was unreachable. Nothing was changed on the page. */
-  | 'PROVIDER_UNAVAILABLE';
+  | 'PROVIDER_UNAVAILABLE'
+  /**
+   * PHASE 18.8 / A14 — the outcome of a consequential action could not be
+   * confirmed, so the run stopped instead of risking a duplicate.
+   *
+   * TERMINAL, and emphatically not SUCCESS: nothing was verified. It is also not
+   * a PAUSE — `NEEDS_USER_CONFIRMATION` already models the confirmation pause —
+   * so it must be dispatched explicitly here, or the adapter's fallback would
+   * render a finished run as one still executing browser actions.
+   */
+  | 'COMMIT_UNKNOWN'
+  /**
+   * PHASE 18.8 / A16 — the page moved (or could not be observed) between
+   * planning a consequential action and dispatching it, so nothing was done.
+   *
+   * TERMINAL, like the A14 state above and for the same reason: an unrecognised
+   * status falls through to `RUNNING`, which would show a finished run as a live
+   * browser session.
+   */
+  | 'FRESHNESS_UNVERIFIED';
 
 export type PipelineStage =
   | 'IDLE'
@@ -194,13 +213,20 @@ export type AgentActivityPhase =
   | 'VERIFICATION' | 'RECOVERY' | 'AWAITING_CONFIRMATION' | 'TERMINAL';
 
 export type AgentTerminalReason =
-  | 'GOAL_ACHIEVED' | 'STOPPED_BY_USER' | 'CONTAINMENT_DENIED' | 'HARNESS_HALTED'
+  | 'GOAL_ACHIEVED' | 'STOPPED_BY_USER'
+  /** PHASE 18.8 / A12 — a newer task replaced this run. */
+  | 'SUPERSEDED_BY_NEW_TASK'
+  | 'CONTAINMENT_DENIED' | 'HARNESS_HALTED'
   | 'RECOVERY_EXHAUSTED' | 'STEP_BOUND_EXHAUSTED' | 'REASONER_FAILED'
   | 'PERCEPTION_FAILED' | 'CONFIRMATION_DECLINED' | 'UNKNOWN'
   // PHASE 18.8 / B1 — an information run's typed end.| 'ANSWERED'
   | 'NO_VERIFIABLE_RESULT'
   /** PHASE 18.8 / A13 — a reference the local resolver refused to guess. */
-  | 'NEEDS_CLARIFICATION';
+  | 'NEEDS_CLARIFICATION'
+  /** PHASE 18.8 / A14 — the run ended with a consequential commit unconfirmed. */
+  | 'COMMIT_UNVERIFIED'
+  /** PHASE 18.8 / A16 — the run ended because the view had moved on. */
+  | 'FRESHNESS_UNVERIFIED';
 
 export interface AgentActivity {
   phase: AgentActivityPhase;
@@ -255,6 +281,10 @@ export type AgentResultKind =
   | 'NEEDS_INFORMATION'
   // PHASE 18.8 / A13. The local resolver refused to guess a reference.
   | 'NEEDS_CLARIFICATION'
+  // PHASE 18.8 / A14. A consequential commit could not be established.
+  | 'COMMIT_UNKNOWN'
+  // PHASE 18.8 / A16. The page moved before a consequential action ran.
+  | 'FRESHNESS_UNVERIFIED'
   | 'SUCCESS'
   | 'FAILED'
   | 'PROVIDER_UNAVAILABLE'

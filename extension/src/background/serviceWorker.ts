@@ -715,7 +715,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         supersededRunId: activeLoop.getRunId?.(),
         newRunId: taskOwnershipToken,
       });
-      activeLoop.stop(true); // silent stop: suppresses stale event emission
+      //
+      // PHASE 18.8 / A12 — the replaced run is SUPERSEDED, not "stopped by the
+      // user". The lifecycle is one-way and terminal, so every continuation of
+      // that run is stale from this line on, and `silent` keeps the old run
+      // from pushing progress into the dashboard the NEW task now owns.
+      //
+      activeLoop.supersede();
       activeLoop = null;
     }
 
@@ -1628,7 +1634,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'PRIVAGENT_DASHBOARD_STOP_TASK') {
     activeTaskRunId++;
     if (activeLoop) {
-      activeLoop.stop();
+      //
+      // PHASE 18.8 / A12 — WHY the run is being stopped is decided by whoever
+      // asked, not guessed here. A dashboard that is replacing a run with a
+      // newer task declares that; anything else is a user stop. Both end the
+      // run identically; only the reported reason differs.
+      //
+      if (message.reason === 'REPLACED_BY_NEW_TASK') {
+        activeLoop.supersede();
+      } else {
+        activeLoop.stop();
+      }
       activeLoop = null;
     }
     sendResponse({ stopped: true });

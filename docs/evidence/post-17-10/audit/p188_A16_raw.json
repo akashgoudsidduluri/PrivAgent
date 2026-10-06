@@ -1,0 +1,419 @@
+{
+  "phase": "18.8-A16",
+  "work": "Pre-action state freshness: a step is never dispatched against a view the device no longer sees — real Chrome",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "inputs": {
+    "task": "Send an enquiry",
+    "fixture": "http://localhost:4174/freshness.html?after=9000",
+    "fixtureNavigatesAfterMs": 9000,
+    "provider": "controlled stub mode=freshness_demo",
+    "gateway": "http://127.0.0.1:8010"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "stub": {
+    "success": true,
+    "stub_mode": "freshness_demo",
+    "calls_served": 0
+  },
+  "timeline": [
+    {
+      "t": "0.02s",
+      "what": "controlled provider mode set",
+      "detail": {
+        "success": true,
+        "stub_mode": "freshness_demo",
+        "calls_served": 0
+      }
+    },
+    {
+      "t": "7.05s",
+      "what": "fixture loaded (page will move on its own)",
+      "detail": {
+        "url": "http://localhost:4174/freshness.html?after=9000",
+        "title": "ApexCart — Order Enquiry",
+        "readyState": "complete",
+        "clicks": 0,
+        "controlPresent": true
+      }
+    },
+    {
+      "t": "7.06s",
+      "what": "task submitted",
+      "detail": {
+        "task": "Send an enquiry"
+      }
+    },
+    {
+      "t": "22.08s",
+      "what": "terminal event observed",
+      "detail": {
+        "status": "FRESHNESS_UNVERIFIED",
+        "fixture": {
+          "url": "http://localhost:4174/freshness-moved.html",
+          "title": "ApexCart — Order Enquiry (session refreshed)",
+          "readyState": "complete",
+          "clicks": 0,
+          "controlPresent": true
+        }
+      }
+    },
+    {
+      "t": "26.09s",
+      "what": "fixture re-read after a 4s grace period",
+      "detail": {
+        "url": "http://localhost:4174/freshness-moved.html",
+        "title": "ApexCart — Order Enquiry (session refreshed)",
+        "readyState": "complete",
+        "clicks": 0,
+        "controlPresent": true
+      }
+    }
+  ],
+  "swLogs": [
+    {
+      "t": "7.07s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791292226524}"
+    },
+    {
+      "t": "7.07s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791292226524}"
+    },
+    {
+      "t": "7.07s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791292226524,targetFound:true,tabId:1251285658,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "7.07s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791292226524,targetFound:true}"
+    },
+    {
+      "t": "7.11s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "7.11s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:15}"
+    },
+    {
+      "t": "7.11s",
+      "text": "[AgentTrace] intent classified {intent:ACTION_REQUEST,confidence:DETERMINISTIC,requiresDestination:false,requiresEvidence:false,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "7.11s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-ad04f580,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "7.11s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "7.11s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "7.11s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:1251285658}"
+    },
+    {
+      "t": "7.11s",
+      "text": "TARGET_TAB_SELECTED {tabId:1251285658,origin:http://localhost:4174,reason:Selected first eligible web tab.}"
+    },
+    {
+      "t": "7.11s",
+      "text": "[AgentTrace] target resolved {tabId:1251285658}"
+    },
+    {
+      "t": "7.16s",
+      "text": "TARGET_TAB_READY {tabId:1251285658}"
+    },
+    {
+      "t": "7.16s",
+      "text": "[AgentTrace] target content script ready {tabId:1251285658}"
+    },
+    {
+      "t": "7.16s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "7.17s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "7.17s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "7.18s",
+      "text": "[AgentTrace] agent loop started {runId:1}"
+    },
+    {
+      "t": "7.19s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-ad04f580,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.19s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "7.19s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "7.19s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "7.20s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+    },
+    {
+      "t": "7.20s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/freshness.html?after=9000}"
+    },
+    {
+      "t": "7.20s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "7.23s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:5}"
+    },
+    {
+      "t": "7.23s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:4,regionsConsidered:4,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "7.23s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:4,ledgerSize:4,verifiedCurrent:4,generation:3}"
+    },
+    {
+      "t": "7.23s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "7.24s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "7.24s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/freshness.html?after=9000,worldModelId:wm-g3-muwp53zh-kfz6}"
+    },
+    {
+      "t": "7.25s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:11,privacyFindingsCount:5}"
+    },
+    {
+      "t": "7.25s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:UNKNOWN,pageState:populated,pageGeneration:3,entityCount:0,affordanceCount:2}"
+    },
+    {
+      "t": "7.25s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-ad04f580,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.25s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwp53z1-sw5dm-sg1,category:LOCATE,description:Perceive page and locate candidate controls relevant to \"Send an enquiry\"}"
+    },
+    {
+      "t": "7.25s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:3,discoveries:0}"
+    },
+    {
+      "t": "7.26s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-ad04f580,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.26s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "17.80s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791292237267}"
+    },
+    {
+      "t": "17.80s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791292237267}"
+    },
+    {
+      "t": "17.80s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791292237267,targetFound:true,tabId:1251285658,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "17.81s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791292237267,targetFound:true}"
+    },
+    {
+      "t": "21.28s",
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "t": "21.28s",
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "t": "21.28s",
+      "text": "[AgentTrace] security critic {verdict:ALLOW,code:NO_OBJECTION,findings:Array(0)}"
+    },
+    {
+      "t": "21.28s",
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "t": "21.29s",
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "t": "21.29s",
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "t": "21.29s",
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": "21.30s",
+      "text": "[AgentTrace] effect snapshot observed {phase:targeted,url:http://localhost:4174/freshness-moved.html,scrollY:0,domElementCount:41,openModalsCount:0}"
+    },
+    {
+      "t": "21.30s",
+      "text": "[AgentTrace] containment decision {code:WITHIN_SCOPE,contained:true,scope:contained:localhost}"
+    },
+    {
+      "t": "21.30s",
+      "text": "[AgentTrace] action freshness assessed {state:CONFLICT,code:URL_CHANGED_SINCE_PLANNING,resolution:STOP_AND_ASK,actionClass:SEND,plannedGeneration:3}"
+    },
+    {
+      "t": "21.30s",
+      "text": "[AgentTrace] dispatch blocked — state freshness not established {state:CONFLICT,code:URL_CHANGED_SINCE_PLANNING,actionClass:SEND}"
+    },
+    {
+      "t": "21.30s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:UNANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "21.30s",
+      "text": "[ServiceWorker] response forwarded {status:FRESHNESS_UNVERIFIED,currentStep:1,reason:The page moved while I was preparing that step, so I stopped without acting on the old view.}"
+    },
+    {
+      "t": "21.31s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-ad04f580,contextGeneration:6,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "21.31s",
+      "text": "[AgentTrace] terminal progress emitted {status:FRESHNESS_UNVERIFIED,runId:1}"
+    },
+    {
+      "t": "21.31s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:UNANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "21.31s",
+      "text": "[ServiceWorker] response forwarded {status:FRESHNESS_UNVERIFIED,currentStep:1,reason:The page moved while I was preparing that step, so I stopped without acting on the old view.}"
+    }
+  ],
+  "events": [
+    {
+      "t": 1791292226641,
+      "runId": 1,
+      "status": "RUNNING",
+      "task": "Send an enquiry",
+      "steps": 0,
+      "finalResult": null,
+      "terminal": null
+    },
+    {
+      "t": 1791292226653,
+      "runId": 1,
+      "status": "RUNNING",
+      "task": "Send an enquiry",
+      "steps": 0,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      },
+      "terminal": null
+    },
+    {
+      "t": 1791292226663,
+      "runId": 1,
+      "status": "IN_PROGRESS",
+      "task": "Send an enquiry",
+      "steps": 0,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      },
+      "terminal": null
+    },
+    {
+      "t": 1791292240772,
+      "runId": 1,
+      "status": "FRESHNESS_UNVERIFIED",
+      "task": "Send an enquiry",
+      "steps": 1,
+      "finalResult": {
+        "kind": "FRESHNESS_UNVERIFIED",
+        "headline": "Page changed before acting",
+        "body": "The page moved while I was preparing that step, so I stopped without acting on the old view.",
+        "provenance": null,
+        "remaining": []
+      },
+      "terminal": {
+        "outcome": "UNANSWERED",
+        "reason": "FRESHNESS_UNVERIFIED",
+        "headline": "Stopped: the page was no longer the one that step was planned on."
+      }
+    },
+    {
+      "t": 1791292240780,
+      "runId": 1,
+      "status": "FRESHNESS_UNVERIFIED",
+      "task": "Send an enquiry",
+      "steps": 1,
+      "finalResult": {
+        "kind": "FRESHNESS_UNVERIFIED",
+        "headline": "Page changed before acting",
+        "body": "The page moved while I was preparing that step, so I stopped without acting on the old view.",
+        "provenance": null,
+        "remaining": []
+      },
+      "terminal": {
+        "outcome": "UNANSWERED",
+        "reason": "FRESHNESS_UNVERIFIED",
+        "headline": "Stopped: the page was no longer the one that step was planned on."
+      }
+    }
+  ],
+  "fixture": {
+    "preRun": {
+      "url": "http://localhost:4174/freshness.html?after=9000",
+      "title": "ApexCart — Order Enquiry",
+      "readyState": "complete",
+      "clicks": 0,
+      "controlPresent": true
+    },
+    "atTerminal": {
+      "url": "http://localhost:4174/freshness-moved.html",
+      "title": "ApexCart — Order Enquiry (session refreshed)",
+      "readyState": "complete",
+      "clicks": 0,
+      "controlPresent": true
+    },
+    "afterSettle": {
+      "url": "http://localhost:4174/freshness-moved.html",
+      "title": "ApexCart — Order Enquiry (session refreshed)",
+      "readyState": "complete",
+      "clicks": 0,
+      "controlPresent": true
+    }
+  },
+  "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nSend an enquiry\nFRESHNESS_UNVERIFIED\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nSend an enquiry\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nFRESHNESS UNVERIFIED\nFinished.\nStep 1 of 10\nPage changed before acting\nThe page moved while I was preparing that step, so I stopped without acting on the old view.\nAGENT ACTIVITY TIMELINE\n3 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\n!\nStep 1: click on btn-send-enquiry\nFAILED\nFRESHNESS_CONFLICT: URL_CHANGED_SINCE_PLANNING · Masked entity: [button]\nBROWSER CONTEXT\nCurrent Page\nlocalhost/freshness.html\nSemantic Type\nunknown\nDestination\nVerified\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+}

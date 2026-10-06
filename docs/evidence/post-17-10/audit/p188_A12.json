@@ -1,0 +1,263 @@
+{
+  "phase": "18.8-A12",
+  "work": "Cancellation / interruption: supersession, late provider response, ownership",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "provider": "CONTROLLED (scratch/i8a7a8_controlled_provider.py, STUB_MODE=interrupt_demo)",
+  "honesty": "CONTROLLED_PROVIDER. The long task answers late BY DESIGN so the response lands after the interrupt; this reproduces the race deterministically and is not a live-provider claim.",
+  "source": "p188_A12_raw.json",
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "tasks": {
+    "taskA": "Go down the page slowly step by step.",
+    "taskB": "Tell me about the products.",
+    "gapMs": 2500,
+    "catalog": "http://localhost:4174/results.html"
+  },
+  "timeline": [
+    {
+      "t": 6.14,
+      "line": "[AgentTrace] agent loop started {runId:1}"
+    },
+    {
+      "t": 6.28,
+      "line": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 6.32,
+      "line": "[AgentTrace] executeAction started"
+    },
+    {
+      "t": 6.35,
+      "line": "[AgentTrace] recovery decision {code:ACTION_NO_EFFECT,strategy:REPERCEIVE,attempt:1,reason:Discard stale perception and re-observe the live p…assified 'ACTION_NO_EFFECT' at page generation 2.}"
+    },
+    {
+      "t": 6.95,
+      "line": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 8.51,
+      "line": "[AgentTrace] run cancelled {reason:SUPERSEDED_BY_NEW_TASK,lifecycle:SUPERSEDED,runId:1}"
+    },
+    {
+      "t": 8.55,
+      "line": "[AgentTrace] agent loop started {runId:2}"
+    },
+    {
+      "t": 8.62,
+      "line": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": 8.64,
+      "line": "[AgentTrace] terminal progress emitted {status:PARTIAL,runId:2}"
+    },
+    {
+      "t": 10.97,
+      "line": "[AgentTrace] terminal progress suppressed (task superseded) {taskOwnershipToken:1,activeTaskRunId:2}"
+    }
+  ],
+  "dashboardEvents": [
+    {
+      "t": 1791234534537,
+      "runId": 1,
+      "status": "RUNNING",
+      "task": "Go down the page slowly step by step.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": null
+    },
+    {
+      "t": 1791234534547,
+      "runId": 1,
+      "status": "RUNNING",
+      "task": "Go down the page slowly step by step.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234534576,
+      "runId": 1,
+      "status": "IN_PROGRESS",
+      "task": "Go down the page slowly step by step.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234534735,
+      "runId": 1,
+      "status": "IN_PROGRESS",
+      "task": "Go down the page slowly step by step.",
+      "steps": 1,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234536944,
+      "runId": 2,
+      "status": "RUNNING",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": null
+    },
+    {
+      "t": 1791234536950,
+      "runId": 2,
+      "status": "RUNNING",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234536971,
+      "runId": 2,
+      "status": "IN_PROGRESS",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      }
+    },
+    {
+      "t": 1791234537021,
+      "runId": 2,
+      "status": "PARTIAL",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "PARTIAL",
+        "headline": "Partly answered",
+        "body": null,
+        "provenance": null,
+        "remaining": [
+          "Some of what was asked could not be verified on this page."
+        ]
+      }
+    },
+    {
+      "t": 1791234537024,
+      "runId": 2,
+      "status": "PARTIAL",
+      "task": "Tell me about the products.",
+      "steps": 0,
+      "cancellationCode": null,
+      "finalResult": {
+        "kind": "PARTIAL",
+        "headline": "Partly answered",
+        "body": null,
+        "provenance": null,
+        "remaining": [
+          "Some of what was asked could not be verified on this page."
+        ]
+      }
+    }
+  ],
+  "checks": [
+    {
+      "id": "A12-1",
+      "claim": "task A started and dispatched a real action before the interrupt",
+      "pass": true,
+      "observed": {
+        "startRun1At": 6.14,
+        "firstDispatchAt": 6.32
+      }
+    },
+    {
+      "id": "A12-2",
+      "claim": "A was cancelled with a TYPED cancellation code",
+      "pass": true,
+      "observed": {
+        "reason": "SUPERSEDED_BY_NEW_TASK",
+        "line": "[AgentTrace] run cancelled {reason:SUPERSEDED_BY_NEW_TASK,lifecycle:SUPERSEDED,runId:1}"
+      }
+    },
+    {
+      "id": "A12-3",
+      "claim": "B started AFTER the cancellation and owns the active run",
+      "pass": true,
+      "observed": {
+        "cancelAt": 8.51,
+        "startRun2At": 8.55
+      }
+    },
+    {
+      "id": "A12-4",
+      "claim": "NO action was dispatched for A after it was cancelled",
+      "pass": true,
+      "observed": {
+        "dispatchesAfterCancellation": [],
+        "dispatchesBetweenCancellationAndB": 0
+      }
+    },
+    {
+      "id": "A12-5",
+      "claim": "A's late provider response produced NO terminal result",
+      "pass": true,
+      "observed": {
+        "terminalEventsForRun1": 0
+      }
+    },
+    {
+      "id": "A12-6",
+      "claim": "A's late result was explicitly SUPPRESSED by ownership, not merely lost",
+      "pass": true,
+      "observed": {
+        "line": "[AgentTrace] terminal progress suppressed (task superseded) {taskOwnershipToken:1,activeTaskRunId:2}"
+      }
+    },
+    {
+      "id": "A12-7",
+      "claim": "B produced its own terminal result and the dashboard ended on it",
+      "pass": true,
+      "observed": {
+        "run2Terminal": [
+          {
+            "status": "PARTIAL",
+            "result": "PARTIAL"
+          },
+          {
+            "status": "PARTIAL",
+            "result": "PARTIAL"
+          }
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0
+  }
+}

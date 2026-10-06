@@ -1,0 +1,137 @@
+{
+  "phase": "18.8-A14",
+  "work": "Uncertain commit: an unconfirmed consequential action is never re-dispatched",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "provider": "CONTROLLED (scratch/i8a7a8_controlled_provider.py, STUB_MODE=commit_demo)",
+  "honesty": "CONTROLLED_PROVIDER. The provider proposed the SAME consequential control on every call, by design. The click count is read from the PAGE (window.__a14Enquiries), not inferred from the agent. The action chosen for this scenario is a real send-shaped control on a real local fixture page; no part of this claims a live-model run.",
+  "source": "p188_A14_raw.json",
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "inputs": {
+    "task": "Send an enquiry",
+    "fixture": "http://localhost:4174/enquiry.html",
+    "provider": "controlled stub mode=commit_demo"
+  },
+  "fixtureCounter": {
+    "atTerminal": {
+      "clicks": 1,
+      "url": "http://localhost:4174/enquiry.html"
+    },
+    "afterSettle": {
+      "clicks": 1,
+      "url": "http://localhost:4174/enquiry.html"
+    }
+  },
+  "trace": {
+    "assessed": "[AgentTrace] commit assessed {actionClass:SEND,certainty:EFFECT_UNVERIFIED,unresolved:true}",
+    "settled": "[AgentTrace] commit settled by effect verification {actionClass:SEND,certainty:EFFECT_UNVERIFIED,code:EFFECT_UNVERIFIED,unresolved:true,effectStatus:ACTION_NO_EFFECT}",
+    "blocked": "[AgentTrace] dispatch blocked — commit unresolved {actionClass:SEND,openStep:1,certainty:EFFECT_UNVERIFIED}",
+    "verification": "[AgentTrace] external commit verification {actionClass:SEND,status:UNKNOWN,code:NOTHING_OBSERVED,resolved:false,observedMarkers:5}"
+  },
+  "terminal": {
+    "t": 1791292280069,
+    "runId": 1,
+    "status": "COMMIT_UNKNOWN",
+    "task": "Send an enquiry",
+    "steps": 2,
+    "finalResult": {
+      "kind": "COMMIT_UNKNOWN",
+      "headline": "Outcome not confirmed",
+      "body": "I could not confirm whether the message went through, so I stopped instead of trying again and risking a duplicate.",
+      "provenance": null,
+      "remaining": []
+    },
+    "terminal": {
+      "outcome": "UNANSWERED",
+      "reason": "COMMIT_UNVERIFIED",
+      "headline": "Stopped: whether the last action went through could not be confirmed."
+    }
+  },
+  "checks": [
+    {
+      "id": "A14-1",
+      "claim": "the task ran and EXACTLY ONE dispatch reached the page",
+      "pass": true,
+      "observed": {
+        "clicksAtTerminal": 1,
+        "clicksAfterSettle": 1,
+        "page": "http://localhost:4174/enquiry.html"
+      }
+    },
+    {
+      "id": "A14-2",
+      "claim": "the first consequential dispatch was recorded with a TYPED commit record, unresolved",
+      "pass": true,
+      "observed": {
+        "assessed": "[AgentTrace] commit assessed {actionClass:SEND,certainty:EFFECT_UNVERIFIED,unresolved:true}",
+        "actionClass": "SEND",
+        "unresolved": "true"
+      }
+    },
+    {
+      "id": "A14-3",
+      "claim": "the effect verifier could NOT close that commit (the action changed nothing observable)",
+      "pass": true,
+      "observed": {
+        "settled": "[AgentTrace] commit settled by effect verification {actionClass:SEND,certainty:EFFECT_UNVERIFIED,code:EFFECT_UNVERIFIED,unresolved:true,effectStatus:ACTION_NO_EFFECT}"
+      }
+    },
+    {
+      "id": "A14-4",
+      "claim": "the SECOND proposal of the same class was refused by the commit gate, naming the class",
+      "pass": true,
+      "observed": {
+        "blocked": "[AgentTrace] dispatch blocked — commit unresolved {actionClass:SEND,openStep:1,certainty:EFFECT_UNVERIFIED}",
+        "actionClass": "SEND",
+        "certainty": "EFFECT_UNVERIFIED"
+      }
+    },
+    {
+      "id": "A14-5",
+      "claim": "NO second dispatch reached the page after the gate — the counter does not move",
+      "pass": true,
+      "observed": {
+        "clicksAtTerminal": 1,
+        "clicksAfterSettle": 1
+      }
+    },
+    {
+      "id": "A14-6",
+      "claim": "re-perception could not settle it (typed UNKNOWN verdict), so the commit stayed open",
+      "pass": true,
+      "observed": {
+        "verification": "[AgentTrace] external commit verification {actionClass:SEND,status:UNKNOWN,code:NOTHING_OBSERVED,resolved:false,observedMarkers:5}"
+      }
+    },
+    {
+      "id": "A14-7",
+      "claim": "the run ended in the typed terminal state COMMIT_UNKNOWN (not a pause, not SUCCESS, not FAILED)",
+      "pass": true,
+      "observed": {
+        "status": "COMMIT_UNKNOWN",
+        "outcome": "UNANSWERED",
+        "reason": "COMMIT_UNVERIFIED",
+        "headline": "Stopped: whether the last action went through could not be confirmed."
+      }
+    },
+    {
+      "id": "A14-8",
+      "claim": "the user-facing result explains the duplicate risk and leaks no internal code",
+      "pass": true,
+      "observed": {
+        "finalResult": {
+          "kind": "COMMIT_UNKNOWN",
+          "headline": "Outcome not confirmed",
+          "body": "I could not confirm whether the message went through, so I stopped instead of trying again and risking a duplicate.",
+          "provenance": null,
+          "remaining": []
+        }
+      }
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0
+  }
+}

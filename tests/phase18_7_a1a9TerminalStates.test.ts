@@ -106,9 +106,27 @@ describe('A1/A9 — a proposal cannot become a success', () => {
       const expected = status === 'SUCCESS' ? 'SATISFIED' : 'NOT_SATISFIED';
       const actual = goalStatusFromTaskStatus(status);
       if (status === 'NEEDS_USER_CONFIRMATION' || status === 'NEEDS_CLARIFICATION') continue;
+      // This list mirrors the CANNOT_VERIFY arm of `goalStatusFromTaskStatus`
+      // exactly: terminal outcomes that are neither goal satisfaction nor a
+      // claim that the goal was unattainable. PHASE 18.8 / A14 + A16 added
+      // COMMIT_UNKNOWN and FRESHNESS_UNVERIFIED to that arm for the same stated
+      // reason — reporting "we could not confirm it" as NOT_SATISFIED would
+      // assert that the action did not happen.
       if (status === 'ANSWER' || status === 'PARTIAL' || status === 'NEEDS_INFORMATION'
-          || status === 'CANNOT_VERIFY' || status === 'PROVIDER_UNAVAILABLE') continue;
+          || status === 'CANNOT_VERIFY' || status === 'PROVIDER_UNAVAILABLE'
+          || status === 'COMMIT_UNKNOWN' || status === 'FRESHNESS_UNVERIFIED') continue;
       expect(actual).toBe(expected);
+    }
+  });
+
+  it('NO terminal status is ever reported to the model as still PENDING', () => {
+    // The `default` arm means "the loop is still working". A terminal status that
+    // landed there would tell the model to keep going after the run had ended.
+    for (const status of TERMINAL_TASK_STATUSES) {
+      const actual = goalStatusFromTaskStatus(status);
+      expect(actual, status).not.toBe('PENDING');
+      if (status === 'SUCCESS') expect(actual, status).toBe('SATISFIED');
+      else expect(actual, status).not.toBe('SATISFIED');
     }
   });
 });

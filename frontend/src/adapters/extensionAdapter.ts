@@ -337,6 +337,14 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     else if (data.status === 'NEEDS_INFORMATION') status = 'NEEDS_INFORMATION';
     else if (data.status === 'CANNOT_VERIFY') status = 'CANNOT_VERIFY';
     else if (data.status === 'PROVIDER_UNAVAILABLE') status = 'PROVIDER_UNAVAILABLE';
+    // PHASE 18.8 / A14. Dispatched explicitly for the same reason as the states
+    // above: an unrecognised status falls through to 'RUNNING', which would show
+    // a run that has ENDED because a commit was unconfirmed as a live browser
+    // session.
+    else if (data.status === 'COMMIT_UNKNOWN') status = 'COMMIT_UNKNOWN';
+    // PHASE 18.8 / A16. Same explicit dispatch: the run ended because the page
+    // moved before a consequential action was dispatched.
+    else if (data.status === 'FRESHNESS_UNVERIFIED') status = 'FRESHNESS_UNVERIFIED';
 
     // The stage MUST be derived before the watchdog is (re)armed. resetWatchdog()
     // chooses its window from `lastLifecycleStage`, so arming it first always
@@ -358,7 +366,8 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED'
         || status === 'NEEDS_CLARIFICATION' || status === 'ANSWER'
         || status === 'PARTIAL' || status === 'NEEDS_INFORMATION'
-        || status === 'CANNOT_VERIFY' || status === 'PROVIDER_UNAVAILABLE') {
+        || status === 'CANNOT_VERIFY' || status === 'PROVIDER_UNAVAILABLE'
+        || status === 'COMMIT_UNKNOWN' || status === 'FRESHNESS_UNVERIFIED') {
       this.clearWatchdog();
     } else if (status === 'RUNNING') {
       this.resetWatchdog();
@@ -657,6 +666,11 @@ export class ExtensionAgentAdapter implements AgentAdapter {
           source: 'privagent-dashboard',
           type: 'STOP_TASK',
           runId: thisRunId,
+          // PHASE 18.8 / A12 — the dashboard KNOWS this stop is a replacement
+          // rather than a user decision, and says so. Without it the worker can
+          // only report "stopped at your request" for a run the user never
+          // stopped, which is a small lie in the user's own direction.
+          reason: 'REPLACED_BY_NEW_TASK',
         },
         '*'
       );

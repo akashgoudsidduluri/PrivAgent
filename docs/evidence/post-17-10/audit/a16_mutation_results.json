@@ -1,0 +1,82 @@
+{
+  "phase": "18.8-A16",
+  "work": "A16 pre-action state freshness — mutation suite",
+  "total": 12,
+  "killed": 12,
+  "survived": 0,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "name": "the dispatch gate is removed — a moved view is acted on anyway",
+      "outcome": "KILLED",
+      "detail": "      Tests  4 failed | 15 passed (19)"
+    },
+    {
+      "id": "M2",
+      "name": "the re-perception branch is removed — an unobserved view is dispatched as if it were fresh",
+      "outcome": "KILLED",
+      "detail": "      Tests  1 failed | 18 passed (19)"
+    },
+    {
+      "id": "M3",
+      "name": "the freshness stop is reported as a generic FAILED instead of the typed state",
+      "outcome": "KILLED",
+      "detail": "     → expected 'FAILED' to be 'FRESHNESS_UNVERIFIED' // Object.is equality |      → expected 'FAILED' to be 'FRESHNESS_UNVERIFIED' // Object.is equality |      → expected 'FAILED' to be 'FRESHNESS_UNVERIFIED' // Object.is equality"
+    },
+    {
+      "id": "M4",
+      "name": "the grounded generation is never recorded — the STALE branch is silently disabled",
+      "outcome": "KILLED",
+      "detail": "      Tests  1 failed | 18 passed (19)"
+    },
+    {
+      "id": "M5",
+      "name": "the non-consequential short-circuit is removed — freshness refuses ordinary actions",
+      "outcome": "KILLED",
+      "detail": "      Tests  2 failed | 17 passed (19)"
+    },
+    {
+      "id": "M6",
+      "name": "two observed readings that disagree about the DOCUMENT are ignored",
+      "outcome": "KILLED",
+      "detail": "      Tests  1 failed | 18 passed (19)"
+    },
+    {
+      "id": "M7",
+      "name": "the URL conflict is ignored — the page may move freely without a refusal",
+      "outcome": "KILLED",
+      "detail": "      Tests  7 failed | 12 passed (19)"
+    },
+    {
+      "id": "M8",
+      "name": "the generation comparison is removed — a stale plan is never recognised",
+      "outcome": "KILLED",
+      "detail": "      Tests  2 failed | 17 passed (19)"
+    },
+    {
+      "id": "M9",
+      "name": "a MISSING observation falls through to FRESH (the original defect)",
+      "outcome": "KILLED",
+      "detail": "      Tests  3 failed | 16 passed (19)"
+    },
+    {
+      "id": "M10",
+      "name": "an observation channel that FAILED is no longer distinguished from no channel at all",
+      "outcome": "KILLED",
+      "detail": "     → expected 'NO_CURRENT_OBSERVATION' to be 'OBSERVATION_FAILED' // Object.is equality |      → expected 'NO_CURRENT_OBSERVATION' to be 'OBSERVATION_FAILED' // Object.is equality |       Tests  2 failed | 17 passed (19)"
+    },
+    {
+      "id": "M11",
+      "name": "a conflict is downgraded from STOP_AND_ASK to a refresh",
+      "outcome": "KILLED",
+      "detail": "     → expected 'FAILED' to be 'FRESHNESS_UNVERIFIED' // Object.is equality |      → expected 'FAILED' to be 'FRESHNESS_UNVERIFIED' // Object.is equality |      → expected 'FAILED' to be 'FRESHNESS_UNVERIFIED' // Object.is equality"
+    },
+    {
+      "id": "M12",
+      "name": "mayDispatchStaleView is granted unconditionally",
+      "outcome": "KILLED",
+      "detail": "      Tests  5 failed | 14 passed (19)"
+    }
+  ]
+}

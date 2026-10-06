@@ -245,6 +245,10 @@ export class OverviewView {
         state.status === 'PARTIAL' ? 'badge-amber' :
         state.status === 'NEEDS_INFORMATION' ? 'badge-gray' :
         state.status === 'CANNOT_VERIFY' ? 'badge-gray' :
+        // PHASE 18.8 / A14 — terminal, and nothing was verified.
+        state.status === 'COMMIT_UNKNOWN' ? 'badge-amber' :
+        // PHASE 18.8 / A16 — nothing ran; the page had moved. Amber, never green.
+        state.status === 'FRESHNESS_UNVERIFIED' ? 'badge-amber' :
         state.status === 'PROVIDER_UNAVAILABLE' ? 'badge-red' : 'badge-gray'
       }`;
     }

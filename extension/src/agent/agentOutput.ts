@@ -59,6 +59,11 @@
 
 import type { AgentTaskState } from './agentState';
 import { userFacingMessageForStatus } from './agentState';
+// PHASE 18.8 / A14 — the fixed per-action sentence for an unconfirmed commit.
+// Imported so the wording lives in ONE place and cannot drift into prose.
+import { unresolvedCommitMessage } from './commitCertainty';
+// PHASE 18.8 / A16 — the fixed per-state sentence for a freshness stop.
+import { freshnessStopMessage } from './actionFreshness';
 import type { PlanningEngineState } from '../hierarchicalPlanning/hierarchicalTypes';
 import type { ContainmentCode } from './containment';
 import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
@@ -106,6 +111,8 @@ export type AgentActivityPhase =
 export type AgentTerminalReason =
   | 'GOAL_ACHIEVED'
   | 'STOPPED_BY_USER'
+  /** PHASE 18.8 / A12 — a newer task replaced this run. */
+  | 'SUPERSEDED_BY_NEW_TASK'
   | 'CONTAINMENT_DENIED'
   | 'HARNESS_HALTED'
   | 'RECOVERY_EXHAUSTED'
@@ -119,6 +126,10 @@ export type AgentTerminalReason =
   | 'NO_VERIFIABLE_RESULT'
   /** PHASE 18.8 / A13 — a reference the local resolver refused to guess. */
   | 'NEEDS_CLARIFICATION'
+  /** PHASE 18.8 / A14 — the run ended with a consequential commit unconfirmed. */
+  | 'COMMIT_UNVERIFIED'
+  /** PHASE 18.8 / A16 — the run ended because the view had moved on. */
+  | 'FRESHNESS_UNVERIFIED'
   | 'UNKNOWN';
 
 export interface AgentActivity {
@@ -214,6 +225,10 @@ export type AgentResultKind =
   | 'NEEDS_INFORMATION'
   // PHASE 18.8 / A13. A reference the local resolver would not guess at.
   | 'NEEDS_CLARIFICATION'
+  // PHASE 18.8 / A14. A consequential commit could not be established.
+  | 'COMMIT_UNKNOWN'
+  // PHASE 18.8 / A16. The page moved before a consequential action ran.
+  | 'FRESHNESS_UNVERIFIED'
   | 'SUCCESS'
   | 'FAILED'
   | 'PROVIDER_UNAVAILABLE'
@@ -246,9 +261,20 @@ const PHASE_SUMMARY: Record<AgentActivityPhase, string> = {
   TERMINAL: 'Finished.',
 };
 
+/**
+ * PHASE 18.8 / A12 — the user-facing body for each cancellation code. Fixed
+ * sentences, selected by code; no internal string is ever interpolated.
+ */
+const CANCELLATION_RESULT_BODY: Record<string, string> = {
+  USER_CANCELLED: 'Stopped at your request. Nothing else was changed.',
+  SUPERSEDED_BY_NEW_TASK:
+    'Stopped because a newer task took over. Nothing from this task was carried into it.',
+};
+
 const TERMINAL_HEADLINE: Record<AgentTerminalReason, string> = {
   GOAL_ACHIEVED: 'Goal achieved.',
   STOPPED_BY_USER: 'Stopped at your request.',
+  SUPERSEDED_BY_NEW_TASK: 'Stopped because a newer task took over.',
   CONTAINMENT_DENIED: 'Stopped: the agent left the environment it was allowed to act in.',
   HARNESS_HALTED: 'Stopped: the run was halted before it could continue safely.',
   RECOVERY_EXHAUSTED: 'Failed: recovery attempts were used up.',
@@ -259,6 +285,10 @@ const TERMINAL_HEADLINE: Record<AgentTerminalReason, string> = {
   ANSWERED: 'Answered from evidence verified on this page.',
   NO_VERIFIABLE_RESULT: 'No verified result was available on this page.',
   NEEDS_CLARIFICATION: 'Stopped: one detail in your request could not be resolved.',
+  COMMIT_UNVERIFIED:
+    'Stopped: whether the last action went through could not be confirmed.',
+  FRESHNESS_UNVERIFIED:
+    'Stopped: the page was no longer the one that step was planned on.',
   UNKNOWN: 'Failed.',
 };
 
@@ -277,6 +307,8 @@ const FINAL_HEADLINE: Record<AgentResultKind, string> = {
   CANNOT_VERIFY: 'Could not verify',
   NEEDS_INFORMATION: 'More information needed',
   NEEDS_CLARIFICATION: 'One detail is missing',
+  COMMIT_UNKNOWN: 'Outcome not confirmed',
+  FRESHNESS_UNVERIFIED: 'Page changed before acting',
   SUCCESS: 'Task completed',
   FAILED: 'Task not completed',
   PROVIDER_UNAVAILABLE: 'Reasoning service unavailable',
@@ -406,6 +438,37 @@ function buildFinalResult(s: AgentTaskState): AgentFinalResult {
       remaining: [],
     };
   }
+  if (status === 'FRESHNESS_UNVERIFIED') {
+    //
+    // PHASE 18.8 / A16. The body is the fixed sentence for the TYPED freshness
+    // state (CONFLICT / UNKNOWN / STALE), never a code and never `state.reason`.
+    //
+    const state = s.actionFreshness?.state ?? null;
+    return {
+      kind: 'FRESHNESS_UNVERIFIED',
+      headline: FINAL_HEADLINE.FRESHNESS_UNVERIFIED,
+      body: (state ? freshnessStopMessage(state) : null) ?? userFacingMessageForStatus('FRESHNESS_UNVERIFIED'),
+      provenance: null,
+      remaining: [],
+    };
+  }
+  if (status === 'COMMIT_UNKNOWN') {
+    //
+    // PHASE 18.8 / A14. The body is composed from the TYPED commit record — the
+    // action class is the only thing that varies, and it selects one fixed
+    // sentence. `state.reason` is not read: it may hold harness prose.
+    //
+    const open = (s.commitRecords ?? []).find((r) => r.unresolved) ?? s.lastCommit ?? null;
+    return {
+      kind: 'COMMIT_UNKNOWN',
+      headline: FINAL_HEADLINE.COMMIT_UNKNOWN,
+      body: open
+        ? unresolvedCommitMessage(open.actionClass)
+        : userFacingMessageForStatus('COMMIT_UNKNOWN'),
+      provenance: null,
+      remaining: [],
+    };
+  }
   if (status === 'NEEDS_INFORMATION') {
     return {
       kind: 'NEEDS_INFORMATION',
@@ -419,10 +482,18 @@ function buildFinalResult(s: AgentTaskState): AgentFinalResult {
     return { kind: 'SUCCESS', headline: FINAL_HEADLINE.SUCCESS, body: answer, provenance, remaining: [] };
   }
   if (status === 'STOPPED') {
+    //
+    // PHASE 18.8 / A12 — the result says WHICH cancellation, from a fixed
+    // sentence selected by the typed code. `state.reason` is still never read:
+    // it can hold harness prose, and the result must not echo it.
+    //
+    const cancelledBody: string =
+      (s.cancellationCode && CANCELLATION_RESULT_BODY[s.cancellationCode]) ||
+      userFacingMessageForStatus('STOPPED');
     return {
       kind: 'STOPPED',
       headline: FINAL_HEADLINE.STOPPED,
-      body: userFacingMessageForStatus('STOPPED'),
+      body: cancelledBody,
       provenance: null,
       remaining: [],
     };
@@ -486,6 +557,14 @@ export function phaseFromPlanningState(state?: string): AgentActivityPhase {
 function isTerminalStatus(status: string): boolean {
   return (
     status === 'SUCCESS' ||
+    // PHASE 18.8 / A14. A run that stopped with an unconfirmed commit has
+    // ENDED. It is not a pause: `NEEDS_USER_CONFIRMATION` already models that,
+    // and rendering this one as "still going" is what would let a duplicate
+    // dispatch look like a resume.
+    status === 'COMMIT_UNKNOWN' ||
+    // PHASE 18.8 / A16. Same reasoning: nothing was attempted on a view nobody
+    // is looking at, and the run has ENDED.
+    status === 'FRESHNESS_UNVERIFIED' ||
     status === 'FAILED' ||
     status === 'STOPPED' ||
     // PHASE 18.7 / A8. A provider failure is a TYPED terminal state, so the
@@ -512,11 +591,20 @@ function isTerminalStatus(status: string): boolean {
  * thought and internal gate prose off the screen.
  */
 function classifyTerminalReason(s: AgentTaskState): AgentTerminalReason {
+  // PHASE 18.8 / A14 — read the TYPED status, never the sentence it carries.
+  if (s.status === 'COMMIT_UNKNOWN') return 'COMMIT_UNVERIFIED';
+  // PHASE 18.8 / A16 — same rule: the status is the verdict.
+  if (s.status === 'FRESHNESS_UNVERIFIED') return 'FRESHNESS_UNVERIFIED';
   if (s.status === 'SUCCESS') return 'GOAL_ACHIEVED';
   if (s.status === 'ANSWER' || s.status === 'PARTIAL') return 'ANSWERED';
   if (s.status === 'CANNOT_VERIFY' || s.status === 'NEEDS_INFORMATION') return 'NO_VERIFIABLE_RESULT';
   if (s.status === 'NEEDS_CLARIFICATION') return 'NEEDS_CLARIFICATION';
   if (s.status === 'STOPPED') {
+    // PHASE 18.8 / A12 — read the TYPED cancellation code, never the prose.
+    // The code is decided by the lifecycle; the sentence is still composed here
+    // from the fixed table, so no internal string can reach the user.
+    if (s.cancellationCode === 'SUPERSEDED_BY_NEW_TASK') return 'SUPERSEDED_BY_NEW_TASK';
+    if (s.cancellationCode === 'USER_CANCELLED') return 'STOPPED_BY_USER';
     return /declin|reject/i.test(s.reason ?? '') ? 'CONFIRMATION_DECLINED' : 'STOPPED_BY_USER';
   }
 
@@ -676,6 +764,12 @@ export function projectAgentOutput(state: AgentTaskState): AgentInteractionState
             ? 'ANSWERED'
             : status === 'CANNOT_VERIFY' ||
                 status === 'NEEDS_INFORMATION' ||
+                // PHASE 18.8 / A14 — nothing was completed and nothing was
+                // verified, so this is UNANSWERED: never SUCCEEDED, and never a
+                // claimed failure.
+                status === 'COMMIT_UNKNOWN' ||
+                // PHASE 18.8 / A16 — the run ended without acting at all.
+                status === 'FRESHNESS_UNVERIFIED' ||
                 status === 'NEEDS_CLARIFICATION'
               ? 'UNANSWERED'
               : 'FAILED';

@@ -1,0 +1,214 @@
+{
+  "phase": "18.8-A16",
+  "work": "Pre-action state freshness: a step is never dispatched against a view the device no longer sees",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "provider": "CONTROLLED (scratch/i8a7a8_controlled_provider.py, STUB_MODE=freshness_demo)",
+  "honesty": "CONTROLLED_PROVIDER. The provider proposed the fixture page's OWN consequential control, and the PAGE ITSELF performed the navigation (a real navigation, not a simulated state). The click count is read from the page (sessionStorage, which survives the navigation), not inferred from the agent. The destination document carries the same control id, so \"the count is still 0\" is evidence that nothing was dispatched rather than evidence that a click missed. No part of this claims a live-model run.",
+  "source": "p188_A16_raw.json",
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "inputs": {
+    "task": "Send an enquiry",
+    "fixture": "http://localhost:4174/freshness.html?after=9000",
+    "fixtureNavigatesAfterMs": 9000,
+    "provider": "controlled stub mode=freshness_demo",
+    "gateway": "http://127.0.0.1:8010"
+  },
+  "stub": {
+    "success": true,
+    "stub_mode": "freshness_demo",
+    "calls_served": 0
+  },
+  "fixture": {
+    "preRun": {
+      "url": "http://localhost:4174/freshness.html?after=9000",
+      "title": "ApexCart — Order Enquiry",
+      "readyState": "complete",
+      "clicks": 0,
+      "controlPresent": true
+    },
+    "atTerminal": {
+      "url": "http://localhost:4174/freshness-moved.html",
+      "title": "ApexCart — Order Enquiry (session refreshed)",
+      "readyState": "complete",
+      "clicks": 0,
+      "controlPresent": true
+    },
+    "afterSettle": {
+      "url": "http://localhost:4174/freshness-moved.html",
+      "title": "ApexCart — Order Enquiry (session refreshed)",
+      "readyState": "complete",
+      "clicks": 0,
+      "controlPresent": true
+    }
+  },
+  "timeline": [
+    {
+      "t": "0.02s",
+      "what": "controlled provider mode set",
+      "detail": {
+        "success": true,
+        "stub_mode": "freshness_demo",
+        "calls_served": 0
+      }
+    },
+    {
+      "t": "7.05s",
+      "what": "fixture loaded (page will move on its own)",
+      "detail": {
+        "url": "http://localhost:4174/freshness.html?after=9000",
+        "title": "ApexCart — Order Enquiry",
+        "readyState": "complete",
+        "clicks": 0,
+        "controlPresent": true
+      }
+    },
+    {
+      "t": "7.06s",
+      "what": "task submitted",
+      "detail": {
+        "task": "Send an enquiry"
+      }
+    },
+    {
+      "t": "22.08s",
+      "what": "terminal event observed",
+      "detail": {
+        "status": "FRESHNESS_UNVERIFIED",
+        "fixture": {
+          "url": "http://localhost:4174/freshness-moved.html",
+          "title": "ApexCart — Order Enquiry (session refreshed)",
+          "readyState": "complete",
+          "clicks": 0,
+          "controlPresent": true
+        }
+      }
+    },
+    {
+      "t": "26.09s",
+      "what": "fixture re-read after a 4s grace period",
+      "detail": {
+        "url": "http://localhost:4174/freshness-moved.html",
+        "title": "ApexCart — Order Enquiry (session refreshed)",
+        "readyState": "complete",
+        "clicks": 0,
+        "controlPresent": true
+      }
+    }
+  ],
+  "trace": {
+    "assessed": "[AgentTrace] action freshness assessed {state:CONFLICT,code:URL_CHANGED_SINCE_PLANNING,resolution:STOP_AND_ASK,actionClass:SEND,plannedGeneration:3}",
+    "blocked": "[AgentTrace] dispatch blocked — state freshness not established {state:CONFLICT,code:URL_CHANGED_SINCE_PLANNING,actionClass:SEND}",
+    "executedCount": 0,
+    "executionStarted": 1
+  },
+  "terminal": {
+    "t": 1791292240780,
+    "runId": 1,
+    "status": "FRESHNESS_UNVERIFIED",
+    "task": "Send an enquiry",
+    "steps": 1,
+    "finalResult": {
+      "kind": "FRESHNESS_UNVERIFIED",
+      "headline": "Page changed before acting",
+      "body": "The page moved while I was preparing that step, so I stopped without acting on the old view.",
+      "provenance": null,
+      "remaining": []
+    },
+    "terminal": {
+      "outcome": "UNANSWERED",
+      "reason": "FRESHNESS_UNVERIFIED",
+      "headline": "Stopped: the page was no longer the one that step was planned on."
+    }
+  },
+  "checks": [
+    {
+      "id": "A16-1",
+      "claim": "the page really moved to a different document before dispatch, and that document carries the SAME consequential control",
+      "pass": true,
+      "observed": {
+        "plannedUrl": "http://localhost:4174/freshness.html?after=9000",
+        "observedUrl": "http://localhost:4174/freshness-moved.html",
+        "controlPresentInNewDocument": true
+      }
+    },
+    {
+      "id": "A16-2",
+      "claim": "the consequential plan was assessed for freshness and the verdict was a CONFLICT about which document this is",
+      "pass": true,
+      "observed": {
+        "assessed": "[AgentTrace] action freshness assessed {state:CONFLICT,code:URL_CHANGED_SINCE_PLANNING,resolution:STOP_AND_ASK,actionClass:SEND,plannedGeneration:3}",
+        "actionClass": "SEND",
+        "state": "CONFLICT",
+        "code": "URL_CHANGED_SINCE_PLANNING",
+        "resolution": "STOP_AND_ASK"
+      }
+    },
+    {
+      "id": "A16-3",
+      "claim": "the dispatch was BLOCKED by that verdict (the stop is named, not silent)",
+      "pass": true,
+      "observed": {
+        "blocked": "[AgentTrace] dispatch blocked — state freshness not established {state:CONFLICT,code:URL_CHANGED_SINCE_PLANNING,actionClass:SEND}",
+        "state": "CONFLICT",
+        "code": "URL_CHANGED_SINCE_PLANNING"
+      }
+    },
+    {
+      "id": "A16-4",
+      "claim": "ZERO actions were executed in the whole run",
+      "pass": true,
+      "observed": {
+        "executedActions": 0,
+        "executionAttemptsSeen": 1
+      }
+    },
+    {
+      "id": "A16-5",
+      "claim": "the page-side count is exactly 0 at the terminal event and after a grace period — nothing reached the fixture",
+      "pass": true,
+      "observed": {
+        "clicksAtTerminal": 0,
+        "clicksAfterSettle": 0
+      }
+    },
+    {
+      "id": "A16-6",
+      "claim": "the run ended in the typed terminal state FRESHNESS_UNVERIFIED, reported as UNANSWERED",
+      "pass": true,
+      "observed": {
+        "status": "FRESHNESS_UNVERIFIED",
+        "outcome": "UNANSWERED",
+        "reason": "FRESHNESS_UNVERIFIED",
+        "headline": "Stopped: the page was no longer the one that step was planned on."
+      }
+    },
+    {
+      "id": "A16-7",
+      "claim": "the user-facing copy explains the stop, claims no failure, and leaks no internal code",
+      "pass": true,
+      "observed": {
+        "finalResult": {
+          "kind": "FRESHNESS_UNVERIFIED",
+          "headline": "Page changed before acting",
+          "body": "The page moved while I was preparing that step, so I stopped without acting on the old view.",
+          "provenance": null,
+          "remaining": []
+        }
+      }
+    },
+    {
+      "id": "A16-8",
+      "claim": "the dashboard renders the stop as a notice, never as a task failure",
+      "pass": true,
+      "observed": {
+        "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nSend an enquiry\nFRESHNESS_UNVERIFIED\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nSend an enquiry\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nFRESHNESS UNVERIFIED\nFinished.\nStep 1 of 10\nPage changed before acting\nThe page moved while I was preparing that step, so I stopped without acting on the old view.\nAGENT ACTIVITY TIMELINE\n3 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\n!\nStep 1: click on btn-send-enquiry\nFAILED\nFRESHNESS_CONF"
+      }
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0
+  }
+}

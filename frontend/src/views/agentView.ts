@@ -111,6 +111,8 @@ export class AgentView {
                    : fr.kind === 'PARTIAL' ||
                     fr.kind === 'CANNOT_VERIFY' ||
                     fr.kind === 'NEEDS_INFORMATION' ||
+                    fr.kind === 'COMMIT_UNKNOWN' ||
+                    fr.kind === 'FRESHNESS_UNVERIFIED' ||
                     fr.kind === 'NEEDS_CLARIFICATION'
                      ? 'var(--status-amber-bright)'
                      : 'var(--status-green-bright, #34d399)'
@@ -375,12 +377,19 @@ export class AgentView {
         state.status === 'PARTIAL' ? 'badge-amber' :
         state.status === 'NEEDS_INFORMATION' ? 'badge-gray' :
         state.status === 'CANNOT_VERIFY' ? 'badge-gray' :
+        // PHASE 18.8 / A14 — amber, like a clarification: the run ended, but the
+        // user has something to check themselves. Never green.
+        state.status === 'COMMIT_UNKNOWN' ? 'badge-amber' :
+        // PHASE 18.8 / A16 — nothing ran; the page had moved. Amber, never green.
+        state.status === 'FRESHNESS_UNVERIFIED' ? 'badge-amber' :
         state.status === 'PROVIDER_UNAVAILABLE' ? 'badge-red' : 'badge-gray'
       }`;
     }
 
     if (kvStatus) kvStatus.textContent = state.status;
     if (kvStep) kvStep.textContent = `${state.currentStep} / ${state.maxSteps}`;
+    // PHASE 18.8 / A14 — COMMIT_UNKNOWN is terminal: there is nothing left
+    // running to stop.
     if (stopBtn) stopBtn.disabled = state.status !== 'RUNNING' && state.status !== 'NEEDS_USER_CONFIRMATION';
 
     if (confirmBox && confirmDesc) {

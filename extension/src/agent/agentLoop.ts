@@ -86,6 +86,10 @@ import {
   advancePageGeneration,
   invalidatePageGenerationState,
   userFacingMessageForStatus,
+  isTerminalLifecycle,
+  CANCELLATION_MESSAGES,
+  type TaskLifecycle,
+  type CancellationCode,
   type ConversationSummary,
 } from './agentState';
 import {
@@ -150,6 +154,22 @@ import {
   type ProposalVerdict,
 } from './proposal';
 import type { ProviderStep } from './providerResponse';
+import {
+  assessActionFreshness,
+  freshnessStopMessage,
+  type FreshnessRecord,
+} from './actionFreshness';
+import {
+  assessCommit,
+  classifyConsequential,
+  mayDispatchConsequential,
+  resolveCommit,
+  settleCommitWithEffect,
+  unresolvedCommitMessage,
+  verifyExternalCommit,
+  type CommitRecord,
+  type ConsequentialClass,
+} from './commitCertainty';
 import {
   appendTurn,
   closeTurn,
@@ -253,6 +273,22 @@ class TerminalProposalSignal extends Error {
   constructor(readonly verdict: ProposalVerdict) {
     super('Terminal proposal received.');
     this.name = 'TerminalProposalSignal';
+  }
+}
+
+/**
+ * PHASE 18.8 / A12 — THIS RUN NO LONGER OWNS ITS OWN RESULT.
+ *
+ * Raised by an async continuation that came back after its run was cancelled,
+ * superseded, or replaced. It is deliberately NOT a `ProviderError`: a
+ * cancellation is not a transport failure, so it must not consume the provider
+ * retry budget, must not register a provider failure, and must never surface
+ * to the user as "the service failed".
+ */
+class RunOwnershipLostError extends Error {
+  constructor(readonly lifecycle: TaskLifecycle) {
+    super('Run no longer owns this result.');
+    this.name = 'RunOwnershipLostError';
   }
 }
 
@@ -507,7 +543,23 @@ export class AgentLoop {
   private providerRetryDelayMs: number;
   private targetTabId: number | null = null;
   private state: AgentTaskState;
-  private isStopped = false;
+  //
+  // ── PHASE 18.8 / A12 — RUN OWNERSHIP ────────────────────────────────────────
+  //
+  // `isStopped` answers "did somebody ask this run to stop?". It cannot
+  // answer "is the async continuation I am holding still the run that is
+  // allowed to act?", which is the question that matters after a cancellation:
+  // a provider response can already be in flight when the user stops the task,
+  // and `isStopped === false` again on the NEXT run of the same instance would
+  // happily apply it.
+  //
+  // `runToken` is that identity. Every `await` that can touch state captures it
+  // first and re-checks on resume; a continuation whose token is no longer the
+  // current one is stale by construction and is discarded.
+  //
+  private runToken: symbol = Symbol('run-0');
+  private lifecycle: TaskLifecycle = 'ACTIVE';
+  private cancellationCode: CancellationCode | null = null;
   /**
    * PHASE 18.8 / B2 + A13 + A15 — conversation context for THIS turn.
    *
@@ -804,8 +856,84 @@ export class AgentLoop {
     return this.taskRunId;
   }
 
+  /**
+   * PHASE 18.8 / A12 — the single cancellation authority.
+   *
+   * The raw `isStopped` boolean this replaced was readable, writable and
+   * resettable from three places, which is precisely how a cancelled run could
+   * come back to life. The typed lifecycle is one-way and has no setter.
+   */
   isHalted(): boolean {
-    return this.isStopped;
+    return isTerminalLifecycle(this.lifecycle);
+  }
+
+  private cancelled(): boolean {
+    return isTerminalLifecycle(this.lifecycle);
+  }
+
+  /**
+   * The run's lifecycle. Once it leaves ACTIVE it can never return, which is
+   * what makes cancellation idempotent: a second `cancel()` observes a terminal
+   * lifecycle and changes nothing.
+   */
+  getLifecycle(): TaskLifecycle {
+    return this.lifecycle;
+  }
+
+  getCancellationCode(): CancellationCode | null {
+    return this.cancellationCode;
+  }
+
+  /**
+   * PHASE 18.8 / A12 — may this run still act?
+   *
+   * Both conditions are required. `lifecycle` is the one-way cancellation
+   * latch; `token` is the identity of the continuation asking.
+   */
+  private owns(token: symbol): boolean {
+    return token === this.runToken && !isTerminalLifecycle(this.lifecycle);
+  }
+
+  /**
+   * PHASE 18.8 / A12 — cancel or supersede this run.
+   *
+   * Idempotent by construction: the first call moves the lifecycle to a
+   * terminal state and records the code; every later call returns false without
+   * re-emitting progress, re-setting status or overwriting the first reason.
+   *
+   * `supersede` additionally silences event emission, because a replaced run
+   * must not keep pushing progress into the dashboard the NEW task now owns.
+   */
+  cancel(reason: CancellationCode = 'USER_CANCELLED', options: { silent?: boolean } = {}): boolean {
+    if (isTerminalLifecycle(this.lifecycle)) return false;
+    this.lifecycle = reason === 'SUPERSEDED_BY_NEW_TASK' ? 'SUPERSEDED' : 'CANCELLED';
+    this.cancellationCode = reason;
+    this.state.lifecycle = this.lifecycle;
+    this.state.cancellationCode = reason;
+    if (this.state.status === 'IN_PROGRESS') {
+      this.state.status = 'STOPPED';
+      this.state.goalStatus = 'STOPPED';
+      // The user-facing sentence, not the code. The code stays in state for
+      // the audit trail and never crosses into the rendered result.
+      this.state.reason = CANCELLATION_MESSAGES[reason];
+    }
+    console.info('[AgentTrace] run cancelled', {
+      reason,
+      lifecycle: this.lifecycle,
+      runId: this.taskRunId,
+    });
+    if (!options.silent && this.callbacks.onStepProgress) {
+      this.callbacks.onStepProgress(this.getState());
+    }
+    return true;
+  }
+
+  /**
+   * Replace this run with a newer task. Silent by definition: the dashboard now
+   * belongs to the new run, and the old one has nothing left to say there.
+   */
+  supersede(): boolean {
+    return this.cancel('SUPERSEDED_BY_NEW_TASK', { silent: true });
   }
 
   /**
@@ -813,15 +941,7 @@ export class AgentLoop {
    * If silent is true, suppresses event emission (used when superseding an old loop).
    */
   stop(silent = false): void {
-    this.isStopped = true;
-    if (!silent && this.state.status === 'IN_PROGRESS') {
-      this.state.status = 'STOPPED';
-      this.state.goalStatus = 'STOPPED';
-      this.state.reason = 'Task stopped by user.';
-      if (this.callbacks.onStepProgress) {
-        this.callbacks.onStepProgress(this.getState());
-      }
-    }
+    this.cancel('USER_CANCELLED', { silent });
   }
 
   getState(): AgentTaskState {
@@ -837,7 +957,20 @@ export class AgentLoop {
    */
   async runTask(task: string): Promise<AgentTaskState> {
     const parsed = parseUserGoal(task);
-    this.isStopped = false;
+    //
+    // PHASE 18.8 / A12 — a new run gets a new identity.
+    //
+    // Any continuation still in flight from a previous `runTask` on this
+    // instance captured the OLD token, so it can no longer apply anything to
+    // this one. This is the difference between "the flag was reset" and "the
+    // run that answered is still the run that may act".
+    //
+    const token = Symbol(`run-${this.taskRunId ?? 'x'}-${Date.now()}-${Math.random()}`);
+    this.runToken = token;
+    this.lifecycle = 'ACTIVE';
+    this.cancellationCode = null;
+    this.state.lifecycle = 'ACTIVE';
+    this.state.cancellationCode = null;
     this.state.task = task;
     this.state.taskGoal = task;
     this.state.normalizedGoal = parsed.normalizedGoal;
@@ -972,7 +1105,10 @@ export class AgentLoop {
     this.notifyProgress();
 
     while (this.state.status === 'IN_PROGRESS') {
-      if (this.isStopped) {
+      // PHASE 18.8 / A12 — every guard below asks about THIS token, so a
+      // continuation belonging to a replaced run cannot act.
+      const token = this.runToken;
+      if (!this.owns(token)) {
         this.state.status = 'STOPPED';
         this.state.goalStatus = 'STOPPED';
         this.state.reason = this.state.reason || 'Task stopped by user.';
@@ -1019,7 +1155,7 @@ export class AgentLoop {
       if (this.harness) {
         const harnessDecision: HarnessDecision = this.harness.runCycle({
           status: this.state.status,
-          stopRequested: this.isStopped,
+          stopRequested: this.cancelled(),
           containmentScope: this.containmentScope,
           targetTabId: this.targetTabId,
           liveUrl: this.state.currentUrl || null,
@@ -1072,6 +1208,23 @@ export class AgentLoop {
       const perceptionGen = this.state.perceptionGeneration;
       console.info('[AgentTrace] perception started', { perceptionGeneration: perceptionGen, url: this.state.currentUrl });
       const perceptionResult = await this.callbacks.perceivePage();
+      //
+      // PHASE 18.8 / A12 — the page may have been read AFTER this run was
+      // cancelled. Ingesting it now would advance `perceptionGeneration`,
+      // invalidate evidence, and — because the evidence ledger is keyed on
+      // generation — make records the cancelled run created indistinguishable
+      // from records the live run verified. The reading is dropped.
+      //
+      if (!this.owns(token)) {
+        console.info('[AgentTrace] stale perception discarded (run cancelled)', {
+          lifecycle: this.lifecycle,
+        });
+        this.state.status = 'STOPPED';
+        this.state.goalStatus = 'STOPPED';
+        this.state.reason =
+          this.cancellationCode ? CANCELLATION_MESSAGES[this.cancellationCode] : this.state.reason;
+        break;
+      }
       const normalized = this.normalizePerceptionResult(perceptionResult);
       if (!normalized) {
         this.state.status = 'FAILED';
@@ -1661,7 +1814,7 @@ export class AgentLoop {
       // exactly as before. A semantic destination has no URL, and inventing one
       // — or guessing the site's internal paths — would be both a fabrication
       // and a fixture special-case.
-      if (this.isStopped) break;
+      if (!this.owns(token)) break;
       const deterministicDestination = OneActionPlanner.proposeDestinationNavigation(activeSubgoal);
       try {
         if (deterministicDestination) {
@@ -1675,7 +1828,7 @@ export class AgentLoop {
           action = await this.requestActionWithBoundedRetry(task, context);
           console.info('[AgentTrace] reasoning response received');
         }
-        if (this.isStopped) break;
+        if (!this.owns(token)) break;
 
         // Enforce the One-Action Proposal constraint: exactly ONE atomic action from allowlist
         const singleActionCheck = OneActionPlanner.validateSingleActionProposal(action);
@@ -1719,6 +1872,26 @@ export class AgentLoop {
           continue;
         }
       } catch (err: unknown) {
+        //
+        // PHASE 18.8 / A12 — A LOST RUN IS A CANCELLATION, NOT A FAILURE.
+        //
+        // It reached here because an async continuation came back after this
+        // run stopped acting. Reporting FAILED would claim the agent tried and
+        // could not, which is a lie: the work was abandoned, deliberately, and
+        // nothing after the cancellation was dispatched.
+        //
+        if (err instanceof RunOwnershipLostError) {
+          this.state.status = 'STOPPED';
+          this.state.goalStatus = 'STOPPED';
+          this.state.lifecycle = err.lifecycle;
+          this.state.reason = this.cancellationCode
+            ? CANCELLATION_MESSAGES[this.cancellationCode]
+            : 'The task was stopped before it finished.';
+          console.info('[AgentTrace] run ownership lost — stopping without dispatch', {
+            lifecycle: err.lifecycle,
+          });
+          break;
+        }
         //
         // PHASE 18.7 / A1 + A9. A terminal proposal is NOT a failure and NOT a
         // success. It is the agent reporting what the LOCAL verifier could
@@ -1919,6 +2092,17 @@ export class AgentLoop {
       if (grounding.targetId && 'target' in action) {
         (action as any).target = grounding.targetId;
       }
+      //
+      // PHASE 18.8 / A16 — the generation this action was GROUNDED against.
+      //
+      // Recorded here, at the gate that actually accepted the action, so the
+      // pre-dispatch freshness check compares against the view the action was
+      // planned on rather than against itself.
+      this.state.plannedActionGeneration =
+        (action as any).pageGeneration ??
+        (action as any).actionPageGeneration ??
+        this.state.currentPageGeneration ??
+        null;
 
       // Plan State Machine: Register Grounding
       if (this.planStateMachine && this.planStateMachine.getState() === 'TARGET_GROUNDING') {
@@ -2483,14 +2667,192 @@ export class AgentLoop {
         this.state.containmentDecision = null;
       }
 
-      if (this.isStopped) break;
+      if (!this.owns(token)) break;
       // 6. Execute
+      //
+      // PHASE 18.8 / A14 — AN UNRESOLVED COMMIT BLOCKS THIS CLASS OF ACTION.
+      //
+      // A previous consequential action left its commit UNKNOWN: the device
+      // could not establish whether the purchase, submission, send, deletion or
+      // transfer happened. Re-dispatching the same class of action here would
+      // be a possible SECOND commit, produced by an agent that has no idea
+      // whether the first one landed. So the dispatch is refused, the external
+      // state is re-observed, and the open commit is either resolved (proven
+      // committed → do not repeat; proven not committed → safe to try once) or
+      // handed back to the user. This can only ever remove a dispatch.
+      const consequentialClass = classifyConsequential({ action: action as never, task });
+
+      // ── PHASE 18.8 / A16 — IS THE STATE STILL THE STATE THAT WAS OBSERVED?
+      //
+      // The pre-action snapshot below is a REAL reading of the live tab, taken a
+      // moment ago. If it disagrees with the view this action was planned on —
+      // the page moved, or was replaced — then this action belongs to a view
+      // nobody is looking at any more, and dispatching it is how the wrong
+      // control gets clicked. A missing reading is not "probably fine" either.
+      //
+      // Like every gate before it, this can only ever REMOVE a dispatch.
+      const freshness = assessActionFreshness({
+        consequential: consequentialClass !== 'NONE',
+        plannedGeneration: this.state.plannedActionGeneration ?? null,
+        currentGeneration: this.state.currentPageGeneration ?? null,
+        plannedUrl: this.state.currentUrl ?? null,
+        observedUrl: preSnapshot?.url ?? null,
+        observed: preSnapshot !== null,
+        observationFailed: preSnapshot === null && typeof this.callbacks.getEffectSnapshot === 'function',
+        at: Date.now(),
+      });
+      if (consequentialClass !== 'NONE') {
+        this.state.actionFreshness = freshness.record;
+        console.info('[AgentTrace] action freshness assessed', {
+          state: freshness.state,
+          code: freshness.code,
+          resolution: freshness.resolution,
+          actionClass: consequentialClass,
+          plannedGeneration: this.state.plannedActionGeneration ?? null,
+          currentGeneration: this.state.currentPageGeneration ?? null,
+          observed: freshness.record?.observed ?? false,
+        });
+      }
+
+      if (freshness.resolution === 'STOP_AND_ASK') {
+        this.state.status = 'FRESHNESS_UNVERIFIED';
+        this.state.goalStatus = 'FRESHNESS_UNVERIFIED';
+        this.state.reason = freshnessStopMessage(freshness.state) ?? this.state.reason;
+        this.state.failureCount++;
+        this.state.lastFailure = {
+          category: 'PAGE_CHANGED',
+          reason: `FRESHNESS_${freshness.state}: ${freshness.code}`,
+          pageGeneration: this.state.currentPageGeneration,
+          attemptedAction: action,
+          recoveryAttempted: false,
+          finalState: 'FRESHNESS_UNVERIFIED',
+          timestamp: Date.now(),
+        } as FailureRecord;
+        if (!this.state.failureHistory) this.state.failureHistory = [];
+        this.state.failureHistory.push(this.state.lastFailure);
+        this.recordStep(
+          action,
+          false,
+          `FRESHNESS_${freshness.state}: ${freshness.code}`,
+          false,
+          this.state.reason,
+          targetDet?.type,
+          risk,
+          semantic,
+          confidence,
+          undefined
+        );
+        console.warn('[AgentTrace] dispatch blocked — state freshness not established', {
+          state: freshness.state,
+          code: freshness.code,
+          actionClass: consequentialClass,
+        });
+        this.notifyProgress();
+        break;
+      }
+
+      if (freshness.resolution === 'RE_PERCEIVE') {
+        // Bounded: the typed recovery budget decides whether a fresh perception
+        // is still available. An exhausted budget ends the run truthfully
+        // instead of dispatching on a view the device has just said it cannot
+        // see.
+        const freshRecovery = this.planRecoveryForLastStep('STALE_PERCEPTION');
+        this.recordStep(
+          action,
+          false,
+          `FRESHNESS_${freshness.state}: ${freshness.code}`,
+          false,
+          'The state this action was planned on is no longer the observed state.',
+          targetDet?.type,
+          risk,
+          semantic,
+          confidence,
+          undefined
+        );
+        console.info('[AgentTrace] action freshness requires re-observation', {
+          state: freshness.state,
+          code: freshness.code,
+          exhausted: freshRecovery?.exhausted ?? null,
+        });
+        if (freshRecovery?.exhausted) {
+          this.state.status = 'FAILED';
+          this.state.goalStatus = 'FAILED';
+          this.state.reason =
+            'The page could not be observed freshly, so I stopped without acting on the state I had.';
+          console.info('[AgentTrace] M6 failed', { reason: this.state.reason });
+          break;
+        }
+        await this.delay(this.delayBetweenStepsMs);
+        continue;
+      }
+
+      const commitGate = mayDispatchConsequential(consequentialClass, this.state.commitRecords ?? []);
+      if (!commitGate.allowed && commitGate.blockedBy) {
+        const blocked = commitGate.blockedBy;
+        console.info('[AgentTrace] dispatch blocked — commit unresolved', {
+          actionClass: consequentialClass,
+          openStep: blocked.step,
+          certainty: blocked.certainty,
+        });
+        const outcome = await this.resolveOpenCommit(token);
+        if (outcome !== 'RESOLVED_NOT_COMMITTED') {
+        // Either it DID commit (repeating would duplicate it) or the world is
+        // still unobservable (repeating would be a guess). Either way the run
+        // ENDS here and the user decides: `COMMIT_UNKNOWN` is a typed terminal
+        // state, deliberately not `NEEDS_USER_CONFIRMATION` (a pause the loop
+        // waits inside) and not `FAILED` (nothing proved a failure).
+        this.state.status = 'COMMIT_UNKNOWN';
+        this.state.goalStatus = 'COMMIT_UNKNOWN';
+        this.state.commitBlocked = true;
+          this.state.reason = unresolvedCommitMessage(consequentialClass);
+          this.recordStep(
+            action,
+            false,
+            `COMMIT_UNKNOWN: ${blocked.code}`,
+            false,
+            this.state.reason,
+            targetDet?.type,
+            risk,
+            semantic,
+            confidence,
+            undefined
+          );
+          this.notifyProgress();
+          break;
+        }
+        // Proven NOT committed: the retry is now safe and explicitly justified.
+        this.state.retryCount = 0;
+        this.state.commitBlocked = false;
+        console.info('[AgentTrace] commit resolved as NOT_COMMITTED — retry is safe', {
+          actionClass: consequentialClass,
+        });
+      }
       this.provider.resetEscalation?.();
       let execResult = await this.callbacks.executeAction(action);
-      if (this.isStopped) break;
+      if (!this.owns(token)) break;
       console.info('[AgentTrace] executeAction response received');
       this.state.lastAction = action;
       this.state.lastActionResult = { success: execResult.success, error: execResult.error };
+      //
+      // PHASE 18.8 / A14 — record what is KNOWN about the commit, before any
+      // failure handling can decide to try again. `success` is the return of a
+      // call, not proof that the world changed.
+      const commitAssessment = assessCommit({
+        actionClass: consequentialClass,
+        executionSuccess: execResult.success,
+        step: this.state.currentStep,
+        at: Date.now(),
+      });
+      if (commitAssessment.record) {
+        // Bounded: only the recent history is kept — this is a guard, not a log.
+        this.state.commitRecords = [...(this.state.commitRecords ?? []), commitAssessment.record].slice(-50);
+        this.state.lastCommit = commitAssessment.record;
+        console.info('[AgentTrace] commit assessed', {
+          actionClass: commitAssessment.record.actionClass,
+          certainty: commitAssessment.certainty,
+          unresolved: commitAssessment.unresolved,
+        });
+      }
 
       if (this.planStateMachine && this.planStateMachine.getState() === 'CHROME_EXECUTION') {
         this.planStateMachine.registerExecutionResult(execResult.success, 'PRIVAGENT_ACTION', execResult.error);
@@ -2521,6 +2883,54 @@ export class AgentLoop {
       }
 
       if (!execResult.success) {
+        //
+        // PHASE 18.8 / A14 — A FAILED CONSEQUENTIAL ACTION IS NOT A RETRY.
+        //
+        // The dispatch returned a failure, but whether the server acted is
+        // unknown. Retrying on that evidence is how a second order is placed.
+        // The retry budget below is only incremented when no commit is at
+        // stake, or when the commit was already proven not to have happened.
+        if (consequentialClass !== 'NONE' && commitAssessment.unresolved) {
+          const outcome = await this.resolveOpenCommit(token);
+          if (outcome !== 'RESOLVED_NOT_COMMITTED') {
+            this.state.status = 'COMMIT_UNKNOWN';
+            this.state.goalStatus = 'COMMIT_UNKNOWN';
+            this.state.commitBlocked = true;
+            this.state.reason = unresolvedCommitMessage(consequentialClass);
+            this.state.failureCount++;
+            this.state.lastFailure = {
+              category: 'ACTION_NO_EFFECT',
+              reason: `COMMIT_UNKNOWN: ${commitAssessment.code}`,
+              pageGeneration: this.state.currentPageGeneration,
+              attemptedAction: action,
+              recoveryAttempted: true,
+              finalState: 'NEEDS_USER_CONFIRMATION',
+              timestamp: Date.now(),
+            } as FailureRecord;
+            this.recordStep(
+              action,
+              false,
+              `COMMIT_UNKNOWN: ${commitAssessment.code}`,
+              false,
+              this.state.reason,
+              targetDet?.type,
+              risk,
+              semantic,
+              confidence,
+              undefined
+            );
+            console.info('[AgentTrace] consequential failure — no blind retry', {
+              actionClass: consequentialClass,
+              certainty: commitAssessment.certainty,
+              resolution: outcome,
+            });
+            this.notifyProgress();
+            break;
+          }
+          // Proven NOT committed: continuing to the ordinary failure handling
+          // below is now a justified retry, not a blind one.
+          this.state.commitBlocked = false;
+        }
         this.state.retryCount++;
         this.state.failureCount++;
         try {
@@ -2779,6 +3189,17 @@ export class AgentLoop {
       }
 
       const effectResult: ActionEffectResult = (execResult as any).effect ?? verifyActionEffect(action, preSnapshot, postSnapshot);
+      //
+      // PHASE 18.8 / A14 — THE EFFECT VERIFIER CLOSES AN OPEN COMMIT.
+      //
+      // This is the only automatic way an open consequential commit can be
+      // settled: the browser was OBSERVED to change (URL, DOM, value, modal),
+      // which on a consequential action is treated as the action having landed.
+      // Where the verifier could not observe (EFFECT_UNVERIFIABLE) or saw
+      // nothing move (ACTION_NO_EFFECT) the commit stays UNRESOLVED, and the
+      // dispatch gate at the top of the loop refuses to repeat that class of
+      // action. This can only ever REMOVE a retry, never add one.
+      this.settleOpenCommitWithEffect(effectResult);
 
       if (this.planStateMachine && this.planStateMachine.getState() === 'EFFECT_VERIFICATION') {
         this.planStateMachine.registerEffectVerification(effectResult.hasEffect, effectResult.details);
@@ -3411,7 +3832,7 @@ export class AgentLoop {
       // 10. Bounded observation delay to allow DOM to settle before next perception
       console.info('[AgentTrace] M6 next step');
       await this.delay(this.delayBetweenStepsMs);
-      if (this.isStopped) {
+      if (this.cancelled()) {
         this.state.status = 'STOPPED';
         this.state.reason = this.state.reason || 'Task stopped by user.';
         this.notifyProgress();
@@ -3427,10 +3848,20 @@ export class AgentLoop {
     // still in progress.
     await clearTracker(this.longHorizonStore);
 
-    if (this.isStopped) {
+    if (this.cancelled()) {
+      // PHASE 18.8 / A12 — the terminal state of a cancelled run is STOPPED
+      // (never SUCCESS), and the sentence says WHICH cancellation, without the
+      // code crossing into the user-facing result.
       this.state.status = 'STOPPED';
       this.state.goalStatus = 'STOPPED';
-      this.state.reason = this.state.reason || 'Task stopped by user.';
+      this.state.lifecycle = this.lifecycle;
+      // An existing reason wins: if a branch already said something specific and
+      // true, overwriting it here would hide what actually happened. Only a run
+      // with no reason yet gets the cancellation sentence.
+      this.state.reason =
+        this.state.reason ??
+        (this.cancellationCode ? CANCELLATION_MESSAGES[this.cancellationCode] : null) ??
+        'The task was stopped before it finished.';
     }
 
     if (this.state.status === 'SUCCESS') {
@@ -3457,6 +3888,18 @@ export class AgentLoop {
    * forwarded — runTask starts a fresh perception cycle automatically.
    */
   async resumeWithConfirmation(): Promise<AgentTaskState> {
+    //
+    // PHASE 18.8 / A12 — a CANCELLED RUN CANNOT BE RESUMED.
+    //
+    // This is the risk boundary: the run parked here holding a confirmed
+    // action, which is exactly the state in which a late click (a stale
+    // dashboard, a queued user gesture) would otherwise dispatch a
+    // consequential action for a task the user already stopped. Cancellation is
+    // checked BEFORE the confirmation is honoured, never after.
+    //
+    if (this.cancelled()) {
+      throw new RunOwnershipLostError(this.lifecycle);
+    }
     if (this.state.status !== 'NEEDS_USER_CONFIRMATION' || !this.state.requiresUserConfirmationAction) {
       throw new Error('Cannot resume: Task is not waiting for user confirmation.');
     }
@@ -3464,6 +3907,10 @@ export class AgentLoop {
     const action = this.state.requiresUserConfirmationAction;
     this.state.requiresUserConfirmationAction = undefined;
     this.state.status = 'IN_PROGRESS';
+
+    // PHASE 18.8 / A12 — the token of THIS run, re-checked after every await on
+    // the path to the dispatch below.
+    const resumeToken = this.runToken;
 
     const isNavigate = action.action === 'navigate' && typeof action.url === 'string';
     const destination = isNavigate ? action.url! : undefined;
@@ -3548,6 +3995,15 @@ export class AgentLoop {
 
     // Execute the confirmed action
     console.info('[AgentTrace] executeAction started');
+    //
+    // PHASE 18.8 / A12 — ownership re-checked AT THE DISPATCH, after the
+    // containment await above. A task cancelled while the user was deciding
+    // must not dispatch on the strength of a confirmation that has since been
+    // invalidated.
+    //
+    if (!this.owns(resumeToken)) {
+      throw new RunOwnershipLostError(this.lifecycle);
+    }
     const execResult = await this.callbacks.executeAction(action);
     console.info('[AgentTrace] executeAction response received', {
       success: execResult.success,
@@ -3709,12 +4165,21 @@ export class AgentLoop {
     // made FROM, before the round trip. Re-checked after the call returns.
     //
     const expectedIdentity = this.observationIdentityFor(context);
+    //
+    // PHASE 18.8 / A12 — the run this request belongs to.
+    //
+    // Captured BEFORE the round trip. A response that arrives after this run
+    // was cancelled, superseded, or replaced carries a token that is no longer
+    // current, and is discarded instead of being applied to whatever run
+    // happens to be active now.
+    //
+    const token = this.runToken;
 
     let lastError: unknown;
     let attempt = 0;
     for (;;) {
-      if (this.isStopped) {
-        throw new ProviderError('Task stopped.', 'timeout', { retryable: false });
+      if (!this.owns(token)) {
+        throw new RunOwnershipLostError(this.lifecycle);
       }
       this.state.providerAttempts++;
       //
@@ -3863,8 +4328,10 @@ export class AgentLoop {
           timeoutPromise,
         ]);
 
-        if (this.isStopped) {
-          throw new ProviderError('Task stopped.', 'timeout', { retryable: false });
+        if (!this.owns(token)) {
+          // A CANCELLED run is not a provider failure: no retry, no failure
+          // registration, no user-facing "the service failed".
+          throw new RunOwnershipLostError(this.lifecycle);
         }
 
         //
@@ -3920,6 +4387,10 @@ export class AgentLoop {
 
         return action.action;
       } catch (err: unknown) {
+        // A lost run is not a transport failure. Registering one here would
+        // escalate the provider on the NEXT task and could make a cancelled run
+        // report PROVIDER_UNAVAILABLE instead of stopping.
+        if (err instanceof RunOwnershipLostError) throw err;
         lastError = err;
         this.provider.registerFailure?.();
         //
@@ -3965,6 +4436,13 @@ export class AgentLoop {
         const delay = typeof hint === 'number' ? Math.min(hint, 30_000) : this.providerRetryDelayMs;
         attempt++;
         await this.delay(delay);
+        if (!this.owns(token)) {
+          // Cancelled WHILE WAITING to retry: the next attempt is never issued.
+          console.info('[AgentTrace] provider retry abandoned (run cancelled)', {
+            lifecycle: this.lifecycle,
+          });
+          throw new RunOwnershipLostError(this.lifecycle);
+        }
       } finally {
         if (timer !== undefined) clearTimeout(timer);
       }
@@ -4477,6 +4955,38 @@ export class AgentLoop {
   }
 
   /**
+   * PHASE 18.8 / A14 — let the effect verifier's OBSERVED verdict close the open
+   * consequential commit for this step. Nothing else may: model prose about what
+   * happened is not an input to this function, and there is no parameter for it.
+   */
+  private settleOpenCommitWithEffect(effectResult: ActionEffectResult): void {
+    const records = this.state.commitRecords ?? [];
+    let open: CommitRecord | undefined;
+    for (let i = records.length - 1; i >= 0; i--) {
+      const candidate = records[i];
+      if (candidate && candidate.unresolved) {
+        open = candidate;
+        break;
+      }
+    }
+    if (!open) return;
+
+    const settled = settleCommitWithEffect(open, {
+      effectVerified: effectResult.hasEffect,
+      effectStatus: effectResult.status,
+    });
+    this.state.commitRecords = records.map((r) => (r === open ? settled : r));
+    this.state.lastCommit = settled;
+    console.info('[AgentTrace] commit settled by effect verification', {
+      actionClass: settled.actionClass,
+      certainty: settled.certainty,
+      code: settled.code,
+      unresolved: settled.unresolved,
+      effectStatus: effectResult.status,
+    });
+  }
+
+  /**
    * Observe REAL browser state for effect verification.
    *
    * Returns null when no observation channel exists, and also when the host's
@@ -4485,6 +4995,79 @@ export class AgentLoop {
    * all, while the POST snapshot must fail closed — because deriving the
    * post-state from the requested action is precisely the defect this replaces.
    */
+
+  /**
+   * PHASE 18.8 / A14 — resolve ONE open commit against freshly observed external
+   * state.
+   *
+   * The only inputs are what the device just perceived. There is deliberately no
+   * parameter for what the model said happened: prose is not evidence about the
+   * world. When the observation cannot settle it, the commit STAYS open and the
+   * caller refuses to repeat the action.
+   */
+  private async resolveOpenCommit(
+    token: symbol
+): Promise<'RESOLVED_COMMITTED' | 'RESOLVED_NOT_COMMITTED' | 'UNRESOLVED'> {
+    const open = (this.state.commitRecords ?? []).find((r) => r.unresolved);
+    if (!open) return 'RESOLVED_NOT_COMMITTED';
+    if (!this.owns(token)) return 'UNRESOLVED';
+
+    let markers: string[] = [];
+    let currentUrl: string | null = this.state.currentUrl ?? null;
+    try {
+      const perception = await this.callbacks.perceivePage();
+      if (!this.owns(token)) return 'UNRESOLVED';
+      const normalized = this.normalizePerceptionResult(perception);
+      if (normalized) {
+        const worldModel = normalized.worldModel;
+        currentUrl = worldModel?.page?.url ?? currentUrl;
+        // Page-DERIVED, bounded labels only. No values, no OCR, no raw text. The
+        // page's own words are the only thing allowed to settle a commit here;
+        // what the model SAID about the outcome is not passed at all.
+        const entities = worldModel?.entities ?? normalized.semanticUnderstanding?.entities ?? [];
+        const entityTitles = entities
+          .map((e) => (e as { title?: string; label?: string }).title ?? (e as { label?: string }).label ?? '')
+          .filter((t): t is string => typeof t === 'string' && t.length > 0);
+        const pageWording = [
+          worldModel?.page?.title ?? '',
+          worldModel?.page?.activeModalLabel ?? '',
+          ...(worldModel?.textRegions ?? []).filter((r) => r.isHeading).map((r) => r.sanitizedPreview ?? ''),
+          ...(worldModel?.textRegions ?? []).map((r) => r.sanitizedPreview ?? ''),
+          ...entityTitles,
+        ];
+        markers = pageWording
+          .filter((t): t is string => typeof t === 'string' && t.length > 0)
+          .map((t) => t.slice(0, 60))
+          .slice(0, 60);
+      }
+    } catch {
+      // An observation that could not be made settles nothing.
+      return 'UNRESOLVED';
+    }
+
+    const verification = verifyExternalCommit({ markers, currentUrl }, open);
+    const records = this.state.commitRecords ?? [];
+    const openIndex = records.findIndex((r) => r === open);
+    const resolved = resolveCommit(records, open, verification);
+    this.state.commitRecords = resolved;
+    // Keep the "last commit" view pointing at the RESOLVED record, never at the
+    // stale open one it replaced — the state the user sees must not disagree
+    // with the state the guard is enforcing.
+    if (openIndex >= 0 && resolved[openIndex]) {
+      this.state.lastCommit = resolved[openIndex];
+    }
+    console.info('[AgentTrace] external commit verification', {
+      actionClass: open.actionClass,
+      status: verification.status,
+      code: verification.code,
+      resolved: verification.resolved,
+      observedMarkers: markers.length,
+      evidence: verification.evidence,
+    });
+    if (!verification.resolved) return 'UNRESOLVED';
+    return verification.status === 'COMMITTED' ? 'RESOLVED_COMMITTED' : 'RESOLVED_NOT_COMMITTED';
+  }
+
   private async observeEffectSnapshot(
     target: string | undefined,
     phase: 'pre' | 'post'
@@ -4499,7 +5082,7 @@ export class AgentLoop {
   }
 
   private notifyProgress(): void {
-    if (this.isStopped) return;
+    if (this.cancelled()) return;
     if (this.callbacks.onStepProgress) {
       this.callbacks.onStepProgress(this.getState());
     }
