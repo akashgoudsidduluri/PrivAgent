@@ -226,9 +226,12 @@ model output.
 
 ### 11. Commit
 
-Feature commit hash is stamped in §11.1 below post-commit (the report file cannot
-contain the hash of the commit that contains it).
+Feature commit (this report, all code, tests and evidence included):
 
-#### 11.1
+```
+72ffb59309d10d5278723c61704c3b7a14429bfc
+feat(ui): dynamic task-aware dashboard — chat looks like chat, browser work looks like work
+```
 
-`PENDING_POST_COMMIT_STAMP`
+(The hash could not be embedded in the commit that contains this file; it is
+stamped here in the follow-up commit `docs(evidence): stamp feature commit hash`.)
