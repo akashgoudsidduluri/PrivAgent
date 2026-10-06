@@ -1380,3 +1380,238 @@
     max-width: 90%;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DYNAMIC TASK-AWARE UI — conversation surface, working indicator,
+   event-driven activity, collapsed diagnostics.
+   Dark PrivAgent language only: existing tokens, no new palettes.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.assistant-message-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 4px 0 14px;
+  padding: 0 4px;
+}
+
+.assistant-avatar {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-bright);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+}
+
+.assistant-message-bubble {
+  max-width: min(760px, 92%);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.assistant-message-bubble.notice {
+  border-color: var(--status-amber-border, rgba(245, 158, 11, 0.35));
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.assistant-message-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.assistant-message-bubble.pending {
+  min-width: 56px;
+}
+
+.typing-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  height: 16px;
+}
+
+.typing-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typing-blink 1.2s infinite ease-in-out;
+}
+
+.typing-dots i:nth-child(2) { animation-delay: 0.18s; }
+.typing-dots i:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes typing-blink {
+  0%, 70%, 100% { opacity: 0.25; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-2px); }
+}
+
+.working-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.terminal-state-icon {
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 50%;
+}
+
+.terminal-state-icon.success { color: var(--status-green-bright); }
+.terminal-state-icon.notice { color: var(--status-amber-bright); }
+.terminal-state-icon.failure { color: var(--status-red-bright, #f87171); }
+
+.activity-count-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.activity-section {
+  margin-top: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs, 6px);
+  background: var(--bg-panel-subtle, var(--bg-input));
+  padding: 8px 10px;
+}
+
+.activity-section .section-label-row {
+  margin-bottom: 6px;
+}
+
+details.activity-section {
+  padding: 0;
+}
+
+details.activity-section > .activity-summary-row {
+  cursor: pointer;
+  list-style: none;
+  margin: 0;
+  padding: 8px 10px;
+  user-select: none;
+}
+
+details.activity-section > .activity-summary-row::-webkit-details-marker {
+  display: none;
+}
+
+details.activity-section[open] > .activity-summary-row {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+details.activity-section > .timeline-list {
+  padding: 6px 10px 8px;
+}
+
+.activity-section[data-state="running"] .timeline-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.superseded-notice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  border: 1px dashed var(--border-default, var(--border-subtle));
+  border-radius: var(--radius-xs, 6px);
+}
+
+.diagnostics-details {
+  margin-top: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs, 6px);
+  background: var(--bg-card);
+}
+
+.diagnostics-details > .accordion-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.diagnostics-details > .accordion-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.diagnostics-details[open] > .accordion-toggle {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.diagnostics-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.final-remaining-list {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.final-provenance {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* The final answer is the primary element: stronger prose rhythm. */
+.final-response-panel .final-summary-prose[data-final-result="body"] {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+.agent-response-card[data-surface="browser"] .agent-card-header .agent-subtitle {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

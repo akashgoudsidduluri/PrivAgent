@@ -1,0 +1,1402 @@
+{
+  "phase": "FINAL-ACCEPTANCE-normal-chat-routing",
+  "suite": "chat",
+  "casesRequested": [
+    "c1",
+    "c2",
+    "c3",
+    "c4",
+    "c5",
+    "c6",
+    "c7"
+  ],
+  "labels": "PROVEN_REAL_CHROME / LIVE_PROVIDER",
+  "inputs": {
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://localhost:4174/",
+    "gateway": "http://127.0.0.1:8010",
+    "stubUsed": false
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "canary": {
+    "ok": true,
+    "httpStatus": 200,
+    "model": "openai/gpt-oss-20b",
+    "ms": 312,
+    "answerPrefix": "OK"
+  },
+  "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+  "timeline": [
+    {
+      "t": "0.31s",
+      "what": "provider canary",
+      "detail": {
+        "ok": true,
+        "httpStatus": 200,
+        "model": "openai/gpt-oss-20b",
+        "ms": 312,
+        "answerPrefix": "OK"
+      }
+    },
+    {
+      "t": "6.64s",
+      "what": "listener injected, fixture + dashboard open",
+      "detail": {
+        "fixture": "http://localhost:4174/"
+      }
+    },
+    {
+      "t": "7.05s",
+      "what": "case c1 submitted",
+      "detail": {
+        "text": "Hi",
+        "readiness": "ready"
+      }
+    },
+    {
+      "t": "12.66s",
+      "what": "case c1 terminal",
+      "detail": {
+        "status": "ANSWER",
+        "route": "CONVERSATION",
+        "pass": true,
+        "fails": []
+      }
+    },
+    {
+      "t": "13.06s",
+      "what": "case c2 submitted",
+      "detail": {
+        "text": "Hello",
+        "readiness": "ready"
+      }
+    },
+    {
+      "t": "18.67s",
+      "what": "case c2 terminal",
+      "detail": {
+        "status": "ANSWER",
+        "route": "CONVERSATION",
+        "pass": true,
+        "fails": []
+      }
+    },
+    {
+      "t": "19.08s",
+      "what": "case c3 submitted",
+      "detail": {
+        "text": "How are you?",
+        "readiness": "ready"
+      }
+    },
+    {
+      "t": "24.69s",
+      "what": "case c3 terminal",
+      "detail": {
+        "status": "ANSWER",
+        "route": "CONVERSATION",
+        "pass": true,
+        "fails": []
+      }
+    },
+    {
+      "t": "25.10s",
+      "what": "case c4 submitted",
+      "detail": {
+        "text": "What is machine learning?",
+        "readiness": "ready"
+      }
+    },
+    {
+      "t": "30.71s",
+      "what": "case c4 terminal",
+      "detail": {
+        "status": "ANSWER",
+        "route": "CONVERSATION",
+        "pass": true,
+        "fails": []
+      }
+    },
+    {
+      "t": "31.11s",
+      "what": "case c5 submitted",
+      "detail": {
+        "text": "Explain TCP vs UDP",
+        "readiness": "ready"
+      }
+    },
+    {
+      "t": "36.72s",
+      "what": "case c5 terminal",
+      "detail": {
+        "status": "ANSWER",
+        "route": "CONVERSATION",
+        "pass": true,
+        "fails": []
+      }
+    },
+    {
+      "t": "37.13s",
+      "what": "case c6 submitted",
+      "detail": {
+        "text": "What is 2 + 2?",
+        "readiness": "ready"
+      }
+    },
+    {
+      "t": "42.74s",
+      "what": "case c6 terminal",
+      "detail": {
+        "status": "ANSWER",
+        "route": "CONVERSATION",
+        "pass": true,
+        "fails": []
+      }
+    },
+    {
+      "t": "43.15s",
+      "what": "case c7 submitted",
+      "detail": {
+        "text": "What is a binary search tree?",
+        "readiness": "ready"
+      }
+    },
+    {
+      "t": "48.76s",
+      "what": "case c7 terminal",
+      "detail": {
+        "status": "ANSWER",
+        "route": "CONVERSATION",
+        "pass": true,
+        "fails": []
+      }
+    }
+  ],
+  "swLogs": [
+    {
+      "t": "7.05s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297075557}"
+    },
+    {
+      "t": "7.05s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297075557}"
+    },
+    {
+      "t": "7.06s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297075557,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "7.06s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297075557,targetFound:true}"
+    },
+    {
+      "t": "7.07s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "7.07s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "7.07s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:2}"
+    },
+    {
+      "t": "7.08s",
+      "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "7.31s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "7.31s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "13.07s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297081573}"
+    },
+    {
+      "t": "13.07s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297081573}"
+    },
+    {
+      "t": "13.07s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297081573,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "13.07s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297081573,targetFound:true}"
+    },
+    {
+      "t": "13.09s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "13.09s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:5}"
+    },
+    {
+      "t": "13.09s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:5}"
+    },
+    {
+      "t": "13.09s",
+      "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "13.73s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "13.73s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "17.75s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297086249}"
+    },
+    {
+      "t": "17.75s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297086249}"
+    },
+    {
+      "t": "17.75s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297086249,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "17.75s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297086249,targetFound:true}"
+    },
+    {
+      "t": "19.08s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297087588}"
+    },
+    {
+      "t": "19.08s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297087588}"
+    },
+    {
+      "t": "19.08s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297087588,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "19.08s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297087588,targetFound:true}"
+    },
+    {
+      "t": "19.11s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "19.11s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:12}"
+    },
+    {
+      "t": "19.11s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:12}"
+    },
+    {
+      "t": "19.11s",
+      "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "19.36s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "19.36s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "25.10s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297093605}"
+    },
+    {
+      "t": "25.10s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297093605}"
+    },
+    {
+      "t": "25.10s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297093605,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "25.10s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297093605,targetFound:true}"
+    },
+    {
+      "t": "25.13s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "25.13s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:25}"
+    },
+    {
+      "t": "25.13s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:25}"
+    },
+    {
+      "t": "25.13s",
+      "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "25.53s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "25.53s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "31.11s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297099622}"
+    },
+    {
+      "t": "31.11s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297099622}"
+    },
+    {
+      "t": "31.11s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297099622,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "31.11s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297099622,targetFound:true}"
+    },
+    {
+      "t": "31.14s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "31.14s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:18}"
+    },
+    {
+      "t": "31.14s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:18}"
+    },
+    {
+      "t": "31.14s",
+      "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "31.68s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "31.68s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "32.75s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297101249}"
+    },
+    {
+      "t": "32.75s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297101249}"
+    },
+    {
+      "t": "32.75s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297101249,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "32.75s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297101249,targetFound:true}"
+    },
+    {
+      "t": "37.13s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297105639}"
+    },
+    {
+      "t": "37.13s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297105639}"
+    },
+    {
+      "t": "37.13s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297105639,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "37.13s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297105639,targetFound:true}"
+    },
+    {
+      "t": "37.16s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "37.16s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:14}"
+    },
+    {
+      "t": "37.16s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:ARITHMETIC,taskLength:14}"
+    },
+    {
+      "t": "37.16s",
+      "text": "[AgentTrace] normal chat accepted {code:ARITHMETIC,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "37.51s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "37.51s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "43.15s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297111657}"
+    },
+    {
+      "t": "43.15s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297111657}"
+    },
+    {
+      "t": "43.15s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297111657,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "43.15s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297111657,targetFound:true}"
+    },
+    {
+      "t": "43.17s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "43.17s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:29}"
+    },
+    {
+      "t": "43.17s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:29}"
+    },
+    {
+      "t": "43.17s",
+      "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "43.63s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "43.63s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "47.74s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297116250}"
+    },
+    {
+      "t": "47.74s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297116250}"
+    },
+    {
+      "t": "47.74s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297116250,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "47.74s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297116250,targetFound:true}"
+    }
+  ],
+  "results": [
+    {
+      "id": "c1",
+      "kind": "normal-chat",
+      "text": "Hi",
+      "submitted": true,
+      "readiness": "ready",
+      "timedOut": false,
+      "durationMs": 5611,
+      "route": "CONVERSATION",
+      "code": "SMALLTALK",
+      "intent": null,
+      "admits": null,
+      "refusal": null,
+      "forwardedStatus": "ANSWER",
+      "screenOutcome": "ANSWERED",
+      "screenResultKind": "NONE",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatUnavailable": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "notAdmitted": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionValidated": 0,
+        "actionExecuted": 0,
+        "navigation": 0,
+        "responseForwarded": 1
+      },
+      "terminalStatus": "ANSWER",
+      "finalResultKind": "ANSWER",
+      "terminalReason": "CONVERSATIONAL_ANSWER",
+      "terminalHeadline": "Answered directly.",
+      "outcome": "ANSWERED",
+      "answer": "Hello! How can I help you today?",
+      "answerProvenance": null,
+      "events": [
+        {
+          "t": 1791297075620,
+          "runId": 1,
+          "status": "ANSWER",
+          "task": "Hi",
+          "reason": "Task accepted by background service worker.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": null,
+          "terminal": null,
+          "finalResult": null
+        },
+        {
+          "t": 1791297075827,
+          "runId": 0,
+          "status": "ANSWER",
+          "task": "Hi",
+          "reason": "Answered directly.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "ANSWERED",
+          "terminal": {
+            "outcome": "ANSWERED",
+            "reason": "CONVERSATIONAL_ANSWER",
+            "headline": "Answered directly."
+          },
+          "finalResult": {
+            "kind": "ANSWER",
+            "headline": "Answer",
+            "body": "Hello! How can I help you today?",
+            "provenance": null,
+            "remaining": []
+          }
+        }
+      ],
+      "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nHi\nANSWER\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nHi\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nANSWER\nProcessing browser agent task\nStep 1 of 10\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nNo active page\nSemantic Type\nUNKNOWN\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+      "swLogs": [
+        {
+          "t": "7.05s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297075557}"
+        },
+        {
+          "t": "7.05s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297075557}"
+        },
+        {
+          "t": "7.06s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297075557,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "7.06s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297075557,targetFound:true}"
+        },
+        {
+          "t": "7.07s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "7.07s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:2}"
+        },
+        {
+          "t": "7.07s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:2}"
+        },
+        {
+          "t": "7.08s",
+          "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "7.31s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "7.31s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        }
+      ],
+      "fails": [],
+      "pass": true
+    },
+    {
+      "id": "c2",
+      "kind": "normal-chat",
+      "text": "Hello",
+      "submitted": true,
+      "readiness": "ready",
+      "timedOut": false,
+      "durationMs": 5609,
+      "route": "CONVERSATION",
+      "code": "SMALLTALK",
+      "intent": null,
+      "admits": null,
+      "refusal": null,
+      "forwardedStatus": "ANSWER",
+      "screenOutcome": "ANSWERED",
+      "screenResultKind": "NONE",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatUnavailable": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "notAdmitted": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionValidated": 0,
+        "actionExecuted": 0,
+        "navigation": 0,
+        "responseForwarded": 1
+      },
+      "terminalStatus": "ANSWER",
+      "finalResultKind": "ANSWER",
+      "terminalReason": "CONVERSATIONAL_ANSWER",
+      "terminalHeadline": "Answered directly.",
+      "outcome": "ANSWERED",
+      "answer": "Hi there! How can I help you today?",
+      "answerProvenance": null,
+      "events": [
+        {
+          "t": 1791297081609,
+          "runId": 2,
+          "status": "ANSWER",
+          "task": "Hello",
+          "reason": "Task accepted by background service worker.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": null,
+          "terminal": null,
+          "finalResult": null
+        },
+        {
+          "t": 1791297082245,
+          "runId": 0,
+          "status": "ANSWER",
+          "task": "Hello",
+          "reason": "Answered directly.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "ANSWERED",
+          "terminal": {
+            "outcome": "ANSWERED",
+            "reason": "CONVERSATIONAL_ANSWER",
+            "headline": "Answered directly."
+          },
+          "finalResult": {
+            "kind": "ANSWER",
+            "headline": "Answer",
+            "body": "Hi there! How can I help you today?",
+            "provenance": null,
+            "remaining": []
+          }
+        }
+      ],
+      "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nHello\nANSWER\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nHello\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nANSWER\nProcessing browser agent task\nStep 1 of 10\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nNo active page\nSemantic Type\nUNKNOWN\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+      "swLogs": [
+        {
+          "t": "13.07s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297081573}"
+        },
+        {
+          "t": "13.07s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297081573}"
+        },
+        {
+          "t": "13.07s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297081573,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "13.07s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297081573,targetFound:true}"
+        },
+        {
+          "t": "13.09s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "13.09s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:5}"
+        },
+        {
+          "t": "13.09s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:5}"
+        },
+        {
+          "t": "13.09s",
+          "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "13.73s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "13.73s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        },
+        {
+          "t": "17.75s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297086249}"
+        },
+        {
+          "t": "17.75s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297086249}"
+        },
+        {
+          "t": "17.75s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297086249,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "17.75s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297086249,targetFound:true}"
+        }
+      ],
+      "fails": [],
+      "pass": true
+    },
+    {
+      "id": "c3",
+      "kind": "normal-chat",
+      "text": "How are you?",
+      "submitted": true,
+      "readiness": "ready",
+      "timedOut": false,
+      "durationMs": 5612,
+      "route": "CONVERSATION",
+      "code": "SMALLTALK",
+      "intent": null,
+      "admits": null,
+      "refusal": null,
+      "forwardedStatus": "ANSWER",
+      "screenOutcome": "ANSWERED",
+      "screenResultKind": "NONE",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatUnavailable": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "notAdmitted": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionValidated": 0,
+        "actionExecuted": 0,
+        "navigation": 0,
+        "responseForwarded": 1
+      },
+      "terminalStatus": "ANSWER",
+      "finalResultKind": "ANSWER",
+      "terminalReason": "CONVERSATIONAL_ANSWER",
+      "terminalHeadline": "Answered directly.",
+      "outcome": "ANSWERED",
+      "answer": "I'm doing well, thanks! How about you?",
+      "answerProvenance": null,
+      "events": [
+        {
+          "t": 1791297087625,
+          "runId": 3,
+          "status": "ANSWER",
+          "task": "How are you?",
+          "reason": "Task accepted by background service worker.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": null,
+          "terminal": null,
+          "finalResult": null
+        },
+        {
+          "t": 1791297087870,
+          "runId": 0,
+          "status": "ANSWER",
+          "task": "How are you?",
+          "reason": "Answered directly.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "ANSWERED",
+          "terminal": {
+            "outcome": "ANSWERED",
+            "reason": "CONVERSATIONAL_ANSWER",
+            "headline": "Answered directly."
+          },
+          "finalResult": {
+            "kind": "ANSWER",
+            "headline": "Answer",
+            "body": "I'm doing well, thanks! How about you?",
+            "provenance": null,
+            "remaining": []
+          }
+        }
+      ],
+      "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nHow are you?\nANSWER\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nHow are you?\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nANSWER\nProcessing browser agent task\nStep 1 of 10\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nNo active page\nSemantic Type\nUNKNOWN\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+      "swLogs": [
+        {
+          "t": "19.08s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297087588}"
+        },
+        {
+          "t": "19.08s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297087588}"
+        },
+        {
+          "t": "19.08s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297087588,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "19.08s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297087588,targetFound:true}"
+        },
+        {
+          "t": "19.11s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "19.11s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:12}"
+        },
+        {
+          "t": "19.11s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:12}"
+        },
+        {
+          "t": "19.11s",
+          "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "19.36s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "19.36s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        }
+      ],
+      "fails": [],
+      "pass": true
+    },
+    {
+      "id": "c4",
+      "kind": "normal-chat",
+      "text": "What is machine learning?",
+      "submitted": true,
+      "readiness": "ready",
+      "timedOut": false,
+      "durationMs": 5612,
+      "route": "CONVERSATION",
+      "code": "DEFINITIONAL_KNOWLEDGE",
+      "intent": null,
+      "admits": null,
+      "refusal": null,
+      "forwardedStatus": "ANSWER",
+      "screenOutcome": "ANSWERED",
+      "screenResultKind": "NONE",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatUnavailable": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "notAdmitted": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionValidated": 0,
+        "actionExecuted": 0,
+        "navigation": 0,
+        "responseForwarded": 1
+      },
+      "terminalStatus": "ANSWER",
+      "finalResultKind": "ANSWER",
+      "terminalReason": "CONVERSATIONAL_ANSWER",
+      "terminalHeadline": "Answered directly.",
+      "outcome": "ANSWERED",
+      "answer": "Machine learning is a type of artificial intelligence that lets computers learn patterns and make decisions from data instead of being explicitly programmed for every task. By training on examples, the system improves its predictions or actions over time.",
+      "answerProvenance": null,
+      "events": [
+        {
+          "t": 1791297093651,
+          "runId": 4,
+          "status": "ANSWER",
+          "task": "What is machine learning?",
+          "reason": "Task accepted by background service worker.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": null,
+          "terminal": null,
+          "finalResult": null
+        },
+        {
+          "t": 1791297094040,
+          "runId": 0,
+          "status": "ANSWER",
+          "task": "What is machine learning?",
+          "reason": "Answered directly.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "ANSWERED",
+          "terminal": {
+            "outcome": "ANSWERED",
+            "reason": "CONVERSATIONAL_ANSWER",
+            "headline": "Answered directly."
+          },
+          "finalResult": {
+            "kind": "ANSWER",
+            "headline": "Answer",
+            "body": "Machine learning is a type of artificial intelligence that lets computers learn patterns and make decisions from data instead of being explicitly programmed for every task. By training on examples, the system improves its predictions or actions over time.",
+            "provenance": null,
+            "remaining": []
+          }
+        }
+      ],
+      "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nWhat is machine learning?\nANSWER\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nWhat is machine learning?\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nANSWER\nProcessing browser agent task\nStep 1 of 10\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nNo active page\nSemantic Type\nUNKNOWN\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+      "swLogs": [
+        {
+          "t": "25.10s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297093605}"
+        },
+        {
+          "t": "25.10s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297093605}"
+        },
+        {
+          "t": "25.10s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297093605,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "25.10s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297093605,targetFound:true}"
+        },
+        {
+          "t": "25.13s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "25.13s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:25}"
+        },
+        {
+          "t": "25.13s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:25}"
+        },
+        {
+          "t": "25.13s",
+          "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "25.53s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "25.53s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        }
+      ],
+      "fails": [],
+      "pass": true
+    },
+    {
+      "id": "c5",
+      "kind": "normal-chat",
+      "text": "Explain TCP vs UDP",
+      "submitted": true,
+      "readiness": "ready",
+      "timedOut": false,
+      "durationMs": 5611,
+      "route": "CONVERSATION",
+      "code": "DEFINITIONAL_KNOWLEDGE",
+      "intent": null,
+      "admits": null,
+      "refusal": null,
+      "forwardedStatus": "ANSWER",
+      "screenOutcome": "ANSWERED",
+      "screenResultKind": "NONE",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatUnavailable": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "notAdmitted": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionValidated": 0,
+        "actionExecuted": 0,
+        "navigation": 0,
+        "responseForwarded": 1
+      },
+      "terminalStatus": "ANSWER",
+      "finalResultKind": "ANSWER",
+      "terminalReason": "CONVERSATIONAL_ANSWER",
+      "terminalHeadline": "Answered directly.",
+      "outcome": "ANSWERED",
+      "answer": "**TCP (Transmission Control Protocol)**  \n- **Connection‑oriented**: Before data is sent, a handshake establishes a reliable link between the two devices.  \n- **Reliability**: It guarantees that packets arrive in order, retransmits lost packets, and checks for errors.  \n- **Flow control & congestion control**: It adjusts the sending rate to avoid overwhelming the network.  \n- **Use cases**: Web pages (HTTP/HTTPS), email (SMTP, IMAP), file transfer (FTP), any application that needs accurate, ordered data.\n\n**UDP (User Datagram Protocol)**  \n- **Connectionless**: No handshake; packets (datagrams) are sent directly.  \n- **No reliability guarantees**: Packets may arrive out of order, duplicate, or be lost, and the protocol doesn’t try to fix that.  \n- **Low overhead**: Fewer headers and no flow control, so it’s faster and uses less bandwidth.  \n- **Use cases**: Streaming audio/video, online gaming, VoIP, DNS queries—situations where speed matters more than perfect delivery.\n\nIn short: **TCP** is like a guaranteed, orderly mail delivery service; **UDP** is like dropping a postcard that may or may not arrive.",
+      "answerProvenance": null,
+      "events": [
+        {
+          "t": 1791297099662,
+          "runId": 5,
+          "status": "ANSWER",
+          "task": "Explain TCP vs UDP",
+          "reason": "Task accepted by background service worker.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": null,
+          "terminal": null,
+          "finalResult": null
+        },
+        {
+          "t": 1791297100195,
+          "runId": 0,
+          "status": "ANSWER",
+          "task": "Explain TCP vs UDP",
+          "reason": "Answered directly.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "ANSWERED",
+          "terminal": {
+            "outcome": "ANSWERED",
+            "reason": "CONVERSATIONAL_ANSWER",
+            "headline": "Answered directly."
+          },
+          "finalResult": {
+            "kind": "ANSWER",
+            "headline": "Answer",
+            "body": "**TCP (Transmission Control Protocol)**  \n- **Connection‑oriented**: Before data is sent, a handshake establishes a reliable link between the two devices.  \n- **Reliability**: It guarantees that packets arrive in order, retransmits lost packets, and checks for errors.  \n- **Flow control & congestion control**: It adjusts the sending rate to avoid overwhelming the network.  \n- **Use cases**: Web pages (HTTP/HTTPS), email (SMTP, IMAP), file transfer (FTP), any application that needs accurate, ordered data.\n\n**UDP (User Datagram Protocol)**  \n- **Connectionless**: No handshake; packets (datagrams) are sent directly.  \n- **No reliability guarantees**: Packets may arrive out of order, duplicate, or be lost, and the protocol doesn’t try to fix that.  \n- **Low overhead**: Fewer headers and no flow control, so it’s faster and uses less bandwidth.  \n- **Use cases**: Streaming audio/video, online gaming, VoIP, DNS queries—situations where speed matters more than perfect delivery.\n\nIn short: **TCP** is like a guaranteed, orderly mail delivery service; **UDP** is like dropping a postcard that may or may not arrive.",
+            "provenance": null,
+            "remaining": []
+          }
+        }
+      ],
+      "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nExplain TCP vs UDP\nANSWER\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nExplain TCP vs UDP\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nANSWER\nProcessing browser agent task\nStep 1 of 10\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nNo active page\nSemantic Type\nUNKNOWN\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+      "swLogs": [
+        {
+          "t": "31.11s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297099622}"
+        },
+        {
+          "t": "31.11s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297099622}"
+        },
+        {
+          "t": "31.11s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297099622,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "31.11s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297099622,targetFound:true}"
+        },
+        {
+          "t": "31.14s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "31.14s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:18}"
+        },
+        {
+          "t": "31.14s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:18}"
+        },
+        {
+          "t": "31.14s",
+          "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "31.68s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "31.68s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        },
+        {
+          "t": "32.75s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297101249}"
+        },
+        {
+          "t": "32.75s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297101249}"
+        },
+        {
+          "t": "32.75s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297101249,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "32.75s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297101249,targetFound:true}"
+        }
+      ],
+      "fails": [],
+      "pass": true
+    },
+    {
+      "id": "c6",
+      "kind": "normal-chat",
+      "text": "What is 2 + 2?",
+      "submitted": true,
+      "readiness": "ready",
+      "timedOut": false,
+      "durationMs": 5612,
+      "route": "CONVERSATION",
+      "code": "ARITHMETIC",
+      "intent": null,
+      "admits": null,
+      "refusal": null,
+      "forwardedStatus": "ANSWER",
+      "screenOutcome": "ANSWERED",
+      "screenResultKind": "NONE",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatUnavailable": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "notAdmitted": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionValidated": 0,
+        "actionExecuted": 0,
+        "navigation": 0,
+        "responseForwarded": 1
+      },
+      "terminalStatus": "ANSWER",
+      "finalResultKind": "ANSWER",
+      "terminalReason": "CONVERSATIONAL_ANSWER",
+      "terminalHeadline": "Answered directly.",
+      "outcome": "ANSWERED",
+      "answer": "2 + 2 equals 4.",
+      "answerProvenance": null,
+      "events": [
+        {
+          "t": 1791297105677,
+          "runId": 6,
+          "status": "ANSWER",
+          "task": "What is 2 + 2?",
+          "reason": "Task accepted by background service worker.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": null,
+          "terminal": null,
+          "finalResult": null
+        },
+        {
+          "t": 1791297106020,
+          "runId": 0,
+          "status": "ANSWER",
+          "task": "What is 2 + 2?",
+          "reason": "Answered directly.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "ANSWERED",
+          "terminal": {
+            "outcome": "ANSWERED",
+            "reason": "CONVERSATIONAL_ANSWER",
+            "headline": "Answered directly."
+          },
+          "finalResult": {
+            "kind": "ANSWER",
+            "headline": "Answer",
+            "body": "2 + 2 equals 4.",
+            "provenance": null,
+            "remaining": []
+          }
+        }
+      ],
+      "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nWhat is 2 + 2?\nANSWER\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nWhat is 2 + 2?\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nANSWER\nProcessing browser agent task\nStep 1 of 10\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nNo active page\nSemantic Type\nUNKNOWN\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+      "swLogs": [
+        {
+          "t": "37.13s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297105639}"
+        },
+        {
+          "t": "37.13s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297105639}"
+        },
+        {
+          "t": "37.13s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297105639,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "37.13s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297105639,targetFound:true}"
+        },
+        {
+          "t": "37.16s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "37.16s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:14}"
+        },
+        {
+          "t": "37.16s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:ARITHMETIC,taskLength:14}"
+        },
+        {
+          "t": "37.16s",
+          "text": "[AgentTrace] normal chat accepted {code:ARITHMETIC,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "37.51s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "37.51s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        }
+      ],
+      "fails": [],
+      "pass": true
+    },
+    {
+      "id": "c7",
+      "kind": "normal-chat",
+      "text": "What is a binary search tree?",
+      "submitted": true,
+      "readiness": "ready",
+      "timedOut": false,
+      "durationMs": 5611,
+      "route": "CONVERSATION",
+      "code": "DEFINITIONAL_KNOWLEDGE",
+      "intent": null,
+      "admits": null,
+      "refusal": null,
+      "forwardedStatus": "ANSWER",
+      "screenOutcome": "ANSWERED",
+      "screenResultKind": "NONE",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatUnavailable": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "notAdmitted": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionValidated": 0,
+        "actionExecuted": 0,
+        "navigation": 0,
+        "responseForwarded": 1
+      },
+      "terminalStatus": "ANSWER",
+      "finalResultKind": "ANSWER",
+      "terminalReason": "CONVERSATIONAL_ANSWER",
+      "terminalHeadline": "Answered directly.",
+      "outcome": "ANSWERED",
+      "answer": "A binary search tree (BST) is a data structure where each node has at most two children, called the left and right child. For any node, all values in its left subtree are smaller, and all values in its right subtree are larger. This ordering allows efficient searching, insertion, and deletion, typically in O(log n) time for balanced trees.",
+      "answerProvenance": null,
+      "events": [
+        {
+          "t": 1791297111693,
+          "runId": 7,
+          "status": "ANSWER",
+          "task": "What is a binary search tree?",
+          "reason": "Task accepted by background service worker.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": null,
+          "terminal": null,
+          "finalResult": null
+        },
+        {
+          "t": 1791297112140,
+          "runId": 0,
+          "status": "ANSWER",
+          "task": "What is a binary search tree?",
+          "reason": "Answered directly.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "ANSWERED",
+          "terminal": {
+            "outcome": "ANSWERED",
+            "reason": "CONVERSATIONAL_ANSWER",
+            "headline": "Answered directly."
+          },
+          "finalResult": {
+            "kind": "ANSWER",
+            "headline": "Answer",
+            "body": "A binary search tree (BST) is a data structure where each node has at most two children, called the left and right child. For any node, all values in its left subtree are smaller, and all values in its right subtree are larger. This ordering allows efficient searching, insertion, and deletion, typically in O(log n) time for balanced trees.",
+            "provenance": null,
+            "remaining": []
+          }
+        }
+      ],
+      "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nWhat is a binary search tree?\nANSWER\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nWhat is a binary search tree?\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nANSWER\nProcessing browser agent task\nStep 1 of 10\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nNo active page\nSemantic Type\nUNKNOWN\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+      "swLogs": [
+        {
+          "t": "43.15s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297111657}"
+        },
+        {
+          "t": "43.15s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297111657}"
+        },
+        {
+          "t": "43.15s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297111657,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "43.15s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297111657,targetFound:true}"
+        },
+        {
+          "t": "43.17s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "43.17s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:29}"
+        },
+        {
+          "t": "43.17s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:29}"
+        },
+        {
+          "t": "43.17s",
+          "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "43.63s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "43.63s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        },
+        {
+          "t": "47.74s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297116250}"
+        },
+        {
+          "t": "47.74s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297116250}"
+        },
+        {
+          "t": "47.74s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297116250,targetFound:true,tabId:1604980368,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "47.74s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297116250,targetFound:true}"
+        }
+      ],
+      "fails": [],
+      "pass": true
+    }
+  ],
+  "summary": {
+    "casesRun": 7,
+    "passed": 7,
+    "failed": 0
+  }
+}

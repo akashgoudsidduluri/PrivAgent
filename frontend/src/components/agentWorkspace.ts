@@ -1,16 +1,38 @@
 /**
- * PrivAgent — Modern Agent Workspace Component (Phase 18)
+ * PrivAgent — Modern Agent Workspace Component (Phase 18, DYNAMIC TASK-AWARE UI)
  *
- * Core Workspace and Real Agent Response Interface.
+ * The workspace renders ONE surface at a time, chosen by the pure projection
+ * in `ui/uiProjection.ts`:
+ *
+ *   IDLE             → empty-state hero
+ *   CONVERSATION     → user message + assistant response. Nothing else:
+ *                      no Agent Activity Timeline, no step counter, no
+ *                      target/privacy/browser chrome of any kind.
+ *   BROWSER_ACTIVITY → compact working indicator, event-driven activity list
+ *                      (only events that really occurred), the terminal
+ *                      result as the primary element, and diagnostics folded
+ *                      into one collapsed disclosure.
  *
  * Invariants:
- * - Real data only: all displayed state comes from actual application state.
- * - Privacy safe: zero raw PII, no passwords, no tokens, no hidden chain-of-thought.
- * - Safe activity summaries only.
- * - Dedicated final response area with truthful outcome and destination verification.
+ * - This component renders state; it never decides it. The projection is the
+ *   only input to every branch below.
+ * - Real data only: no fixed timeline entries, no fabricated step counts, no
+ *   fabricated thinking, no hidden chain-of-thought.
+ * - Privacy safe: everything dynamic is escaped; content comes from the
+ *   screened interaction projection or a fixed label table.
+ * - Activity space is proportional to actual agent work: a run with no
+ *   reported events shows no activity list at all.
  */
 
 import { DashboardAgentState, StepTelemetry } from '../types/dashboard';
+import {
+  projectUi,
+  mergeActivities,
+  EMPTY_LOG,
+  type ActivityLog,
+  type UiModel,
+  type UiActivity,
+} from '../ui/uiProjection';
 
 export interface AgentWorkspaceCallbacks {
   onPresetSelected: (prompt: string) => void;
@@ -19,11 +41,20 @@ export interface AgentWorkspaceCallbacks {
   onRetryTask: (task: string) => void;
 }
 
+const escapeHtml = (s: string): string =>
+  String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string),
+  );
+
 export class AgentWorkspace {
   private container: HTMLElement;
   private callbacks: AgentWorkspaceCallbacks;
   private latestState: DashboardAgentState | null = null;
   private technicalDetailsExpanded = false;
+  private diagnosticsOpen = false;
+  private activityOpen = false;
+  private lastUi: UiModel | null = null;
+  private activityLog: ActivityLog = EMPTY_LOG;
 
   constructor(container: HTMLElement, callbacks: AgentWorkspaceCallbacks) {
     this.container = container;
@@ -46,21 +77,38 @@ export class AgentWorkspace {
     const content = this.container.querySelector('#workspace-content') as HTMLElement | null;
     if (!content) return;
 
-    // If completely IDLE with no task, show the Empty State Hero
-    if (!state.task && state.status === 'IDLE') {
+    // A new run on the same message starts a fresh activity history: the old
+    // run reached a terminal state and this one is running again.
+    if (this.lastUi?.terminal && state.status === 'RUNNING') {
+      this.activityLog = { task: state.task || '', items: [], seen: [] };
+      this.activityOpen = false;
+    }
+
+    // Fold this runtime report into the event-driven activity log (pure).
+    this.activityLog = mergeActivities(this.activityLog, state);
+    const ui = projectUi(state, this.activityLog);
+    this.lastUi = ui;
+
+    if (ui.surface === 'IDLE') {
       content.innerHTML = this.renderEmptyState();
       this.attachEmptyStateEvents(content);
       return;
     }
 
-    // Active or finished task: render the Conversation Stream & Agent Response
+    if (ui.surface === 'CONVERSATION') {
+      content.innerHTML = `
+        <div class="conversation-thread">
+          ${this.renderUserMessage(state)}
+          ${this.renderConversationResponse(state, ui)}
+        </div>
+      `;
+      return;
+    }
+
     content.innerHTML = `
       <div class="conversation-thread">
-        <!-- 1. User Message Bubble -->
         ${this.renderUserMessage(state)}
-
-        <!-- 2. Agent Response Card -->
-        ${this.renderAgentResponseCard(state)}
+        ${this.renderBrowserTaskCard(state, ui)}
       </div>
     `;
 
@@ -78,43 +126,39 @@ export class AgentWorkspace {
     const content = this.container.querySelector('#workspace-content') as HTMLElement | null;
     if (!content) return;
 
+    const ok = receipt.result === 'SUCCESS';
     const pseudoState: DashboardAgentState = {
-      status: receipt.result === 'SUCCESS' ? 'SUCCESS' : 'FAILED',
+      status: ok ? 'SUCCESS' : 'FAILED',
       task: receipt.task,
-      currentStep: receipt.steps?.length || 1,
+      currentStep: receipt.steps?.length || 0,
       maxSteps: 10,
       currentPipelineStage: 'IDLE',
       currentUrl: '',
-      reason: receipt.error,
       steps: receipt.steps || [],
       sensitiveItemsCount: 0,
       categories: {
-        password: 0,
-        credit_card: 0,
-        account_number: 0,
-        email: 0,
-        phone: 0,
-        pan: 0,
-        cvv: 0,
-        otp: 0,
+        password: 0, credit_card: 0, account_number: 0, email: 0,
+        phone: 0, pan: 0, cvv: 0, otp: 0,
       },
       interaction: {
-        outcome: receipt.result === 'SUCCESS' ? 'SUCCEEDED' : 'FAILED',
+        outcome: ok ? 'SUCCEEDED' : 'FAILED',
         activity: {
           phase: 'TERMINAL',
-          summary: receipt.result === 'SUCCESS' ? 'Task completed successfully.' : 'Task completed with failure.',
-          step: receipt.steps?.length || 1,
+          summary: ok ? 'Task completed successfully.' : 'Task completed with failure.',
+          step: receipt.steps?.length || 0,
           maxSteps: 10,
           cycle: null,
         },
         terminal: {
-          outcome: receipt.result === 'SUCCESS' ? 'SUCCEEDED' : 'FAILED',
-          reason: (receipt.result === 'SUCCESS' ? 'GOAL_ACHIEVED' : 'UNKNOWN') as any,
-          headline: receipt.result === 'SUCCESS' ? 'Historical session verified.' : receipt.error || 'Task could not be completed.',
+          outcome: ok ? 'SUCCEEDED' : 'FAILED',
+          reason: (ok ? 'GOAL_ACHIEVED' : 'UNKNOWN') as never,
+          headline: ok
+            ? 'Historical session verified.'
+            : receipt.error || 'Task could not be completed.',
         },
         result: {
           kind: 'NONE',
-          summary: receipt.result === 'SUCCESS' ? 'Goal was achieved in previous session.' : receipt.error || 'Action could not be completed.',
+          summary: ok ? 'Goal was achieved in previous session.' : receipt.error || 'Action could not be completed.',
           count: 0,
           items: [],
         },
@@ -124,10 +168,17 @@ export class AgentWorkspace {
       },
     };
 
+    this.activityLog = mergeActivities(
+      { task: receipt.task, items: [], seen: [] },
+      pseudoState,
+    );
+    const ui = projectUi(pseudoState, this.activityLog);
+    this.lastUi = ui;
+
     content.innerHTML = `
       <div class="conversation-thread">
         ${this.renderUserMessage(pseudoState)}
-        ${this.renderAgentResponseCard(pseudoState)}
+        ${this.renderBrowserTaskCard(pseudoState, ui)}
       </div>
     `;
 
@@ -143,9 +194,14 @@ export class AgentWorkspace {
           </svg>
         </div>
         <h1>How can PrivAgent help?</h1>
-        <p>Autonomous browser navigation with provable on-device privacy. Sensitive data is masked locally before reasoning models ever see the page.</p>
+        <p>Ask a question for a direct answer, or describe a browser task and watch only the work that actually happens.</p>
 
         <div class="preset-suggestions-grid">
+          <div class="preset-card" data-prompt="What is machine learning?">
+            <span class="preset-title">Ask a question</span>
+            <span class="preset-desc">Get a direct conversational answer — no browser involved.</span>
+          </div>
+
           <div class="preset-card" data-prompt="Open the store catalog and find wireless headphones">
             <span class="preset-title">Store Catalog Navigation</span>
             <span class="preset-desc">Navigate to shopping catalog, explore listings, verify destination.</span>
@@ -154,11 +210,6 @@ export class AgentWorkspace {
           <div class="preset-card" data-prompt="Open the account details and find recent transactions">
             <span class="preset-title">Synthetic Banking Inspection</span>
             <span class="preset-desc">Check account balance &amp; transactions with zero credential leakage.</span>
-          </div>
-
-          <div class="preset-card" data-prompt="Find and click the account number field">
-            <span class="preset-title">Local DOM Privacy Test</span>
-            <span class="preset-desc">Locate interactive fields while masking account numbers locally.</span>
           </div>
 
           <div class="preset-card" data-prompt="Scroll down and examine page listings">
@@ -180,11 +231,10 @@ export class AgentWorkspace {
   }
 
   private renderUserMessage(state: DashboardAgentState): string {
-    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
     return `
       <div class="user-message-row">
         <div class="user-message-bubble">
-          <div>${escape(state.task || 'Autonomous Browser Task')}</div>
+          <div>${escapeHtml(state.task || '')}</div>
           <div class="user-message-meta">
             <span>You</span>
             <span>·</span>
@@ -195,90 +245,136 @@ export class AgentWorkspace {
     `;
   }
 
-  private renderAgentResponseCard(state: DashboardAgentState): string {
-    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  // ── CONVERSATION SURFACE ───────────────────────────────────────────────────
 
+  /**
+   * Phase 3 — a conversational reply looks like a conversation: the user's
+   * message and the assistant's response. Nothing else is rendered, by
+   * construction: this branch cannot reach the timeline, the cards, the step
+   * counter, or any browser state.
+   */
+  private renderConversationResponse(state: DashboardAgentState, ui: UiModel): string {
+    const tone = ui.terminal?.tone;
+    const body = ui.terminal?.body ?? '';
+
+    if (ui.pending) {
+      return `
+        <div class="assistant-message-row" data-surface="conversation">
+          <div class="assistant-avatar" aria-hidden="true">PA</div>
+          <div class="assistant-message-bubble pending">
+            <span class="typing-dots" aria-label="Answering"><i></i><i></i><i></i></span>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="assistant-message-row" data-surface="conversation">
+        <div class="assistant-avatar" aria-hidden="true">PA</div>
+        <div class="assistant-message-bubble${tone && tone !== 'success' ? ' notice' : ''}" data-tone="${tone || 'success'}">
+          <div class="assistant-message-body">${escapeHtml(body)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── BROWSER ACTIVITY SURFACE ───────────────────────────────────────────────
+
+  private renderBrowserTaskCard(state: DashboardAgentState, ui: UiModel): string {
     const statusBadgeClass = state.status;
     const statusText = state.status === 'RUNNING' ? 'WORKING' : state.status.replace(/_/g, ' ');
 
-    // Safe activity summary
-    const safeSummary = this.getSafeActivitySummary(state);
-    const stepCountText = state.maxSteps > 0 ? `Step ${state.currentStep || 1} of ${state.maxSteps}` : 'Step 1';
-
     return `
-      <div class="agent-response-card">
+      <div class="agent-response-card" data-surface="browser">
         <!-- Agent Identity & Status Header -->
         <div class="agent-card-header">
           <div class="agent-identity">
             <div class="agent-avatar">PA</div>
             <div class="agent-name-group">
               <span class="agent-title">PrivAgent</span>
-              <span class="agent-subtitle">On-Device Privacy Engine</span>
+              <span class="agent-subtitle">Browser task</span>
             </div>
           </div>
           <div class="agent-status-badge ${statusBadgeClass}">
             <span class="status-dot"></span>
-            <span>${escape(statusText)}</span>
+            <span>${escapeHtml(statusText)}</span>
           </div>
         </div>
 
-        <!-- Safe Activity Bar -->
-        <div class="agent-live-summary-bar">
-          <div class="summary-text-group">
-            ${state.status === 'RUNNING' ? '<span class="status-dot pulse" style="background:var(--status-blue)"></span>' : '<span class="status-dot" style="background:var(--status-green)"></span>'}
-            <span>${escape(safeSummary)}</span>
-          </div>
-          <span class="summary-step-counter">${escape(stepCountText)}</span>
-        </div>
+        <!-- Compact live row: category of work + observed activity count -->
+        ${this.renderLiveRow(ui)}
 
-        <!-- Consequential Action Confirmation Prompt (if awaiting confirmation) -->
+        ${this.renderSupersededNotice(ui)}
         ${this.renderConfirmationBanner(state)}
 
-        <!-- Final Response Panel (Dedicated Area) -->
-        ${this.renderFinalResponsePanel(state)}
+        <!-- FINAL RESULT — primary visual focus once the run reaches a terminal state -->
+        ${this.renderFinalResult(state, ui)}
 
-        <!-- Agent Activity Timeline Stream -->
-        ${this.renderTimeline(state)}
+        <!-- Event-driven activity list: only what actually happened -->
+        ${this.renderActivitySection(ui)}
 
-        <!-- Browser State & Local Privacy Cards Grid -->
-        <div class="agent-status-cards-grid">
-          ${this.renderBrowserCard(state)}
-          ${this.renderPrivacyCard(state)}
-        </div>
-
-        <!-- Collapsible Technical Details (Secondary / Safe) -->
-        ${this.renderTechnicalDetails(state)}
+        <!-- Diagnostics folded away: the answer comes first, the machinery second -->
+        ${this.renderDiagnostics(state)}
       </div>
     `;
   }
 
-  private getSafeActivitySummary(state: DashboardAgentState): string {
-    const ix = state.interaction;
-    if (ix?.activity?.summary) {
-      return ix.activity.summary;
+  private renderLiveRow(ui: UiModel): string {
+    const right = ui.activityCount > 0
+      ? `<span class="activity-count-badge">${ui.activityCount} ${ui.activityCount === 1 ? 'activity' : 'activities'}</span>`
+      : '';
+
+    if (ui.workingLabel) {
+      return `
+        <div class="agent-live-summary-bar" data-state="working">
+          <div class="summary-text-group">
+            <span class="status-dot pulse" style="background:var(--status-blue)"></span>
+            <span class="working-label">${escapeHtml(ui.workingLabel)}</span>
+          </div>
+          ${right}
+        </div>
+      `;
     }
 
-    if (state.status === 'SUCCESS') return 'Task completed';
-    if (state.status === 'FAILED') return 'Task could not be completed';
-    if (state.status === 'NEEDS_USER_CONFIRMATION') return 'Waiting for user confirmation';
-
-    switch (state.currentPipelineStage) {
-      case 'PERCEPTION':
-        return 'Checking current page';
-      case 'PRIVACY_PROTECTION':
-      case 'CONTEXT_MINIMIZATION':
-        return 'Sanitizing page context locally';
-      case 'LLM_REASONING':
-        return 'Understanding task & planning action';
-      case 'ACTION_VALIDATION':
-        return 'Verifying action safety';
-      case 'BROWSER_EXECUTION':
-        return 'Executing browser action';
-      case 'VERIFICATION':
-        return 'Verifying destination & page update';
-      default:
-        return 'Processing browser agent task';
+    if (ui.awaitingConfirmation) {
+      return `
+        <div class="agent-live-summary-bar" data-state="awaiting">
+          <div class="summary-text-group">
+            <span class="status-dot" style="background:var(--status-amber-bright)"></span>
+            <span class="working-label">Waiting for your confirmation</span>
+          </div>
+          ${right}
+        </div>
+      `;
     }
+
+    if (ui.terminal) {
+      const icon = ui.terminal.tone === 'success' ? '✓' : ui.terminal.tone === 'notice' ? 'i' : '!';
+      return `
+        <div class="agent-live-summary-bar" data-state="terminal" data-tone="${ui.terminal.tone}">
+          <div class="summary-text-group">
+            <span class="terminal-state-icon ${ui.terminal.tone}">${icon}</span>
+            <span class="working-label">${escapeHtml(ui.terminal.headline)}</span>
+          </div>
+          ${right}
+        </div>
+      `;
+    }
+
+    return right ? `<div class="agent-live-summary-bar" data-state="idle">${right}</div>` : '';
+  }
+
+  private renderSupersededNotice(ui: UiModel): string {
+    if (!ui.supersededNotice) return '';
+    return `
+      <div class="superseded-notice" role="status">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+          <polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+        </svg>
+        <span>${escapeHtml(ui.supersededNotice)}</span>
+      </div>
+    `;
   }
 
   private renderConfirmationBanner(state: DashboardAgentState): string {
@@ -287,14 +383,13 @@ export class AgentWorkspace {
       return '';
     }
 
-    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
     const desc = req.description || req.action || 'Consequential browser action';
 
     return `
       <div class="confirmation-prompt-card">
         <div class="confirmation-header">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
             <line x1="12" y1="9" x2="12" y2="13"></line>
             <line x1="12" y1="17" x2="12.01" y2="17"></line>
           </svg>
@@ -302,7 +397,7 @@ export class AgentWorkspace {
         </div>
         <div class="confirmation-message">
           The agent proposed an action requiring explicit user authorization:
-          <strong style="color:var(--text-bright)"> ${escape(desc)}</strong>.
+          <strong style="color:var(--text-bright)"> ${escapeHtml(desc)}</strong>.
           Navigation to external destinations or consequential actions must be approved.
         </div>
         <div class="confirmation-actions">
@@ -313,285 +408,150 @@ export class AgentWorkspace {
     `;
   }
 
-  private renderFinalResponsePanel(state: DashboardAgentState): string {
-    const ix = state.interaction;
-    const final = ix?.finalResult;
-    const legacySuccess = state.status === 'SUCCESS' || ix?.outcome === 'SUCCEEDED';
-    const legacyFailed = state.status === 'FAILED' || ix?.outcome === 'FAILED';
-    const hasFinal = !!final && final.kind !== 'NONE';
+  /**
+   * Phase 7 — the terminal result. Success/answer shows the answer as the
+   * primary element; notices (clarification, commit unknown, freshness,
+   * cancelled, superseded) say what happened; failures are concise with a
+   * retry. `state.reason` is internal by contract and is never rendered.
+   */
+  private renderFinalResult(state: DashboardAgentState, ui: UiModel): string {
+    const t = ui.terminal;
+    if (!t) return '';
 
-    //
-    // PHASE 18.8 / B1 — the final result panel renders for EVERY typed terminal
-    // kind: answer, partial, cannot-verify, needs-information, success,
-    // failure, provider-unavailable and stopped. Before B1 only SUCCESS/FAILED
-    // had a panel at all, so an ANSWER left the user with the timeline and no
-    // result. The body comes from the projection's `finalResult` — never
-    // `state.reason`, which is internal by contract.
-    //
-    if (!hasFinal && !legacySuccess && !legacyFailed) {
-      return '';
-    }
-
-    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
-
-    if (hasFinal && final) {
-      const ok = final.kind === 'ANSWER' || final.kind === 'SUCCESS' || final.kind === 'PARTIAL';
-      const notice =
-        final.kind === 'PARTIAL' ||
-        final.kind === 'CANNOT_VERIFY' ||
-        final.kind === 'NEEDS_INFORMATION' ||
-        // PHASE 18.8 / A14 — an unconfirmed commit is a "check this yourself",
-        // not a claimed failure. It must never render as one.
-        final.kind === 'COMMIT_UNKNOWN' ||
-        // PHASE 18.8 / A16 — the run stopped without acting because the view
-        // moved. A refusal to act on a stale view is a notice, not a failure.
-        final.kind === 'FRESHNESS_UNVERIFIED' ||
-        // PHASE 18.8 / A13 — a clarification is a question, not a failure.
-        final.kind === 'NEEDS_CLARIFICATION';
-      const panelClass = ok ? 'success' : notice ? 'notice' : 'failure';
-      const iconSvg = ok
+    const panelClass = t.tone === 'success' ? 'success' : t.tone === 'notice' ? 'notice' : 'failure';
+    const iconSvg =
+      t.tone === 'success'
         ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
-      const destTag =
-        state.pageType && ok
-          ? `<div class="destination-verified-badge">
-               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-               <span>Destination verified: ${escape(state.pageType)}</span>
-             </div>`
-          : '';
-      const remaining =
-        Array.isArray(final.remaining) && final.remaining.length
-          ? `<ul style="margin: 4px 0 0; padding-left: 16px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">${final.remaining
-              .map((r) => `<li>${escape(r)}</li>`)
-              .join('')}</ul>`
-          : '';
-      const retry = ok || notice ? '' : `<button id="btn-retry-task" class="retry-action-btn">Try Again</button>`;
+        : t.tone === 'notice'
+          ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
+          : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
 
-      return `
-        <div class="final-response-panel ${panelClass}">
-          <div class="final-response-header">
-            <div class="final-headline-group ${panelClass}">
-              ${iconSvg}
-              <span>${escape(final.headline)}</span>
-            </div>
-            ${destTag}
-          </div>
+    const ix = state.interaction;
+    const result = ix?.result;
+    const showLegacyResult =
+      !t.body && result && result.kind !== 'NONE' && (t.kind === 'SUCCESS' || t.kind === 'PARTIAL');
 
-          <div class="final-summary-prose" data-final-result="body">${final.body ? escape(final.body) : ''}</div>
-          ${remaining}
-          ${final.provenance ? `<div style="font-size: 11px; color: var(--text-muted);">${escape(final.provenance)}</div>` : ''}
-          ${retry}
-        </div>
-      `;
-    }
+    const remaining =
+      t.remaining.length > 0
+        ? `<ul class="final-remaining-list">${t.remaining.map((r) => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`
+        : '';
 
-    if (legacySuccess) {
-      const headline = ix?.terminal?.headline || 'Task completed successfully';
-      const summaryText = ix?.result?.summary || 'The requested action has been completed and verified.';
-      const items = ix?.result?.items || [];
-
-      // Destination verification tag
-      const destTag = state.pageType
-        ? `<div class="destination-verified-badge">
-             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-               <polyline points="20 6 9 17 4 12"></polyline>
-             </svg>
-             <span>Destination verified: ${escape(state.pageType)} · ${Math.round((state.latestSemantic?.confidence ?? 0.99) * 100)}% confidence</span>
-           </div>`
-        : `<div class="destination-verified-badge">
-             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-               <polyline points="20 6 9 17 4 12"></polyline>
-             </svg>
-             <span>Destination verified</span>
-           </div>`;
-
-      return `
-        <div class="final-response-panel success">
-          <div class="final-response-header">
-            <div class="final-headline-group success">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>${escape(headline)}</span>
-            </div>
-            ${destTag}
-          </div>
-
-          <div class="final-summary-prose">${escape(summaryText)}</div>
-
-          ${
-            items.length > 0
-              ? `
-            <div class="final-result-items-list">
-              ${items
-                .map(
-                  (it) => `
-                <div class="result-item-row">
-                  <span class="result-item-title">${escape(it.title)}</span>
-                  <span class="result-item-detail">${escape(it.detail)}</span>
-                </div>`
-                )
-                .join('')}
-            </div>`
-              : ''
-          }
-        </div>
-      `;
-    }
-
-    // Failure case — legacy fallback for a payload with no finalResult.
-    // PHASE 18.8 / B1: `state.reason` is internal by contract and is never
-    // rendered; the typed terminal headline is the user-safe fallback.
-    const headline = ix?.terminal?.headline || 'Task could not be completed';
-    const explanation =
-      ix?.terminal?.headline || 'The requested goal could not be completed with the current page state.';
+    const retry =
+      t.tone === 'failure'
+        ? `<button id="btn-retry-task" class="retry-action-btn">Try Again</button>`
+        : '';
 
     return `
-      <div class="final-response-panel failure">
+      <div class="final-response-panel ${panelClass}">
         <div class="final-response-header">
-          <div class="final-headline-group failure">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>${escape(headline)}</span>
+          <div class="final-headline-group ${panelClass}">
+            ${iconSvg}
+            <span>${escapeHtml(t.headline)}</span>
           </div>
         </div>
 
-        <div class="final-summary-prose">${escape(explanation)}</div>
-
-        <button id="btn-retry-task" class="retry-action-btn">
-          Try Again
-        </button>
+        ${t.body ? `<div class="final-summary-prose" data-final-result="body">${escapeHtml(t.body)}</div>` : ''}
+        ${
+          showLegacyResult && result
+            ? `<div class="final-summary-prose">${escapeHtml(result.summary)}</div>
+               ${
+                 result.items.length
+                   ? `<div class="final-result-items-list">${result.items
+                       .map(
+                         (it) => `<div class="result-item-row">
+                           <span class="result-item-title">${escapeHtml(it.title)}</span>
+                           <span class="result-item-detail">${escapeHtml(it.detail)}</span>
+                         </div>`,
+                       )
+                       .join('')}</div>`
+                   : ''
+               }`
+            : ''
+        }
+        ${remaining}
+        ${t.provenance ? `<div class="final-provenance">${escapeHtml(t.provenance)}</div>` : ''}
+        ${retry}
       </div>
     `;
   }
 
-  private renderTimeline(state: DashboardAgentState): string {
-    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  /**
+   * Phase 5 — the event-driven activity list. Entries exist only for events
+   * that actually occurred (an executed step, or a reported phase). While the
+   * run is going it is open; at a terminal state it collapses behind a
+   * disclosure so the answer stays primary.
+   */
+  private renderActivitySection(ui: UiModel): string {
+    if (ui.activityCount === 0) return '';
 
-    // Construct safe timeline entries
-    const entries: Array<{
-      status: 'completed' | 'active' | 'blocked' | 'failed';
-      title: string;
-      badgeText: string;
-      badgeClass: string;
-      detail?: string;
-    }> = [];
+    const entries = ui.activities.map((a) => this.renderActivityEntry(a)).join('');
+    const count = `<span class="activity-count-badge">${ui.activityCount} ${ui.activityCount === 1 ? 'activity' : 'activities'}</span>`;
 
-    // Always started with task received
-    entries.push({
-      status: 'completed',
-      title: 'Task received & parsed',
-      badgeText: 'PARSED',
-      badgeClass: 'badge-success',
-      detail: 'Goal normalized into target destination constraints.',
-    });
-
-    // Privacy boundary initialized
-    entries.push({
-      status: 'completed',
-      title: 'Privacy boundary active',
-      badgeText: 'LOCAL M5',
-      badgeClass: 'badge-success',
-      detail: 'Zero raw PII transmitted. Local DOM sanitization ready.',
-    });
-
-    // Step telemetry items
-    const steps = state.steps || [];
-    steps.forEach((step, idx) => {
-      const isLast = idx === steps.length - 1 && state.status === 'RUNNING';
-      const isFailed = !step.executionSuccess || !step.validationPassed;
-
-      let title = `Step ${step.step}: ${step.actionType} action`;
-      if (step.targetDescription) {
-        title = `Step ${step.step}: ${step.actionType} on ${step.targetDescription}`;
-      }
-
-      let badgeText = step.effectStatus || (step.executionSuccess ? 'EXECUTED' : 'FAILED');
-      let badgeClass = step.executionSuccess ? 'badge-success' : 'badge-warning';
-
-      if (isLast) {
-        badgeText = 'IN PROGRESS';
-        badgeClass = 'badge-running';
-      }
-
-      let detail = step.validationReason || (step.effectDetails ? `Effect: ${step.effectDetails}` : undefined);
-      if (step.sensitiveCategoryDetected) {
-        detail = `${detail ? detail + ' · ' : ''}Masked entity: [${step.sensitiveCategoryDetected}]`;
-      }
-
-      entries.push({
-        status: isLast ? 'active' : isFailed ? 'failed' : 'completed',
-        title,
-        badgeText,
-        badgeClass,
-        detail,
-      });
-    });
-
-    // Terminal or destination entry
-    if (state.status === 'SUCCESS') {
-      entries.push({
-        status: 'completed',
-        title: 'Destination verified & task completed',
-        badgeText: 'VERIFIED',
-        badgeClass: 'badge-success',
-        detail: state.pageType ? `Matched declared destination: ${state.pageType}` : 'Observed page satisfies task goal.',
-      });
-    } else if (state.status === 'FAILED') {
-      entries.push({
-        status: 'failed',
-        title: 'Task terminated safely',
-        badgeText: 'HALTED',
-        badgeClass: 'badge-warning',
-        // PHASE 18.8 / B1 — a user-safe detail only. `state.reason` is the
-        // loop's internal prose and must never be rendered.
-        detail: state.interaction?.finalResult?.body || state.interaction?.terminal?.headline || 'Safety containment or boundary held.',
-      });
-    } else if (state.status === 'RUNNING') {
-      entries.push({
-        status: 'active',
-        title: this.getSafeActivitySummary(state),
-        badgeText: 'ACTIVE',
-        badgeClass: 'badge-running',
-      });
+    if (ui.terminal) {
+      return `
+        <details class="activity-section collapsed-activity" id="activity-details" ${this.activityOpen ? 'open' : ''}>
+          <summary class="section-label-row activity-summary-row">
+            <span>Activity</span>
+            ${count}
+          </summary>
+          <div class="timeline-list">${entries}</div>
+        </details>
+      `;
     }
 
     return `
-      <div class="activity-timeline-section">
+      <div class="activity-section" data-state="running">
         <div class="section-label-row">
-          <span>Agent Activity Timeline</span>
-          <span style="font-family:var(--font-mono)">${entries.length} EVENTS</span>
+          <span>Activity</span>
+          ${count}
         </div>
+        <div class="timeline-list">${entries}</div>
+      </div>
+    `;
+  }
 
-        <div class="timeline-list">
-          ${entries
-            .map(
-              (e) => `
-            <div class="timeline-entry">
-              <div class="timeline-icon-dot ${e.status}">
-                ${e.status === 'completed' ? '✓' : e.status === 'active' ? '●' : '!'}
-              </div>
-              <div class="timeline-content">
-                <div class="timeline-headline-row">
-                  <span class="timeline-title">${escape(e.title)}</span>
-                  <span class="timeline-badge ${e.badgeClass}">${escape(e.badgeText)}</span>
-                </div>
-                ${e.detail ? `<div class="timeline-details-text">${escape(e.detail)}</div>` : ''}
-              </div>
-            </div>`
-            )
-            .join('')}
+  private renderActivityEntry(a: UiActivity): string {
+    const glyph = a.status === 'COMPLETE' ? '✓' : a.status === 'ACTIVE' ? '●' : '!';
+    const badgeText =
+      a.status === 'COMPLETE' ? 'DONE' : a.status === 'ACTIVE' ? 'WORKING' : a.status;
+    return `
+      <div class="timeline-entry" data-status="${a.status}">
+        <div class="timeline-icon-dot ${a.status === 'COMPLETE' ? 'completed' : a.status === 'ACTIVE' ? 'active' : 'failed'}">${glyph}</div>
+        <div class="timeline-content">
+          <div class="timeline-headline-row">
+            <span class="timeline-title">${escapeHtml(a.label)}</span>
+            <span class="timeline-badge ${a.status === 'ACTIVE' ? 'badge-running' : a.status === 'COMPLETE' ? 'badge-success' : 'badge-warning'}">${badgeText}</span>
+          </div>
+          ${a.detail ? `<div class="timeline-details-text">${escapeHtml(a.detail)}</div>` : ''}
         </div>
       </div>
+    `;
+  }
+
+  /**
+   * The diagnostics (browser context, local privacy boundary, technical
+   * telemetry) are real and useful — but second. They live behind one
+   * disclosure so a short task looks short.
+   */
+  private renderDiagnostics(state: DashboardAgentState): string {
+    return `
+      <details class="diagnostics-details" id="diagnostics-details" ${this.diagnosticsOpen ? 'open' : ''}>
+        <summary class="accordion-toggle">
+          <span>Browser &amp; privacy diagnostics</span>
+          <span id="diagnostics-icon">${this.diagnosticsOpen ? '▲ Hide' : '▼ Expand'}</span>
+        </summary>
+        <div class="diagnostics-body">
+          <div class="agent-status-cards-grid">
+            ${this.renderBrowserCard(state)}
+            ${this.renderPrivacyCard(state)}
+          </div>
+          ${this.renderTechnicalDetails(state)}
+        </div>
+      </details>
     `;
   }
 
   private renderBrowserCard(state: DashboardAgentState): string {
-    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
-
     let sanitizedUrl = 'No active page';
     if (state.currentUrl) {
       try {
@@ -618,12 +578,12 @@ export class AgentWorkspace {
 
         <div class="card-metric-row">
           <span class="metric-label">Current Page</span>
-          <span class="metric-val mono" title="${escape(state.currentUrl || '')}">${escape(sanitizedUrl)}</span>
+          <span class="metric-val mono" title="${escapeHtml(state.currentUrl || '')}">${escapeHtml(sanitizedUrl)}</span>
         </div>
 
         <div class="card-metric-row">
           <span class="metric-label">Semantic Type</span>
-          <span class="metric-val">${escape(pageType)}</span>
+          <span class="metric-val">${escapeHtml(pageType)}</span>
         </div>
 
         <div class="card-metric-row">
@@ -678,7 +638,6 @@ export class AgentWorkspace {
   }
 
   private renderTechnicalDetails(state: DashboardAgentState): string {
-    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
     const latestStep = state.steps?.length ? state.steps[state.steps.length - 1] : undefined;
 
     return `
@@ -692,23 +651,23 @@ export class AgentWorkspace {
           <div class="tech-grid">
             <div class="tech-item">
               <span class="tech-key">Agent State</span>
-              <span class="tech-val">${escape(state.status)}</span>
+              <span class="tech-val">${escapeHtml(state.status)}</span>
             </div>
             <div class="tech-item">
               <span class="tech-key">Pipeline Stage</span>
-              <span class="tech-val">${escape(state.currentPipelineStage || 'IDLE')}</span>
+              <span class="tech-val">${escapeHtml(state.currentPipelineStage || 'IDLE')}</span>
             </div>
             <div class="tech-item">
               <span class="tech-key">Effect Status</span>
-              <span class="tech-val">${escape(latestStep?.effectStatus || 'N/A')}</span>
+              <span class="tech-val">${escapeHtml(latestStep?.effectStatus || 'N/A')}</span>
             </div>
             <div class="tech-item">
               <span class="tech-key">Risk Assessment</span>
-              <span class="tech-val">${escape(latestStep?.riskAssessment?.riskLevel || 'LOW')} (${latestStep?.riskAssessment?.score ?? 0.05})</span>
+              <span class="tech-val">${escapeHtml(latestStep?.riskAssessment?.riskLevel || 'LOW')} (${latestStep?.riskAssessment?.score ?? 0.05})</span>
             </div>
             <div class="tech-item">
               <span class="tech-key">Semantic Alignment</span>
-              <span class="tech-val">${escape(latestStep?.semanticVerification?.targetAlignment || 'ALIGNED')}</span>
+              <span class="tech-val">${escapeHtml(latestStep?.semanticVerification?.targetAlignment || 'ALIGNED')}</span>
             </div>
             <div class="tech-item">
               <span class="tech-key">Confidence</span>
@@ -738,6 +697,25 @@ export class AgentWorkspace {
     const cancelBtn = content.querySelector('#btn-cancel-action');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => this.callbacks.onCancelAction());
+    }
+
+    // Diagnostics disclosure — flag survives the per-payload re-render.
+    const diagnostics = content.querySelector('#diagnostics-details') as HTMLDetailsElement | null;
+    if (diagnostics) {
+      diagnostics.addEventListener('toggle', () => {
+        this.diagnosticsOpen = diagnostics.open;
+        const icon = content.querySelector('#diagnostics-icon');
+        if (icon) icon.textContent = this.diagnosticsOpen ? '▲ Hide' : '▼ Expand';
+      });
+    }
+
+    // Activity history disclosure — same, so an expanded history stays open
+    // while progress keeps arriving.
+    const activity = content.querySelector('#activity-details') as HTMLDetailsElement | null;
+    if (activity) {
+      activity.addEventListener('toggle', () => {
+        this.activityOpen = activity.open;
+      });
     }
 
     // Toggle technical details

@@ -556,6 +556,16 @@ export interface AgentTaskState extends TaskState {
   plannedActionGeneration?: number | null;
   /** The last typed freshness verdict for a consequential action. */
   actionFreshness?: FreshnessRecord | null;
+  /**
+   * FINAL ACCEPTANCE AUDIT — where an ANSWERED run's answer came from.
+   *
+   * `'CONVERSATION'` means the answer was produced by the normal-chat route: no
+   * browser was involved, no page was read, and there is no page evidence to
+   * claim. The result layer reads this so it never tells the user that a general
+   * knowledge answer was "verified on this page". Absent means the answer came
+   * from the loop's own locally verified evidence.
+   */
+  answerSource?: 'CONVERSATION' | 'PAGE_EVIDENCE' | null;
   pageType: PageCategory;
 
   // Constraints & subgoals

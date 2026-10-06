@@ -459,6 +459,15 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       latestRisk: latestStep?.riskAssessment,
       latestSemantic: latestStep?.semanticVerification,
       decisionTraceSummary: data.decisionTraceSummary,
+      //
+      // DYNAMIC TASK-AWARE UI — provenance of an ANSWER. Present on payloads
+      // from the normal-chat route and absent on browser-run payloads, so it
+      // is assigned explicitly (never spread-carried): a browser payload
+      // therefore always clears a stale conversational flag.
+      //
+      answerSource: data.answerSource === 'CONVERSATION' || data.answerSource === 'PAGE_EVIDENCE'
+        ? data.answerSource
+        : undefined,
       // Phase 14: the interaction projection is built and SCREENED in the
       // service worker, immediately before it crosses the SW → dashboard
       // boundary. The UI consumes it verbatim and re-filters nothing — a
@@ -652,6 +661,9 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
     this.currentRunId++;
     const thisRunId = this.currentRunId;
+    const previousState = this.state;
+    const wasRunning =
+      previousState.status === 'RUNNING' && Boolean(previousState.task) && previousState.task !== task;
 
     if (this.state.status === 'RUNNING' || this.isStartingTask) {
       console.warn('[AgentTrace] Superseding previous task with new task', {
@@ -674,6 +686,23 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         },
         '*'
       );
+    }
+
+    //
+    // DYNAMIC TASK-AWARE UI — a genuinely running task that is being replaced
+    // says so BEFORE the new card takes over: the old card transitions to the
+    // typed SUPERSEDED terminal state with truthful copy. It is cleared the
+    // moment the new task's own state is written, so it can never leak onto a
+    // card it does not describe.
+    //
+    if (wasRunning) {
+      this.state = {
+        ...previousState,
+        status: 'STOPPED',
+        reason: undefined,
+        supersededPreviousTask: previousState.task,
+      };
+      this.notify();
     }
 
     this.clearWatchdog();
@@ -716,6 +745,14 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         currentUrl: '',
         steps: [],
         reason: undefined,
+        //
+        // DYNAMIC TASK-AWARE UI — a new message starts a clean slate: the
+        // previous run's interaction projection and answer provenance must not
+        // render browser chrome (or a conversational flag) onto this card.
+        //
+        interaction: undefined,
+        answerSource: undefined,
+        supersededPreviousTask: undefined,
         requiresUserConfirmationAction: undefined,
         currentPipelineStage: 'PERCEPTION',
       };

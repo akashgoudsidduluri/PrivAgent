@@ -1,0 +1,603 @@
+{
+  "phase": "FINAL-ACCEPTANCE-normal-chat-routing",
+  "suite": "browser",
+  "casesRequested": [
+    "b4"
+  ],
+  "labels": "PROVEN_REAL_CHROME / LIVE_PROVIDER",
+  "inputs": {
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://localhost:4174/",
+    "gateway": "http://127.0.0.1:8010",
+    "stubUsed": false
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "canary": {
+    "ok": true,
+    "httpStatus": 200,
+    "model": "openai/gpt-oss-20b",
+    "ms": 370,
+    "answerPrefix": "OK"
+  },
+  "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+  "timeline": [
+    {
+      "t": "0.37s",
+      "what": "provider canary",
+      "detail": {
+        "ok": true,
+        "httpStatus": 200,
+        "model": "openai/gpt-oss-20b",
+        "ms": 370,
+        "answerPrefix": "OK"
+      }
+    },
+    {
+      "t": "6.68s",
+      "what": "listener injected, fixture + dashboard open",
+      "detail": {
+        "fixture": "http://localhost:4174/"
+      }
+    },
+    {
+      "t": "7.09s",
+      "what": "case b4 submitted",
+      "detail": {
+        "text": "Find the latest information about Charminar.",
+        "readiness": "ready"
+      }
+    },
+    {
+      "t": "12.70s",
+      "what": "case b4 terminal",
+      "detail": {
+        "status": "PROVIDER_UNAVAILABLE",
+        "route": "PIPELINE",
+        "pass": true,
+        "fails": []
+      }
+    }
+  ],
+  "swLogs": [
+    {
+      "t": "7.09s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297869974}"
+    },
+    {
+      "t": "7.09s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297869974}"
+    },
+    {
+      "t": "7.09s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297869974,targetFound:true,tabId:1045196871,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "7.09s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297869974,targetFound:true}"
+    },
+    {
+      "t": "7.12s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "7.12s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:44}"
+    },
+    {
+      "t": "7.12s",
+      "text": "[AgentTrace] chat route classified {route:PIPELINE,code:BROWSER_VERB,taskLength:44}"
+    },
+    {
+      "t": "7.12s",
+      "text": "[AgentTrace] intent classified {intent:INFORMATION_REQUEST,confidence:DETERMINISTIC,requiresDestination:false,requiresEvidence:true,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "7.13s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-0e73ddde,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "7.13s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "7.13s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "7.13s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:1045196871}"
+    },
+    {
+      "t": "7.13s",
+      "text": "TARGET_TAB_SELECTED {tabId:1045196871,origin:http://localhost:4174,reason:Selected first eligible web tab.}"
+    },
+    {
+      "t": "7.13s",
+      "text": "[AgentTrace] target resolved {tabId:1045196871}"
+    },
+    {
+      "t": "7.18s",
+      "text": "TARGET_TAB_READY {tabId:1045196871}"
+    },
+    {
+      "t": "7.18s",
+      "text": "[AgentTrace] target content script ready {tabId:1045196871}"
+    },
+    {
+      "t": "7.18s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "7.18s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "7.18s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "7.19s",
+      "text": "[AgentTrace] agent loop started {runId:1}"
+    },
+    {
+      "t": "7.20s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-0e73ddde,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.20s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "7.20s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "7.20s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "7.21s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+    },
+    {
+      "t": "7.21s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/}"
+    },
+    {
+      "t": "7.21s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "7.25s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+    },
+    {
+      "t": "7.25s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:3,regionsConsidered:3,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "7.25s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:3,ledgerSize:3,verifiedCurrent:3,generation:2}"
+    },
+    {
+      "t": "7.25s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "7.26s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "7.26s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/,worldModelId:wm-g2-muwsi2hf-ldc5}"
+    },
+    {
+      "t": "7.27s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:11,privacyFindingsCount:6}"
+    },
+    {
+      "t": "7.27s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:UNKNOWN,pageState:populated,pageGeneration:2,entityCount:0,affordanceCount:1}"
+    },
+    {
+      "t": "7.27s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-0e73ddde,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.28s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwsi2gx-kmy4s-sg1,category:SEARCH,description:Enter search query \"latest information about\" into search box}"
+    },
+    {
+      "t": "7.28s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:4,discoveries:0}"
+    },
+    {
+      "t": "7.29s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-0e73ddde,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.29s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "7.97s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}"
+    },
+    {
+      "t": "7.98s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "7.98s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "7.98s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "7.99s",
+      "text": "[AgentTrace] reasoning provider unavailable {category:MODEL_CONTRACT,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "7.99s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-0e73ddde,contextGeneration:6,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.99s",
+      "text": "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:1}"
+    },
+    {
+      "t": "7.99s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "7.99s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    }
+  ],
+  "results": [
+    {
+      "id": "b4",
+      "kind": "browser",
+      "text": "Find the latest information about Charminar.",
+      "submitted": true,
+      "readiness": "ready",
+      "timedOut": false,
+      "stubMode": "navigate_wikipedia",
+      "durationMs": 5615,
+      "route": "PIPELINE",
+      "code": "BROWSER_VERB",
+      "intent": "INFORMATION_REQUEST",
+      "admits": true,
+      "refusal": null,
+      "forwardedStatus": "RUNNING",
+      "screenOutcome": "RUNNING",
+      "screenResultKind": "NONE",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 0,
+        "chatUnavailable": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 1,
+        "notAdmitted": 0,
+        "targetResolution": 1,
+        "tabProvisioned": 0,
+        "perception": 2,
+        "actionValidated": 0,
+        "actionExecuted": 0,
+        "navigation": 0,
+        "responseForwarded": 5
+      },
+      "terminalStatus": "PROVIDER_UNAVAILABLE",
+      "finalResultKind": "PROVIDER_UNAVAILABLE",
+      "terminalReason": "REASONER_FAILED",
+      "terminalHeadline": "Failed: the reasoning model was unavailable.",
+      "outcome": "FAILED",
+      "answer": "The reasoning service was unavailable, so nothing was changed on the page.",
+      "answerProvenance": null,
+      "events": [
+        {
+          "t": 1791297870072,
+          "runId": 1,
+          "status": "RUNNING",
+          "task": "Find the latest information about Charminar.",
+          "reason": "Target tab discovered and ready. Starting visual privacy perception...",
+          "conversational": null,
+          "steps": 0,
+          "outcome": null,
+          "terminal": null,
+          "finalResult": null
+        },
+        {
+          "t": 1791297870080,
+          "runId": 1,
+          "status": "RUNNING",
+          "task": "Find the latest information about Charminar.",
+          "reason": "Target tab discovered and ready. Starting visual privacy perception...",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "RUNNING",
+          "terminal": null,
+          "finalResult": {
+            "kind": "NONE",
+            "headline": "",
+            "body": null,
+            "provenance": null,
+            "remaining": []
+          }
+        },
+        {
+          "t": 1791297870092,
+          "runId": 1,
+          "status": "IN_PROGRESS",
+          "task": "Find the latest information about Charminar.",
+          "reason": null,
+          "conversational": null,
+          "steps": 0,
+          "outcome": "RUNNING",
+          "terminal": null,
+          "finalResult": {
+            "kind": "NONE",
+            "headline": "",
+            "body": null,
+            "provenance": null,
+            "remaining": []
+          }
+        },
+        {
+          "t": 1791297870875,
+          "runId": 1,
+          "status": "PROVIDER_UNAVAILABLE",
+          "task": "Find the latest information about Charminar.",
+          "reason": "The reasoning service was unavailable, so nothing was changed on the page.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "FAILED",
+          "terminal": {
+            "outcome": "FAILED",
+            "reason": "REASONER_FAILED",
+            "headline": "Failed: the reasoning model was unavailable."
+          },
+          "finalResult": {
+            "kind": "PROVIDER_UNAVAILABLE",
+            "headline": "Reasoning service unavailable",
+            "body": "The reasoning service was unavailable, so nothing was changed on the page.",
+            "provenance": null,
+            "remaining": []
+          }
+        },
+        {
+          "t": 1791297870880,
+          "runId": 1,
+          "status": "PROVIDER_UNAVAILABLE",
+          "task": "Find the latest information about Charminar.",
+          "reason": "The reasoning service was unavailable, so nothing was changed on the page.",
+          "conversational": null,
+          "steps": 0,
+          "outcome": "FAILED",
+          "terminal": {
+            "outcome": "FAILED",
+            "reason": "REASONER_FAILED",
+            "headline": "Failed: the reasoning model was unavailable."
+          },
+          "finalResult": {
+            "kind": "PROVIDER_UNAVAILABLE",
+            "headline": "Reasoning service unavailable",
+            "body": "The reasoning service was unavailable, so nothing was changed on the page.",
+            "provenance": null,
+            "remaining": []
+          }
+        }
+      ],
+      "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nFind the latest information about Charminar.\nPROVIDER_UNAVAILABLE\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nFind the latest information about Charminar.\nYou\n·\nJust now\nPA\nPrivAgent\nOn-Device Privacy Engine\nPROVIDER UNAVAILABLE\nFinished.\nStep 1 of 10\nReasoning service unavailable\nThe reasoning service was unavailable, so nothing was changed on the page.\nTry Again\nAGENT ACTIVITY TIMELINE\n2 EVENTS\n✓\nTask received & parsed\nPARSED\nGoal normalized into target destination constraints.\n✓\nPrivacy boundary active\nLOCAL M5\nZero raw PII transmitted. Local DOM sanitization ready.\nBROWSER CONTEXT\nCurrent Page\nlocalhost/\nSemantic Type\nlanding\nDestination\nPending Arrival\nLOCAL PRIVACY BOUNDARY\nSensitive Transmitted\n0 BYTES (HARD INVARIANT)\nLocally Masked\n0 fields [••••••••]\nDOM\n→\nDetect\n→\nRedact\n→\nSanitized\n→\nAgent\nTechnical Telemetry Details\n▼ Expand\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×",
+      "swLogs": [
+        {
+          "t": "7.09s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791297869974}"
+        },
+        {
+          "t": "7.09s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791297869974}"
+        },
+        {
+          "t": "7.09s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791297869974,targetFound:true,tabId:1045196871,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "7.09s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791297869974,targetFound:true}"
+        },
+        {
+          "t": "7.12s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "7.12s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:44}"
+        },
+        {
+          "t": "7.12s",
+          "text": "[AgentTrace] chat route classified {route:PIPELINE,code:BROWSER_VERB,taskLength:44}"
+        },
+        {
+          "t": "7.12s",
+          "text": "[AgentTrace] intent classified {intent:INFORMATION_REQUEST,confidence:DETERMINISTIC,requiresDestination:false,requiresEvidence:true,admitsBrowserAutomation:true}"
+        },
+        {
+          "t": "7.13s",
+          "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-0e73ddde,contextGeneration:1,persistenceAvailable:true}"
+        },
+        {
+          "t": "7.13s",
+          "text": "TARGET_RESOLUTION_STARTED"
+        },
+        {
+          "t": "7.13s",
+          "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+        },
+        {
+          "t": "7.13s",
+          "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:1045196871}"
+        },
+        {
+          "t": "7.13s",
+          "text": "TARGET_TAB_SELECTED {tabId:1045196871,origin:http://localhost:4174,reason:Selected first eligible web tab.}"
+        },
+        {
+          "t": "7.13s",
+          "text": "[AgentTrace] target resolved {tabId:1045196871}"
+        },
+        {
+          "t": "7.18s",
+          "text": "TARGET_TAB_READY {tabId:1045196871}"
+        },
+        {
+          "t": "7.18s",
+          "text": "[AgentTrace] target content script ready {tabId:1045196871}"
+        },
+        {
+          "t": "7.18s",
+          "text": "[AgentTrace] first progress emitted"
+        },
+        {
+          "t": "7.18s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+        },
+        {
+          "t": "7.18s",
+          "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+        },
+        {
+          "t": "7.19s",
+          "text": "[AgentTrace] agent loop started {runId:1}"
+        },
+        {
+          "t": "7.20s",
+          "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-0e73ddde,contextGeneration:2,turnIndex:0,candidates:0}"
+        },
+        {
+          "t": "7.20s",
+          "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+        },
+        {
+          "t": "7.20s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+        },
+        {
+          "t": "7.20s",
+          "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+        },
+        {
+          "t": "7.21s",
+          "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+        },
+        {
+          "t": "7.21s",
+          "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/}"
+        },
+        {
+          "t": "7.21s",
+          "text": "[AgentTrace] perception started"
+        },
+        {
+          "t": "7.25s",
+          "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+        },
+        {
+          "t": "7.25s",
+          "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:3,regionsConsidered:3,droppedSensitive:0,quarantinedInjection:0}"
+        },
+        {
+          "t": "7.25s",
+          "text": "[AgentTrace] evidence ledger updated {ingested:3,ledgerSize:3,verifiedCurrent:3,generation:2}"
+        },
+        {
+          "t": "7.25s",
+          "text": "[ServiceWorker] response forwarded"
+        },
+        {
+          "t": "7.26s",
+          "text": "[AgentLoop] perception completed"
+        },
+        {
+          "t": "7.26s",
+          "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/,worldModelId:wm-g2-muwsi2hf-ldc5}"
+        },
+        {
+          "t": "7.27s",
+          "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:11,privacyFindingsCount:6}"
+        },
+        {
+          "t": "7.27s",
+          "text": "[AgentTrace] semantic understanding complete {pageType:UNKNOWN,pageState:populated,pageGeneration:2,entityCount:0,affordanceCount:1}"
+        },
+        {
+          "t": "7.27s",
+          "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-0e73ddde,contextGeneration:4,turnIndex:0,candidates:0}"
+        },
+        {
+          "t": "7.28s",
+          "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwsi2gx-kmy4s-sg1,category:SEARCH,description:Enter search query \"latest information about\" into search box}"
+        },
+        {
+          "t": "7.28s",
+          "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:4,discoveries:0}"
+        },
+        {
+          "t": "7.29s",
+          "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-0e73ddde,contextGeneration:4,turnIndex:0,candidates:0}"
+        },
+        {
+          "t": "7.29s",
+          "text": "[AgentTrace] requesting reasoning"
+        },
+        {
+          "t": "7.97s",
+          "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}"
+        },
+        {
+          "t": "7.98s",
+          "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+        },
+        {
+          "t": "7.98s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "7.98s",
+          "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+        },
+        {
+          "t": "7.99s",
+          "text": "[AgentTrace] reasoning provider unavailable {category:MODEL_CONTRACT,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+        },
+        {
+          "t": "7.99s",
+          "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-0e73ddde,contextGeneration:6,turnIndex:0,candidates:0}"
+        },
+        {
+          "t": "7.99s",
+          "text": "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:1}"
+        },
+        {
+          "t": "7.99s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "7.99s",
+          "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+        }
+      ],
+      "fails": [],
+      "pass": true
+    }
+  ],
+  "summary": {
+    "casesRun": 1,
+    "passed": 1,
+    "failed": 0
+  }
+}

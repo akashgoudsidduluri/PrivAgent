@@ -67,6 +67,22 @@ export interface AgentProvider {
     task: string,
     context: AgentContextPayload
   ): Promise<{ safe: boolean; reason: string }>;
+  /**
+   * FINAL ACCEPTANCE AUDIT — answer an ordinary message conversationally.
+   *
+   * OPTIONAL, like `requestStep`: a provider that cannot answer a plain
+   * question simply does not implement it, and the caller must then report the
+   * conversational answer as unavailable rather than falling back to browser
+   * automation.
+   *
+   * NOTE WHAT IS NOT PASSED. There is no `AgentContextPayload` parameter and
+   * deliberately so: this call performs no perception, reads no page, and
+   * therefore has no page metadata to transmit. A conversational question
+   * cannot leak the page the user happens to have open, because the browser was
+   * never involved. Keeping the signature free of context is the enforcement —
+   * not a comment asking future callers to behave.
+   */
+  requestChat?(task: string): Promise<{ answer: string }>;
 }
 
 export type ModelRole = 'FAST' | 'STRONG' | 'VISION' | 'SAFETY';

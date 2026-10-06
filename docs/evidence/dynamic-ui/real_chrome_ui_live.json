@@ -1,0 +1,1985 @@
+{
+  "phase": "DYNAMIC-TASK-AWARE-UI",
+  "work": "Real Chrome: task-aware dashboard surfaces (tests A–F)",
+  "labels": "PROVEN_REAL_CHROME / LIVE_PROVIDER",
+  "suite": "live",
+  "inputs": {
+    "dashboard": "http://localhost:5173",
+    "fixture": "http://localhost:4174/",
+    "gateway": "http://127.0.0.1:8010",
+    "cases": [
+      "A",
+      "B",
+      "E",
+      "F"
+    ]
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "canary": {
+    "ok": true,
+    "httpStatus": 200,
+    "model": "openai/gpt-oss-20b",
+    "ms": 235,
+    "answerPrefix": "OK"
+  },
+  "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+  "timeline": [
+    {
+      "t": "0.23s",
+      "what": "provider canary",
+      "detail": {
+        "ok": true,
+        "httpStatus": 200,
+        "model": "openai/gpt-oss-20b",
+        "ms": 235,
+        "answerPrefix": "OK"
+      }
+    },
+    {
+      "t": "10.27s",
+      "what": "case A submitted",
+      "detail": {
+        "task": "hi",
+        "readiness": "ready",
+        "submitted": "submitted"
+      }
+    },
+    {
+      "t": "11.21s",
+      "what": "case A evaluated",
+      "detail": {
+        "pass": true,
+        "surface": "conversation",
+        "panel": null,
+        "fails": []
+      }
+    },
+    {
+      "t": "15.24s",
+      "what": "case B submitted",
+      "detail": {
+        "task": "What is machine learning?",
+        "readiness": "ready",
+        "submitted": "submitted"
+      }
+    },
+    {
+      "t": "16.64s",
+      "what": "case B evaluated",
+      "detail": {
+        "pass": true,
+        "surface": "conversation",
+        "panel": null,
+        "fails": []
+      }
+    },
+    {
+      "t": "20.66s",
+      "what": "case E submitted",
+      "detail": {
+        "task": "Find the latest information about Charminar.",
+        "readiness": "ready",
+        "submitted": "submitted"
+      }
+    },
+    {
+      "t": "23.26s",
+      "what": "case E evaluated",
+      "detail": {
+        "pass": true,
+        "surface": "browser",
+        "panel": "final-response-panel failure",
+        "fails": []
+      }
+    },
+    {
+      "t": "23.27s",
+      "what": "case F submitted",
+      "detail": {
+        "task": "hi",
+        "readiness": "ready",
+        "submitted": "submitted"
+      }
+    },
+    {
+      "t": "24.21s",
+      "what": "case F evaluated",
+      "detail": {
+        "pass": true,
+        "surface": "conversation",
+        "panel": null,
+        "fails": []
+      }
+    }
+  ],
+  "swLogs": [
+    {
+      "t": "6.51s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303595528}"
+    },
+    {
+      "t": "6.51s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303595528}"
+    },
+    {
+      "t": "6.52s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303595528,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "6.52s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303595528,targetFound:true}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303599282}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303599282}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303599282,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303599282,targetFound:true}"
+    },
+    {
+      "t": "10.30s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "10.30s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "10.30s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:2}"
+    },
+    {
+      "t": "10.30s",
+      "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "10.53s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "10.53s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "11.51s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303600525}"
+    },
+    {
+      "t": "11.52s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303600525}"
+    },
+    {
+      "t": "11.52s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303600525,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "11.52s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303600525,targetFound:true}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303604252}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303604252}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303604252,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303604252,targetFound:true}"
+    },
+    {
+      "t": "15.26s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "15.26s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:25}"
+    },
+    {
+      "t": "15.26s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:25}"
+    },
+    {
+      "t": "15.26s",
+      "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "15.72s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "15.72s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303605939}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303605939}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303605939,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303605939,targetFound:true}"
+    },
+    {
+      "t": "20.67s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303609678}"
+    },
+    {
+      "t": "20.67s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303609678}"
+    },
+    {
+      "t": "20.67s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303609678,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "20.67s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303609678,targetFound:true}"
+    },
+    {
+      "t": "20.68s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "20.69s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:44}"
+    },
+    {
+      "t": "20.69s",
+      "text": "[AgentTrace] chat route classified {route:PIPELINE,code:BROWSER_VERB,taskLength:44}"
+    },
+    {
+      "t": "20.69s",
+      "text": "[AgentTrace] intent classified {intent:INFORMATION_REQUEST,confidence:DETERMINISTIC,requiresDestination:false,requiresEvidence:true,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "20.69s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-5b1eddf7,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "20.69s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "20.70s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "20.70s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:172593014}"
+    },
+    {
+      "t": "20.70s",
+      "text": "TARGET_TAB_SELECTED {tabId:172593014,origin:http://localhost:4174,reason:Selected first eligible web tab.}"
+    },
+    {
+      "t": "20.70s",
+      "text": "[AgentTrace] target resolved {tabId:172593014}"
+    },
+    {
+      "t": "20.75s",
+      "text": "TARGET_TAB_READY {tabId:172593014}"
+    },
+    {
+      "t": "20.75s",
+      "text": "[AgentTrace] target content script ready {tabId:172593014}"
+    },
+    {
+      "t": "20.75s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "20.75s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "20.75s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "20.76s",
+      "text": "[AgentTrace] agent loop started {runId:1}"
+    },
+    {
+      "t": "20.77s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-5b1eddf7,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "20.77s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "20.77s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "20.77s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "20.78s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+    },
+    {
+      "t": "20.78s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/}"
+    },
+    {
+      "t": "20.78s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "20.81s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+    },
+    {
+      "t": "20.81s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:3,regionsConsidered:3,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "20.82s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:3,ledgerSize:3,verifiedCurrent:3,generation:2}"
+    },
+    {
+      "t": "20.82s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "20.82s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "20.82s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/,worldModelId:wm-g2-muwvx39m-5agh}"
+    },
+    {
+      "t": "20.83s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:11,privacyFindingsCount:6}"
+    },
+    {
+      "t": "20.83s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:UNKNOWN,pageState:populated,pageGeneration:2,entityCount:0,affordanceCount:1}"
+    },
+    {
+      "t": "20.83s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-5b1eddf7,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "20.83s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwvx397-osh2u-sg1,category:SEARCH,description:Enter search query \"latest information about\" into search box}"
+    },
+    {
+      "t": "20.84s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:4,discoveries:0}"
+    },
+    {
+      "t": "20.84s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-5b1eddf7,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "20.84s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "21.39s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}"
+    },
+    {
+      "t": "21.39s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "21.39s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "21.39s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "21.39s",
+      "text": "[AgentTrace] reasoning provider unavailable {category:MODEL_CONTRACT,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "21.40s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-5b1eddf7,contextGeneration:6,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "21.40s",
+      "text": "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:1}"
+    },
+    {
+      "t": "21.40s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "21.40s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303612283}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303612283}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303612283,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303612283,targetFound:true}"
+    },
+    {
+      "t": "23.29s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "23.29s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "23.29s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:2}"
+    },
+    {
+      "t": "23.29s",
+      "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "23.70s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "23.70s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    }
+  ],
+  "pageLogs": [
+    {
+      "t": "2.31s",
+      "text": "[vite] connecting..."
+    },
+    {
+      "t": "2.33s",
+      "text": "[vite] connected."
+    },
+    {
+      "t": "2.43s",
+      "text": "[PrivAgent] Initializing on-device privacy engine content script..."
+    },
+    {
+      "t": "2.54s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303591558,origin:http://localhost:5173}"
+    },
+    {
+      "t": "2.54s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303591558,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "2.54s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303591558,attempt:1}"
+    },
+    {
+      "t": "2.55s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303591558,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "2.55s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303591558,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "2.55s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303591558,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "2.55s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303591558,connected:true}"
+    },
+    {
+      "t": "2.55s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "2.55s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "2.55s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "2.55s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "6.30s",
+      "text": "[vite] connecting..."
+    },
+    {
+      "t": "6.31s",
+      "text": "[vite] connected."
+    },
+    {
+      "t": "6.33s",
+      "text": "[PrivAgent] Initializing on-device privacy engine content script..."
+    },
+    {
+      "t": "6.51s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303595528,origin:http://localhost:5173}"
+    },
+    {
+      "t": "6.51s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303595528,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "6.51s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303595528,attempt:1}"
+    },
+    {
+      "t": "6.52s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303595528,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "6.52s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303595528,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "6.52s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303595528,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "6.52s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303595528,connected:true}"
+    },
+    {
+      "t": "6.52s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "6.52s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "6.52s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "6.52s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "10.27s",
+      "text": "[Adapter] START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303599282,origin:http://localhost:5173}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303599282,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303599282,attempt:1}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303599282,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303599282,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "10.27s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303599282,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "10.28s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303599282,connected:true}"
+    },
+    {
+      "t": "10.28s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "10.28s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "10.28s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "10.28s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "10.28s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:2,runId:1}"
+    },
+    {
+      "t": "10.29s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "10.30s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "10.30s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "10.31s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "10.31s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "10.54s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+    },
+    {
+      "t": "10.54s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "11.29s",
+      "text": "[vite] connecting..."
+    },
+    {
+      "t": "11.30s",
+      "text": "[vite] connected."
+    },
+    {
+      "t": "11.33s",
+      "text": "[PrivAgent] Initializing on-device privacy engine content script..."
+    },
+    {
+      "t": "11.51s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303600525,origin:http://localhost:5173}"
+    },
+    {
+      "t": "11.51s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303600525,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "11.51s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303600525,attempt:1}"
+    },
+    {
+      "t": "11.52s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303600525,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "11.52s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303600525,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "11.52s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303600525,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "11.52s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303600525,connected:true}"
+    },
+    {
+      "t": "11.52s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "11.53s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "11.53s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "11.53s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "15.23s",
+      "text": "[Adapter] START_TASK received {taskLength:25}"
+    },
+    {
+      "t": "15.23s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:25}"
+    },
+    {
+      "t": "15.23s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303604252,origin:http://localhost:5173}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303604252,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303604252,attempt:1}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303604252,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303604252,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303604252,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "15.24s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303604252,connected:true}"
+    },
+    {
+      "t": "15.24s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "15.24s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "15.24s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "15.24s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "15.24s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:25,runId:1}"
+    },
+    {
+      "t": "15.26s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "15.26s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "15.26s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "15.27s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "15.27s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "15.72s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+    },
+    {
+      "t": "15.72s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "16.71s",
+      "text": "[vite] connecting..."
+    },
+    {
+      "t": "16.72s",
+      "text": "[vite] connected."
+    },
+    {
+      "t": "16.74s",
+      "text": "[PrivAgent] Initializing on-device privacy engine content script..."
+    },
+    {
+      "t": "16.93s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303605939,origin:http://localhost:5173}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303605939,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303605939,attempt:1}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303605939,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303605939,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303605939,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "16.93s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303605939,connected:true}"
+    },
+    {
+      "t": "16.93s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "16.93s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "16.93s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "16.93s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "20.66s",
+      "text": "[Adapter] START_TASK received {taskLength:44}"
+    },
+    {
+      "t": "20.66s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:44}"
+    },
+    {
+      "t": "20.66s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303609678,origin:http://localhost:5173}"
+    },
+    {
+      "t": "20.66s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303609678,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "20.66s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303609678,attempt:1}"
+    },
+    {
+      "t": "20.67s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303609678,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "20.67s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303609678,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "20.67s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303609678,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "20.67s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303609678,connected:true}"
+    },
+    {
+      "t": "20.67s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "20.67s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "20.67s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "20.67s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "20.67s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:44,runId:1}"
+    },
+    {
+      "t": "20.68s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "20.68s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "20.68s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "20.75s",
+      "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "20.75s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "20.77s",
+      "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION,interactionOutcome:RUNNING}"
+    },
+    {
+      "t": "20.77s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION}"
+    },
+    {
+      "t": "20.78s",
+      "text": "[Adapter] response received {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING,interactionOutcome:RUNNING}"
+    },
+    {
+      "t": "20.78s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING}"
+    },
+    {
+      "t": "21.40s",
+      "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+    },
+    {
+      "t": "21.40s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "21.40s",
+      "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+    },
+    {
+      "t": "21.40s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[Adapter] START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303612283,origin:http://localhost:5173}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303612283,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303612283,attempt:1}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303612283,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303612283,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "23.27s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303612283,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "23.28s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303612283,connected:true}"
+    },
+    {
+      "t": "23.28s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "23.28s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "23.28s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "23.28s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "23.28s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:2,runId:2}"
+    },
+    {
+      "t": "23.28s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "23.28s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "23.28s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "23.29s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "23.29s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "23.70s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+    },
+    {
+      "t": "23.70s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+    }
+  ],
+  "results": [
+    {
+      "id": "A",
+      "suite": "live",
+      "task": "hi",
+      "expect": "chat",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "timedOut": false,
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "surface": "conversation",
+      "panelClass": null,
+      "panelHeadline": null,
+      "assistantBody": "Hello! How can I help you today?",
+      "bubbleTone": "success",
+      "sawTypingIndicator": false,
+      "activityDetailsPresent": false,
+      "activityDetailsOpenAtEnd": null,
+      "renderedActivitiesAtEnd": [],
+      "observedLabels": [],
+      "sampleCount": 1,
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "intentClassified": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionExecuted": 0,
+        "responseForwarded": 1
+      },
+      "composerReadyAtEnd": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/dynamic-ui/shots/A_live.png",
+      "textExcerpt": "hi\nYou\n·\nJust now\nPA\nHello! How can I help you today?",
+      "fails": [],
+      "pass": true,
+      "samples": [
+        {
+          "t": 1791303599735,
+          "surface": "conversation",
+          "workingLabels": [],
+          "activities": [],
+          "pending": false,
+          "panelClass": null
+        }
+      ],
+      "swLogs": [
+        {
+          "t": "10.27s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303599282}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303599282}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303599282,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303599282,targetFound:true}"
+        },
+        {
+          "t": "10.30s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "10.30s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:2}"
+        },
+        {
+          "t": "10.30s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:2}"
+        },
+        {
+          "t": "10.30s",
+          "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "10.53s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "10.53s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        }
+      ],
+      "pageLogs": [
+        {
+          "t": "10.27s",
+          "text": "[Adapter] START_TASK received {taskLength:2}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[AgentTrace] dashboard START_TASK received {taskLength:2}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303599282,origin:http://localhost:5173}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303599282,origin:http://localhost:5173,validContext:true}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303599282,attempt:1}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303599282,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303599282,connected:true,targetTab:FOUND}"
+        },
+        {
+          "t": "10.27s",
+          "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303599282,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+        },
+        {
+          "t": "10.28s",
+          "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303599282,connected:true}"
+        },
+        {
+          "t": "10.28s",
+          "text": "Extension: CONNECTED"
+        },
+        {
+          "t": "10.28s",
+          "text": "Service Worker: REACHABLE"
+        },
+        {
+          "t": "10.28s",
+          "text": "Target Tab: FOUND"
+        },
+        {
+          "t": "10.28s",
+          "text": "Content Script: REACHABLE"
+        },
+        {
+          "t": "10.28s",
+          "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:2,runId:1}"
+        },
+        {
+          "t": "10.29s",
+          "text": "[Extension] message received {type:START_TASK}"
+        },
+        {
+          "t": "10.30s",
+          "text": "[AgentTrace] content START_TASK received"
+        },
+        {
+          "t": "10.30s",
+          "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+        },
+        {
+          "t": "10.31s",
+          "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+        },
+        {
+          "t": "10.31s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+        },
+        {
+          "t": "10.54s",
+          "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+        },
+        {
+          "t": "10.54s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "suite": "live",
+      "task": "What is machine learning?",
+      "expect": "chat",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "timedOut": false,
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "surface": "conversation",
+      "panelClass": null,
+      "panelHeadline": null,
+      "assistantBody": "Machine learning is a type of artificial intelligence that teaches computers to recognize patterns and make decisions by learning from data instead of being explicitly programmed for each task.",
+      "bubbleTone": "success",
+      "sawTypingIndicator": true,
+      "activityDetailsPresent": false,
+      "activityDetailsOpenAtEnd": null,
+      "renderedActivitiesAtEnd": [],
+      "observedLabels": [],
+      "sampleCount": 2,
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "intentClassified": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionExecuted": 0,
+        "responseForwarded": 1
+      },
+      "composerReadyAtEnd": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/dynamic-ui/shots/B_live.png",
+      "textExcerpt": "What is machine learning?\nYou\n·\nJust now\nPA\nMachine learning is a type of artificial intelligence that teaches computers to recognize patterns and make decisions by learning from data instead of being explicitly programmed for each task.",
+      "fails": [],
+      "pass": true,
+      "samples": [
+        {
+          "t": 1791303604705,
+          "surface": "conversation",
+          "workingLabels": [],
+          "activities": [],
+          "pending": true,
+          "panelClass": null
+        },
+        {
+          "t": 1791303605157,
+          "surface": "conversation",
+          "workingLabels": [],
+          "activities": [],
+          "pending": false,
+          "panelClass": null
+        }
+      ],
+      "swLogs": [
+        {
+          "t": "15.24s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303604252}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303604252}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303604252,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303604252,targetFound:true}"
+        },
+        {
+          "t": "15.26s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "15.26s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:25}"
+        },
+        {
+          "t": "15.26s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:25}"
+        },
+        {
+          "t": "15.26s",
+          "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "15.72s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "15.72s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        }
+      ],
+      "pageLogs": [
+        {
+          "t": "15.23s",
+          "text": "[Adapter] START_TASK received {taskLength:25}"
+        },
+        {
+          "t": "15.23s",
+          "text": "[AgentTrace] dashboard START_TASK received {taskLength:25}"
+        },
+        {
+          "t": "15.23s",
+          "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303604252,origin:http://localhost:5173}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303604252,origin:http://localhost:5173,validContext:true}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303604252,attempt:1}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303604252,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303604252,connected:true,targetTab:FOUND}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303604252,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+        },
+        {
+          "t": "15.24s",
+          "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303604252,connected:true}"
+        },
+        {
+          "t": "15.24s",
+          "text": "Extension: CONNECTED"
+        },
+        {
+          "t": "15.24s",
+          "text": "Service Worker: REACHABLE"
+        },
+        {
+          "t": "15.24s",
+          "text": "Target Tab: FOUND"
+        },
+        {
+          "t": "15.24s",
+          "text": "Content Script: REACHABLE"
+        },
+        {
+          "t": "15.24s",
+          "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:25,runId:1}"
+        },
+        {
+          "t": "15.26s",
+          "text": "[Extension] message received {type:START_TASK}"
+        },
+        {
+          "t": "15.26s",
+          "text": "[AgentTrace] content START_TASK received"
+        },
+        {
+          "t": "15.26s",
+          "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+        },
+        {
+          "t": "15.27s",
+          "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+        },
+        {
+          "t": "15.27s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+        },
+        {
+          "t": "15.72s",
+          "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+        },
+        {
+          "t": "15.72s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "suite": "live",
+      "task": "Find the latest information about Charminar.",
+      "expect": "browser-failure",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "timedOut": false,
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "surface": "browser",
+      "panelClass": "final-response-panel failure",
+      "panelHeadline": "Reasoning service unavailable",
+      "assistantBody": null,
+      "bubbleTone": null,
+      "sawTypingIndicator": false,
+      "activityDetailsPresent": true,
+      "activityDetailsOpenAtEnd": false,
+      "renderedActivitiesAtEnd": [
+        "Reading the page",
+        "Planning the next action"
+      ],
+      "observedLabels": [
+        "Planning the next action",
+        "Reading the page",
+        "Reasoning service unavailable"
+      ],
+      "sampleCount": 2,
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 0,
+        "intentClassified": 1,
+        "targetResolution": 1,
+        "tabProvisioned": 0,
+        "perception": 2,
+        "actionExecuted": 0,
+        "responseForwarded": 5
+      },
+      "composerReadyAtEnd": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/dynamic-ui/shots/E_live.png",
+      "textExcerpt": "Find the latest information about Charminar.\nYou\n·\nJust now\nPA\nPrivAgent\nBROWSER TASK\nPROVIDER UNAVAILABLE\n!\nReasoning service unavailable\n2 activities\nReasoning service unavailable\nThe reasoning service was unavailable, so nothing was changed on the page.\nTry Again\nACTIVITY\n2 ACTIVITIES\nBROWSER & PRIVACY DIAGNOSTICS\n▼ EXPAND",
+      "fails": [],
+      "pass": true,
+      "samples": [
+        {
+          "t": 1791303610135,
+          "surface": "browser",
+          "workingLabels": [
+            "Planning the next action"
+          ],
+          "activities": [
+            "Reading the page",
+            "Planning the next action"
+          ],
+          "pending": false,
+          "panelClass": null
+        },
+        {
+          "t": 1791303610593,
+          "surface": "browser",
+          "workingLabels": [
+            "Reasoning service unavailable"
+          ],
+          "activities": [
+            "Reading the page",
+            "Planning the next action"
+          ],
+          "pending": false,
+          "panelClass": "final-response-panel failure"
+        }
+      ],
+      "swLogs": [
+        {
+          "t": "20.67s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303609678}"
+        },
+        {
+          "t": "20.67s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303609678}"
+        },
+        {
+          "t": "20.67s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303609678,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "20.67s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303609678,targetFound:true}"
+        },
+        {
+          "t": "20.68s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "20.69s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:44}"
+        },
+        {
+          "t": "20.69s",
+          "text": "[AgentTrace] chat route classified {route:PIPELINE,code:BROWSER_VERB,taskLength:44}"
+        },
+        {
+          "t": "20.69s",
+          "text": "[AgentTrace] intent classified {intent:INFORMATION_REQUEST,confidence:DETERMINISTIC,requiresDestination:false,requiresEvidence:true,admitsBrowserAutomation:true}"
+        },
+        {
+          "t": "20.69s",
+          "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-5b1eddf7,contextGeneration:1,persistenceAvailable:true}"
+        },
+        {
+          "t": "20.69s",
+          "text": "TARGET_RESOLUTION_STARTED"
+        },
+        {
+          "t": "20.70s",
+          "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+        },
+        {
+          "t": "20.70s",
+          "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:172593014}"
+        },
+        {
+          "t": "20.70s",
+          "text": "TARGET_TAB_SELECTED {tabId:172593014,origin:http://localhost:4174,reason:Selected first eligible web tab.}"
+        },
+        {
+          "t": "20.70s",
+          "text": "[AgentTrace] target resolved {tabId:172593014}"
+        },
+        {
+          "t": "20.75s",
+          "text": "TARGET_TAB_READY {tabId:172593014}"
+        },
+        {
+          "t": "20.75s",
+          "text": "[AgentTrace] target content script ready {tabId:172593014}"
+        },
+        {
+          "t": "20.75s",
+          "text": "[AgentTrace] first progress emitted"
+        },
+        {
+          "t": "20.75s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+        },
+        {
+          "t": "20.75s",
+          "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+        },
+        {
+          "t": "20.76s",
+          "text": "[AgentTrace] agent loop started {runId:1}"
+        },
+        {
+          "t": "20.77s",
+          "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-5b1eddf7,contextGeneration:2,turnIndex:0,candidates:0}"
+        },
+        {
+          "t": "20.77s",
+          "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+        },
+        {
+          "t": "20.77s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+        },
+        {
+          "t": "20.77s",
+          "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+        },
+        {
+          "t": "20.78s",
+          "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+        },
+        {
+          "t": "20.78s",
+          "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/}"
+        },
+        {
+          "t": "20.78s",
+          "text": "[AgentTrace] perception started"
+        },
+        {
+          "t": "20.81s",
+          "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+        },
+        {
+          "t": "20.81s",
+          "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:3,regionsConsidered:3,droppedSensitive:0,quarantinedInjection:0}"
+        },
+        {
+          "t": "20.82s",
+          "text": "[AgentTrace] evidence ledger updated {ingested:3,ledgerSize:3,verifiedCurrent:3,generation:2}"
+        },
+        {
+          "t": "20.82s",
+          "text": "[ServiceWorker] response forwarded"
+        },
+        {
+          "t": "20.82s",
+          "text": "[AgentLoop] perception completed"
+        },
+        {
+          "t": "20.82s",
+          "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/,worldModelId:wm-g2-muwvx39m-5agh}"
+        },
+        {
+          "t": "20.83s",
+          "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:11,privacyFindingsCount:6}"
+        },
+        {
+          "t": "20.83s",
+          "text": "[AgentTrace] semantic understanding complete {pageType:UNKNOWN,pageState:populated,pageGeneration:2,entityCount:0,affordanceCount:1}"
+        },
+        {
+          "t": "20.83s",
+          "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-5b1eddf7,contextGeneration:4,turnIndex:0,candidates:0}"
+        },
+        {
+          "t": "20.83s",
+          "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwvx397-osh2u-sg1,category:SEARCH,description:Enter search query \"latest information about\" into search box}"
+        },
+        {
+          "t": "20.84s",
+          "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:4,discoveries:0}"
+        },
+        {
+          "t": "20.84s",
+          "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-5b1eddf7,contextGeneration:4,turnIndex:0,candidates:0}"
+        },
+        {
+          "t": "20.84s",
+          "text": "[AgentTrace] requesting reasoning"
+        },
+        {
+          "t": "21.39s",
+          "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}"
+        },
+        {
+          "t": "21.39s",
+          "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+        },
+        {
+          "t": "21.39s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "21.39s",
+          "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+        },
+        {
+          "t": "21.39s",
+          "text": "[AgentTrace] reasoning provider unavailable {category:MODEL_CONTRACT,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+        },
+        {
+          "t": "21.40s",
+          "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-5b1eddf7,contextGeneration:6,turnIndex:0,candidates:0}"
+        },
+        {
+          "t": "21.40s",
+          "text": "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:1}"
+        },
+        {
+          "t": "21.40s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "21.40s",
+          "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+        }
+      ],
+      "pageLogs": [
+        {
+          "t": "20.66s",
+          "text": "[Adapter] START_TASK received {taskLength:44}"
+        },
+        {
+          "t": "20.66s",
+          "text": "[AgentTrace] dashboard START_TASK received {taskLength:44}"
+        },
+        {
+          "t": "20.66s",
+          "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303609678,origin:http://localhost:5173}"
+        },
+        {
+          "t": "20.66s",
+          "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303609678,origin:http://localhost:5173,validContext:true}"
+        },
+        {
+          "t": "20.66s",
+          "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303609678,attempt:1}"
+        },
+        {
+          "t": "20.67s",
+          "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303609678,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "20.67s",
+          "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303609678,connected:true,targetTab:FOUND}"
+        },
+        {
+          "t": "20.67s",
+          "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303609678,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+        },
+        {
+          "t": "20.67s",
+          "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303609678,connected:true}"
+        },
+        {
+          "t": "20.67s",
+          "text": "Extension: CONNECTED"
+        },
+        {
+          "t": "20.67s",
+          "text": "Service Worker: REACHABLE"
+        },
+        {
+          "t": "20.67s",
+          "text": "Target Tab: FOUND"
+        },
+        {
+          "t": "20.67s",
+          "text": "Content Script: REACHABLE"
+        },
+        {
+          "t": "20.67s",
+          "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:44,runId:1}"
+        },
+        {
+          "t": "20.68s",
+          "text": "[Extension] message received {type:START_TASK}"
+        },
+        {
+          "t": "20.68s",
+          "text": "[AgentTrace] content START_TASK received"
+        },
+        {
+          "t": "20.68s",
+          "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+        },
+        {
+          "t": "20.75s",
+          "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+        },
+        {
+          "t": "20.75s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null}"
+        },
+        {
+          "t": "20.77s",
+          "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION,interactionOutcome:RUNNING}"
+        },
+        {
+          "t": "20.77s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION}"
+        },
+        {
+          "t": "20.78s",
+          "text": "[Adapter] response received {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING,interactionOutcome:RUNNING}"
+        },
+        {
+          "t": "20.78s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING}"
+        },
+        {
+          "t": "21.40s",
+          "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+        },
+        {
+          "t": "21.40s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+        },
+        {
+          "t": "21.40s",
+          "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+        },
+        {
+          "t": "21.40s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "suite": "live",
+      "task": "hi",
+      "expect": "chat-after-browser",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "timedOut": false,
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "surface": "conversation",
+      "panelClass": null,
+      "panelHeadline": null,
+      "assistantBody": "Hello! How can I help you today?",
+      "bubbleTone": "success",
+      "sawTypingIndicator": false,
+      "activityDetailsPresent": false,
+      "activityDetailsOpenAtEnd": null,
+      "renderedActivitiesAtEnd": [],
+      "observedLabels": [],
+      "sampleCount": 1,
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "intentClassified": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionExecuted": 0,
+        "responseForwarded": 1
+      },
+      "composerReadyAtEnd": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/dynamic-ui/shots/F_live.png",
+      "textExcerpt": "hi\nYou\n·\nJust now\nPA\nHello! How can I help you today?",
+      "fails": [],
+      "pass": true,
+      "samples": [
+        {
+          "t": 1791303612735,
+          "surface": "conversation",
+          "workingLabels": [],
+          "activities": [],
+          "pending": false,
+          "panelClass": null
+        }
+      ],
+      "swLogs": [
+        {
+          "t": "23.27s",
+          "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791303612283}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791303612283}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791303612283,targetFound:true,tabId:172593014,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791303612283,targetFound:true}"
+        },
+        {
+          "t": "23.29s",
+          "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+        },
+        {
+          "t": "23.29s",
+          "text": "[AgentTrace] service worker START_TASK received {taskLength:2}"
+        },
+        {
+          "t": "23.29s",
+          "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:2}"
+        },
+        {
+          "t": "23.29s",
+          "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+        },
+        {
+          "t": "23.70s",
+          "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+        },
+        {
+          "t": "23.70s",
+          "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+        }
+      ],
+      "pageLogs": [
+        {
+          "t": "23.27s",
+          "text": "[Adapter] START_TASK received {taskLength:2}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[AgentTrace] dashboard START_TASK received {taskLength:2}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791303612283,origin:http://localhost:5173}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791303612283,origin:http://localhost:5173,validContext:true}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791303612283,attempt:1}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791303612283,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791303612283,connected:true,targetTab:FOUND}"
+        },
+        {
+          "t": "23.27s",
+          "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791303612283,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+        },
+        {
+          "t": "23.28s",
+          "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791303612283,connected:true}"
+        },
+        {
+          "t": "23.28s",
+          "text": "Extension: CONNECTED"
+        },
+        {
+          "t": "23.28s",
+          "text": "Service Worker: REACHABLE"
+        },
+        {
+          "t": "23.28s",
+          "text": "Target Tab: FOUND"
+        },
+        {
+          "t": "23.28s",
+          "text": "Content Script: REACHABLE"
+        },
+        {
+          "t": "23.28s",
+          "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:2,runId:2}"
+        },
+        {
+          "t": "23.28s",
+          "text": "[Extension] message received {type:START_TASK}"
+        },
+        {
+          "t": "23.28s",
+          "text": "[AgentTrace] content START_TASK received"
+        },
+        {
+          "t": "23.28s",
+          "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+        },
+        {
+          "t": "23.29s",
+          "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+        },
+        {
+          "t": "23.29s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+        },
+        {
+          "t": "23.70s",
+          "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+        },
+        {
+          "t": "23.70s",
+          "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "casesRun": 4,
+    "passed": 4,
+    "failed": 0
+  }
+}

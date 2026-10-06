@@ -158,7 +158,15 @@ function normalize(task: string): string {
   return task.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-function isPureGreeting(task: string): boolean {
+/**
+ * True when the whole message is smalltalk and nothing else.
+ *
+ * EXPORTED (final acceptance audit) so the normal-chat route shares this one
+ * definition rather than carrying a second, drift-prone copy of the greeting
+ * vocabulary. The predicate itself is unchanged, and I-1's decisions are
+ * unchanged with it.
+ */
+export function isPureGreeting(task: string): boolean {
   const n = normalize(task);
   if (n.length === 0) return false;
   for (const re of GREETING_PHRASES) if (re.test(n)) return true;

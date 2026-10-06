@@ -373,6 +373,30 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(raw or b"{}")
         except Exception:
             payload = {}
+        if self.path.endswith("/agent/chat"):
+            #
+            # FINAL ACCEPTANCE AUDIT — the conversational endpoint.
+            #
+            # A controlled stub so the normal-chat ROUTING can be proven in real
+            # Chrome without depending on a live model. It answers with an
+            # unmistakably controlled string: no artifact that contains this text
+            # can be mistaken for live-provider evidence.
+            #
+            # NOTE what it is given: the user's text only. There is no page
+            # context on this route, so the stub has nothing else to echo even if
+            # it wanted to.
+            task_text = _task_text(payload) or "(empty)"
+            body = json.dumps({
+                "success": True,
+                "answer": f"CONTROLLED_STUB_ANSWER: {task_text[:120]}",
+                "model": "controlled_stub",
+            }).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if not self.path.endswith("/agent/action"):
             if self.path.endswith("/agent/review"):
                 # The loop's SAFETY review is a separate endpoint on the same

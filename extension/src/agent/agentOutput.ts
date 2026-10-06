@@ -130,6 +130,16 @@ export type AgentTerminalReason =
   | 'COMMIT_UNVERIFIED'
   /** PHASE 18.8 / A16 — the run ended because the view had moved on. */
   | 'FRESHNESS_UNVERIFIED'
+  /**
+   * FINAL ACCEPTANCE AUDIT — an ordinary conversation was answered directly.
+   *
+   * Distinct from `ANSWERED` on purpose: `ANSWERED` says the device answered
+   * from evidence it verified on the page, which is true of the browser pipeline
+   * and FALSE of a general knowledge answer. Reusing it here would put "Answered
+   * from evidence verified on this page" above an answer about TCP, for a run
+   * that never read a page.
+   */
+  | 'CONVERSATIONAL_ANSWER'
   | 'UNKNOWN';
 
 export interface AgentActivity {
@@ -285,6 +295,7 @@ const TERMINAL_HEADLINE: Record<AgentTerminalReason, string> = {
   ANSWERED: 'Answered from evidence verified on this page.',
   NO_VERIFIABLE_RESULT: 'No verified result was available on this page.',
   NEEDS_CLARIFICATION: 'Stopped: one detail in your request could not be resolved.',
+  CONVERSATIONAL_ANSWER: 'Answered directly.',
   COMMIT_UNVERIFIED:
     'Stopped: whether the last action went through could not be confirmed.',
   FRESHNESS_UNVERIFIED:
@@ -596,6 +607,11 @@ function classifyTerminalReason(s: AgentTaskState): AgentTerminalReason {
   // PHASE 18.8 / A16 — same rule: the status is the verdict.
   if (s.status === 'FRESHNESS_UNVERIFIED') return 'FRESHNESS_UNVERIFIED';
   if (s.status === 'SUCCESS') return 'GOAL_ACHIEVED';
+  //
+  // FINAL ACCEPTANCE AUDIT. Read the TYPED answer source before the status: an
+  // ANSWER produced by the normal-chat route carries no page evidence, so it
+  // must not be reported as "answered from evidence verified on this page".
+  if (s.status === 'ANSWER' && s.answerSource === 'CONVERSATION') return 'CONVERSATIONAL_ANSWER';
   if (s.status === 'ANSWER' || s.status === 'PARTIAL') return 'ANSWERED';
   if (s.status === 'CANNOT_VERIFY' || s.status === 'NEEDS_INFORMATION') return 'NO_VERIFIABLE_RESULT';
   if (s.status === 'NEEDS_CLARIFICATION') return 'NEEDS_CLARIFICATION';

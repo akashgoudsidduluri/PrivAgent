@@ -804,6 +804,10 @@ window.addEventListener('message', (event) => {
                   runId,
                   steps: [],
                   reason: response.reason || (response.started ? 'Task accepted by background service worker.' : 'Task failed.'),
+                  // DYNAMIC TASK-AWARE UI — relay the conversational
+                  // provenance from the normal-chat route's ack so the
+                  // dashboard picks the chat surface immediately.
+                  answerSource: response.answerSource,
                 },
               },
               '*'

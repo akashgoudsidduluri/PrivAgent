@@ -39,7 +39,7 @@ export class TaskComposer {
             <textarea
               id="composer-input"
               class="composer-textarea"
-              placeholder="What should PrivAgent do? (e.g. Open the store catalog and find wireless headphones)"
+              placeholder="Message PrivAgent — ask anything, or describe a browser task to run"
               rows="1"
             ></textarea>
           </div>

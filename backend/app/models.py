@@ -420,6 +420,30 @@ class AgentActionRequest(StrictModel):
     model_role: Optional[ModelRole] = None
 
 
+class AgentChatRequest(StrictModel):
+    """Incoming request to the CONVERSATIONAL endpoint.
+
+    THE SHAPE IS THE SECURITY CONTROL. There is no context field, no detections,
+    no evidence and no history: the normal-chat path is not merely documented as
+    page-free, it has nowhere to put page data. `extra="forbid"` means a caller
+    that tries to attach a page payload gets a 422 instead of a silent widen.
+    """
+
+    task: str = Field(min_length=1, max_length=2000)
+
+
+class AgentChatResponse(StrictModel):
+    """One plain conversational answer.
+
+    No action, no proposal, no telemetry that could carry model internals: an
+    answer and the model that produced it, nothing else.
+    """
+
+    success: bool = True
+    answer: str
+    model: Optional[str] = None
+
+
 class ReasoningTelemetry(StrictModel):
     """
     Safe reasoning telemetry — identifiers and durations only.

@@ -32,6 +32,8 @@ from .. import config
 from ..models import (
     AgentActionRequest,
     AgentActionResponse,
+    AgentChatRequest,
+    AgentChatResponse,
     AgentProposal,
     BrowserActionModel,
     ReasoningTelemetry,
@@ -40,6 +42,7 @@ from ..reasoner import (
     ReasoningError,
     assert_model_action_applicable,
     build_reasoner,
+    chat_answer,
     last_clamped_fields,
     normalize_model_action_shape,
     resolve_reasoner_name,
@@ -526,4 +529,62 @@ async def review_action(
     # In a full implementation, this would invoke the configured safety model.
     # For this phase, we return a deterministic "SAFE" response since the model is Mock/Fast by default.
     return {"safe": True, "reason": "Safety review passed (deterministic)."}
+
+
+@router.post(
+    "/chat",
+    response_model=AgentChatResponse,
+    response_model_exclude_none=True,
+    status_code=status.HTTP_200_OK,
+    summary=(
+        "Conversational Answer — one plain answer to an ordinary message, with "
+        "NO page context and NO action (final routing acceptance)"
+    ),
+)
+async def generate_chat_answer(
+    request: Request,
+    body: AgentChatRequest,
+) -> AgentChatResponse:
+    """
+    FINAL ACCEPTANCE AUDIT — the conversational endpoint.
+
+    This route exists so that an ordinary message ("Hi", "What is machine
+    learning?", "Explain TCP vs UDP", "What is 2 + 2?") can be ANSWERED.
+    Before it, the only non-browser outcome a casual message could reach was a
+    refusal, and every knowledge question was admitted to the browser pipeline.
+
+    SECURITY POSTURE — deliberately narrow:
+      * it accepts the user's TEXT only (`AgentChatRequest` has no context
+        field and forbids extras), so there is no page data on this path to
+        sanitize, minimize or leak;
+      * it produces NO action and no proposal, so nothing here can be
+        dispatched, and every browser authority (grounding, M5, security
+        critic, privacy firewall, risk/confirmation, effect verification, goal
+        verification, containment) is simply not on this path — there is
+        nothing for them to authorize;
+      * the API key stays in this process and never appears in the response;
+      * an unavailable or unreadable provider fails with a typed 503, never with
+        an empty answer and never with a fabricated one.
+    """
+    task = (body.task or "").strip()
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="No message was provided.",
+        )
+    try:
+        answer, model = chat_answer(task)
+    except ReasoningError as err:
+        logger.warning("Conversational answer unavailable (%s)", err.kind or "reasoning_error")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Conversational reasoning is unavailable",
+        ) from err
+    except Exception as err:  # noqa: BLE001 - fail closed, never fabricate an answer
+        logger.error("Conversational answer failed: %s", type(err).__name__)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Conversational reasoning is unavailable",
+        ) from err
+    return AgentChatResponse(success=True, answer=answer, model=model or None)
 

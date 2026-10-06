@@ -1,0 +1,50 @@
+{
+  "phase": "FINAL-ACCEPTANCE-normal-chat-routing",
+  "work": "Normal-chat vs browser-task routing boundary — mutation suite",
+  "tests": [
+    "tests/finalNormalChatRouting.test.ts",
+    "tests/phase18_7_i1IntentBoundary.test.ts"
+  ],
+  "total": 6,
+  "killed": 6,
+  "survived": 0,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "name": "every message is classified PIPELINE — normal chat is never answered here",
+      "outcome": "KILLED",
+      "detail": "   × FINAL AUDIT — ordinary chat is answered, not automated > 1. every acceptance greeting and basic question routes to CONVERSATION 9ms |    × FINAL AUDIT — ordinary chat is answered, not automated > 2. the three conversational codes are the WHOLE whitelist 2ms |    × FINAL AUDIT — ordinary chat is answered, not automated > 3. a greeting is recognised by the SAME predicate I-1 uses (no second vocabulary) 1ms |    × FINAL AUDIT — the boundary cases keep their typed outcomes > 8. a MIXED request "
+    },
+    {
+      "id": "M2",
+      "name": "every message is classified CONVERSATION — browser tasks never reach their gates",
+      "outcome": "KILLED",
+      "detail": "   × FINAL AUDIT — ordinary chat is answered, not automated > 2. the three conversational codes are the WHOLE whitelist 8ms |    × FINAL AUDIT — a real browser task is still a browser task > 6. every acceptance browser request routes to PIPELINE and I-1 admits it 2ms |    × FINAL AUDIT — the boundary cases keep their typed outcomes > 8. a MIXED request that needs the browser is admitted to the browser 1ms |    × FINAL AUDIT — the boundary cases keep their typed outcomes > 9. a question about THI"
+    },
+    {
+      "id": "M3",
+      "name": "the VAGUE_REFERENCE signal is removed — a dangling pronoun is \"answered\" instead of clarified",
+      "outcome": "KILLED",
+      "detail": "   × FINAL AUDIT — the boundary cases keep their typed outcomes > 10. a dangling reference with no context is a CLARIFICATION, not an answer and not a browser run 7ms |    × FINAL AUDIT — the conversational route cannot be talked into browser work > 13. no browser-shaped message in the corpus is ever answered conversationally 1ms |    × FINAL AUDIT — the conversational route cannot be talked into browser work > 13b. each browser signal class is reported for a message where it is unambiguous 1ms "
+    },
+    {
+      "id": "M6",
+      "name": "the ordering is inverted — a definitional shape is granted before browser signals are checked",
+      "outcome": "KILLED",
+      "detail": "   × FINAL AUDIT — ordinary chat is answered, not automated > 2. the three conversational codes are the WHOLE whitelist 11ms |    × FINAL AUDIT — the boundary cases keep their typed outcomes > 9. a question about THIS page is not answered conversationally 3ms |    × FINAL AUDIT — the boundary cases keep their typed outcomes > 10. a dangling reference with no context is a CLARIFICATION, not an answer and not a browser run 1ms |    × FINAL AUDIT — the conversational route cannot be talked into bro"
+    },
+    {
+      "id": "M4",
+      "name": "the conversational early exit is removed — a chat message falls through into target resolution",
+      "outcome": "KILLED",
+      "detail": "   × FINAL AUDIT — the conversational branch returns before the browser pipeline exists > 17b. the conversational branch ends with an UNCONDITIONAL early exit 6ms |       Tests  1 failed | 53 passed (54)"
+    },
+    {
+      "id": "M5",
+      "name": "I-1 admits greetings to browser automation — the refusal is silently granted",
+      "outcome": "KILLED",
+      "detail": "   × I-1 — casual input never reaches browser automation > refuses hi with zero automation 7ms |    × I-1 — casual input never reaches browser automation > refuses hello with zero automation 1ms |    × I-1 — casual input never reaches browser automation > refuses hey there with zero automation 0ms |    × I-1 — casual input never reaches browser automation > refuses hello there with zero automation 0ms"
+    }
+  ]
+}

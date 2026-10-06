@@ -83,6 +83,14 @@ export class BackendAgentProvider implements AgentProvider {
    */
   private readonly actionEndpoint: string;
   private readonly reviewEndpoint: string;
+  /**
+   * FINAL ACCEPTANCE AUDIT — the conversational endpoint.
+   *
+   * A separate route on the same local gateway. It carries ONLY the user's
+   * message: no page context, no detections, no evidence ids, no action history.
+   * The normal-chat path has nothing to send because it never read a page.
+   */
+  private readonly chatEndpoint: string;
 
   /**
    * PHASE 17.5. Structured, CONTENT-FREE telemetry. A ring buffer, not a log
@@ -100,6 +108,66 @@ export class BackendAgentProvider implements AgentProvider {
     const base = (opts.baseUrl ?? DEFAULT_AGENT_API_BASE).replace(/\/+$/, '');
     this.actionEndpoint = `${base}/api/v1/agent/action`;
     this.reviewEndpoint = `${base}/api/v1/agent/review`;
+    this.chatEndpoint = `${base}/api/v1/agent/chat`;
+  }
+
+  /**
+   * FINAL ACCEPTANCE AUDIT — one plain conversational answer.
+   *
+   * Deliberately NOT routed through `requestStep`: there is no step, no context,
+   * no action, no validation and nothing to dispatch. It shares the egress
+   * firewall of the local gateway (the base is still `127.0.0.1`), and it fails
+   * TYPED — a chat failure must surface as an unavailable reasoning service, never
+   * as an empty answer and never as a browser task.
+   */
+  async requestChat(task: string): Promise<{ answer: string }> {
+    //
+    // The payload is the user's text and NOTHING ELSE. It is still put through
+    // the SAME egress firewall as every other outbound request, so the normal
+    // chat path cannot become a side channel around the privacy boundary even
+    // though it has no page data to send.
+    //
+    const payload = { task };
+    const egressDecision = validateEgressPayload(payload, this.chatEndpoint);
+    if (egressDecision.directive === 'BLOCK') {
+      throw new ProviderError(`Egress Firewall Blocked Request: ${egressDecision.reason}`, 'unknown');
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    let resp: Response;
+    try {
+      resp = await fetch(this.chatEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (!resp.ok) {
+      const retryAfterMs = parseRetryAfter(resp.headers?.get?.('retry-after'));
+      const { detail, kind, retryable } = await this.parseError(resp, retryAfterMs);
+      throw new ProviderError(`Backend chat endpoint failed: ${detail}`, kind, {
+        retryable,
+        status: resp.status,
+        retryAfterMs,
+      });
+    }
+
+    const data = (await resp.json().catch(() => null)) as { answer?: unknown } | null;
+    const answer = typeof data?.answer === 'string' ? data.answer.trim() : '';
+    if (!answer) {
+      // Fail TYPED, never with an empty answer: an empty string rendered as an
+      // assistant reply is indistinguishable from a model that "said" nothing.
+      throw new ProviderError('Backend chat endpoint returned no answer.', 'invalid_json', {
+        retryable: false,
+        status: resp.status,
+      });
+    }
+    return { answer };
   }
 
   async requestAction(

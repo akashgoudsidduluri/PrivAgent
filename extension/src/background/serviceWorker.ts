@@ -1,6 +1,7 @@
 import { AgentLoop, TaskState } from '../agent/agentLoop';
 import type { AgentTaskState } from '../agent/agentState';
 import { createAgentProvider } from '../agent/providerRegistry';
+import { classifyMessageRoute } from '../agent/conversationRoute';
 import { ModelRouter } from '../agent/modelRouter';
 import { buildAgentPayload, PrivacyScanReport, AgentContextPayload, VisualCaptureReport } from '../privacy/types';
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
@@ -584,6 +585,134 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.info('[AgentTrace] service worker START_TASK received', { taskLength: (message.task as string)?.length });
     const task = message.task as string;
     const dashboardTabId = sender.tab?.id || currentDashboardTabId;
+
+    // ── FINAL ACCEPTANCE AUDIT — THE NORMAL-CHAT ROUTE ──────────────────
+    //
+    // Placed HERE, above the I-1 boundary and above target resolution, for the
+    // same load-bearing reason I-1 is placed above target resolution: an
+    // ordinary message must not reach `chrome.tabs.query`,
+    // `resolveTargetWebTab`, `provisionTargetTab`, perception or the loop. It
+    // must not supersede a task that is genuinely running either, which is why
+    // this branch returns before the ownership block below.
+    //
+    // The route itself (`conversationRoute.ts`) is deterministic, local and
+    // WHITELISTED: it answers smalltalk, definitional/technical questions and
+    // arithmetic, and only when the message carries no browser signal at all.
+    // Everything else returns PIPELINE and falls through to the existing I-1
+    // boundary completely unchanged. This route can therefore only ever REMOVE
+    // browser work, never admit any.
+    const messageRoute = classifyMessageRoute(task);
+    console.info('[AgentTrace] chat route classified', {
+      route: messageRoute.route,
+      code: messageRoute.code,
+      taskLength: typeof task === 'string' ? task.length : 0,
+    });
+
+    if (messageRoute.route === 'CONVERSATION') {
+      //
+      // DYNAMIC TASK-AWARE UI — TWO ids, deliberately different:
+      //
+      //   * `chatOwnerToken` is the pipeline owner at receive time. The
+      //     in-flight answer is suppressed only if ownership CHANGES (a newer
+      //     browser task claimed the pipeline, or a stop bumped the counter).
+      //   * `chatRunId` is the run the DASHBOARD is waiting on for THIS
+      //     message — its own adapter counter, relayed in `message.runId`.
+      //     `sendToDashboard` stamps the outbound payload with
+      //     `rawPayload.runId`, and the adapter drops any payload whose runId
+      //     is not its current run. Using `activeTaskRunId` here was wrong:
+      //     this branch never claims ownership (correctly — a casual message
+      //     must not supersede a genuinely running task), so on a fresh
+      //     session it was 0 while the adapter expected 1. The answer was
+      //     therefore dropped as "stale" and the dashboard waited on a typing
+      //     indicator forever. Ownership stays untouched below.
+      const chatOwnerToken = activeTaskRunId;
+      const chatRunId = typeof message.runId === 'number' ? message.runId : activeTaskRunId;
+      console.info('[AgentTrace] normal chat accepted', {
+        code: messageRoute.code,
+        targetTabsQueried: 0,
+        targetTabsProvisioned: 0,
+        browserActionsDispatched: 0,
+      });
+      // Acknowledge on the port in the SAME synchronous section that decided the
+      // route. The refusal path below exists because an early `return` without
+      // `sendResponse` leaves the port to close and the dashboard reports a lie;
+      // the same rule applies to a conversational reply.
+      try {
+        sendResponse({
+          started: true,
+          success: true,
+          status: 'ANSWER',
+          conversational: true,
+          // DYNAMIC TASK-AWARE UI — relays the provenance of this answer so
+          // the dashboard can select the conversational surface from the very
+          // first message instead of guessing.
+          answerSource: 'CONVERSATION',
+        });
+      } catch {
+        /* port already closed */
+      }
+      void (async () => {
+        const chatProvider = createAgentProvider({ provider: 'backend' });
+        try {
+          if (typeof chatProvider.requestChat !== 'function') {
+            throw new Error('provider has no conversational path');
+          }
+          const { answer } = await chatProvider.requestChat(task);
+          // A12 discipline: if a newer task took over while this answer was in
+          // flight, the dashboard belongs to that task and this reply is stale.
+          if (chatOwnerToken !== activeTaskRunId) {
+            console.info('[AgentTrace] normal chat suppressed (superseded)', { chatRunId, chatOwnerToken, activeTaskRunId });
+            return;
+          }
+          //
+          // `sendToDashboard` is the SINGLE output-privacy enforcement point, so
+          // the answer crosses the same screening boundary as every other
+          // payload. `answerSource` is what tells the result layer this answer
+          // came from conversation, not from verified page evidence.
+          //
+          await sendToDashboard(
+            {
+              status: 'ANSWER',
+              task: typeof task === 'string' ? task : '',
+              answer,
+              answerSource: 'CONVERSATION',
+              currentStep: 0,
+              maxSteps: 0,
+              steps: [],
+              reason: 'Answered directly.',
+              runId: chatRunId,
+            },
+            dashboardTabId
+          );
+        } catch (err) {
+          console.warn('[AgentTrace] normal chat unavailable', {
+            code: messageRoute.code,
+            kind: err instanceof Error ? err.name : 'unknown',
+          });
+          if (chatOwnerToken !== activeTaskRunId) return;
+          // Fail TYPED and honestly. A conversational answer that could not be
+          // produced is a reasoning-service problem; it is NOT a reason to
+          // launch the browser agent, and it is NOT an empty answer.
+          await sendToDashboard(
+            {
+              status: 'PROVIDER_UNAVAILABLE',
+              // A chat that could not be answered is still a conversation:
+              // the dashboard must render the notice as chat, never as a
+              // browser-agent failure.
+              answerSource: 'CONVERSATION',
+              task: typeof task === 'string' ? task : '',
+              currentStep: 0,
+              maxSteps: 0,
+              steps: [],
+              reason: 'The reasoning service could not answer that right now.',
+              runId: chatRunId,
+            },
+            dashboardTabId
+          );
+        }
+      })();
+      return;
+    }
 
     // ── PHASE 18.7 / I-1: THE INTENT BOUNDARY ────────────────────────────
     //

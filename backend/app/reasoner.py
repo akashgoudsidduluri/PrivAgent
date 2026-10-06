@@ -33,7 +33,7 @@ from urllib.parse import urlparse
 import httpx
 
 from . import config
-from .text_safety import scan_reason_text
+from .text_safety import scan_reason_text, scan_text
 
 logger = logging.getLogger("privagent.reasoner")
 
@@ -2132,6 +2132,17 @@ class MockReasoner:
     def configured(self) -> bool:
         return True
 
+    def chat_answer(self, task: str) -> tuple[str, str]:
+        """Deterministic conversational reply for tests and CI.
+
+        The mock does not call a model, so this route can be exercised end to end
+        with no network and no credentials. It still returns an answer that is
+        plainly a MOCK answer, so no artifact can mistake it for a live one.
+        """
+        if self.fail_with:
+            raise ReasoningError(self.fail_with, kind="mock_failure")
+        return f"Mock answer for: {task.strip()}", "mock"
+
     def request_action(
         self,
         task: str,
@@ -2213,6 +2224,139 @@ REASONER_REGISTRY: Dict[str, Callable[[], ReasonerProvider]] = {
 # an API key. There is no guessing-based fallback anywhere in this module.
 DEFAULT_REASONER_NAME = "groq"
 
+
+
+CHAT_SYSTEM_PROMPT = (
+    "You are a normal conversational assistant. Answer the user's message "
+    "directly and concisely, in plain language, with no preamble about tools, "
+    "modes or capabilities.\n"
+    "You have NO browser access on this path and NO page context. If the "
+    "question needs live or page-specific information you do not have, say so "
+    "plainly in one sentence instead of inventing an answer.\n"
+    "Never claim to have performed, submitted, sent or verified anything."
+)
+
+
+def chat_answer(task: str) -> tuple[str, str]:
+    """One plain conversational completion. Returns ``(answer, model)``.
+
+    SECURITY — WHAT THIS FUNCTION CANNOT DO
+    ---------------------------------------
+    It takes the user's TEXT and nothing else. There is no context parameter, so
+    there is no page metadata to sanitize, strip or leak: the conversational path
+    cannot become a side channel around the M8 raw-value boundary, because it
+    never observes the page in the first place. This is why the signature is
+    free of any context argument rather than merely documented as such.
+
+    The result is screened for raw sensitive content before it is returned, so a
+    model that echoes a card or account number into an answer cannot put it on a
+    screen through this route.
+    """
+    provider = build_reasoner(config.REASONER_MODE)
+    if not getattr(provider, "configured", False):
+        raise ReasoningError(
+            "No conversational provider is configured.", retryable=False, kind="unconfigured"
+        )
+
+    # A provider may implement the conversational path itself (the deterministic
+    # mock does, so this route is testable with no network at all).
+    direct = getattr(provider, "chat_answer", None)
+    if callable(direct):
+        answer, model = direct(task)
+        return _screen_chat_answer(answer), model
+
+    endpoint = getattr(provider, "endpoint_url", None) or getattr(provider, "base_url", None)
+    if not endpoint:
+        raise ReasoningError("Configured provider has no endpoint.", retryable=False, kind="unconfigured")
+
+    payload = {
+        "model": provider.model,
+        "messages": [
+            {"role": "system", "content": CHAT_SYSTEM_PROMPT},
+            {"role": "user", "content": task},
+        ],
+        "temperature": 0.3,
+        "max_tokens": 512,
+    }
+    headers = {
+        "Authorization": f"Bearer {provider.api_key}",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        response = httpx.post(endpoint, json=payload, headers=headers, timeout=provider.timeout_seconds)
+    except httpx.TimeoutException as err:
+        raise ReasoningError("Conversational request timed out.", retryable=True, kind="timeout") from err
+    except httpx.HTTPError as err:
+        raise ReasoningError(
+            f"Conversational network error: {type(err).__name__}", retryable=True, kind="network"
+        ) from err
+
+    if response.status_code != 200:
+        raise ReasoningError(
+            f"Conversational provider returned HTTP {response.status_code}.",
+            retryable=response.status_code >= 500,
+            kind="http",
+        )
+
+    try:
+        data = response.json()
+        content = data["choices"][0]["message"]["content"]
+    except Exception as err:  # noqa: BLE001 - any shape error is the same failure
+        raise ReasoningError(
+            "Conversational provider returned an unreadable body.", retryable=False, kind="invalid_json"
+        ) from err
+
+    answer = (content or "").strip()
+    if not answer:
+        raise ReasoningError(
+            "Conversational provider returned an empty answer.", retryable=False, kind="empty"
+        )
+    return _screen_chat_answer(answer), str(getattr(provider, "model", ""))
+
+
+# Fixed, safe copy for an answer that tripped the sensitive-content scanner. It
+# says what happened without repeating a single character of what tripped it.
+CHAT_WITHHELD = (
+    "I could not safely show that answer because it appeared to contain "
+    "sensitive information. Please rephrase the question."
+)
+
+#
+# The value classes this route withholds on. They are exactly the classes the
+# EXTENSION's authoritative egress screen (`rawValueScanner.valueRuleViolations`)
+# applies to a user-facing body, so the two ends of the wire now screen for the
+# same thing instead of disagreeing.
+#
+# `person_name` is deliberately NOT among them, and this is a scoping decision
+# for THIS route rather than a relaxation of anything that existed before it
+# (the conversational screen is new in this change; no pre-existing authority
+# is touched). Two reasons, and the second one is what makes it necessary:
+#
+#   1. `person_name` exists to stop the model copying a name it SAW ON A PAGE
+#      into user-facing text. This route has no page context at all, so every
+#      name in the answer came from the user's own message or from general
+#      knowledge — there is nothing to leak.
+#   2. The rule is a capitalised-phrase heuristic, and it false-positives on
+#      ordinary technical prose. Real observed example: "TCP (Transmission
+#      Control Protocol)" is reported as `person_name` snippet 'Transmission
+#      Control', which withheld an entirely ordinary answer to "Explain TCP vs
+#      UDP" — one of the acceptance cases this route exists to serve.
+#
+CHAT_VALUE_RULES = frozenset(
+    {"credit_card", "pan", "account_number", "email", "phone", "labelled_credential", "credential_token"}
+)
+
+
+def _screen_chat_answer(answer: str) -> str:
+    """Withhold, never echo, an answer that looks like it carries a raw value."""
+    try:
+        finding = scan_text(answer)
+    except Exception:  # noqa: BLE001 - screening must never break the route
+        return CHAT_WITHHELD
+    if finding is not None and finding.rule in CHAT_VALUE_RULES:
+        return CHAT_WITHHELD
+    return answer
 
 
 def resolve_reasoner_name(name: str) -> str:

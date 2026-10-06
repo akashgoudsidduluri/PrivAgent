@@ -1,0 +1,31 @@
+{
+  "phase": "DYNAMIC-TASK-AWARE-UI",
+  "work": "Dynamic UI critical invariants — mutation suite",
+  "tests": [
+    "tests/dynamicUi.test.ts"
+  ],
+  "total": 3,
+  "killed": 3,
+  "survived": 0,
+  "notApplied": 0,
+  "results": [
+    {
+      "id": "M1",
+      "name": "always render browser activity — the conversation branch is dead",
+      "outcome": "KILLED",
+      "detail": "   × 1. conversation renders no browser-agent UI > 1a. a settled conversational answer is user message + assistant response only 94ms |    × 1. conversation renders no browser-agent UI > 1b. the in-flight chat ack shows a typing indicator, never browser chrome 66ms |    × 1. conversation renders no browser-agent UI > 1c. a chat that could not be answered renders as chat, not as a browser failure 26ms |    ✓ 9. failure is truthful and never stuck working > 9a. FAILED shows a concise failure, pres"
+    },
+    {
+      "id": "M2",
+      "name": "always render \"Step 1 of 10\" — the fabricated step counter returns",
+      "outcome": "KILLED",
+      "detail": "   × 4. no fabricated step counters > 4b. no surface ever renders \"Step N of M\" 61ms |    × 4. no fabricated step counters > 4c. the count shown is a count of observed activities, not a budget 17ms |    ✓ 9. failure is truthful and never stuck working > 9a. FAILED shows a concise failure, preserves activity context, and stops the working indicator 20ms |       Tests  2 failed | 26 passed (28)"
+    },
+    {
+      "id": "M3",
+      "name": "conversation route displays the browser timeline / task card",
+      "outcome": "KILLED",
+      "detail": "   × 1. conversation renders no browser-agent UI > 1a. a settled conversational answer is user message + assistant response only 99ms |    × 1. conversation renders no browser-agent UI > 1b. the in-flight chat ack shows a typing indicator, never browser chrome 59ms |    × 1. conversation renders no browser-agent UI > 1c. a chat that could not be answered renders as chat, not as a browser failure 19ms |    ✓ 9. failure is truthful and never stuck working > 9a. FAILED shows a concise failure, pres"
+    }
+  ]
+}

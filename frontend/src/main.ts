@@ -147,6 +147,10 @@ class App {
       steps: [],
       currentStep: 0,
       interaction: undefined,
+      // DYNAMIC TASK-AWARE UI — a fresh workspace carries no provenance and
+      // no supersession from the previous message.
+      answerSource: undefined,
+      supersededPreviousTask: undefined,
       currentPipelineStage: 'IDLE',
     };
     this.workspace.update(emptyState);

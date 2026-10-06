@@ -219,8 +219,11 @@ export type AgentTerminalReason =
   | 'CONTAINMENT_DENIED' | 'HARNESS_HALTED'
   | 'RECOVERY_EXHAUSTED' | 'STEP_BOUND_EXHAUSTED' | 'REASONER_FAILED'
   | 'PERCEPTION_FAILED' | 'CONFIRMATION_DECLINED' | 'UNKNOWN'
-  // PHASE 18.8 / B1 — an information run's typed end.| 'ANSWERED'
+  // PHASE 18.8 / B1 — an information run's typed end.
+  | 'ANSWERED'
   | 'NO_VERIFIABLE_RESULT'
+  /** DYNAMIC TASK-AWARE UI — the normal-chat route answered directly. */
+  | 'CONVERSATIONAL_ANSWER'
   /** PHASE 18.8 / A13 — a reference the local resolver refused to guess. */
   | 'NEEDS_CLARIFICATION'
   /** PHASE 18.8 / A14 — the run ended with a consequential commit unconfirmed. */
@@ -346,6 +349,18 @@ export interface DashboardAgentState {
    * previous behaviour rather than failing.
    */
   interaction?: AgentInteractionState;
+  /**
+   * DYNAMIC TASK-AWARE UI — the provenance of an ANSWER, relayed from the
+   * normal-chat route ("CONVERSATION") or a page-evidence run. This is the
+   * ONLY signal that may select the conversational surface; the projection
+   * never guesses it from prose. Cleared on every new task.
+   */
+  answerSource?: 'CONVERSATION' | 'PAGE_EVIDENCE';
+  /**
+   * Set only when a genuinely running task was replaced by a newer request,
+   * so the new card can say so truthfully. Never set otherwise.
+   */
+  supersededPreviousTask?: string;
 }
 
 export interface BackendHealthState {
