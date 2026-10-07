@@ -189,6 +189,40 @@ function isArithmetic(task: string): boolean {
  * would let "is there a cheaper one on the site?" through as a definitional
  * question, because it also starts with "is".
  */
+/**
+ * PHASE 19.3 — A LEADING CANCELLATION PREFIX.
+ *
+ * Real-browser finding (A12 interrupt scenario): the user's interrupt message is
+ * "Stop. What is TCP?" — a cancellation followed by a knowledge question. The
+ * shape patterns below are anchored at the START of the message, so the
+ * definitional question never matched and the turn fell through to the browser
+ * pipeline. The task genuinely stopped (supersession is handled before any of
+ * this), but the QUESTION was then answered by browsing the page in front of us
+ * instead of as a normal conversation.
+ *
+ * Only the SHAPE test looks past the prefix. Every browser-signal pattern above
+ * still runs against the FULL message first, so nothing can hide behind "Stop."
+ * — "Stop. Search for cats." is still BROWSER_VERB and "Stop. Buy it." is still
+ * STATE_CHANGE. A message whose remainder is not itself a recognised
+ * conversational shape still falls through to the pipeline, unchanged.
+ *
+ * The prefix is also exported as a PREDICATE (`hasLeadingCancellation`) because
+ * a message that begins this way must still STOP the running task, even when the
+ * turn is answered conversationally. Routing and cancellation authority are
+ * decided in different places, and they must agree on what "Stop." means.
+ */
+const LEADING_CANCELLATION = /^(?:stop|halt|cancel|abort)\b[\s.,;:!\u2014\u2013-]*/i;
+
+/** The prefix-stripped message, used ONLY for the conversational-shape tests. */
+export function stripLeadingCancellation(task: string): string {
+  return task.replace(LEADING_CANCELLATION, '').trim();
+}
+
+/** Does this message begin by telling the agent to stop? */
+export function hasLeadingCancellation(rawTask: unknown): boolean {
+  return typeof rawTask === 'string' && LEADING_CANCELLATION.test(rawTask.trim());
+}
+
 export function classifyMessageRoute(rawTask: unknown): MessageRouteDecision {
   if (typeof rawTask !== 'string') return { route: 'PIPELINE', code: 'NO_CONVERSATIONAL_SHAPE' };
   const task = rawTask.trim();
@@ -210,8 +244,15 @@ export function classifyMessageRoute(rawTask: unknown): MessageRouteDecision {
   if (FRESHNESS_REQUIRED.test(task)) return { route: 'PIPELINE', code: 'FRESHNESS_REQUIRED' };
 
   // ── 2. Only now: is it a conversational shape? ────────────────────────────
-  if (isArithmetic(task)) return { route: 'CONVERSATION', code: 'ARITHMETIC' };
-  if (DEFINITIONAL.test(task)) return { route: 'CONVERSATION', code: 'DEFINITIONAL_KNOWLEDGE' };
+  //
+  // The shape tests run against the message WITHOUT a leading cancellation
+  // prefix (see LEADING_CANCELLATION). This is the only place the prefix is
+  // ignored, and it can only ever turn a knowledge question into CONVERSATION —
+  // it cannot admit a browser signal, because step 1 already ran on the full
+  // text.
+  const shape = stripLeadingCancellation(task);
+  if (isArithmetic(shape)) return { route: 'CONVERSATION', code: 'ARITHMETIC' };
+  if (DEFINITIONAL.test(shape)) return { route: 'CONVERSATION', code: 'DEFINITIONAL_KNOWLEDGE' };
 
   // A bare noun phrase ("machine learning") is not a question and not a task.
   // It is left to the pipeline's own ambiguity handling.

@@ -379,25 +379,38 @@ export function parseTaskTargetReference(task: string): TaskTargetReference | nu
   // 5. Preposition indicating site (e.g. "search for cats on google", "on flipkart find shirts")
   const prepMatch = lower.match(/\b(?:on|in|at)\s+([a-zA-Z0-9-]+)(?:\.([a-zA-Z]{2,}))?\b/i);
   if (prepMatch && prepMatch[1]) {
-    const rawName = prepMatch[1];
-    const rawTld = prepMatch[2];
-    const STOP_WORDS = new Set(['the', 'a', 'an', 'this', 'that', 'page', 'tab', 'window', 'top', 'bottom', 'left', 'right', 'screen']);
-    if (!STOP_WORDS.has(rawName)) {
-      if (rawTld) {
+    //
+    // REAL-BROWSER DEFECT: a preposition by itself does not name a
+    // destination. "Sign in now" parsed as site "now", and "based on price"
+    // parsed as site "price" — both then hard-failed the whole task with
+    // DESTINATION_REQUIRED ("Please open now and try again") even though a
+    // perfectly good eligible tab was open, so the browser task never ran at
+    // all. The phrase may declare a destination only when the task ALSO
+    // expresses site usage — an open/search intent verb of the same vocabulary
+    // branch 4 uses. Domain/port/URL references above are unaffected.
+    const siteUsageIntent =
+      /\b(?:open|opens|go\s+to|goto|visit|visits|browse|browses|search|searches|navigate|navigates|launch|launches)\b/.test(lower);
+    if (siteUsageIntent) {
+      const rawName = prepMatch[1];
+      const rawTld = prepMatch[2];
+      const STOP_WORDS = new Set(['the', 'a', 'an', 'this', 'that', 'page', 'tab', 'window', 'top', 'bottom', 'left', 'right', 'screen']);
+      if (!STOP_WORDS.has(rawName)) {
+        if (rawTld) {
+          return {
+            rawTarget: `${rawName}.${rawTld}`,
+            hostname: `${rawName}.${rawTld}`,
+            siteName: rawName,
+            isOpenIntent: false,
+            isAlreadyOpenedIntent: false,
+          };
+        }
         return {
-          rawTarget: `${rawName}.${rawTld}`,
-          hostname: `${rawName}.${rawTld}`,
+          rawTarget: rawName,
           siteName: rawName,
           isOpenIntent: false,
           isAlreadyOpenedIntent: false,
         };
       }
-      return {
-        rawTarget: rawName,
-        siteName: rawName,
-        isOpenIntent: false,
-        isAlreadyOpenedIntent: false,
-      };
     }
   }
 

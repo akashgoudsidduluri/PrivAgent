@@ -83,6 +83,28 @@ function isActionCompatibleWithType(actionType: ActionType, detectionType: strin
   // second privacy policy — rejecting `click` on an account-number row here
   // dead-locked the whole banking demo pipeline. Structural compatibility
   // therefore treats any form-control-like type as interactable.
+  //
+  // PHASE 19.1 — `email` and `phone` join the set.
+  //
+  // They are the CONTACT-IDENTIFIER pair, and every other authority already
+  // treats them exactly like the types above:
+  //   * M8 privacy policy (`privacyPolicy.checkCapability`) grants the agent
+  //     TYPE/SELECT/CLICK on EVERY entity type; only READ_SENSITIVE_VALUE,
+  //     DISCLOSE_TO_USER and TRANSMIT_EXTERNALLY are denied.
+  //   * the risk engine scores `type` into an email/phone target as MEDIUM
+  //     ("Target is a contact identifier field being modified"), i.e. it expects
+  //     the action to be REACHABLE and to be merely gated, not dead.
+  //
+  // Leaving them out made a login/contact form unfillable in real Chrome:
+  // typing into the account field is refused as TARGET_MISMATCH, because the
+  // DOM scanner classifies that input as `email`. Found by running the login
+  // fixture end to end (test/evidence `e2e_affordance.json`, AF.1), not by
+  // reading the table — the sibling types `person_name`/`address` were already
+  // here for the same reason, and this pair was simply missed.
+  //
+  // The gate stays STRUCTURAL: this only says "this element kind is a form
+  // control". Grounding, M5, the privacy firewall, the Security Critic, risk and
+  // confirmation are unchanged, and a non-offered target id is still refused.
   const formControlLike =
     detectionType === 'input' ||
     detectionType === 'search' ||
@@ -94,7 +116,9 @@ function isActionCompatibleWithType(actionType: ActionType, detectionType: strin
     detectionType === 'account_number' ||
     detectionType === 'pan' ||
     detectionType === 'person_name' ||
-    detectionType === 'address';
+    detectionType === 'address' ||
+    detectionType === 'email' ||
+    detectionType === 'phone';
   switch (actionType) {
     case 'click':
       return (

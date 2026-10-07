@@ -1,0 +1,289 @@
+{
+  "phase": "18.8-A14",
+  "work": "Uncertain commit: an unconfirmed consequential action is never re-dispatched — real Chrome",
+  "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
+  "inputs": {
+    "task": "Reply to the order enquiry shown on this page.",
+    "fixture": "http://localhost:4174/enquiry.html",
+    "provider": "controlled stub mode=commit_demo"
+  },
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "swLogs": [
+    {
+      "t": "5.86s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791308572704}"
+    },
+    {
+      "t": "5.86s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791308572704}"
+    },
+    {
+      "t": "5.86s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791308572704,targetFound:true,tabId:184084386,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "5.86s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791308572704,targetFound:true}"
+    },
+    {
+      "t": "5.88s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "5.88s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:46}"
+    },
+    {
+      "t": "5.88s",
+      "text": "[AgentTrace] chat route classified {route:PIPELINE,code:PAGE_DEIXIS,taskLength:46}"
+    },
+    {
+      "t": "5.89s",
+      "text": "[AgentTrace] intent classified {intent:ACTION_REQUEST,confidence:DETERMINISTIC,requiresDestination:false,requiresEvidence:false,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "5.89s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-585c5d4f,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "5.89s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "5.89s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "5.89s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:184084386}"
+    },
+    {
+      "t": "5.89s",
+      "text": "TARGET_TAB_SELECTED {tabId:184084386,origin:http://localhost:4174,reason:Selected first eligible web tab.}"
+    },
+    {
+      "t": "5.89s",
+      "text": "[AgentTrace] target resolved {tabId:184084386}"
+    },
+    {
+      "t": "5.93s",
+      "text": "TARGET_TAB_READY {tabId:184084386}"
+    },
+    {
+      "t": "5.93s",
+      "text": "[AgentTrace] target content script ready {tabId:184084386}"
+    },
+    {
+      "t": "5.93s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "5.94s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "5.94s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "5.95s",
+      "text": "[AgentTrace] agent loop started {runId:1}"
+    },
+    {
+      "t": "5.97s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-585c5d4f,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "5.97s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "5.97s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "5.97s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "5.97s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+    },
+    {
+      "t": "5.97s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/enquiry.html}"
+    },
+    {
+      "t": "5.98s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "6.01s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:5}"
+    },
+    {
+      "t": "6.01s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:3,regionsConsidered:3,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "6.02s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:3,ledgerSize:3,verifiedCurrent:3,generation:2}"
+    },
+    {
+      "t": "6.02s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "6.03s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "6.03s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/enquiry.html,worldModelId:wm-g2-muwyvgrm-4unw}"
+    },
+    {
+      "t": "6.03s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:11,privacyFindingsCount:5}"
+    },
+    {
+      "t": "6.04s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:UNKNOWN,pageState:populated,pageGeneration:2,entityCount:0,affordanceCount:2}"
+    },
+    {
+      "t": "6.04s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-585c5d4f,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "6.04s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwyvgr7-vonzx-sg1,category:NAVIGATE,description:Navigate to commerce catalog or store front}"
+    },
+    {
+      "t": "6.05s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:4,discoveries:0}"
+    },
+    {
+      "t": "6.05s",
+      "text": "[AgentTrace] conversation updated {event:REFERENCE_NEEDS_INFORMATION,conversationId:conv-585c5d4f,contextGeneration:5,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "6.05s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:UNANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "6.05s",
+      "text": "[ServiceWorker] response forwarded {status:NEEDS_INFORMATION,currentStep:0,reason:I do not have a list of items from this page yet, … you mean. Try asking me to find the items first.}"
+    },
+    {
+      "t": "6.05s",
+      "text": "[AgentTrace] reference not resolvable {outcome:NEEDS_INFORMATION,code:NO_CANDIDATES,phrase:that page}"
+    },
+    {
+      "t": "6.06s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-585c5d4f,contextGeneration:7,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "6.06s",
+      "text": "[AgentTrace] terminal progress emitted {status:NEEDS_INFORMATION,runId:1}"
+    },
+    {
+      "t": "6.06s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:UNANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "6.07s",
+      "text": "[ServiceWorker] response forwarded {status:NEEDS_INFORMATION,currentStep:0,reason:I do not have a list of items from this page yet, … you mean. Try asking me to find the items first.}"
+    }
+  ],
+  "events": [
+    {
+      "t": 1791308572798,
+      "runId": 1,
+      "status": "RUNNING",
+      "task": "Reply to the order enquiry shown on this page.",
+      "steps": 0,
+      "finalResult": null,
+      "terminal": null
+    },
+    {
+      "t": 1791308572820,
+      "runId": 1,
+      "status": "RUNNING",
+      "task": "Reply to the order enquiry shown on this page.",
+      "steps": 0,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      },
+      "terminal": null
+    },
+    {
+      "t": 1791308572829,
+      "runId": 1,
+      "status": "IN_PROGRESS",
+      "task": "Reply to the order enquiry shown on this page.",
+      "steps": 0,
+      "finalResult": {
+        "kind": "NONE",
+        "headline": "",
+        "body": null,
+        "provenance": null,
+        "remaining": []
+      },
+      "terminal": null
+    },
+    {
+      "t": 1791308572908,
+      "runId": 1,
+      "status": "NEEDS_INFORMATION",
+      "task": "Reply to the order enquiry shown on this page.",
+      "steps": 0,
+      "finalResult": {
+        "kind": "NEEDS_INFORMATION",
+        "headline": "More information needed",
+        "body": "This page does not contain what was asked. Try a different page or add detail.",
+        "provenance": null,
+        "remaining": []
+      },
+      "terminal": {
+        "outcome": "UNANSWERED",
+        "reason": "NO_VERIFIABLE_RESULT",
+        "headline": "No verified result was available on this page."
+      }
+    },
+    {
+      "t": 1791308572922,
+      "runId": 1,
+      "status": "NEEDS_INFORMATION",
+      "task": "Reply to the order enquiry shown on this page.",
+      "steps": 0,
+      "finalResult": {
+        "kind": "NEEDS_INFORMATION",
+        "headline": "More information needed",
+        "body": "This page does not contain what was asked. Try a different page or add detail.",
+        "provenance": null,
+        "remaining": []
+      },
+      "terminal": {
+        "outcome": "UNANSWERED",
+        "reason": "NO_VERIFIABLE_RESULT",
+        "headline": "No verified result was available on this page."
+      }
+    }
+  ],
+  "fixture": {
+    "atTerminal": {
+      "clicks": 0,
+      "url": "http://localhost:4174/enquiry.html"
+    },
+    "afterSettle": {
+      "clicks": 0,
+      "url": "http://localhost:4174/enquiry.html"
+    }
+  },
+  "dashboardBodyExcerpt": "PrivAgent\nPRIVACY BROWSER AGENT\nPrivacy Protected\nTools\nNew Task\nAlt+N\nCURRENT TASK\nReply to the order enquiry shown on this page.\nNEEDS_INFORMATION\nRECENT TASKS\nFind my recent transactions\nSUCCESS · 15m ago\nOpen account details\nSUCCESS · 1h ago\nLocal Privacy Boundary\n0 bytes transmitted (zero-leak)\nPrivacy Hub\nEvaluation\nArch\nReply to the order enquiry shown on this page.\nYou\n·\nJust now\nPA\nPrivAgent\nBROWSER TASK\nNEEDS INFORMATION\ni\nMore information needed\n2 activities\nMore information needed\nThis page does not contain what was asked. Try a different page or add detail.\nACTIVITY\n2 ACTIVITIES\nBROWSER & PRIVACY DIAGNOSTICS\n▼ EXPAND\nOn-device privacy boundary active (zero raw PII)\nPrivAgent Boundary\nSanitized\n1. Original\n2. Detected\n3. Sanitized\n×"
+}

@@ -1,7 +1,7 @@
 import { AgentLoop, TaskState } from '../agent/agentLoop';
 import type { AgentTaskState } from '../agent/agentState';
 import { createAgentProvider } from '../agent/providerRegistry';
-import { classifyMessageRoute } from '../agent/conversationRoute';
+import { classifyMessageRoute, hasLeadingCancellation } from '../agent/conversationRoute';
 import { ModelRouter } from '../agent/modelRouter';
 import { buildAgentPayload, PrivacyScanReport, AgentContextPayload, VisualCaptureReport } from '../privacy/types';
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
@@ -609,6 +609,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
 
     if (messageRoute.route === 'CONVERSATION') {
+      //
+      // PHASE 19.3 — "Stop." MUST STILL STOP.
+      //
+      // This branch deliberately returns BEFORE the ownership block below, so an
+      // ordinary message can never kill a genuinely running task. A message that
+      // BEGINS with a cancellation is not ordinary: it is the user telling the
+      // agent to stop, and answering its question while the old run kept working
+      // would silently ignore that instruction (real-browser finding: "Stop.
+      // What is TCP?" during a running browser task).
+      //
+      // Supersession is one-way and silent, so the replaced run cannot push
+      // progress into the dashboard the answer now belongs to, and every one of
+      // its continuations is stale from this line on. Cancelling can only ever
+      // STOP work — it grants nothing, dispatches nothing, and bypasses no gate.
+      //
+      // It runs BEFORE the ids below are captured, so the conversational answer
+      // is not suppressed by the ownership change it just made.
+      if (hasLeadingCancellation(task) && activeLoop) {
+        console.info('[PrivAgent SW] conversational cancellation — superseding the running task', {
+          supersededRunId: activeLoop.getRunId?.(),
+        });
+        activeLoop.supersede();
+        activeLoop = null;
+      }
       //
       // DYNAMIC TASK-AWARE UI — TWO ids, deliberately different:
       //

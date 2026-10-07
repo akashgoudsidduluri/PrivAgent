@@ -30,6 +30,13 @@ Modes (chosen by the env var, never by model output):
   click_fixture     — click a REAL affordance target read out of the posted
                       sanitized context (never a hard-coded id)
   navigate_fixture  — navigate to a route of the same fixture origin
+  fill_sanitized    — type into the SANITIZED detection id of the account field
+  unknown_target    — type into an id that matches no offered detection at all
+  bogus_target      — type into the affordance's raw DOM id (never offered by
+                      the device) so grounding must reject it
+  confirm_submit    — click the device-reported SUBMIT_LOGIN affordance with a
+                      submission intent, so the HIGH-risk confirmation gate
+                      (GATE 5) is exercised from the sanitized context alone
   commit_demo       — A14: always propose the SAME consequential control, so a
                       second dispatch would be a second commit
   freshness_demo    — A16: propose the consequential control, but hold the FIRST
@@ -225,6 +232,101 @@ def next_action(mode: str, n: int, payload: dict) -> dict:
     if mode == "wrong_type":
         return {"action": "scroll", "direction": "down", "amount": "five hundred",
                 "reason": "controlled: amount is not a number"}
+    if mode == "type_password":
+        # GATE 5 confirmation test: propose typing into the REAL password field
+        # the device reported (never an invented id). Risk: type + password
+        # category => HIGH => requiresUserConfirmation => the loop must ask.
+        #
+        # The typed text is deliberately BENIGN and low-entropy. An earlier
+        # revision sent a credential-shaped token (upper+lower+digit, >=8 chars),
+        # which M5's credential-token heuristic (actionValidator.ts,
+        # CREDENTIAL_TOKEN_PATTERN) correctly refused as a PII-smuggling channel
+        # BEFORE the risk gate could ever be reached. That refusal is the intended
+        # privacy-first behaviour, not the confirmation gate — so the scenario that
+        # exercises GATE 5 must not carry a credential-shaped payload.
+        context = (payload or {}).get("context") or {}
+        for d in context.get("detections") or []:
+            if str(d.get("type", "")).lower() == "password" and d.get("id"):
+                return {
+                    "action": "type",
+                    "target": d["id"],
+                    "text": "demo",
+                    "reason": "controlled: fill the credential field the task asked for",
+                }
+        semantic = context.get("semantic_context") or context.get("semanticContext") or {}
+        for a in semantic.get("affordances") or []:
+            if a.get("type") == "FILL_FIELD" and a.get("targetElementId"):
+                return {
+                    "action": "type",
+                    "target": a["targetElementId"],
+                    "text": "demo",
+                    "reason": "controlled: fill the requested field",
+                }
+        return {"action": "scroll", "direction": "down", "amount": 300,
+                "reason": "controlled: no credential field was offered"}
+    if mode == "fill_sanitized":
+        # PHASE 1 — the SANITIZED identity is the actionable one.
+        #
+        # Types into the detection id the device actually offered for the
+        # account-identifier field (never the raw DOM id an affordance may name).
+        # If the privacy-safe identity cannot be grounded, then the legitimate
+        # interaction really is broken; if it can, the interaction works and only
+        # the affordance's raw id is unusable.
+        context = (payload or {}).get("context") or {}
+        for d in context.get("detections") or []:
+            sel = str(d.get("selector") or "")
+            if d.get("id") and "input-username" in sel:
+                return {"action": "type", "target": d["id"], "text": "operator",
+                        "reason": "controlled: fill the account identifier field"}
+        return {"action": "scroll", "direction": "down", "amount": 200,
+                "reason": "controlled: no offered detection for the account field"}
+    if mode == "unknown_target":
+        # PHASE 1 — the negative control. This id matches NO detection on any
+        # signal (id, selector, label), so grounding must refuse it and nothing
+        # may be dispatched. It proves the fix did not widen the target space.
+        return {"action": "type", "target": "no-such-field-anywhere", "text": "operator",
+                "reason": "controlled: fill a field the device never offered"}
+    if mode == "bogus_target":
+        # PHASE 1 — grounding must STILL reject a target the device never
+        # offered. This is the raw DOM id that the FILL_FIELD affordance named
+        # while the detections called the same field `privagent-det-N`: exactly
+        # the id a model following that affordance would have used.
+        context = (payload or {}).get("context") or {}
+        offered = {d.get("id") for d in context.get("detections") or []}
+        candidate = None
+        sem = context.get("semantic_context") or context.get("semanticContext") or {}
+        for a in sem.get("affordances") or []:
+            tid = a.get("targetElementId")
+            if tid and tid not in offered:
+                candidate = tid
+                break
+        return {"action": "type", "target": candidate or "input-username",
+                "text": "shopper",
+                "reason": "controlled: fill the field this affordance named"}
+    if mode == "confirm_submit":
+        # GATE 5 confirmation test that is reachable from the SANITIZED context.
+        #
+        # A credential FILL is not reachable this way — the password field is
+        # excluded from the remote context and exposed only as an
+        # ENTER_PASSWORD_LOCAL affordance explicitly marked "never forwarded to
+        # remote reasoner" — so the gate is exercised with a still-consequential,
+        # still-reachable action: submitting the sign-in form. A click whose
+        # declared intent is a form submission scores HIGH in the deterministic
+        # risk engine, which is exactly what the confirmation gate guards. The
+        # target is the device-reported SUBMIT_LOGIN affordance id, never an
+        # invented one.
+        context = (payload or {}).get("context") or {}
+        semantic = context.get("semantic_context") or context.get("semanticContext") or {}
+        for a in semantic.get("affordances") or []:
+            if a.get("type") == "SUBMIT_LOGIN" and a.get("targetElementId"):
+                return {"action": "click", "target": a["targetElementId"],
+                        "reason": "controlled: submit the sign-in form the user asked for"}
+        target = _first_target(payload)
+        if target:
+            return {"action": "click", "target": target,
+                    "reason": "controlled: submit the form the user asked for"}
+        return {"action": "scroll", "direction": "down", "amount": 300,
+                "reason": "controlled: no submit control was offered"}
     if mode == "click_fixture":
         target = _first_target(payload)
         if not target:
@@ -349,6 +451,31 @@ def terminal_proposal(mode: str, n: int, payload: dict):
                 "cited_evidence": _verified_evidence_ids(payload),
             }
         return None
+    if mode == "fill_sanitized" and n >= 2:
+        # Bounded scenario: after the authorized fill went out, a controlled
+        # provider reports instead of proposing the same sensitive fill forever
+        # (which would park the run in a second confirmation state and measure
+        # nothing). Answer text comes from the device's own sanitized facts.
+        return {
+            "kind": "ANSWER",
+            "reason": "controlled: reporting that the requested field was filled",
+            "answer": _answer_from_context(payload),
+            "cited_evidence": _verified_evidence_ids(payload),
+        }
+    if mode == "type_password" and n >= 2:
+        # The credential fill has been DISPATCHED (the run only asks for a second
+        # plan after the first action went out) or the first cycle was refused.
+        # Answering here is what makes the scenario bounded: a controlled
+        # provider that kept proposing the same sensitive fill forever would
+        # leave the run parked in a confirmation state, which measures nothing.
+        # The answer is composed from the device's own sanitized facts and cites
+        # only evidence the DEVICE reports as verified and current.
+        return {
+            "kind": "ANSWER",
+            "reason": "controlled: reporting that the requested field was filled",
+            "answer": _answer_from_context(payload),
+            "cited_evidence": _verified_evidence_ids(payload),
+        }
     if mode == "act_then_answer" and n >= 3:
         # A model that gathers evidence first and only then answers. The device
         # requires an ACTION from the planning step, so answering on the very
@@ -419,12 +546,31 @@ class Handler(BaseHTTPRequestHandler):
             # screened labels only; this never prints a raw value.
             ctx = payload.get("context") or {}
             sem = ctx.get("semantic_context") or ctx.get("semanticContext") or {}
+            detections = ctx.get("detections") or []
+            affordances = sem.get("affordances") or []
+            offered = {d.get("id") for d in detections}
+            #
+            # DECOY CHECK — measured on the real wire payload, not from source.
+            # An affordance whose targetElementId is not among the offered
+            # detection ids names a target the prompt itself forbids, so a model
+            # that follows it cannot be grounded. The codebase states this
+            # invariant (contextMinimizer.filterAffordancesToOfferedIds); this
+            # line reports whether it actually HOLDS on the wire.
+            decoys = [a.get("targetElementId") for a in affordances
+                      if a.get("targetElementId") and a.get("targetElementId") not in offered]
+            print("DECOY_AFFORDANCES", json.dumps({
+                "task": _task_text(payload)[:60],
+                "offered_detection_ids": sorted(i for i in offered if i),
+                "affordance_targets": [a.get("targetElementId") for a in affordances],
+                "decoy_targets": sorted(set(decoys)),
+                "decoy_count": len(decoys),
+            }), flush=True)
             print("TARGETS", json.dumps({
                 "task": _task_text(payload)[:80],
                 "detections": [{k: d.get(k) for k in ("id", "type", "selector", "label")}
-                               for d in (ctx.get("detections") or [])][:8],
+                               for d in detections][:8],
                 "affordances": [{k: a.get(k) for k in ("type", "targetElementId", "description")}
-                                for a in (sem.get("affordances") or [])][:8],
+                                for a in affordances][:8],
             }), flush=True)
         if MODE == "freshness_demo" and SERVED["n"] == 1:
             # PHASE 18.8 / A16. The FIRST call of the scenario is held open while
@@ -473,10 +619,24 @@ class Handler(BaseHTTPRequestHandler):
             "telemetry": {"provider": "controlled_stub", "role": "FAST",
                           "latency_ms": 1.0, "attempts": 1, "fallback_used": False},
         }
+        chosen: dict = {}
         if proposal is not None:
             envelope["proposal"] = proposal
+            chosen = {"kind": proposal.get("kind")}
         else:
-            envelope["action"] = next_action(MODE, SERVED["n"], payload)
+            action = next_action(MODE, SERVED["n"], payload)
+            envelope["action"] = action
+            # Compact, sanitized echo of what this call proposed. No typed text,
+            # no page content — only the action shape the extension itself will
+            # re-validate. It makes the wire sequence readable from the stub log.
+            chosen = {k: action.get(k) for k in ("action", "target", "direction",
+                                                 "amount", "url") if action.get(k) is not None}
+        print("PROPOSAL", json.dumps({
+            "mode": MODE,
+            "call": SERVED["n"],
+            "task": _task_text(payload)[:60],
+            "chosen": chosen,
+        }), flush=True)
         body = json.dumps(envelope).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")

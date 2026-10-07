@@ -1,0 +1,696 @@
+{
+  "phase": "HARD-E2E-VERIFICATION",
+  "work": "Real Chrome end-to-end verification — suite level4",
+  "labels": "PROVEN_REAL_CHROME / LIVE_PROVIDER",
+  "suite": "level4",
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "canary": {
+    "ok": true,
+    "httpStatus": 200,
+    "model": "openai/gpt-oss-20b",
+    "answerPrefix": "OK"
+  },
+  "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+  "timeline": [
+    {
+      "t": "0.29s",
+      "what": "provider canary",
+      "detail": {
+        "ok": true,
+        "httpStatus": 200,
+        "model": "openai/gpt-oss-20b",
+        "answerPrefix": "OK"
+      }
+    },
+    {
+      "t": "8.51s",
+      "what": "step L4.1",
+      "detail": {
+        "pass": true,
+        "surface": "browser",
+        "terminal": "PROVIDER_UNAVAILABLE",
+        "fails": []
+      }
+    },
+    {
+      "t": "10.43s",
+      "what": "step L4.2",
+      "detail": {
+        "pass": true,
+        "surface": "browser",
+        "terminal": "NEEDS_CLARIFICATION",
+        "fails": []
+      }
+    }
+  ],
+  "swLogs": [
+    {
+      "t": "6.58s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791307956739}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791307956739}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791307956739,targetFound:true,tabId:1602586553,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791307956739,targetFound:true}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:172}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[AgentTrace] chat route classified {route:PIPELINE,code:BROWSER_VERB,taskLength:172}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[AgentTrace] intent classified {intent:MIXED_TASK,confidence:DETERMINISTIC,requiresDestination:true,requiresEvidence:true,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "6.59s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-acb73ede,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "6.59s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "6.59s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "6.59s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:localhost,tabId:1602586553}"
+    },
+    {
+      "t": "6.59s",
+      "text": "TARGET_TAB_SELECTED {tabId:1602586553,origin:http://localhost:4174,reason:Selected first eligible web tab.}"
+    },
+    {
+      "t": "6.59s",
+      "text": "[AgentTrace] target resolved {tabId:1602586553}"
+    },
+    {
+      "t": "6.63s",
+      "text": "TARGET_TAB_READY {tabId:1602586553}"
+    },
+    {
+      "t": "6.63s",
+      "text": "[AgentTrace] target content script ready {tabId:1602586553}"
+    },
+    {
+      "t": "6.63s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "6.64s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "6.64s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "6.65s",
+      "text": "[AgentTrace] agent loop started {runId:1}"
+    },
+    {
+      "t": "6.66s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-acb73ede,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "6.66s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "6.66s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "6.66s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:localhost,withinScope:true}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:http://localhost:4174/results.html}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "6.70s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:6}"
+    },
+    {
+      "t": "6.71s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:16,regionsConsidered:16,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "6.71s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:16,ledgerSize:16,verifiedCurrent:16,generation:2}"
+    },
+    {
+      "t": "6.71s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "6.71s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "6.71s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:http://localhost:4174/results.html,worldModelId:wm-g2-muwyi9gx-k9wt}"
+    },
+    {
+      "t": "6.72s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:16,privacyFindingsCount:6}"
+    },
+    {
+      "t": "6.72s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:LISTING,pageState:results_available,pageGeneration:2,entityCount:4,affordanceCount:1}"
+    },
+    {
+      "t": "6.72s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-acb73ede,contextGeneration:4,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "6.72s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwyi9gi-dvrry-sg1,category:SEARCH,description:Enter search query \"best phones under\" into search box}"
+    },
+    {
+      "t": "6.73s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:4,discoveries:4}"
+    },
+    {
+      "t": "6.73s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-acb73ede,contextGeneration:4,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "6.74s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "7.02s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}"
+    },
+    {
+      "t": "7.02s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "7.02s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "7.02s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "7.02s",
+      "text": "[AgentTrace] reasoning provider unavailable {category:HTTP_5XX,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "7.02s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-acb73ede,contextGeneration:6,turnIndex:0,candidates:4}"
+    },
+    {
+      "t": "7.02s",
+      "text": "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:1}"
+    },
+    {
+      "t": "7.03s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "7.03s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791307958693}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791307958693}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791307958693,targetFound:true,tabId:1602586553,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791307958693,targetFound:true}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:51}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] chat route classified {route:PIPELINE,code:NO_CONVERSATIONAL_SHAPE,taskLength:51}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] intent classified {intent:AMBIGUOUS,confidence:HEURISTIC,requiresDestination:false,requiresEvidence:false,admitsBrowserAutomation:false}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] task not admitted by the intent boundary {intent:AMBIGUOUS,refusal:AMBIGUOUS_NO_GUESS}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:UNANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "8.54s",
+      "text": "[ServiceWorker] response forwarded {status:NEEDS_CLARIFICATION,currentStep:0,reason:The request is too ambiguous to act on safely. Please say what to open or what to find.}"
+    }
+  ],
+  "pageLogs": [
+    {
+      "t": "2.62s",
+      "text": "[vite] connecting..."
+    },
+    {
+      "t": "2.65s",
+      "text": "[vite] connected."
+    },
+    {
+      "t": "2.77s",
+      "text": "[PrivAgent] Initializing on-device privacy engine content script..."
+    },
+    {
+      "t": "2.86s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307953033,origin:http://localhost:5173}"
+    },
+    {
+      "t": "2.86s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307953033,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "2.86s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307953033,attempt:1}"
+    },
+    {
+      "t": "2.86s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307953033,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "2.86s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307953033,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "2.87s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307953033,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "2.87s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307953033,connected:true}"
+    },
+    {
+      "t": "2.87s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "2.87s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "2.87s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "2.87s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "6.58s",
+      "text": "[Adapter] START_TASK received {taskLength:172}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:172}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307956739,origin:http://localhost:5173}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307956739,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307956739,attempt:1}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307956739,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307956739,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307956739,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307956739,connected:true}"
+    },
+    {
+      "t": "6.58s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "6.58s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "6.58s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "6.58s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "6.58s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:172,runId:1}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "6.58s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "6.58s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "6.66s",
+      "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "6.66s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "6.66s",
+      "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION,interactionOutcome:RUNNING}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION}"
+    },
+    {
+      "t": "6.68s",
+      "text": "[Adapter] response received {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING,interactionOutcome:RUNNING}"
+    },
+    {
+      "t": "6.68s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING}"
+    },
+    {
+      "t": "7.02s",
+      "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+    },
+    {
+      "t": "7.02s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "7.03s",
+      "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+    },
+    {
+      "t": "7.03s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[Adapter] START_TASK received {taskLength:51}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:51}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307958693,origin:http://localhost:5173}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307958693,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307958693,attempt:1}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307958693,attempt:1,targetTab:FOUND,urlOrigin:http://localhost:4174}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307958693,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307958693,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "8.52s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307958693,connected:true}"
+    },
+    {
+      "t": "8.53s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "8.53s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "8.53s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "8.53s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:51,runId:2}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "8.53s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "8.54s",
+      "text": "[Adapter] response received {status:NEEDS_CLARIFICATION,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "8.54s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:NEEDS_CLARIFICATION,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "8.54s",
+      "text": "[AgentTrace] Dropping stale progress from superseded runId {incomingRunId:1,activeRunId:2,incomingTask:Only show products under 30000 with rating above 4.,activeTask:Only show products under 30000 with rating above 4.}"
+    }
+  ],
+  "steps": [
+    {
+      "id": "L4.1",
+      "suite": "level4",
+      "task": "Find the best 3 phones under 40000 with rating above 4. Open the best one. Check whether it supports 5G. Compare it with the second-best option and tell me which is better.",
+      "expected": "search, filter, open, re-read, compare, truthful verified answer",
+      "expect": "browser",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "timedOut": false,
+      "terminalStatus": "PROVIDER_UNAVAILABLE",
+      "terminalOutcome": "FAILED",
+      "finalResult": {
+        "kind": "PROVIDER_UNAVAILABLE",
+        "headline": "Reasoning service unavailable",
+        "body": "The reasoning service was unavailable, so nothing was changed on the page."
+      },
+      "surface": "browser",
+      "panelClass": "final-response-panel failure",
+      "panelHeadline": "Reasoning service unavailable",
+      "assistantBody": null,
+      "answerMatched": null,
+      "workingLabels": [
+        "Reasoning service unavailable"
+      ],
+      "activities": [
+        "Reading the page",
+        "Planning the next action"
+      ],
+      "activityDetailsOpen": false,
+      "confirmPromptSeen": null,
+      "confirmClicked": null,
+      "selection": {
+        "conversationId": "conv-acb73ede",
+        "contextGeneration": 6,
+        "turnIndex": 0,
+        "turnCount": 1,
+        "candidateCount": 4,
+        "selectedOrdinal": null,
+        "selectedIdentityKey": null,
+        "selectedProductId": null,
+        "selectedEntityType": null,
+        "revalidation": null,
+        "referenceOutcome": "NOT_A_REFERENCE",
+        "clarificationCode": null
+      },
+      "identity": null,
+      "urlBefore": "http://localhost:4174/results.html",
+      "urlAfter": "http://localhost:4174/results.html",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 1,
+        "intentRefused": 0,
+        "targetResolution": 1,
+        "tabProvisioned": 0,
+        "perception": 2,
+        "actionExecuted": 0,
+        "confirmation": 0,
+        "superseded": 0,
+        "responseForwarded": 5,
+        "modelContract": 0
+      },
+      "lateActions": null,
+      "answerSource": null,
+      "interrupt": null,
+      "sampleCount": 1,
+      "composerReady": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/e2e-verify/shots/L4_1_level4.png",
+      "textExcerpt": "Find the best 3 phones under 40000 with rating above 4. Open the best one. Check whether it supports 5G. Compare it with the second-best option and tell me which is better.\nYou\n·\nJust now\nPA\nPrivAgent\nBROWSER TASK\nPROVIDER UNAVAILABLE\n!\nReasoning service unavailable\n2 activities\nReasoning service unavailable\nThe reasoning service was unavailable, so nothing was changed on the page.\nTry Again\nACTIVITY\n2 ACTIVITIES\nBROWSER & PRIVACY DIAGNOSTICS\n▼ EXPAND",
+      "swLogsExcerpt": [
+        "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}",
+        "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}",
+        "[ServiceWorker] response forwarded",
+        "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}",
+        "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}",
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}",
+        "[AgentTrace] reasoning provider unavailable {category:HTTP_5XX,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}",
+        "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:1}",
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+      ],
+      "fails": [],
+      "pass": true,
+      "rootCause": null
+    },
+    {
+      "id": "L4.2",
+      "suite": "level4",
+      "task": "Only show products under 30000 with rating above 4.",
+      "expected": "products violating either condition excluded; no invention",
+      "expect": "browser",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "timedOut": false,
+      "terminalStatus": "NEEDS_CLARIFICATION",
+      "terminalOutcome": "UNANSWERED",
+      "finalResult": {
+        "kind": "NEEDS_CLARIFICATION",
+        "headline": "One detail is missing",
+        "body": "That request is too vague to act on. Tell me which site, app or thing you mean."
+      },
+      "surface": "browser",
+      "panelClass": "final-response-panel notice",
+      "panelHeadline": "One detail is missing — a little more information is needed.",
+      "assistantBody": null,
+      "answerMatched": null,
+      "workingLabels": [
+        "One detail is missing — a little more information is needed."
+      ],
+      "activities": [],
+      "activityDetailsOpen": null,
+      "confirmPromptSeen": null,
+      "confirmClicked": null,
+      "selection": null,
+      "identity": null,
+      "urlBefore": "http://localhost:4174/results.html",
+      "urlAfter": "http://localhost:4174/results.html",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 1,
+        "intentRefused": 1,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionExecuted": 0,
+        "confirmation": 0,
+        "superseded": 0,
+        "responseForwarded": 1,
+        "modelContract": 0
+      },
+      "lateActions": null,
+      "answerSource": null,
+      "interrupt": null,
+      "sampleCount": 1,
+      "composerReady": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/e2e-verify/shots/L4_2_level4.png",
+      "textExcerpt": "Only show products under 30000 with rating above 4.\nYou\n·\nJust now\nPA\nPrivAgent\nBROWSER TASK\nNEEDS CLARIFICATION\ni\nOne detail is missing — a little more information is needed.\nOne detail is missing — a little more information is needed.\nBROWSER & PRIVACY DIAGNOSTICS\n▼ EXPAND",
+      "swLogsExcerpt": [
+        "[AgentTrace] task not admitted by the intent boundary {intent:AMBIGUOUS,refusal:AMBIGUOUS_NO_GUESS}",
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:UNANSWERED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:NEEDS_CLARIFICATION,currentStep:0,reason:The request is too ambiguous to act on safely. Please say what to open or what to find.}"
+      ],
+      "fails": [],
+      "pass": true,
+      "rootCause": null
+    }
+  ],
+  "summary": {
+    "steps": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0
+  }
+}

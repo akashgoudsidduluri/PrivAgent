@@ -297,7 +297,12 @@ export interface ConversationSummary {
   selectedProductId: string | null;
   selectedEntityType: string | null;
   revalidation: 'SELECTED' | 'REVALIDATED' | 'UNCONFIRMED' | 'NOT_FOUND' | null;
-  referenceOutcome: 'NOT_A_REFERENCE' | 'RESOLVED' | 'NEEDS_CLARIFICATION' | 'NEEDS_INFORMATION';
+  referenceOutcome:
+    | 'NOT_A_REFERENCE'
+    | 'RESOLVED'
+    | 'PAGE_SCOPED'
+    | 'NEEDS_CLARIFICATION'
+    | 'NEEDS_INFORMATION';
   referencePhrase?: string | null;
   referenceBasis?: 'NONE' | 'ORDINAL' | 'REVALIDATED_SELECTION' | 'UNIQUE_CANDIDATE';
   clarificationCode?: string | null;

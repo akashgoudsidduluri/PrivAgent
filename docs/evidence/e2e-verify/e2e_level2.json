@@ -1,0 +1,1509 @@
+{
+  "phase": "HARD-E2E-VERIFICATION",
+  "work": "Real Chrome end-to-end verification — suite level2",
+  "labels": "PROVEN_REAL_CHROME / LIVE_PROVIDER",
+  "suite": "level2",
+  "environment": {
+    "chromeVersion": "Chrome/153.0.8010.12"
+  },
+  "canary": {
+    "ok": true,
+    "httpStatus": 200,
+    "model": "openai/gpt-oss-20b",
+    "answerPrefix": "OK"
+  },
+  "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+  "timeline": [
+    {
+      "t": "0.38s",
+      "what": "provider canary",
+      "detail": {
+        "ok": true,
+        "httpStatus": 200,
+        "model": "openai/gpt-oss-20b",
+        "answerPrefix": "OK"
+      }
+    },
+    {
+      "t": "7.56s",
+      "what": "step L2.1",
+      "detail": {
+        "pass": true,
+        "surface": "conversation",
+        "terminal": "ANSWER",
+        "fails": []
+      }
+    },
+    {
+      "t": "10.12s",
+      "what": "step L2.2",
+      "detail": {
+        "pass": true,
+        "surface": "browser",
+        "terminal": "PROVIDER_UNAVAILABLE",
+        "fails": []
+      }
+    },
+    {
+      "t": "10.86s",
+      "what": "step L2.3",
+      "detail": {
+        "pass": true,
+        "surface": "conversation",
+        "terminal": "ANSWER",
+        "fails": []
+      }
+    },
+    {
+      "t": "13.99s",
+      "what": "step L2.4",
+      "detail": {
+        "pass": true,
+        "surface": "browser",
+        "terminal": "PROVIDER_UNAVAILABLE",
+        "fails": []
+      }
+    },
+    {
+      "t": "14.72s",
+      "what": "step L2.5",
+      "detail": {
+        "pass": true,
+        "surface": "conversation",
+        "terminal": "ANSWER",
+        "fails": []
+      }
+    }
+  ],
+  "swLogs": [
+    {
+      "t": "6.67s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791307893151}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791307893151}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791307893151,targetFound:true,tabId:2019827310,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791307893151,targetFound:true}"
+    },
+    {
+      "t": "6.68s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "6.68s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "6.69s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:SMALLTALK,taskLength:2}"
+    },
+    {
+      "t": "6.69s",
+      "text": "[AgentTrace] normal chat accepted {code:SMALLTALK,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "6.91s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "6.91s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "7.58s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791307894054}"
+    },
+    {
+      "t": "7.58s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791307894054}"
+    },
+    {
+      "t": "7.58s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791307894054,targetFound:true,tabId:2019827310,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "7.59s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791307894054,targetFound:true}"
+    },
+    {
+      "t": "7.63s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "7.63s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:66}"
+    },
+    {
+      "t": "7.64s",
+      "text": "[AgentTrace] chat route classified {route:PIPELINE,code:BROWSER_VERB,taskLength:66}"
+    },
+    {
+      "t": "7.64s",
+      "text": "[AgentTrace] intent classified {intent:NAVIGATION_REQUEST,confidence:DETERMINISTIC,requiresDestination:true,requiresEvidence:false,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "7.64s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_ACTIVE_CONVERSATION,conversationId:conv-9471b8c9,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "7.65s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "7.65s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "7.65s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:leetcode.com,tabId:2019827310}"
+    },
+    {
+      "t": "7.65s",
+      "text": "TARGET_TAB_SELECTED {tabId:2019827310,origin:https://leetcode.com,reason:Selected first eligible web tab.}"
+    },
+    {
+      "t": "7.66s",
+      "text": "[AgentTrace] target resolved {tabId:2019827310}"
+    },
+    {
+      "t": "7.66s",
+      "text": "TARGET_TAB_READY {tabId:2019827310}"
+    },
+    {
+      "t": "7.66s",
+      "text": "[AgentTrace] target content script ready {tabId:2019827310}"
+    },
+    {
+      "t": "7.66s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "7.67s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "7.67s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "7.67s",
+      "text": "[AgentTrace] agent loop started {runId:2}"
+    },
+    {
+      "t": "7.67s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-9471b8c9,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.68s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "7.68s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "7.68s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "7.69s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:leetcode.com,withinScope:true}"
+    },
+    {
+      "t": "7.69s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:https://leetcode.com/}"
+    },
+    {
+      "t": "7.69s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "7.73s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1280,screenshotHeight:757,ocrRegions:0,privacyFindings:2}"
+    },
+    {
+      "t": "7.73s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:4,regionsConsidered:4,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "7.73s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:4,ledgerSize:4,verifiedCurrent:4,generation:2}"
+    },
+    {
+      "t": "7.73s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "7.75s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "7.75s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:https://leetcode.com/,worldModelId:wm-g2-muwygx41-0o73}"
+    },
+    {
+      "t": "7.75s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:4,privacyFindingsCount:2}"
+    },
+    {
+      "t": "7.75s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:UNKNOWN,pageState:populated,pageGeneration:2,entityCount:0,affordanceCount:1}"
+    },
+    {
+      "t": "7.75s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-9471b8c9,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.75s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwygx3i-03nva-sg1,category:LOCATE,description:Perceive page and locate candidate controls releva…etCode profile page for the user \"twothirtyone\".\"}"
+    },
+    {
+      "t": "7.76s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:3,discoveries:0}"
+    },
+    {
+      "t": "7.76s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-9471b8c9,contextGeneration:4,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "7.76s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "8.49s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}"
+    },
+    {
+      "t": "8.49s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[AgentTrace] reasoning provider unavailable {category:MODEL_CONTRACT,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-9471b8c9,contextGeneration:6,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:2}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791307896616}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791307896616}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791307896616,targetFound:true,tabId:2019827310,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791307896616,targetFound:true}"
+    },
+    {
+      "t": "10.15s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "10.15s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:22}"
+    },
+    {
+      "t": "10.15s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:DEFINITIONAL_KNOWLEDGE,taskLength:22}"
+    },
+    {
+      "t": "10.15s",
+      "text": "[AgentTrace] normal chat accepted {code:DEFINITIONAL_KNOWLEDGE,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "10.55s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "10.55s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791307897358}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791307897358}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791307897358,targetFound:true,tabId:2019827310,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791307897358,targetFound:true}"
+    },
+    {
+      "t": "10.89s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "10.89s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:49}"
+    },
+    {
+      "t": "10.89s",
+      "text": "[AgentTrace] chat route classified {route:PIPELINE,code:NO_CONVERSATIONAL_SHAPE,taskLength:49}"
+    },
+    {
+      "t": "10.89s",
+      "text": "[AgentTrace] intent classified {intent:MIXED_TASK,confidence:DETERMINISTIC,requiresDestination:true,requiresEvidence:true,admitsBrowserAutomation:true}"
+    },
+    {
+      "t": "10.89s",
+      "text": "[AgentTrace] conversation planned {mode:NEW,reason:NO_REFERENCE_IN_TURN,conversationId:conv-aa114cea,contextGeneration:1,persistenceAvailable:true}"
+    },
+    {
+      "t": "10.89s",
+      "text": "[PrivAgent SW] Halting and superseding previous active loop for new task run {supersededRunId:2,newRunId:4}"
+    },
+    {
+      "t": "10.89s",
+      "text": "[AgentTrace] run cancelled {reason:SUPERSEDED_BY_NEW_TASK,lifecycle:SUPERSEDED,runId:2}"
+    },
+    {
+      "t": "10.89s",
+      "text": "TARGET_RESOLUTION_STARTED"
+    },
+    {
+      "t": "10.89s",
+      "text": "TARGET_TAB_CANDIDATES {0:Object,1:Object,2:Object}"
+    },
+    {
+      "t": "10.94s",
+      "text": "TARGET_TAB_PROVISIONED {tabId:2019827312,origin:https://en.wikipedia.org}"
+    },
+    {
+      "t": "10.94s",
+      "text": "[AgentTrace] target tab provisioned {tabId:2019827312,origin:https://en.wikipedia.org}"
+    },
+    {
+      "t": "11.54s",
+      "text": "[PrivAgent SW] waitForTabLoad: complete event received {tabId:2019827312}"
+    },
+    {
+      "t": "11.54s",
+      "text": "TARGET_TAB_READY {tabId:2019827312,provisioned:true}"
+    },
+    {
+      "t": "11.54s",
+      "text": "[AgentTrace] containment scope established {established:true,rootHost:wikipedia.org,tabId:2019827312}"
+    },
+    {
+      "t": "11.55s",
+      "text": "TARGET_TAB_SELECTED {tabId:2019827312,origin:https://en.wikipedia.org,reason:Provisioned from task destination: https://en.wikipedia.org}"
+    },
+    {
+      "t": "11.55s",
+      "text": "[AgentTrace] target resolved {tabId:2019827312}"
+    },
+    {
+      "t": "11.55s",
+      "text": "TARGET_TAB_READY {tabId:2019827312}"
+    },
+    {
+      "t": "11.55s",
+      "text": "[AgentTrace] target content script ready {tabId:2019827312}"
+    },
+    {
+      "t": "11.55s",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "t": "11.55s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PERCEPTION,resultKind:NONE}"
+    },
+    {
+      "t": "11.55s",
+      "text": "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}"
+    },
+    {
+      "t": "11.55s",
+      "text": "[AgentTrace] agent loop started {runId:4}"
+    },
+    {
+      "t": "11.55s",
+      "text": "[AgentTrace] conversation updated {event:TURN_OPENED,conversationId:conv-aa114cea,contextGeneration:2,turnIndex:0,candidates:0}"
+    },
+    {
+      "t": "11.56s",
+      "text": "[AgentTrace] long-horizon state {restoreStatus:FRESH_NO_RECORD,detail:null,actionCount:0,recoveryCount:0,consecutiveNoProgress:0}"
+    },
+    {
+      "t": "11.56s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:RUNNING,phase:PLANNING,resultKind:NONE}"
+    },
+    {
+      "t": "11.56s",
+      "text": "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}"
+    },
+    {
+      "t": "11.56s",
+      "text": "[AgentTrace] harness cycle {cycle:1,verdict:CONTINUE,haltCode:null,scope:contained:wikipedia.org,withinScope:true}"
+    },
+    {
+      "t": "11.56s",
+      "text": "[AgentTrace] perception started {perceptionGeneration:1,url:https://en.wikipedia.org/}"
+    },
+    {
+      "t": "11.56s",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "t": "11.80s",
+      "text": "[AgentTrace] multimodal perception complete {visualDetections:0,screenshotWidth:1265,screenshotHeight:757,ocrRegions:0,privacyFindings:29}"
+    },
+    {
+      "t": "11.80s",
+      "text": "[AgentTrace] semantic observation {state:OBSERVED,facts:16,regionsConsidered:16,droppedSensitive:0,quarantinedInjection:0}"
+    },
+    {
+      "t": "11.80s",
+      "text": "[AgentTrace] evidence ledger updated {ingested:16,ledgerSize:16,verifiedCurrent:16,generation:1}"
+    },
+    {
+      "t": "11.80s",
+      "text": "[ServiceWorker] response forwarded"
+    },
+    {
+      "t": "11.80s",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "t": "11.80s",
+      "text": "[AgentTrace] perception complete {perceptionGeneration:1,contextUrl:https://en.wikipedia.org/wiki/Main_Page,worldModelId:wm-g1-muwyh04x-4sz5}"
+    },
+    {
+      "t": "11.80s",
+      "text": "[AgentTrace] multimodal perception complete {screenshotDimensions:Object,ocrRegionsCount:0,visualRegionsCount:37,privacyFindingsCount:29}"
+    },
+    {
+      "t": "11.81s",
+      "text": "[AgentTrace] semantic understanding complete {pageType:SEARCH,pageState:populated,pageGeneration:1,entityCount:2,affordanceCount:4}"
+    },
+    {
+      "t": "11.81s",
+      "text": "[AgentTrace] conversation updated {event:OBSERVED,conversationId:conv-aa114cea,contextGeneration:4,turnIndex:0,candidates:1}"
+    },
+    {
+      "t": "11.81s",
+      "text": "[AgentTrace] subgoal selected {subgoalId:goal-muwyh03d-s25a8-sg1,category:SEARCH,description:Enter search query \"Wikipedia tell Charminar\" into search box}"
+    },
+    {
+      "t": "11.81s",
+      "text": "[AgentTrace] long-horizon update {meaningfulProgress:true,signals:Array(1),completedSubgoals:0,pendingSubgoals:4,discoveries:2}"
+    },
+    {
+      "t": "11.82s",
+      "text": "[AgentTrace] conversation updated {event:NO_REFERENCE,conversationId:conv-aa114cea,contextGeneration:4,turnIndex:0,candidates:1}"
+    },
+    {
+      "t": "11.82s",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "t": "12.14s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}"
+    },
+    {
+      "t": "12.14s",
+      "text": "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "12.14s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "12.14s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "12.14s",
+      "text": "[AgentTrace] reasoning provider unavailable {category:HTTP_5XX,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}"
+    },
+    {
+      "t": "12.15s",
+      "text": "[AgentTrace] conversation updated {event:TURN_CLOSED,conversationId:conv-aa114cea,contextGeneration:6,turnIndex:0,candidates:1}"
+    },
+    {
+      "t": "12.15s",
+      "text": "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:4}"
+    },
+    {
+      "t": "12.15s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "12.15s",
+      "text": "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {pingId:adapter-1791307900490}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {pingId:adapter-1791307900490}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {pingId:adapter-1791307900490,targetFound:true,tabId:2019827310,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {pingId:adapter-1791307900490,targetFound:true}"
+    },
+    {
+      "t": "14.02s",
+      "text": "[ServiceWorker] message received {type:PRIVAGENT_DASHBOARD_START_TASK}"
+    },
+    {
+      "t": "14.02s",
+      "text": "[AgentTrace] service worker START_TASK received {taskLength:15}"
+    },
+    {
+      "t": "14.02s",
+      "text": "[AgentTrace] chat route classified {route:CONVERSATION,code:ARITHMETIC,taskLength:15}"
+    },
+    {
+      "t": "14.03s",
+      "text": "[AgentTrace] normal chat accepted {code:ARITHMETIC,targetTabsQueried:0,targetTabsProvisioned:0,browserActionsDispatched:0}"
+    },
+    {
+      "t": "14.25s",
+      "text": "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}"
+    },
+    {
+      "t": "14.25s",
+      "text": "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+    }
+  ],
+  "pageLogs": [
+    {
+      "t": "2.80s",
+      "text": "[vite] connecting..."
+    },
+    {
+      "t": "2.81s",
+      "text": "[vite] connected."
+    },
+    {
+      "t": "2.91s",
+      "text": "[PrivAgent] Initializing on-device privacy engine content script..."
+    },
+    {
+      "t": "3.04s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307889524,origin:http://localhost:5173}"
+    },
+    {
+      "t": "3.04s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307889524,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "3.04s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307889524,attempt:1}"
+    },
+    {
+      "t": "3.05s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307889524,attempt:1,targetTab:FOUND,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "3.05s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307889524,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "3.05s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307889524,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "3.05s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307889524,connected:true}"
+    },
+    {
+      "t": "3.05s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "3.05s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "3.05s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "3.05s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "6.67s",
+      "text": "[Adapter] START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:2}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307893151,origin:http://localhost:5173}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307893151,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307893151,attempt:1}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307893151,attempt:1,targetTab:FOUND,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307893151,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307893151,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "6.67s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307893151,connected:true}"
+    },
+    {
+      "t": "6.68s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "6.68s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "6.68s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "6.69s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "6.69s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:2,runId:1}"
+    },
+    {
+      "t": "6.69s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "6.69s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "6.69s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "6.71s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "6.71s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "6.91s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+    },
+    {
+      "t": "6.91s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "7.58s",
+      "text": "[Adapter] START_TASK received {taskLength:66}"
+    },
+    {
+      "t": "7.58s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:66}"
+    },
+    {
+      "t": "7.58s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307894054,origin:http://localhost:5173}"
+    },
+    {
+      "t": "7.63s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307894054,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "7.63s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307894054,attempt:1}"
+    },
+    {
+      "t": "7.64s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307894054,attempt:1,targetTab:FOUND,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "7.64s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307894054,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "7.64s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307894054,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "7.64s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307894054,connected:true}"
+    },
+    {
+      "t": "7.65s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "7.65s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "7.65s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "7.66s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "7.66s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:66,runId:2}"
+    },
+    {
+      "t": "7.66s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "7.66s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "7.67s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "7.67s",
+      "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "7.67s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "7.67s",
+      "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION,interactionOutcome:RUNNING}"
+    },
+    {
+      "t": "7.67s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION}"
+    },
+    {
+      "t": "7.70s",
+      "text": "[Adapter] response received {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING,interactionOutcome:RUNNING}"
+    },
+    {
+      "t": "7.70s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+    },
+    {
+      "t": "8.50s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "8.51s",
+      "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+    },
+    {
+      "t": "8.51s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[Adapter] START_TASK received {taskLength:22}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:22}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307896616,origin:http://localhost:5173}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307896616,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "10.13s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307896616,attempt:1}"
+    },
+    {
+      "t": "10.14s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307896616,attempt:1,targetTab:FOUND,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "10.14s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307896616,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "10.14s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307896616,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "10.14s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307896616,connected:true}"
+    },
+    {
+      "t": "10.14s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "10.14s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "10.14s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "10.14s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "10.14s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:22,runId:3}"
+    },
+    {
+      "t": "10.15s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "10.15s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "10.15s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "10.17s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "10.17s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "10.55s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+    },
+    {
+      "t": "10.55s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "10.87s",
+      "text": "[Adapter] START_TASK received {taskLength:49}"
+    },
+    {
+      "t": "10.87s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:49}"
+    },
+    {
+      "t": "10.87s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307897358,origin:http://localhost:5173}"
+    },
+    {
+      "t": "10.87s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307897358,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307897358,attempt:1}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307897358,attempt:1,targetTab:FOUND,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307897358,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307897358,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307897358,connected:true}"
+    },
+    {
+      "t": "10.88s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "10.88s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "10.88s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "10.88s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "10.88s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:49,runId:4}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "10.88s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "10.88s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "11.56s",
+      "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "11.56s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "11.57s",
+      "text": "[Adapter] response received {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION,interactionOutcome:RUNNING}"
+    },
+    {
+      "t": "11.58s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:RUNNING,currentStep:0,hasInteraction:true,interactionPhase:PERCEPTION}"
+    },
+    {
+      "t": "11.59s",
+      "text": "[Adapter] response received {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING,interactionOutcome:RUNNING}"
+    },
+    {
+      "t": "11.59s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:IN_PROGRESS,currentStep:0,hasInteraction:true,interactionPhase:PLANNING}"
+    },
+    {
+      "t": "12.15s",
+      "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+    },
+    {
+      "t": "12.15s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "12.15s",
+      "text": "[Adapter] response received {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:FAILED}"
+    },
+    {
+      "t": "12.15s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:PROVIDER_UNAVAILABLE,currentStep:1,hasInteraction:true,interactionPhase:TERMINAL}"
+    },
+    {
+      "t": "14.00s",
+      "text": "[Adapter] START_TASK received {taskLength:15}"
+    },
+    {
+      "t": "14.00s",
+      "text": "[AgentTrace] dashboard START_TASK received {taskLength:15}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[Adapter][PING] PING_SENT {pingId:adapter-1791307900490,origin:http://localhost:5173}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {pingId:adapter-1791307900490,origin:http://localhost:5173,validContext:true}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {pingId:adapter-1791307900490,attempt:1}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {pingId:adapter-1791307900490,attempt:1,targetTab:FOUND,urlOrigin:https://leetcode.com}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[CS][PING] PONG_EXTENSION_SENT {pingId:adapter-1791307900490,connected:true,targetTab:FOUND}"
+    },
+    {
+      "t": "14.01s",
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {pingId:adapter-1791307900490,connected:true,extension:CONNECTED,serviceWorker:REACHABLE,targetTab:FOUND}"
+    },
+    {
+      "t": "14.02s",
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {pingId:adapter-1791307900490,connected:true}"
+    },
+    {
+      "t": "14.02s",
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": "14.02s",
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": "14.02s",
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": "14.02s",
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": "14.02s",
+      "text": "[AgentTrace] dashboard START_TASK posted to window {taskLength:15,runId:5}"
+    },
+    {
+      "t": "14.02s",
+      "text": "[Extension] message received {type:START_TASK}"
+    },
+    {
+      "t": "14.02s",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "t": "14.02s",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "t": "14.03s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null,interactionOutcome:null}"
+    },
+    {
+      "t": "14.03s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:false,interactionPhase:null}"
+    },
+    {
+      "t": "14.25s",
+      "text": "[Adapter] response received {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL,interactionOutcome:ANSWERED}"
+    },
+    {
+      "t": "14.25s",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS {status:ANSWER,currentStep:0,hasInteraction:true,interactionPhase:TERMINAL}"
+    }
+  ],
+  "steps": [
+    {
+      "id": "L2.1",
+      "suite": "level2",
+      "task": "hi",
+      "expected": "normal chat",
+      "expect": "chat",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "timedOut": false,
+      "terminalStatus": "ANSWER",
+      "terminalOutcome": "ANSWERED",
+      "finalResult": {
+        "kind": "ANSWER",
+        "headline": "Answer",
+        "body": "Hello! How can I help you today?"
+      },
+      "surface": "conversation",
+      "panelClass": null,
+      "panelHeadline": null,
+      "assistantBody": "Hello! How can I help you today?",
+      "answerMatched": true,
+      "workingLabels": [],
+      "activities": [],
+      "activityDetailsOpen": null,
+      "confirmPromptSeen": null,
+      "confirmClicked": null,
+      "selection": null,
+      "identity": null,
+      "urlBefore": "https://leetcode.com/",
+      "urlAfter": "https://leetcode.com/",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "intentRefused": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionExecuted": 0,
+        "confirmation": 0,
+        "superseded": 0,
+        "responseForwarded": 1,
+        "modelContract": 0
+      },
+      "lateActions": null,
+      "answerSource": "CONVERSATION",
+      "interrupt": null,
+      "sampleCount": 1,
+      "composerReady": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/e2e-verify/shots/L2_1_level2.png",
+      "textExcerpt": "hi\nYou\n·\nJust now\nPA\nHello! How can I help you today?",
+      "swLogsExcerpt": [
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+      ],
+      "fails": [],
+      "pass": true,
+      "rootCause": null
+    },
+    {
+      "id": "L2.2",
+      "suite": "level2",
+      "task": "Open the public LeetCode profile page for the user \"twothirtyone\".",
+      "expected": "browser task with navigation + perception, response from observed page",
+      "expect": "browser",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "timedOut": false,
+      "terminalStatus": "PROVIDER_UNAVAILABLE",
+      "terminalOutcome": "FAILED",
+      "finalResult": {
+        "kind": "PROVIDER_UNAVAILABLE",
+        "headline": "Reasoning service unavailable",
+        "body": "The reasoning service was unavailable, so nothing was changed on the page."
+      },
+      "surface": "browser",
+      "panelClass": "final-response-panel failure",
+      "panelHeadline": "Reasoning service unavailable",
+      "assistantBody": null,
+      "answerMatched": null,
+      "workingLabels": [
+        "Reasoning service unavailable"
+      ],
+      "activities": [
+        "Reading the page",
+        "Planning the next action"
+      ],
+      "activityDetailsOpen": false,
+      "confirmPromptSeen": null,
+      "confirmClicked": null,
+      "selection": {
+        "conversationId": "conv-9471b8c9",
+        "contextGeneration": 6,
+        "turnIndex": 0,
+        "turnCount": 1,
+        "candidateCount": 0,
+        "selectedOrdinal": null,
+        "selectedIdentityKey": null,
+        "selectedProductId": null,
+        "selectedEntityType": null,
+        "revalidation": null,
+        "referenceOutcome": "NOT_A_REFERENCE",
+        "clarificationCode": null
+      },
+      "identity": null,
+      "urlBefore": "https://leetcode.com/",
+      "urlAfter": "https://leetcode.com/",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 1,
+        "intentRefused": 0,
+        "targetResolution": 1,
+        "tabProvisioned": 0,
+        "perception": 2,
+        "actionExecuted": 0,
+        "confirmation": 0,
+        "superseded": 0,
+        "responseForwarded": 5,
+        "modelContract": 1
+      },
+      "lateActions": null,
+      "answerSource": null,
+      "interrupt": null,
+      "sampleCount": 2,
+      "composerReady": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/e2e-verify/shots/L2_2_level2.png",
+      "textExcerpt": "Open the public LeetCode profile page for the user \"twothirtyone\".\nYou\n·\nJust now\nPA\nPrivAgent\nBROWSER TASK\nPROVIDER UNAVAILABLE\n!\nReasoning service unavailable\n2 activities\nReasoning service unavailable\nThe reasoning service was unavailable, so nothing was changed on the page.\nTry Again\nACTIVITY\n2 ACTIVITIES\nBROWSER & PRIVACY DIAGNOSTICS\n▼ EXPAND",
+      "swLogsExcerpt": [
+        "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}",
+        "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}",
+        "[ServiceWorker] response forwarded",
+        "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}",
+        "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}",
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}",
+        "[AgentTrace] reasoning provider unavailable {category:MODEL_CONTRACT,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}",
+        "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:2}",
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+      ],
+      "fails": [],
+      "pass": true,
+      "rootCause": null
+    },
+    {
+      "id": "L2.3",
+      "suite": "level2",
+      "task": "What is binary search?",
+      "expected": "normal chat, no browser activity",
+      "expect": "chat",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "timedOut": false,
+      "terminalStatus": "ANSWER",
+      "terminalOutcome": "ANSWERED",
+      "finalResult": {
+        "kind": "ANSWER",
+        "headline": "Answer",
+        "body": "Binary search is an efficient algorithm for finding a target value within a sorted list. It repeatedly divides the search interval in half: if the target is less than the middle element, the algorithm continues on the left half; if greater, it continues on the right half. This process repeats until the target is found or the interval is empty, giving a time complexity of O(log n)."
+      },
+      "surface": "conversation",
+      "panelClass": null,
+      "panelHeadline": null,
+      "assistantBody": "Binary search is an efficient algorithm for finding a target value within a sorted list. It repeatedly divides the search interval in half: if the target is less than the middle element, the algorithm continues on the left half; if greater, it continues on the right half. This process repeats until the target is found or the interval is empty, giving a time complexity of O(log n).",
+      "answerMatched": true,
+      "workingLabels": [],
+      "activities": [],
+      "activityDetailsOpen": null,
+      "confirmPromptSeen": null,
+      "confirmClicked": null,
+      "selection": null,
+      "identity": null,
+      "urlBefore": "https://leetcode.com/",
+      "urlAfter": "https://leetcode.com/",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "intentRefused": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionExecuted": 0,
+        "confirmation": 0,
+        "superseded": 0,
+        "responseForwarded": 1,
+        "modelContract": 0
+      },
+      "lateActions": null,
+      "answerSource": "CONVERSATION",
+      "interrupt": null,
+      "sampleCount": 1,
+      "composerReady": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/e2e-verify/shots/L2_3_level2.png",
+      "textExcerpt": "What is binary search?\nYou\n·\nJust now\nPA\nBinary search is an efficient algorithm for finding a target value within a sorted list. It repeatedly divides the search interval in half: if the target is less than the middle element, the algorithm continues on the left half; if greater, it continues on the right half. This process repeats until the target is found or the interval is empty, giving a time complexity of O(log n).",
+      "swLogsExcerpt": [
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+      ],
+      "fails": [],
+      "pass": true,
+      "rootCause": null
+    },
+    {
+      "id": "L2.4",
+      "suite": "level2",
+      "task": "Open Wikipedia and tell me what the Charminar is.",
+      "expected": "browser task, page analysis, answer from observed page info",
+      "expect": "browser",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "timedOut": false,
+      "terminalStatus": "PROVIDER_UNAVAILABLE",
+      "terminalOutcome": "FAILED",
+      "finalResult": {
+        "kind": "PROVIDER_UNAVAILABLE",
+        "headline": "Reasoning service unavailable",
+        "body": "The reasoning service was unavailable, so nothing was changed on the page."
+      },
+      "surface": "browser",
+      "panelClass": "final-response-panel failure",
+      "panelHeadline": "Reasoning service unavailable",
+      "assistantBody": null,
+      "answerMatched": null,
+      "workingLabels": [
+        "Reasoning service unavailable"
+      ],
+      "activities": [
+        "Reading the page",
+        "Planning the next action"
+      ],
+      "activityDetailsOpen": false,
+      "confirmPromptSeen": null,
+      "confirmClicked": null,
+      "selection": {
+        "conversationId": "conv-aa114cea",
+        "contextGeneration": 6,
+        "turnIndex": 0,
+        "turnCount": 1,
+        "candidateCount": 1,
+        "selectedOrdinal": null,
+        "selectedIdentityKey": null,
+        "selectedProductId": null,
+        "selectedEntityType": null,
+        "revalidation": null,
+        "referenceOutcome": "NOT_A_REFERENCE",
+        "clarificationCode": null
+      },
+      "identity": null,
+      "urlBefore": "https://leetcode.com/",
+      "urlAfter": "https://en.wikipedia.org/wiki/Main_Page",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 0,
+        "chatSuppressed": 0,
+        "intentClassified": 1,
+        "intentRefused": 0,
+        "targetResolution": 1,
+        "tabProvisioned": 1,
+        "perception": 2,
+        "actionExecuted": 0,
+        "confirmation": 0,
+        "superseded": 1,
+        "responseForwarded": 5,
+        "modelContract": 0
+      },
+      "lateActions": null,
+      "answerSource": null,
+      "interrupt": null,
+      "sampleCount": 3,
+      "composerReady": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/e2e-verify/shots/L2_4_level2.png",
+      "textExcerpt": "Open Wikipedia and tell me what the Charminar is.\nYou\n·\nJust now\nPA\nPrivAgent\nBROWSER TASK\nPROVIDER UNAVAILABLE\n!\nReasoning service unavailable\n2 activities\nReasoning service unavailable\nThe reasoning service was unavailable, so nothing was changed on the page.\nTry Again\nACTIVITY\n2 ACTIVITIES\nBROWSER & PRIVACY DIAGNOSTICS\n▼ EXPAND",
+      "swLogsExcerpt": [
+        "[ServiceWorker] response forwarded {status:RUNNING,currentStep:0,reason:Target tab discovered and ready. Starting visual privacy perception...}",
+        "[ServiceWorker] response forwarded {status:IN_PROGRESS,currentStep:0,reason:undefined}",
+        "[ServiceWorker] response forwarded",
+        "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:CONTINUE,retryCount:0,reasonCode:PROVIDER_COULD_NOT_ANSWER}",
+        "[AgentTrace] recovery record {category:PROVIDER_UNAVAILABLE,from:CONTINUE,to:STOP,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}",
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}",
+        "[AgentTrace] reasoning provider unavailable {category:HTTP_5XX,attempts:1,retryCount:1,reasonCode:RETRY_BUDGET_EXHAUSTED}",
+        "[AgentTrace] terminal progress emitted {status:PROVIDER_UNAVAILABLE,runId:4}",
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:FAILED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:PROVIDER_UNAVAILABLE,currentStep:1,reason:The reasoning service was unavailable, so nothing was changed on the page.}"
+      ],
+      "fails": [],
+      "pass": true,
+      "rootCause": null
+    },
+    {
+      "id": "L2.5",
+      "suite": "level2",
+      "task": "What is 12 + 8?",
+      "expected": "normal chat, arithmetic 20",
+      "expect": "chat",
+      "submitted": "submitted",
+      "readiness": "ready",
+      "providerMode": "LIVE_PROVIDER (real FastAPI gateway :8010, model=openai/gpt-oss-20b)",
+      "timedOut": false,
+      "terminalStatus": "ANSWER",
+      "terminalOutcome": "ANSWERED",
+      "finalResult": {
+        "kind": "ANSWER",
+        "headline": "Answer",
+        "body": "20"
+      },
+      "surface": "conversation",
+      "panelClass": null,
+      "panelHeadline": null,
+      "assistantBody": "20",
+      "answerMatched": true,
+      "workingLabels": [],
+      "activities": [],
+      "activityDetailsOpen": null,
+      "confirmPromptSeen": null,
+      "confirmClicked": null,
+      "selection": null,
+      "identity": null,
+      "urlBefore": "https://en.wikipedia.org/wiki/Main_Page",
+      "urlAfter": "https://en.wikipedia.org/wiki/Main_Page",
+      "counts": {
+        "chatClassified": 1,
+        "chatAccepted": 1,
+        "chatSuppressed": 0,
+        "intentClassified": 0,
+        "intentRefused": 0,
+        "targetResolution": 0,
+        "tabProvisioned": 0,
+        "perception": 0,
+        "actionExecuted": 0,
+        "confirmation": 0,
+        "superseded": 0,
+        "responseForwarded": 1,
+        "modelContract": 0
+      },
+      "lateActions": null,
+      "answerSource": "CONVERSATION",
+      "interrupt": null,
+      "sampleCount": 1,
+      "composerReady": true,
+      "screenshot": "/home/daytona/codebase/docs/evidence/e2e-verify/shots/L2_5_level2.png",
+      "textExcerpt": "What is 12 + 8?\nYou\n·\nJust now\nPA\n20",
+      "swLogsExcerpt": [
+        "[AgentTrace] output screen {verdict:CLEAR,audit:OUTPUT_SCREEN_CLEAR (0 finding(s)),outcome:ANSWERED,phase:TERMINAL,resultKind:NONE}",
+        "[ServiceWorker] response forwarded {status:ANSWER,currentStep:0,reason:Answered directly.}"
+      ],
+      "fails": [],
+      "pass": true,
+      "rootCause": null
+    }
+  ],
+  "summary": {
+    "steps": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0
+  }
+}

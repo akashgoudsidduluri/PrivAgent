@@ -71,6 +71,7 @@ import {
 import { AgentDecisionTracer, DecisionTraceEntry } from './decisionTrace';
 import { sanitizeRetainedAction, sanitizeRetainedSelfHealing } from './agentState';
 import { PrivacyBoundaryError } from '../privacy/rawValueScanner';
+import { filterAffordancesToOfferedIds } from '../privacy/contextMinimizer';
 import {
   AgentTaskState,
   TaskState,
@@ -910,7 +911,19 @@ export class AgentLoop {
     this.cancellationCode = reason;
     this.state.lifecycle = this.lifecycle;
     this.state.cancellationCode = reason;
-    if (this.state.status === 'IN_PROGRESS') {
+    //
+    // PHASE 19 / GATE 5 DENY. `NEEDS_USER_CONFIRMATION` is included because it
+    // is the one non-terminal status a run can be STOPPED from OUTSIDE the loop
+    // body: the loop parks there while the user decides, and the dashboard's
+    // "Cancel Action" control answers the pending prompt by calling stop().
+    // Leaving it out meant a declined action cancelled the run (lifecycle
+    // CANCELLED, token dead) while the rendered status stayed
+    // NEEDS_USER_CONFIRMATION — so the panel kept saying "Waiting for your
+    // confirmation" and never reached a terminal result, even though nothing
+    // could ever be resumed. Found in real Chrome (gate5 G5.1), not by the
+    // unit suite, which asserted the dispatch count (correctly 0) and never
+    // asserted the rendered terminal state.
+    if (this.state.status === 'IN_PROGRESS' || this.state.status === 'NEEDS_USER_CONFIRMATION') {
       this.state.status = 'STOPPED';
       this.state.goalStatus = 'STOPPED';
       // The user-facing sentence, not the code. The code stays in state for
@@ -1315,8 +1328,32 @@ export class AgentLoop {
             this.state.pageType = worldModelPageType;
           }
           this.state.candidateEntities = semanticUnderstanding?.entities ?? [];
+          //
+          // `this.state.semanticContext` keeps the RAW context on purpose: the
+          // planner, the evidence ledger and self-healing read it locally, and
+          // local reads are not a model channel.
           this.state.semanticContext = semanticContext;
-          context.semantic_context = semanticContext;
+          //
+          // PHASE 19.1 — but the MODEL-FACING copy must keep the A4 invariant.
+          //
+          // `minimizeAgentContext` already ran
+          // `filterAffordancesToOfferedIds` over this context. Assigning the raw
+          // object here threw that result away, so affordances whose
+          // `targetElementId` is not an OFFERED detection id were back on the
+          // wire — the exact "decoy" condition the A4 comment describes: the
+          // prompt tells the model "the ONLY valid values for target are the ids
+          // listed under Detected elements" and then lists affordances naming
+          // ids that are not in that list. Measured on the real wire payload
+          // (login fixture, `e2e_affordance.json`): offered ids
+          // [btn-signin, inter-link-1, privagent-det-1] with affordance targets
+          // [input-username, input-password, btn-signin, null] — 2 decoys, and a
+          // model that followed the affordance got ELEMENT_NOT_FOUND.
+          //
+          // Re-applying the SAME filter removes decoys only. It cannot add a
+          // target, cannot widen the offered set, and leaves grounding, M5, the
+          // firewall, the critic, risk/confirmation and effect verification
+          // untouched.
+          context.semantic_context = filterAffordancesToOfferedIds(semanticContext, context.detections);
           context.page_type = context.page_type || semanticContext.pageType;
 
           console.info('[AgentTrace] semantic understanding complete', {
@@ -4632,6 +4669,33 @@ export class AgentLoop {
     }
 
     const result = resolveReference(reference, this.conversation);
+
+    //
+    // PHASE 18.8 / A13 — PAGE SCOPE IS NOT AN ENTITY.
+    //
+    // "…shown on this page" names the page the device is on, not an item inside
+    // it. There is nothing to disambiguate and nothing to ask, so the turn
+    // proceeds to perception and the reasoner with NO anchor line and NO gate
+    // touched. Before this branch the turn fell through to the candidate path,
+    // which on a page that lists no entity (a form, a cart, an article) ended
+    // in an unanswerable NEEDS_INFORMATION: "I do not have a list of items from
+    // this page yet…". The user had named no item at all, so there was no
+    // question to answer.
+    //
+    // It grants nothing: `identity` is null here, so `providerTaskLine()` can
+    // never derive a reference from it, and no permission, gate or dispatch
+    // decision reads the conversation.
+    if (result.outcome === 'PAGE_SCOPED') {
+      this.state.conversation = {
+        ...(this.conversationSummary() as ConversationSummary),
+        referenceOutcome: 'PAGE_SCOPED',
+        referencePhrase: reference.phrase,
+        referenceBasis: 'NONE',
+      };
+      this.publishConversation('REFERENCE_PAGE_SCOPED');
+      return false;
+    }
+
     if (result.outcome === 'RESOLVED' && result.identity) {
       const identity = result.identity;
       this.conversationIdentities.set(identity.identityKey, identity);

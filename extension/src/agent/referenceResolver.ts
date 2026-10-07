@@ -7,6 +7,10 @@
  * decide the anchor.
  *
  * ── Resolution priority (fixed, documented, deterministic) ──────────────────
+ *   0. PAGE SCOPE ("on this page", "that page")
+ *      → the page the device is already looking at. It names WHERE, not WHICH:
+ *        there is no entity to disambiguate, so it resolves against the page
+ *        itself, needs no candidates, and never injects an entity anchor.
  *   1. ORDINAL ("the third one", "3rd result")
  *      → the candidate with that ordinal among the candidates that describe the
  *        LIVE page. Zero candidates → NEEDS_INFORMATION. Out of range →
@@ -49,6 +53,7 @@ export interface EntityReference {
 export type ReferenceOutcome =
   | 'NOT_A_REFERENCE'
   | 'RESOLVED'
+  | 'PAGE_SCOPED'
   | 'NEEDS_CLARIFICATION'
   | 'NEEDS_INFORMATION';
 
@@ -305,6 +310,28 @@ export function resolveReference(
       basis: 'NONE',
     };
   }
+  //
+  // Priority 0: PAGE SCOPE — and it is checked before the context, because a
+  // page-scoped turn needs no conversation context to be answered. "Reply to the
+  // order enquiry shown on this page" names the page in front of the device, not
+  // an item inside it, so there is nothing to disambiguate and nothing the model
+  // could be asked to guess. Resolving it against candidates would produce the
+  // unanswerable refusal this replaces ("I do not have a list of items from this
+  // page yet…") on every page that lists no entity — a form, a checkout, an
+  // article. `identity` stays null, so this can never become an entity anchor
+  // and no `[RESOLVED REFERENCE]` line is derived from it.
+  if (reference.kind === 'PAGE') {
+    return {
+      outcome: 'PAGE_SCOPED',
+      reference,
+      candidate: null,
+      identity: null,
+      clarificationCode: null,
+      question: null,
+      basis: 'NONE',
+    };
+  }
+
   if (!ctx) return clarification('NO_CANDIDATES', reference, 'NEEDS_INFORMATION');
 
   const live = observed && observed.length ? observed : eligibleCandidates(ctx);

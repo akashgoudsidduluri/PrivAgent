@@ -303,6 +303,72 @@ describe('A13-4 the resolver cannot become a second planner', () => {
     });
   });
 
+  // ── PAGE SCOPE — found by REAL CHROME (A14 real-Chrome run) ───────────────
+  //
+  // "Reply to the order enquiry shown on this page." ended the turn
+  // NEEDS_INFORMATION with "I do not have a list of items from this page yet, so
+  // I cannot tell which one you mean." — a question with no answer, on a page
+  // that lists no items. The locative names WHERE, not WHICH.
+
+  it('5.1 "on this page" is page scope: no candidates, no question, no entity', () => {
+    const ref = detectReference('Reply to the order enquiry shown on this page.');
+    expect(ref?.kind).toBe('PAGE');
+    const result = resolveReference(ref, listingContext());
+    expect(result.outcome).toBe('PAGE_SCOPED');
+    expect(result.question).toBeNull();
+    expect(result.clarificationCode).toBeNull();
+    expect(result.candidate).toBeNull();
+    expect(result.identity).toBeNull();
+    // It needs no conversation at all: the page is already in front of the device.
+    expect(resolveReference(detectReference('summarize that page'), null).outcome).toBe('PAGE_SCOPED');
+  });
+
+  it('5.2 an ordinal on the same page still outranks the locative', () => {
+    const ref = detectReference('open the third one on this page');
+    expect(ref?.kind).toBe('ORDINAL');
+    const result = resolveReference(ref, withCandidates());
+    expect(result.outcome).toBe('RESOLVED');
+    expect(result.basis).toBe('ORDINAL');
+    expect(result.candidate?.ordinal).toBe(3);
+  });
+
+  it('5.3 entity references with nothing observed still fail closed', () => {
+    const result = resolveReference(detectReference('tell me about this product'), listingContext());
+    expect(result.outcome).toBe('NEEDS_INFORMATION');
+    expect(result.clarificationCode).toBe('NO_CANDIDATES');
+  });
+
+  it('5.4 a page-scoped turn reaches the reasoner and anchors nothing', async () => {
+    const provider = new MockAgentProvider([
+      { action: 'click', target: 'nope-not-grounded', reason: 'invented target' },
+    ]);
+    const reasoner = vi.spyOn(provider as never as { requestAction: () => unknown }, 'requestAction');
+    const executed: unknown[] = [];
+    const loop = new AgentLoop(
+      provider as never,
+      {
+        // The A14 fixture: a page that lists no product at all.
+        perceivePage: catalogPerception([]),
+        executeAction: async (action) => {
+          executed.push(action);
+          return { success: true };
+        },
+      },
+      { maxSteps: 2, maxRetries: 1, delayBetweenStepsMs: 1, conversationContext: listingContext() }
+    );
+    const state = await loop.runTask('Reply to the order enquiry shown on this page.');
+    expect(state.conversation?.referenceOutcome).toBe('PAGE_SCOPED');
+    // Not the unanswerable refusal this replaces.
+    expect(state.status).not.toBe('NEEDS_INFORMATION');
+    expect(state.clarification?.code ?? null).toBeNull();
+    // The reasoner was actually consulted: the turn was not refused before it.
+    expect(reasoner).toHaveBeenCalled();
+    // No entity was selected, so no reference line can be derived from it.
+    expect(state.conversation?.selectedIdentityKey).toBeNull();
+    // The invented target was still refused by grounding — page scope grants nothing.
+    expect(executed).toHaveLength(0);
+  });
+
   it('4.4 "Open it." now resolves to the active web tab instead of failing', () => {
     const tabs = [
       { id: 7, url: CATALOG, active: false },
