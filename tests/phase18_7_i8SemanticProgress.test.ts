@@ -633,3 +633,70 @@ describe('I-8 · the real loop stops scrolling instead of running to maxSteps', 
     expect(state.longHorizon?.semanticProgress.stagnation).toBe('NONE');
   });
 });
+
+// ── PHASE 18.7 / I-8 §4.2 — viewport fingerprint with saturation ──────────
+
+describe('I-8 §4.2 · viewport fingerprint with saturation', () => {
+  it('a small same-direction scroll keeps the same fingerprint band', () => {
+    // SCROLL_BAND_PX = 400 → band 2 = [800, 1199], so 1000→1300 is already
+    // 2→3. Use band 2 internally so the assertion tests saturation, not a
+    // band boundary crossing.
+    const before = lhObs({ scrollY: 850, targetValueLength: 0 });
+    const after = lhObs({ scrollY: 1100, targetValueLength: 0 });
+    const same = lhObs({ scrollY: 950, targetValueLength: 0 });
+    const alsoSame = lhObs({ scrollY: 1050, targetValueLength: 0 });
+
+    expect(assessProgress(before, after).fingerprint).toBe(
+      assessProgress(before, same).fingerprint
+    );
+    expect(assessProgress(before, after).fingerprint).toBe(
+      assessProgress(same, alsoSame).fingerprint
+    );
+  });
+
+  it('a cross-band scroll changes the fingerprint band', () => {
+    const before = lhObs({ scrollY: 300, targetValueLength: 0 });
+    const after = lhObs({ scrollY: 700, targetValueLength: 0 });
+    const sameBand = lhObs({ scrollY: 350, targetValueLength: 0 });
+
+    // (300→700) is a 0→1 band transition; (300→350) stays in band 0.
+    expect(assessProgress(before, after).fingerprint).not.toBe(
+      assessProgress(before, sameBand).fingerprint
+    );
+  });
+
+  it('an unobservable viewport keeps a fixed fingerprint marker', () => {
+    const obs = lhObs({ viewportObservable: false, scrollY: 0, targetValueLength: 0 });
+
+    expect(assessProgress(obs, obs).fingerprint).toBe(
+      assessProgress(lhObs({ viewportObservable: false, scrollY: 9999 }), lhObs({ viewportObservable: false, scrollY: 0 })).fingerprint
+    );
+  });
+
+  it('a repeated same-band scroll CAN repeat a fingerprint, so budget can fire', () => {
+    // SCROLL_BAND_PX = 400 → band 0 = [0, 399]. All of these stay in band 0.
+    const base = lhObs({ scrollY: 50, targetValueLength: 0 });
+    const same = lhObs({ scrollY: 100, targetValueLength: 0 });
+    const same2 = lhObs({ scrollY: 150, targetValueLength: 0 });
+    const same3 = lhObs({ scrollY: 200, targetValueLength: 0 });
+
+    expect(assessProgress(base, same).fingerprint).toBe(
+      assessProgress(same, same2).fingerprint
+    );
+    expect(assessProgress(same, same2).fingerprint).toBe(
+      assessProgress(same2, same3).fingerprint
+    );
+    expect(assessProgress(base, same).fingerprint).toBe(
+      assessProgress(same2, same3).fingerprint
+    );
+  });
+
+  it('saturation does not collapse genuinely different pages', () => {
+    const a = lhObs({ scrollY: 0, targetValueLength: 0, url: 'https://a.example/charminar' });
+    const b = lhObs({ scrollY: 0, targetValueLength: 0, url: 'https://b.example/other' });
+
+    expect(assessProgress(a, b).fingerprint).not.toBe(
+      assessProgress(a, a).fingerprint
+    );
+  });
+});

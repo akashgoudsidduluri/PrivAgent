@@ -311,11 +311,28 @@ export function fingerprintObservation(
   const actionPart = action
     ? `${action.action}:${String(action.target ?? '')}`
     : 'observe';
-  const geometryPart =
-    observation.viewportObservable === false
-      ? 'geometry:unobservable'
-      : `geometry:${observation.scrollY}:${observation.targetValueLength}`;
-  return stableHash(`${url}|${topCandidates}|${topEntities}|${geometryPart}|${actionPart}`);
+  // PHASE 18.7 / I-8 §4.2 — viewport fingerprint with saturation.
+  //
+  // A raw `scrollY` makes every successful scroll produce a fresh fingerprint,
+  // which is exactly the defect §4.2 exists to close: same-direction scrolling
+  // with no evidence delta could never repeat a fingerprint, so loop/stall
+  // detection relied on `maxSteps` instead of noticing the task was going
+  // nowhere. Quantising `scrollY` into a coarse band collapses small/idle/
+  // same-direction scrolls into repeating fingerprints while leaving a genuinely
+  // different viewport region distinguishable.
+  //
+  // The band is a coarse multiple, not a page-percentile, so it stays
+  // deterministic and dependency-free. It is large enough that normal one-screen
+  // scrolls within the same region share a band, and small enough that moving to
+  // a clearly different part of a long page changes it.
+  const SCROLL_BAND_PX = 400;
+  const band = observation.viewportObservable === false
+    ? 'geometry:unobservable'
+    : observation.scrollY < 0
+      ? 'geometry:above-origin'
+      : `geometry:band:${Math.floor(observation.scrollY / SCROLL_BAND_PX)}`;
+
+  return stableHash(`${url}|${topCandidates}|${topEntities}|${band}|${actionPart}`);
 }
 
 /**
