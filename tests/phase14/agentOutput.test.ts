@@ -365,7 +365,14 @@ describe('P14-4 results are surfaced instead of silently dropped', () => {
     expect(kinds).toContain('RECOVERY');
     expect(kinds).toContain('PERCEPTION');
     // The container label is a root host, never a URL.
-    expect(out.artifacts.find((a) => a.kind === 'CONTAINMENT')?.label).toBe('SCOPE_DRIFT_DETECTED:contained:google.com');
+    //
+    // PHASE 18.6 / A10-F1 — the code and the scope are separated by a SPACE.
+    // Fusing them with ':' made the label a single mixed-case+digit token that the
+    // credential-token heuristic matches, which dropped the whole user-facing
+    // payload on every action-bearing run. Both values are still asserted here:
+    // the representation changed, the information did not.
+    //
+    expect(out.artifacts.find((a) => a.kind === 'CONTAINMENT')?.label).toBe('SCOPE_DRIFT_DETECTED contained:google.com');
   });
 });
 

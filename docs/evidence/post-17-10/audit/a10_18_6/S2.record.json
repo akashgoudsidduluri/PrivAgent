@@ -1,0 +1,37 @@
+{
+  "scenarioId": "S2",
+  "number": 2,
+  "task": "search for cats on wikipedia",
+  "providerMode": "CONTROLLED_PROVIDER",
+  "environmentBlocked": false,
+  "executed": true,
+  "terminalStatus": "PARTIAL",
+  "goalStatus": "NOT_SATISFIED",
+  "actionCount": 2,
+  "dispatchCount": 2,
+  "lateActionCount": 0,
+  "effectVerifiedCount": 2,
+  "effectNoEffectCount": 0,
+  "effectUnverifiableCount": 0,
+  "destinationStatus": "UNVERIFIED",
+  "evidenceLedgerCount": 48,
+  "evidenceLedgerVerifiedCurrentCount": 16,
+  "citedEvidenceIds": [],
+  "providerCallCount": 5,
+  "citedEvidenceRefs": 0,
+  "citationSource": "AgentTrace terminal proposal received {supportedRecords} for the accepted terminal",
+  "rejectionCodes": [
+    "INSUFFICIENT_EVIDENCE"
+  ],
+  "privacySelfCheck": {
+    "clean": true,
+    "rawValueFindings": 0,
+    "scannerLines": 6
+  },
+  "artifactPath": "docs/evidence/post-17-10/audit/a10_18_6/raw_S2.json",
+  "notes": "§14 row 2 — Search → result → information. provider=CONTROLLED stub_mode=act_then_answer; api_requests=5. provider_evidence=response-telemetry=controlled_stub. observables: intent=yes terminal=yes forwarded=yes output_screen=6 ledger_updates=3 long_horizon=3 citation=0 record(s) via AgentTrace terminal proposal received {supportedRecords} for the accepted terminal rejected=INSUFFICIENT_EVIDENCE; citedEvidenceIds=0 (record ids are deterministic ledger hashes; a run recorded before the F3 instrument reports 0 ids even when a count is present). privacySelfCheck is the execution-side self-check: last output-screen verdict + privacy-policy rejections. Controlled runs bypass the FastAPI gateway, so no independent model-facing capture exists for them; the artifact-level scan is independent of this field. scrolls proposed=2 strategy_exhausted=0 refused_after_exhaustion=0. distinctUrls=1 is the distinct non-null timeline URL count (the ledger log carries no URL). pageEngaged=true (perceivedUrl=true, ledgerUpdates=3, generations=4). startUrl=https://en.wikipedia.org/wiki/Main_Page.",
+  "pageGenerations": 4,
+  "pageEngaged": true,
+  "distinctUrls": 1,
+  "scrollCount": 2
+}

@@ -4418,6 +4418,24 @@ export class AgentLoop {
             status: verdict.status,
             supportedRecords: verdict.supportedRecordIds.length,
             downgraded: verdict.downgraded,
+            //
+            // PHASE 18.8 / A10 (finding F3) — METADATA-ONLY OBSERVABILITY.
+            //
+            // An audit of a terminal state has to be able to tell "the model
+            // cited nothing" from "the model cited records this device does not
+            // hold/trust", and has to be able to name WHICH local records
+            // backed an accepted answer. Both were previously invisible outside
+            // the device, which made a downgrade indistinguishable from a
+            // dropped citation.
+            //
+            // Neither field carries page content: a record id is a deterministic
+            // hash of `sourceUrl|pageGeneration|key` (never claim text), and a
+            // rejection is a code from a closed enum. The ledger, the claims and
+            // the raw values stay on the device — only handles and codes cross
+            // the boundary, and both cross it to the LOCAL console trace only.
+            //
+            supportedRecordIds: [...verdict.supportedRecordIds],
+            rejected: [...verdict.rejections],
           });
           throw new TerminalProposalSignal(verdict);
         }

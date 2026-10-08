@@ -183,7 +183,14 @@ export type AgentArtifactKind =
 
 export interface AgentArtifact {
   kind: AgentArtifactKind;
-  /** Value-free label, e.g. `contained:google.com` or a failure code. */
+  /**
+   * Value-free label, e.g. `contained:google.com` or a failure code.
+   *
+   * PHASE 18.6 / A10-F1 — a label that concatenates a closed-vocabulary code with
+   * a machine-generated value using ':' can form a single mixed-case+digit token,
+   * which the credential-token heuristic matches (that is what dropped every
+   * action-bearing run's terminal payload). Separate such parts with a space, and
+   * never interpolate page-derived text here. */
   label: string;
 }
 
@@ -661,7 +668,25 @@ function buildArtifacts(s: AgentTaskState): AgentArtifact[] {
   if (s.containmentDecision) {
     out.push({
       kind: 'CONTAINMENT',
-      label: `${s.containmentDecision.code}:${s.containmentDecision.scope}`,
+      //
+      // PHASE 18.6 / A10-F1 — the decision code and the scope summary are joined
+      // by a SPACE, never by ':'.
+      //
+      // `structureIsClean` scans this as one whitespace-delimited token, and the
+      // credential-token heuristic matches a token that mixes upper case, lower
+      // case and a digit. Neither half matches it alone — the code supplies the
+      // upper case (`WITHIN_SCOPE`), the scope supplies the lower case and the
+      // digit (`contained:0.1`) — but the concatenation does, and the whole
+      // user-facing payload was then replaced by the safe empty projection. The
+      // rule is RIGHT to be that broad in page text; a closed-vocabulary code is
+      // simply not page text, so the two halves are no longer fused into a token
+      // that looks like one.
+      //
+      // Both pieces of information are unchanged, and NOTHING is excluded from
+      // screening: the label is still scanned with the full rule set, so a real
+      // credential shape in the code or the scope still fails closed.
+      //
+      label: `${s.containmentDecision.code} ${s.containmentDecision.scope}`,
     });
   }
   if (s.harnessRun && s.harnessRun.cycles > 0) {

@@ -1,14 +1,14 @@
 {
   "harnessVersion": "phase18.6-a10-1",
-  "gradedAt": 1791467494696,
+  "gradedAt": 1791469226587,
   "artifactPath": "docs/evidence/post-17-10/audit/a10_18_6/artifact.json",
   "pass": false,
   "summary": {
     "total": 10,
     "passed": 3,
-    "failed": 2,
+    "failed": 7,
     "blocked": 0,
-    "notRun": 5
+    "notRun": 0
   },
   "verdicts": [
     {
@@ -18,38 +18,38 @@
     },
     {
       "scenarioId": "S2",
-      "kind": "NOT_RUN",
-      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+      "kind": "FAIL",
+      "reason": "no verified/current evidence is cited in the recorded artifact (ledger=48, verifiedCurrent=16, cited=0)"
     },
     {
       "scenarioId": "S3",
-      "kind": "NOT_RUN",
-      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+      "kind": "FAIL",
+      "reason": "no verified/current evidence is cited in the recorded artifact (ledger=48, verifiedCurrent=16, cited=0)"
     },
     {
       "scenarioId": "S4",
       "kind": "FAIL",
-      "reason": "independent privacy self-check.clean === true required (findings=7, scannerLines=9)"
+      "reason": "no verified/current evidence is cited in the recorded artifact (ledger=34, verifiedCurrent=14, cited=0)"
     },
     {
       "scenarioId": "S5",
-      "kind": "NOT_RUN",
-      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+      "kind": "FAIL",
+      "reason": "terminal PARTIAL is not in expected set [NEEDS_INFORMATION]"
     },
     {
       "scenarioId": "S6",
-      "kind": "NOT_RUN",
-      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+      "kind": "FAIL",
+      "reason": "terminal FRESHNESS_UNVERIFIED is not in expected set [ANSWER, PARTIAL, SUCCESS, CANNOT_VERIFY]"
     },
     {
       "scenarioId": "S7",
       "kind": "FAIL",
-      "reason": "independent privacy self-check.clean === true required (findings=5, scannerLines=7)"
+      "reason": "no verified/current evidence is cited in the recorded artifact (ledger=33, verifiedCurrent=11, cited=0)"
     },
     {
       "scenarioId": "S8",
-      "kind": "NOT_RUN",
-      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+      "kind": "FAIL",
+      "reason": "no verified/current evidence is cited in the recorded artifact (ledger=60, verifiedCurrent=24, cited=0)"
     },
     {
       "scenarioId": "S9",
@@ -63,35 +63,18 @@
     }
   ],
   "privacy": {
-    "clean": false,
-    "findings": [
-      {
-        "scenarioId": "S4",
-        "field": "privacySelfCheck.clean",
-        "category": "privacySelfCheck",
-        "rule": "privacy_self_check_not_clean",
-        "detail": "7 raw-value finding(s) reported by the execution-side self-check"
-      },
-      {
-        "scenarioId": "S7",
-        "field": "privacySelfCheck.clean",
-        "category": "privacySelfCheck",
-        "rule": "privacy_self_check_not_clean",
-        "detail": "5 raw-value finding(s) reported by the execution-side self-check"
-      }
-    ],
+    "clean": true,
+    "findings": [],
     "scenariosScanned": 10
   },
   "failures": [
-    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
-    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
-    "independent privacy self-check.clean === true required (findings=7, scannerLines=9)",
-    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
-    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
-    "independent privacy self-check.clean === true required (findings=5, scannerLines=7)",
-    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
-    "privacy [privacySelfCheck] S4 privacySelfCheck.clean: 7 raw-value finding(s) reported by the execution-side self-check",
-    "privacy [privacySelfCheck] S7 privacySelfCheck.clean: 5 raw-value finding(s) reported by the execution-side self-check"
+    "no verified/current evidence is cited in the recorded artifact (ledger=48, verifiedCurrent=16, cited=0)",
+    "no verified/current evidence is cited in the recorded artifact (ledger=48, verifiedCurrent=16, cited=0)",
+    "no verified/current evidence is cited in the recorded artifact (ledger=34, verifiedCurrent=14, cited=0)",
+    "terminal PARTIAL is not in expected set [NEEDS_INFORMATION]",
+    "terminal FRESHNESS_UNVERIFIED is not in expected set [ANSWER, PARTIAL, SUCCESS, CANNOT_VERIFY]",
+    "no verified/current evidence is cited in the recorded artifact (ledger=33, verifiedCurrent=11, cited=0)",
+    "no verified/current evidence is cited in the recorded artifact (ledger=60, verifiedCurrent=24, cited=0)"
   ],
   "coverage": {
     "required": 10,
