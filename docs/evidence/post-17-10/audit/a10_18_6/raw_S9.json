@@ -1,11 +1,11 @@
 {
   "phase": "18.6-A10",
-  "work": "A10 §14 row 9 — ambiguous request",
+  "work": "A10 §14 row 9 — Ambiguous request",
   "labels": "PROVEN_REAL_CHROME / CONTROLLED_PROVIDER",
   "inputs": {
     "task": "Open it.",
     "startUrl": "http://127.0.0.1:4174/index.html",
-    "settleMs": 25000
+    "settleMs": 30000
   },
   "environment": {
     "chromeVersion": "Chrome/153.0.8010.12",
@@ -20,8 +20,8 @@
   },
   "timeline": [
     {
-      "t": 3593,
-      "wall": 1791465186339,
+      "t": 3592,
+      "wall": 1791470973902,
       "status": "NEEDS_CLARIFICATION",
       "stage": null,
       "phase": null,
@@ -31,8 +31,8 @@
       "finalResult": null
     },
     {
-      "t": 3596,
-      "wall": 1791465186342,
+      "t": 3595,
+      "wall": 1791470973905,
       "status": "NEEDS_CLARIFICATION",
       "stage": null,
       "phase": "TERMINAL",
@@ -51,190 +51,250 @@
   "network": [],
   "dashboardLogs": [
     {
-      "t": 5942,
+      "t": 6005,
       "text": "[Adapter] START_TASK received {\"taskLength\":8}"
     },
     {
-      "t": 5942,
+      "t": 6006,
       "text": "[AgentTrace] dashboard START_TASK received {\"taskLength\":8}"
     },
     {
-      "t": 5943,
-      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791465186283\",\"origin\":\"http://localhost:5173\"}"
+      "t": 6009,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791470973844\",\"origin\":\"http://localhost:5173\"}"
     },
     {
-      "t": 5957,
-      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791465186283\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+      "t": 6020,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791470973844\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
     },
     {
-      "t": 5958,
-      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791465186283\",\"attempt\":1}"
+      "t": 6020,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791470973844\",\"attempt\":1}"
     },
     {
-      "t": 5961,
-      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791465186283\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+      "t": 6023,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791470973844\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
     },
     {
-      "t": 5962,
-      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791465186283\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+      "t": 6026,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791470973844\",\"connected\":true,\"targetTab\":\"FOUND\"}"
     },
     {
-      "t": 5964,
+      "t": 6028,
       "text": "Extension: CONNECTED"
     },
     {
-      "t": 5964,
+      "t": 6029,
       "text": "Service Worker: REACHABLE"
     },
     {
-      "t": 5965,
+      "t": 6029,
       "text": "Target Tab: FOUND"
     },
     {
-      "t": 5965,
+      "t": 6029,
       "text": "Content Script: REACHABLE"
     },
     {
-      "t": 5971,
-      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791465186283\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+      "t": 6033,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791470973844\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
     },
     {
-      "t": 5972,
-      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791465186283\",\"connected\":true}"
+      "t": 6035,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791470973844\",\"connected\":true}"
     },
     {
-      "t": 5972,
+      "t": 6035,
       "text": "[AgentTrace] dashboard START_TASK posted to window {\"taskLength\":8,\"runId\":1}"
     },
     {
-      "t": 5974,
+      "t": 6037,
       "text": "[AgentTrace] content START_TASK received"
     },
     {
-      "t": 5974,
+      "t": 6037,
       "text": "[AgentTrace] content script forwarding START_TASK to background worker"
     },
     {
-      "t": 5982,
+      "t": 6048,
       "text": "[Extension] message received {\"type\":\"START_TASK\"}"
     },
     {
-      "t": 5996,
+      "t": 6062,
       "text": "[Adapter] response received {\"status\":\"NEEDS_CLARIFICATION\",\"currentStep\":0,\"hasInteraction\":false,\"interactionPhase\":null,\"interactionOutcome\":null}"
     },
     {
-      "t": 5997,
+      "t": 6063,
       "text": "[AgentTrace] dashboard received TASK_PROGRESS {\"status\":\"NEEDS_CLARIFICATION\",\"currentStep\":0,\"hasInteraction\":false,\"interactionPhase\":null}"
     },
     {
-      "t": 5998,
+      "t": 6064,
       "text": "[AgentTrace] Dropping stale progress from superseded runId {\"incomingRunId\":0,\"activeRunId\":1,\"incomingTask\":\"Open it.\",\"activeTask\":\"Open it.\"}"
     },
     {
-      "t": 18106,
-      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791465198448\",\"origin\":\"http://localhost:5173\"}"
+      "t": 17610,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791470985448\",\"origin\":\"http://localhost:5173\"}"
     },
     {
-      "t": 18113,
-      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791465198448\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+      "t": 17619,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791470985448\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
     },
     {
-      "t": 18113,
-      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791465198448\",\"attempt\":1}"
+      "t": 17619,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791470985448\",\"attempt\":1}"
     },
     {
-      "t": 18115,
-      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791465198448\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+      "t": 17621,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791470985448\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
     },
     {
-      "t": 18115,
-      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791465198448\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+      "t": 17621,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791470985448\",\"connected\":true,\"targetTab\":\"FOUND\"}"
     },
     {
-      "t": 18117,
+      "t": 17626,
       "text": "Extension: CONNECTED"
     },
     {
-      "t": 18117,
+      "t": 17626,
       "text": "Service Worker: REACHABLE"
     },
     {
-      "t": 18119,
+      "t": 17626,
       "text": "Target Tab: FOUND"
     },
     {
-      "t": 18119,
+      "t": 17626,
       "text": "Content Script: REACHABLE"
     },
     {
-      "t": 18120,
-      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791465198448\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+      "t": 17627,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791470985448\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
     },
     {
-      "t": 18120,
-      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791465198448\",\"connected\":true}"
+      "t": 17627,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791470985448\",\"connected\":true}"
+    },
+    {
+      "t": 32611,
+      "text": "[Adapter][PING] PING_SENT {\"pingId\":\"adapter-1791471000450\",\"origin\":\"http://localhost:5173\"}"
+    },
+    {
+      "t": 32624,
+      "text": "[CS][PING] PING_RECEIVED_BY_CONTENT_SCRIPT {\"pingId\":\"adapter-1791471000450\",\"origin\":\"http://localhost:5173\",\"validContext\":true}"
+    },
+    {
+      "t": 32624,
+      "text": "[CS][PING] DASHBOARD_PING_SENT_TO_SERVICE_WORKER {\"pingId\":\"adapter-1791471000450\",\"attempt\":1}"
+    },
+    {
+      "t": 32627,
+      "text": "[CS][PING] CONTENT_SCRIPT_RESPONSE_RECEIVED — SW alive {\"pingId\":\"adapter-1791471000450\",\"attempt\":1,\"targetTab\":\"FOUND\",\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 32627,
+      "text": "[CS][PING] PONG_EXTENSION_SENT {\"pingId\":\"adapter-1791471000450\",\"connected\":true,\"targetTab\":\"FOUND\"}"
+    },
+    {
+      "t": 32629,
+      "text": "Extension: CONNECTED"
+    },
+    {
+      "t": 32629,
+      "text": "Service Worker: REACHABLE"
+    },
+    {
+      "t": 32630,
+      "text": "Target Tab: FOUND"
+    },
+    {
+      "t": 32630,
+      "text": "Content Script: REACHABLE"
+    },
+    {
+      "t": 32630,
+      "text": "[Adapter][PING] PONG_EXTENSION_RECEIVED {\"pingId\":\"adapter-1791471000450\",\"connected\":true,\"extension\":\"CONNECTED\",\"serviceWorker\":\"REACHABLE\",\"targetTab\":\"FOUND\",\"contentScript\":\"REACHABLE\"}"
+    },
+    {
+      "t": 32631,
+      "text": "[Adapter][PING] ADAPTER_RESOLVED {\"pingId\":\"adapter-1791471000450\",\"connected\":true}"
     }
   ],
   "swLogs": [
     {
-      "t": 5951,
-      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791465186283\"}"
+      "t": 6016,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791470973844\"}"
     },
     {
-      "t": 5955,
-      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791465186283\"}"
+      "t": 6018,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791470973844\"}"
     },
     {
-      "t": 5955,
-      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791465186283\",\"targetFound\":true,\"tabId\":729553448,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+      "t": 6018,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791470973844\",\"targetFound\":true,\"tabId\":1938393945,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
     },
     {
-      "t": 5955,
-      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791465186283\",\"targetFound\":true}"
+      "t": 6018,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791470973844\",\"targetFound\":true}"
     },
     {
-      "t": 5990,
+      "t": 6053,
       "text": "[ServiceWorker] message received {\"type\":\"PRIVAGENT_DASHBOARD_START_TASK\"}"
     },
     {
-      "t": 5991,
+      "t": 6054,
       "text": "[AgentTrace] service worker START_TASK received {\"taskLength\":8}"
     },
     {
-      "t": 5991,
+      "t": 6054,
       "text": "[AgentTrace] chat route classified {\"route\":\"PIPELINE\",\"code\":\"VAGUE_REFERENCE\",\"taskLength\":8}"
     },
     {
-      "t": 5991,
+      "t": 6054,
       "text": "[AgentTrace] intent classified {\"intent\":\"AMBIGUOUS\",\"confidence\":\"DETERMINISTIC\",\"requiresDestination\":false,\"requiresEvidence\":false,\"admitsBrowserAutomation\":false,\"refusal\":\"AMBIGUOUS_NO_GUESS\"}"
     },
     {
-      "t": 5991,
+      "t": 6054,
       "text": "[AgentTrace] task not admitted by the intent boundary {\"intent\":\"AMBIGUOUS\",\"refusal\":\"AMBIGUOUS_NO_GUESS\"}"
     },
     {
-      "t": 5992,
+      "t": 6055,
       "text": "[AgentTrace] output screen {\"verdict\":\"CLEAR\",\"audit\":\"OUTPUT_SCREEN_CLEAR (0 finding(s))\",\"outcome\":\"UNANSWERED\",\"phase\":\"TERMINAL\",\"resultKind\":\"NONE\"}"
     },
     {
-      "t": 5992,
+      "t": 6055,
       "text": "[ServiceWorker] response forwarded {\"status\":\"NEEDS_CLARIFICATION\",\"currentStep\":0,\"reason\":\"The request is too ambiguous to act on safely. Please say what to open or what to find.\"}"
     },
     {
-      "t": 18110,
-      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791465198448\"}"
+      "t": 17617,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791470985448\"}"
     },
     {
-      "t": 18111,
-      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791465198448\"}"
+      "t": 17618,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791470985448\"}"
     },
     {
-      "t": 18112,
-      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791465198448\",\"targetFound\":true,\"tabId\":729553448,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+      "t": 17618,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791470985448\",\"targetFound\":true,\"tabId\":1938393945,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
     },
     {
-      "t": 18113,
-      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791465198448\",\"targetFound\":true}"
+      "t": 17618,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791470985448\",\"targetFound\":true}"
+    },
+    {
+      "t": 32619,
+      "text": "[SW][PING] SERVICE_WORKER_RECEIVED_PING {\"pingId\":\"adapter-1791471000450\"}"
+    },
+    {
+      "t": 32620,
+      "text": "[SW][PING] TARGET_RESOLUTION_STARTED {\"pingId\":\"adapter-1791471000450\"}"
+    },
+    {
+      "t": 32621,
+      "text": "[SW][PING] TARGET_RESOLUTION_RESULT {\"pingId\":\"adapter-1791471000450\",\"targetFound\":true,\"tabId\":1938393945,\"urlOrigin\":\"http://127.0.0.1:4174\"}"
+    },
+    {
+      "t": 32621,
+      "text": "[SW][PING] SERVICE_WORKER_RESPONSE_SENT {\"pingId\":\"adapter-1791471000450\",\"targetFound\":true}"
     }
   ],
   "analysis": {

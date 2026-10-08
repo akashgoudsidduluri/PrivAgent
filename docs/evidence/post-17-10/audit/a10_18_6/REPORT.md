@@ -224,7 +224,25 @@ normal-chat routing, browser-task classification and containment are untouched.
 | Certification gate | `npx vite-node scratch/a10_matrix_grade.ts --require-pass` | **exit 1** (truthful) |
 | Artifact integrity | record ↔ raw artifact ↔ `artifact.json` ↔ `graded.json` ↔ this report | 10/10 records agree; no PASS on a non-clean run; no FAIL reason contradicting its record |
 
-## 7. Non-claims
+## 7. I-5 re-execution note (2026-10-08)
+
+The I-5 information-task success contract (`docs/I5_INFORMATION_TASK_VERIFICATION.md`)
+hoisted the evidence precondition in `verifyTaskGoal` so no rule can certify an
+information task's SUCCESS ahead of it. Rows **S1, S2, S6, S7, S9 and S10 were
+re-executed in real Chrome on the post-I-5 build**; their raw artifacts in this
+directory are that build's. Their outcomes and verdicts are unchanged, which is the
+point of the regression: S1 still reaches an evidence-backed `SUCCESS` (rule `2c`, 7
+composed verified records), the insufficient-evidence rows still fail closed, and
+**no false SUCCESS was introduced** — `graded.json` remains 3 PASS / 7 FAIL, privacy
+clean, `--require-pass` exits 1.
+
+Rows **S3, S4, S5 and S8 were not re-executed** after I-5: they are the same
+insufficient-evidence class already re-observed through S2 (same downgrade, same
+citation gate), and re-running them would spend browser time without adding a new
+distinction. Their raw artifacts therefore predate the I-5 build and are labelled as
+such here rather than being presented as post-I-5 evidence.
+
+## 8. Non-claims
 
 * **A10 is NOT CERTIFIED.** 3 of 10 rows are certified; 5 of the 7 refusals are caused by a controlled
   provider that cannot gather subject-matched evidence, 2 by contract semantics.

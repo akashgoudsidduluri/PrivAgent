@@ -3857,6 +3857,16 @@ export class AgentLoop {
       }
 
       // Check immediate completion
+      //
+      // PHASE 18.8 / I-5 — the evidence inputs are refreshed IMMEDIATELY BEFORE
+      // this verdict as well. A5's contract says the refresh happens "immediately
+      // before every goal verdict", but only the step-top verdict site did it, so
+      // this second site decided on the copy taken BEFORE the action: a record
+      // that went stale during the step could still have authorised SUCCESS here.
+      // Re-deriving the two inputs from the device's own ledger costs nothing and
+      // is strictly fail-closed (an empty or absent list can never satisfy the
+      // information requirement).
+      this.refreshEvidenceCompletionInputs();
       if (this.isTaskGoalSatisfied(task, this.state, context)) {
         this.state.status = 'SUCCESS';
         this.state.goalStatus = 'SUCCESS';

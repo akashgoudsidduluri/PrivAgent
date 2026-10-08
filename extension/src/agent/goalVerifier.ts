@@ -550,6 +550,61 @@ export function verifyTaskGoal(
   const lower = task.toLowerCase();
   const currentUrl = context.url || state.currentUrl || '';
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // PHASE 18.8 / I-5 — THE INFORMATION SUCCESS CONTRACT. THIS GATE IS FIRST,
+  // AND IT IS FIRST ON PURPOSE.
+  //
+  // A5 (below, formerly at 2c-bis) stated the requirement correctly but placed
+  // it AFTER rules 1, 1b, 2, 2b and after the scroll preconditions. Every one of
+  // those rules returns SUCCESS on OBSERVED STATE that is not evidence of the
+  // requested information:
+  //
+  //   * rule 1/1b certify a SEARCH — the query appears in the URL — which says
+  //     a search was PERFORMED, not that anything was learned;
+  //   * rule 2 certifies a login by a URL transition;
+  //   * rule 2b certifies research from the pages that were REACHED;
+  //   * the scroll preconditions certify that the page MOVED.
+  //
+  // So an information task could still reach SUCCESS with zero verified
+  // records. Reproduced in a real Chrome row: "search for cats on wikipedia" is
+  // MIXED_TASK with requiresEvidence=true, and rule 1 certified it as SUCCESS
+  // the moment `search=cats` appeared in the results URL.
+  //
+  // The contract, enforced here for the WHOLE class of task and for every rule:
+  //
+  //   an information task (the I-1 intent boundary marks it requiresEvidence)
+  //   may return SUCCESS only when the device itself holds at least one ledger
+  //   record that is VERIFIED by the local verifier, CURRENT (not superseded by
+  //   a later observed generation), SANITIZED at write time, and ON SUBJECT —
+  //   its normalized key matches a subject term taken from the USER'S OWN task
+  //   text.
+  //
+  // Nothing else authorises SUCCESS: no visited page, no dispatched action, no
+  // search URL, no provider claim, no non-empty answer string, and no evidence
+  // that merely exists somewhere in the ledger about something else.
+  //
+  // Deterministic and local. The inputs are `state.intentRequiresEvidence`
+  // (frozen by the I-1 boundary) and `state.verifiedEvidenceKeys` (derived by
+  // the loop from the device's own ledger). No model claim, no answer text and
+  // no dispatch outcome is read. FAIL CLOSED: unmet evidence returns
+  // IN_PROGRESS — nothing failed and nothing is claimed, the agent simply has
+  // not established the answer yet. An absent intent decision means "not
+  // required", so action/navigation tasks and every pre-A5 caller are
+  // unaffected.
+  // ─────────────────────────────────────────────────────────────────────────
+  const requiresEvidence = state.intentRequiresEvidence === true;
+  const evidenceSatisfied = !requiresEvidence || hasVerifiedSubjectEvidence(state, task);
+  if (requiresEvidence && !evidenceSatisfied) {
+    return {
+      satisfied: false,
+      status: 'IN_PROGRESS',
+      reason:
+        `Evidence requirement unmet: the intent boundary marked this task as needing ` +
+        `evidence, and no VERIFIED, CURRENT ledger record matches the subject of the ` +
+        `question yet. Completion stays unreachable until one does.`,
+    };
+  }
+
   // ── 1. Generic Web Search Goal Verification (any search engine) ─────────────
   // PrivAgent is a GENERAL-PURPOSE browser agent, so search goals are not
   // Google-specific. Success requires an OBSERVED query in the live URL
@@ -702,19 +757,6 @@ export function verifyTaskGoal(
   // FAILED, because nothing failed; the agent simply has not established the
   // answer yet, and the loop should keep working. It never returns a terminal
   // state from here, and it never reads the model's claim.
-  const requiresEvidence = state.intentRequiresEvidence === true;
-  const evidenceSatisfied = !requiresEvidence || hasVerifiedSubjectEvidence(state, task);
-  if (requiresEvidence && !evidenceSatisfied) {
-    return {
-      satisfied: false,
-      status: 'IN_PROGRESS',
-      reason:
-        `Evidence requirement unmet: the intent boundary marked this task as needing ` +
-        `evidence, and no VERIFIED, CURRENT ledger record matches the subject of the ` +
-        `question yet. Completion stays unreachable until one does.`,
-    };
-  }
-
   // ── 2c. Read-only display-fact goals (post-17.9) ───────────────────────────
   //
   // A goal that asks the agent to REPORT something the page displays ("...and

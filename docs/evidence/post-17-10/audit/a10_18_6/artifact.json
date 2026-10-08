@@ -2,12 +2,12 @@
   "label": "Phase 18.6 §14 real-web evaluation matrix",
   "note": "10/10 rows recorded from real-Chrome runs; unrecorded rows are NOT_RUN",
   "harnessVersion": "phase18.6-a10-1",
-  "generatedAt": 1791469226583,
+  "generatedAt": 1791471101934,
   "run": {
     "phase": "18.6-A10",
     "matrix": "§14",
-    "repositoryHead": "71b3d6dd52f4aa23dda866afe19604c9d5bf23a7",
-    "startedAt": 1791469226578,
+    "repositoryHead": "919d5e551cf226656bf93183c9cb3c86ef0d669f",
+    "startedAt": 1791471101930,
     "providerModes": []
   },
   "scenarios": [
@@ -236,13 +236,16 @@
       "providerCallCount": 5,
       "citedEvidenceRefs": 0,
       "citationSource": "AgentTrace terminal proposal received {supportedRecords} for the accepted terminal",
+      "rejectionCodes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
       "privacySelfCheck": {
         "clean": true,
         "rawValueFindings": 0,
         "scannerLines": 6
       },
       "artifactPath": "docs/evidence/post-17-10/audit/a10_18_6/raw_S7.json",
-      "notes": "§14 row 7 — Sensitive-data page. provider=CONTROLLED stub_mode=act_then_answer; api_requests=5. provider_evidence=response-telemetry=controlled_stub. observables: intent=yes terminal=yes forwarded=yes output_screen=6 ledger_updates=3 long_horizon=3 citation=0 record(s) via AgentTrace terminal proposal received {supportedRecords} for the accepted terminal; citedEvidenceIds=0 (record ids are deterministic ledger hashes; a run recorded before the F3 instrument reports 0 ids even when a count is present). privacySelfCheck is the execution-side self-check: last output-screen verdict + privacy-policy rejections. Controlled runs bypass the FastAPI gateway, so no independent model-facing capture exists for them; the artifact-level scan is independent of this field. scrolls proposed=2 strategy_exhausted=0 refused_after_exhaustion=0. distinctUrls=1 is the distinct non-null timeline URL count (the ledger log carries no URL). pageEngaged=true (perceivedUrl=true, ledgerUpdates=3, generations=4). startUrl=http://127.0.0.1:4175/.",
+      "notes": "§14 row 7 — Sensitive-data page. provider=CONTROLLED stub_mode=act_then_answer; api_requests=5. provider_evidence=response-telemetry=controlled_stub. observables: intent=yes terminal=yes forwarded=yes output_screen=6 ledger_updates=3 long_horizon=3 citation=0 record(s) via AgentTrace terminal proposal received {supportedRecords} for the accepted terminal rejected=INSUFFICIENT_EVIDENCE; citedEvidenceIds=0 (record ids are deterministic ledger hashes; a run recorded before the F3 instrument reports 0 ids even when a count is present). privacySelfCheck is the execution-side self-check: last output-screen verdict + privacy-policy rejections. Controlled runs bypass the FastAPI gateway, so no independent model-facing capture exists for them; the artifact-level scan is independent of this field. scrolls proposed=2 strategy_exhausted=0 refused_after_exhaustion=0. distinctUrls=1 is the distinct non-null timeline URL count (the ledger log carries no URL). pageEngaged=true (perceivedUrl=true, ledgerUpdates=3, generations=4). startUrl=http://127.0.0.1:4175/.",
       "pageGenerations": 4,
       "pageEngaged": true,
       "distinctUrls": 1,
