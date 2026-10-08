@@ -4807,6 +4807,7 @@ export class AgentLoop {
       // model's prose is not consulted. When no answer can be composed the
       // field simply stays absent; nothing is fabricated.
       //
+      let composedVerifiedRecords: number | null = null;
       if (!this.state.answer) {
         const composed = composeEvidenceAnswerFromLedger(
           this.evidenceLedger,
@@ -4818,13 +4819,24 @@ export class AgentLoop {
             verifiedRecords: composed.verifiedRecords,
             sourceHost: hostFromUrl(this.state.currentUrl),
           };
+          composedVerifiedRecords = composed.verifiedRecords;
         }
       }
       // PHASE 18.7 / A5. The rule id only — `res.reason` quotes the observed
       // fact and its value, so it must never reach a log line. Without this,
       // a SUCCESS is undiagnosable in a real browser and a false one is
       // impossible to attribute.
-      console.info('[AgentTrace] goal verification satisfied', { rule: res.rule ?? 'UNATTRIBUTED' });
+      //
+      // PHASE 18.6 / A10-F3. `composedVerifiedRecords` is the count of verified,
+      // current ledger records the ANSWER was composed from — the same number
+      // `answerProvenance.verifiedRecords` carries to the dashboard. COUNT ONLY:
+      // the claims themselves are never logged. Without it, a goal-verified
+      // SUCCESS cannot be checked against the evidence it stands on (§14 rows
+      // 1/2/3/8), which is precisely the "SUCCESS with 0 verified records" trap.
+      console.info('[AgentTrace] goal verification satisfied', {
+        rule: res.rule ?? 'UNATTRIBUTED',
+        ...(composedVerifiedRecords === null ? {} : { composedVerifiedRecords }),
+      });
       return true;
     }
     return false;

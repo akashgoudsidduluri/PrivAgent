@@ -145,6 +145,12 @@ async function sendToDashboard(payload: any, preferredTabId?: number | null): Pr
     outcome: screened.output.outcome,
     phase: screened.output.activity.phase,
     resultKind: screened.output.result.kind,
+    // PHASE 18.6 / A10-F1. Field names + rule codes when the closed-vocabulary
+    // check fails, so a dropped payload is attributable from the run's own trace
+    // instead of from a count alone. Values are never logged.
+    ...(screened.structuralViolations && screened.structuralViolations.length
+      ? { structuralViolations: screened.structuralViolations }
+      : {}),
   });
   payload = outbound;
 

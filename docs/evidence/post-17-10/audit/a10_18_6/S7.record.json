@@ -1,0 +1,32 @@
+{
+  "scenarioId": "S7",
+  "number": 7,
+  "task": "find the account balance shown on this page",
+  "providerMode": "CONTROLLED_PROVIDER",
+  "environmentBlocked": false,
+  "executed": true,
+  "terminalStatus": "FAILED",
+  "goalStatus": "NOT_SATISFIED",
+  "actionCount": 4,
+  "dispatchCount": 4,
+  "lateActionCount": 0,
+  "effectVerifiedCount": 1,
+  "effectNoEffectCount": 3,
+  "effectUnverifiableCount": 0,
+  "destinationStatus": "NOT_APPLICABLE",
+  "evidenceLedgerCount": 60,
+  "evidenceLedgerVerifiedCurrentCount": 11,
+  "citedEvidenceIds": [],
+  "providerCallCount": 8,
+  "privacySelfCheck": {
+    "clean": false,
+    "rawValueFindings": 5,
+    "scannerLines": 7
+  },
+  "artifactPath": "docs/evidence/post-17-10/audit/a10_18_6/raw_S7.json",
+  "notes": "§14 row 7 — Sensitive-data page. provider=CONTROLLED stub_mode=scroll_down; api_requests=8. observables: intent=yes terminal=yes forwarded=yes output_screen=7 ledger_updates=6 long_horizon=4 citation=none observed; citedEvidenceIds is empty by construction: this build reports ledger counts, not the ids a terminal cites, so no citation is ever inferred here (see §14 rows 1/2/3/8 in the A10 report). privacySelfCheck is the execution-side self-check: last output-screen verdict + privacy-policy rejections. Controlled runs bypass the FastAPI gateway, so no independent model-facing capture exists for them; the artifact-level scan is independent of this field. scrolls proposed=4 strategy_exhausted=0 refused_after_exhaustion=0. distinctUrls=1 is the distinct non-null timeline URL count (the ledger log carries no URL). pageEngaged=true (perceivedUrl=true, ledgerUpdates=6, generations=7). startUrl=http://127.0.0.1:4175/.",
+  "pageGenerations": 7,
+  "pageEngaged": true,
+  "distinctUrls": 1,
+  "scrollCount": 4
+}

@@ -1,0 +1,101 @@
+{
+  "harnessVersion": "phase18.6-a10-1",
+  "gradedAt": 1791467494696,
+  "artifactPath": "docs/evidence/post-17-10/audit/a10_18_6/artifact.json",
+  "pass": false,
+  "summary": {
+    "total": 10,
+    "passed": 3,
+    "failed": 2,
+    "blocked": 0,
+    "notRun": 5
+  },
+  "verdicts": [
+    {
+      "scenarioId": "S1",
+      "kind": "PASS",
+      "reason": "§14 contract satisfied: terminal SUCCESS within [ANSWER, PARTIAL, SUCCESS]; actions=0; evidence verified-current=24/24; destination=UNVERIFIED; provider=CONTROLLED_PROVIDER"
+    },
+    {
+      "scenarioId": "S2",
+      "kind": "NOT_RUN",
+      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+    },
+    {
+      "scenarioId": "S3",
+      "kind": "NOT_RUN",
+      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+    },
+    {
+      "scenarioId": "S4",
+      "kind": "FAIL",
+      "reason": "independent privacy self-check.clean === true required (findings=7, scannerLines=9)"
+    },
+    {
+      "scenarioId": "S5",
+      "kind": "NOT_RUN",
+      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+    },
+    {
+      "scenarioId": "S6",
+      "kind": "NOT_RUN",
+      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+    },
+    {
+      "scenarioId": "S7",
+      "kind": "FAIL",
+      "reason": "independent privacy self-check.clean === true required (findings=5, scannerLines=7)"
+    },
+    {
+      "scenarioId": "S8",
+      "kind": "NOT_RUN",
+      "reason": "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS"
+    },
+    {
+      "scenarioId": "S9",
+      "kind": "PASS",
+      "reason": "§14 contract satisfied: terminal NEEDS_CLARIFICATION within [AMBIGUOUS, NEEDS_CLARIFICATION]; actions=0; evidence verified-current=0/0; destination=NOT_APPLICABLE; provider=CONTROLLED_PROVIDER"
+    },
+    {
+      "scenarioId": "S10",
+      "kind": "PASS",
+      "reason": "§14 contract satisfied: terminal PROVIDER_UNAVAILABLE within [PROVIDER_UNAVAILABLE]; actions=0; evidence verified-current=3/3; destination=UNVERIFIED; provider=CONTROLLED_PROVIDER"
+    }
+  ],
+  "privacy": {
+    "clean": false,
+    "findings": [
+      {
+        "scenarioId": "S4",
+        "field": "privacySelfCheck.clean",
+        "category": "privacySelfCheck",
+        "rule": "privacy_self_check_not_clean",
+        "detail": "7 raw-value finding(s) reported by the execution-side self-check"
+      },
+      {
+        "scenarioId": "S7",
+        "field": "privacySelfCheck.clean",
+        "category": "privacySelfCheck",
+        "rule": "privacy_self_check_not_clean",
+        "detail": "5 raw-value finding(s) reported by the execution-side self-check"
+      }
+    ],
+    "scenariosScanned": 10
+  },
+  "failures": [
+    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
+    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
+    "independent privacy self-check.clean === true required (findings=7, scannerLines=9)",
+    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
+    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
+    "independent privacy self-check.clean === true required (findings=5, scannerLines=7)",
+    "scenario not executed (providerMode=NOT_RUN) — cannot certify PASS",
+    "privacy [privacySelfCheck] S4 privacySelfCheck.clean: 7 raw-value finding(s) reported by the execution-side self-check",
+    "privacy [privacySelfCheck] S7 privacySelfCheck.clean: 5 raw-value finding(s) reported by the execution-side self-check"
+  ],
+  "coverage": {
+    "required": 10,
+    "evaluated": 10,
+    "missing": []
+  }
+}

@@ -66,7 +66,7 @@ import { unresolvedCommitMessage } from './commitCertainty';
 import { freshnessStopMessage } from './actionFreshness';
 import type { PlanningEngineState } from '../hierarchicalPlanning/hierarchicalTypes';
 import type { ContainmentCode } from './containment';
-import { scanForRawSensitiveValues } from '../privacy/rawValueScanner';
+import { scanForRawSensitiveValues, type RawValueRule } from '../privacy/rawValueScanner';
 
 // ── Public vocabulary ────────────────────────────────────────────────────────
 
@@ -851,7 +851,30 @@ export interface OutputScreenResult {
   findings: number;
   /** Deterministic, value-free explanation. */
   reason: string;
+  /**
+   * WHICH structural field tripped, when the closed-vocabulary check failed.
+   *
+   * Field NAME + rule CODE only — never the value, and never the matched text.
+   * The scanner already returns exactly this pair, and without it a dropped
+   * payload is undiagnosable in a real run: Phase 18.6/A10 recorded real-Chrome
+   * runs whose terminal projection was dropped wholesale with `findings: 1` and
+   * no way to tell from the artifact which field caused it.
+   *
+   * Deciding what to DO about a trip is unchanged: the payload is still dropped.
+   */
+  structuralViolations?: readonly StructuralViolation[];
 }
+
+/** A value-free description of one structural screening trip. */
+export interface StructuralViolation {
+  /** Path of the offending field inside the interaction projection. */
+  readonly field: string;
+  /** The scanner rule that matched. */
+  readonly rule: RawValueRule;
+}
+
+/** Bound on how many structural violations are reported, so a log stays bounded. */
+const MAX_STRUCTURAL_VIOLATIONS = 8;
 
 /** The payload emitted when screening fails closed. */
 function safeBlockedProjection(reason: AgentTerminalReason): AgentInteractionState {
@@ -879,23 +902,42 @@ function isTripped(value: string): boolean {
   return scanForRawSensitiveValues(value, { structuralKeys: new Set() }).length > 0;
 }
 
+/**
+ * The closed-vocabulary fields, each with the NAME it is reported under.
+ *
+ * Names exist so a trip can be attributed without ever logging a value: the
+ * projection is a fixed shape, so a field name is not derived from page content.
+ */
+function structuralFields(o: AgentInteractionState): Array<[string, string]> {
+  return [
+    ['outcome', o.outcome],
+    ['activity.phase', o.activity.phase],
+    ['activity.summary', o.activity.summary],
+    ['activity.cycle', o.activity.cycle === null ? '' : String(o.activity.cycle)],
+    ['terminal.headline', o.terminal?.headline ?? ''],
+    ['terminal.reason', o.terminal?.reason ?? ''],
+    ['result.kind', o.result.kind],
+    ['result.summary', o.result.summary],
+    ['finalResult.kind', o.finalResult?.kind ?? ''],
+    ['finalResult.headline', o.finalResult?.headline ?? ''],
+    ...(o.finalResult?.remaining ?? []).map((v, i): [string, string] => [`finalResult.remaining[${i}]`, v]),
+    ...o.timeline.map((t, i): [string, string] => [`timeline[${i}]`, `${t.action}:${t.outcome}`]),
+    ...o.artifacts.map((a, i): [string, string] => [`artifacts[${i}]`, `${a.kind}:${a.label}`]),
+  ];
+}
+
 /** Structural fields come from a closed vocabulary; a hit there means corruption. */
-function structureIsClean(o: AgentInteractionState): boolean {
-  return ![
-    o.outcome,
-    o.activity.phase,
-    o.activity.summary,
-    o.activity.cycle === null ? '' : String(o.activity.cycle),
-    o.terminal?.headline ?? '',
-    o.terminal?.reason ?? '',
-    o.result.kind,
-    o.result.summary,
-    o.finalResult?.kind ?? '',
-    o.finalResult?.headline ?? '',
-    ...(o.finalResult?.remaining ?? []),
-    ...o.timeline.map((t) => `${t.action}:${t.outcome}`),
-    ...o.artifacts.map((a) => `${a.kind}:${a.label}`),
-  ].some(isTripped);
+function structureIsClean(o: AgentInteractionState): {
+  clean: boolean;
+  violations: StructuralViolation[];
+} {
+  const violations: StructuralViolation[] = [];
+  for (const [field, value] of structuralFields(o)) {
+    for (const hit of scanForRawSensitiveValues(value, { structuralKeys: new Set() })) {
+      violations.push({ field, rule: hit.rule });
+    }
+  }
+  return { clean: violations.length === 0, violations };
 }
 
 /**
@@ -924,12 +966,14 @@ export function screenAgentOutput(output: AgentInteractionState): OutputScreenRe
     };
   }
 
-  if (!structureIsClean(output)) {
+  const structural = structureIsClean(output);
+  if (!structural.clean) {
     return {
       verdict: 'BLOCKED',
       output: safeBlockedProjection('UNKNOWN'),
       findings: 1,
       reason: 'Structural field failed output screening; whole payload dropped.',
+      structuralViolations: structural.violations.slice(0, MAX_STRUCTURAL_VIOLATIONS),
     };
   }
 
