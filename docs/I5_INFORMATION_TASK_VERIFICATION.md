@@ -140,8 +140,10 @@ loop's refresh to intersect the ledger's freshness with the loop's own generatio
 a change to the freshness contract that needs its own analysis and tests, so it is
 recorded here rather than silently folded in.
 
-**F2 (IPv4 containment root host) is out of scope for I-5** and remains unfixed, as
-the brief requires.
+**F2 (IPv4 containment root host) is out of scope for I-5** and was left unfixed by
+this task, as the brief required. It has since been fixed by its own task — see
+`docs/F2_IPV4_CONTAINMENT_ISOLATION.md` — which does not affect anything asserted
+above and does not reopen I-5.
 
 ## 7. Verification commands
 

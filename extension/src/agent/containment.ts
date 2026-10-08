@@ -126,15 +126,58 @@ function parseHost(url: string | null | undefined): string | null {
 }
 
 /**
+ * PHASE 18.8 / F2 — is this host an IP LITERAL (IPv4 dotted quad or IPv6)?
+ *
+ * Two host CLASSES are handled here and they are deliberately NOT interchangeable:
+ *   * a DNS name has a registrable hierarchy, so scope containment is a SUFFIX
+ *     relationship (`accounts.google.com` sits under `google.com`);
+ *   * an IP literal has no hierarchy — `10.0.0.1` is not "under" anything — so
+ *     its identity IS its scope and containment must be exact equality.
+ *
+ * F2 existed because the containment path used the DNS rule for both classes:
+ * the root of `127.0.0.1` was derived as `0.1` ("last two labels") and the
+ * suffix test then matched every `*.0.1` address, so a task scoped to one IPv4
+ * literal contained another.
+ *
+ * The URL parser canonicalises IPv4-shaped hosts to dotted decimal before this
+ * runs (`http://0177.0.0.1/` → `127.0.0.1`), and reports IPv6 with brackets
+ * (`[::1]`); both shapes are recognised so an uncanonicalised literal passed by
+ * a caller is still treated as an identity rather than as a name.
+ */
+export function isIpLiteralHost(host: string | null | undefined): boolean {
+  if (typeof host !== 'string') return false;
+  const h = host.toLowerCase();
+  if (!h) return false;
+  // Bracketed IPv6 as the WHATWG URL reports it, plus any colon-bearing literal
+  // (bare IPv6, IPv4-mapped IPv6). No DNS name contains a colon.
+  if (h.startsWith('[') && h.endsWith(']')) return true;
+  if (h.includes(':')) return true;
+  // Exactly four dot-separated decimal octets in range ⇒ IPv4 literal.
+  const parts = h.split('.');
+  if (parts.length !== 4) return false;
+  return parts.every((part) => /^[0-9]{1,3}$/.test(part) && Number(part) <= 255);
+}
+
+/**
  * Host containment. The target's own root host and any subdomain of it are
  * inside the scope; every other host is outside. A leading `www.` is treated
  * as a subdomain, so `www.example.com` and `example.com` share a scope.
+ *
+ * PHASE 18.8 / F2 — the two classes never mix. If EITHER side is an IP
+ * literal, containment is exact equality only: an IP literal is never
+ * "contained" by a DNS-shaped suffix (which is how `10.0.0.1` used to be
+ * inside the root `0.1`), and a DNS host is never contained by an IP root
+ * (which is how `evil.127.0.0.1` could have matched the root `127.0.0.1`).
+ * This only ever REMOVES matches, so containment can only refuse more — it can
+ * never be broadened by it.
  */
 export function hostWithinScope(host: string | null, rootHost: string | null): boolean {
   if (!host || !rootHost) return false;
   const h = host.toLowerCase();
   const r = rootHost.toLowerCase();
-  return h === r || h.endsWith('.' + r);
+  if (h === r) return true;
+  if (isIpLiteralHost(h) || isIpLiteralHost(r)) return false;
+  return h.endsWith('.' + r);
 }
 
 /** Scheme check. Only real web origins can be contained. */
@@ -149,13 +192,23 @@ export function isContainableScheme(url: string | null | undefined): boolean {
 }
 
 /**
- * Derive the root host for a target url. A single leading label is kept for
- * bare hostnames (e.g. `localhost`); otherwise the last two labels are used,
- * which matches the subdomain reasoning the tab resolver already relies on.
+ * Derive the root host for a target url.
+ *
+ * DNS hostnames: bare or two-label hosts (`localhost`, `example.com`) are kept;
+ * otherwise the last two labels are used, which matches the subdomain reasoning
+ * the tab resolver already relies on.
+ *
+ * PHASE 18.8 / F2 — IP literals are NOT names. An IP literal has no registrable
+ * hierarchy to strip, so splitting `127.0.0.1` and keeping "the last two
+ * labels" produced `0.1` and collapsed every `*.0.1` address into one scope.
+ * The literal is returned as-is: its identity IS its scope. This is the one
+ * place the class is decided, so root derivation and containment can never
+ * disagree about what a host is.
  */
 export function deriveRootHost(url: string | null | undefined): string | null {
   const host = parseHost(url);
   if (!host) return null;
+  if (isIpLiteralHost(host)) return host;
   const labels = host.split('.').filter(Boolean);
   if (labels.length <= 2) return host;
   return labels.slice(-2).join('.');

@@ -154,15 +154,17 @@ output; no raw value can enter the diagnostic; screening stays fail-closed on a 
 and the additions to `tests/phase14/agentOutput.test.ts`. Verified in real Chrome: S4/S7 no longer
 report `OUTPUT_SCREEN_BLOCKED`, and the independent artifact scan is clean.
 
-**F2 — the containment root host for an IPv4 literal collapses to its last two octets. CONFIRMED, NOT
-MODIFIED.** `containment scope established {"rootHost":"0.1"}` for `http://127.0.0.1:4174`, so
-`hostWithinScope('10.0.0.1', '0.1')` is true (`endsWith('.0.1')`) and a task scoped to `127.0.0.1`
-treats another IP-literal origin as inside its scope. Affected cases: every IPv4-literal fixture target
-(`127.0.0.1:4174`, `127.0.0.1:4175`, `127.0.0.1:8010` → root host `0.1`). It did **not** affect any run
-recorded here (no row acted across origins; containment was never bypassed), and it supplies the scope
-text that made F1 fire. `extension/src/agent/containment.ts` is on the plan's DO-NOT-MODIFY list, so it
-is unchanged: the fix (an IPv4 literal is one host, not a hierarchical name) needs its own task and its
-own tests.
+**F2 — the containment root host for an IPv4 literal collapses to its last two octets. FIXED by its own
+task after A10 closed (see `docs/F2_IPV4_CONTAINMENT_ISOLATION.md`).**
+`deriveRootHost` applied the DNS "last two labels" rule to a dotted quad, so `127.0.0.1` → `0.1` and
+`hostWithinScope('10.0.0.1', '0.1')` was true (`endsWith('.0.1')`) — a task scoped to one IPv4 literal
+contained other IP-literal origins. It did **not** affect any A10 run (no row acted across origins;
+containment was never bypassed), and it supplied the scope text that made F1 fire. Containment was on
+this plan's DO-NOT-MODIFY list at the time, so it was left alone here; the follow-up F2 task fixed the
+abstraction itself (IP literals are exact identities, DNS keeps the suffix rule), proved by 17 focused
+tests that reproduced this defect first, the 34 existing security suites, and a real-Chrome run that now
+records `containment scope established {"rootHost":"127.0.0.1"}` where it previously recorded `0.1`.
+**A10 verdicts are unchanged by that fix: still 3 PASS / 7 FAIL, privacy clean, `--require-pass` exits 1.**
 
 **F3 — citation observability. RESOLVED (metadata only), with one residual gap.**
 An accepted terminal already logged the *count* of supported records, and the GoalVerifier path logs the
@@ -202,8 +204,9 @@ normal-chat routing, browser-task classification and containment are untouched.
 2. **A provider that pursues the subject.** The citation-gate failures (S2, S3, S4, S7, S8) are caused
    by a controlled provider that never gathers content about the asked subject. A live reasoner would
    search; a controlled fixture could too, with a mode that performs a subject-bearing action.
-3. **An F2 fix** (IPv4 root host) before rows 7/8 are re-run against any origin other than a single
-   fixture — with its own tests, as a separate task.
+3. ~~**An F2 fix** (IPv4 root host)~~ — **RESOLVED**: fixed with its own tests by the follow-up F2 task
+   (`docs/F2_IPV4_CONTAINMENT_ISOLATION.md`). This removes the precondition on re-running rows 7/8
+   against a second origin; the re-run itself is still outstanding.
 4. **A contract decision for rows 5 and 6** (`PARTIAL` vs `NEEDS_INFORMATION`; whether a fail-closed
    freshness terminal satisfies the stale-evidence row). Both need the A9 terminal semantics to be
    revisited deliberately — not changed to move a matrix score.
@@ -253,7 +256,9 @@ such here rather than being presented as post-I-5 evidence.
   correctly.
 * S1's `PASS` proves real-DOM perception, ledger freshness and citation-backed completion under a
   scripted provider. It does **not** prove real-provider behaviour.
-* F2 is confirmed and deliberately unfixed; F1 was fixed without weakening the privacy boundary, and no
+* F2 was confirmed here and deliberately not touched (DO-NOT-MODIFY at the time); it has since been
+  fixed by its own task, which changed no A10 verdict. F1 was fixed without weakening the privacy
+  boundary, and no
   security authority (Grounding, M5, Security Critic, Risk/Confirmation, Effect Verification, Goal
   Verification, Recovery, Containment, A12/A14/A16, output screening, routing) was modified to obtain a
   verdict.
