@@ -331,6 +331,43 @@ export class EvidenceLedger {
   }
 
   /**
+   * PHASE 18.8 / CLOSURE — the FRESHNESS WINDOW.
+   *
+   * `citable()` answers “has the ledger seen anything better than this?”; it
+   * cannot answer “is this record still about the page the tab is ON?” because
+   * the ledger only marks records STALE when the NEXT observation arrives
+   * (`ingestObservation` → `advance`), while the LOOP's generation
+   * (`state.currentPageGeneration`) has already moved on the moment a
+   * navigation settles. In that interval — precisely where the post-action
+   * verdict runs — page A's records are still `CURRENT` and still citable.
+   *
+   * Both sides already read ONE counter: the world model's monotonic
+   * `pageGeneration`, stamped into every record's provenance at ingest and
+   * adopted by the loop each perception. This method intersects `citable()`
+   * with that generation, so a record must be citable AND belong to the
+   * generation being judged. It only ever REMOVES records.
+   *
+   * A non-positive generation means “no generation information yet” (a caller
+   * that has never perceived); the ledger's own freshness rules then apply
+   * unchanged, which is the pre-window behaviour.
+   */
+  citableAt(generation: number | null | undefined): EvidenceRecord[] {
+    const citable = this.citable();
+    if (typeof generation !== 'number' || generation <= 0) return citable;
+    return citable.filter((r) => r.pageGeneration === generation);
+  }
+
+  /**
+   * The keys of VERIFIED records that belong to `generation` — the exact input
+   * the information-success gate reads. Keys only: never claim text.
+   */
+  verifiedKeysAtGeneration(generation: number | null | undefined): string[] {
+    return this.citableAt(generation)
+      .filter((r) => r.verificationStatus === 'VERIFIED')
+      .map((r) => r.key);
+  }
+
+  /**
    * Promote a citable record to VERIFIED. Local-only: it is driven by a
    * deterministic verifier, never by the model and never by dispatch history.
    */

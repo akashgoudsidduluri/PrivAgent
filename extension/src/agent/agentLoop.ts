@@ -1013,6 +1013,9 @@ export class AgentLoop {
     if (this.state.status !== 'IN_PROGRESS') {
       this.state.perceptionGeneration = 0;
       this.state.currentPageGeneration = 0;
+      // Fresh task: no world model has been observed yet, so the generation
+      // scope stays off until one is (PHASE 18.8 / CLOSURE).
+      this.state.worldModelGenerationObserved = false;
     }
     this.state.reason = undefined;
     this.state.requiresUserConfirmationAction = undefined;
@@ -1303,6 +1306,10 @@ export class AgentLoop {
       if (worldModel) {
         this.state.currentPageGeneration = worldModel.page.pageGeneration;
         this.state.perceptionGeneration = worldModel.page.pageGeneration;
+        // PHASE 18.8 / CLOSURE — from here on `currentPageGeneration` IS a
+        // document generation (this same value is stamped into every record's
+        // provenance at ingest), so the freshness scope may be applied.
+        this.state.worldModelGenerationObserved = true;
         this.state.activeWorldModelRef = activeWorldModelRef ?? {
           pageGeneration: worldModel.page.pageGeneration,
           worldModelId: worldModel.id,
@@ -4420,7 +4427,7 @@ export class AgentLoop {
         if (action.kind === 'TERMINAL_PROPOSAL') {
           const verdict = verifyTerminalProposal(
             action.proposal,
-            this.evidenceLedger ?? EMPTY_LEDGER_VIEW,
+            this.scopedEvidenceLedgerView(),
             task
           );
           console.info('[AgentTrace] terminal proposal received', {
@@ -4556,12 +4563,59 @@ export class AgentLoop {
     // promotion is left to add here — re-checking freshness here too would be a
     // second copy of a rule that already lives in one place, and two copies of
     // a rule is exactly how they drift.
+    //
+    // PHASE 18.8 / CLOSURE — GENERATION-SCOPED PUBLISHING.
+    //
+    // `citable()` is the ledger's own single gate: it already excludes STALE,
+    // CONFLICTED, INVALIDATED and non-SANITIZED records. On top of that the
+    // published keys are intersected with the generation the loop is currently
+    // judging, because the ledger marks records STALE only when the NEXT
+    // observation arrives, while `state.currentPageGeneration` has already moved
+    // on at a settled navigation — the window in which page A's evidence could
+    // still certify page B. One counter (the world model's pageGeneration), no
+    // parallel state.
+    //
+    // The scope applies ONLY when a world model has actually been observed in
+    // this run: that is what makes `currentPageGeneration` mean *document*
+    // generation (the loop adopts the world model's own counter each
+    // perception, and records are ingested at that same value). Without one the
+    // loop's number is only a perception counter with no counterpart in the
+    // ledger, so scoping on it would silently discard perfectly current
+    // evidence; the ledger's own freshness rules then apply unchanged.
+    const documentGeneration =
+      this.state.worldModelGenerationObserved === true ? this.state.currentPageGeneration : null;
     this.state.verifiedEvidenceKeys = this.evidenceLedger
-      ? this.evidenceLedger
-          .citable()
-          .filter((r) => r.verificationStatus === 'VERIFIED')
-          .map((r) => r.key)
+      ? this.evidenceLedger.verifiedKeysAtGeneration(documentGeneration)
       : [];
+  }
+
+  /**
+   * PHASE 18.8 / CLOSURE — the device's ledger as seen by the TWO consumers
+   * that turn evidence into a user-facing statement: the terminal-proposal
+   * verifier and the answer composer.
+   *
+   * The view is scoped to the generation being judged, so neither a provider's
+   * ANSWER nor the composer can read records from a previous page during the
+   * freshness window (the interval between a settled navigation and the next
+   * observation, where the ledger itself has not yet marked them STALE).
+   * Nothing is widened: an unknown/non-positive generation falls back to the
+   * ledger's own freshness rules unchanged.
+   */
+  private scopedEvidenceLedgerView(): ProposalLedgerView {
+    const ledger = this.evidenceLedger;
+    // Same condition as the publish path: without an observed world model the
+    // loop's generation is a perception counter, not a document generation.
+    const generation =
+      this.state.worldModelGenerationObserved === true ? this.state.currentPageGeneration : null;
+    if (!ledger) return EMPTY_LEDGER_VIEW;
+    if (typeof generation !== 'number' || generation <= 0) return ledger;
+    return {
+      byIdSafe: (id: string) => {
+        const record = ledger.byIdSafe(id);
+        return record && record.pageGeneration === generation ? record : undefined;
+      },
+      citable: () => ledger.citableAt(generation),
+    };
   }
 
   // ───────────────────────────────────────────────────────────────────────
@@ -4622,7 +4676,7 @@ export class AgentLoop {
       selectedOrdinal: selection?.ordinal ?? null,
       selectedIdentityKey: selection?.identityKey ?? null,
       selectedProductId: selection?.identity.productId ?? null,
-      selectedEntityType: selection?.identity.entityType ?? null,
+      selectedEntityType: selection?.identity?.entityType ?? null,
       revalidation: selection?.revalidation ?? null,
       referenceOutcome: this.state.conversation?.referenceOutcome ?? 'NOT_A_REFERENCE',
       clarificationCode: this.conversation.clarification?.code ?? null,
@@ -4838,7 +4892,7 @@ export class AgentLoop {
       let composedVerifiedRecords: number | null = null;
       if (!this.state.answer) {
         const composed = composeEvidenceAnswerFromLedger(
-          this.evidenceLedger,
+          this.scopedEvidenceLedgerView(),
           this.state.taskGoal || this.state.normalizedGoal || ''
         );
         if (composed) {

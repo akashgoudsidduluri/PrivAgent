@@ -461,6 +461,19 @@ export interface TaskState {
    * Lets the dashboard distinguish stale perception context from fresh.
    */
   perceptionGeneration: number;
+  /**
+   * PHASE 18.8 / CLOSURE — has a world model been observed in this task?
+   *
+   * `currentPageGeneration` is a DOCUMENT generation only once the loop has
+   * adopted the world model's own counter; before that (and in runs that never
+   * produce a world model) it is merely a perception counter with no
+   * counterpart in the evidence ledger. The freshness scope — a record may
+   * certify a page only if it belongs to the generation being judged — is
+   * therefore applied only when this flag is true, so the scope can never
+   * discard current evidence on the strength of an unrelated counter. It is a
+   * statement about WHERE THE COUNTER CAME FROM, not a second generation.
+   */
+  worldModelGenerationObserved?: boolean;
 }
 
 /**
@@ -755,6 +768,7 @@ export function createAgentTaskState(
     maxRetries,
     providerAttempts: 0,
     perceptionGeneration: 0,
+    worldModelGenerationObserved: false,
 
     // Extended AgentTaskState fields
     taskGoal: task,
