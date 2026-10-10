@@ -597,8 +597,8 @@ describe('12. the proven normal-chat routing and the UI surface agree', () => {
     }
   });
 
-  it('12c. a new normal-chat message after a browser task leaves no browser residue (multi-turn)', () => {
-    const { workspace, html, text } = makeWorkspace();
+  it('12c. a new normal-chat message after a browser task appends cleanly without leaking browser residue into the chat turn', () => {
+    const { workspace, html, text, container } = makeWorkspace();
     // Browser task runs and finishes.
     workspace.update(base({
       status: 'ANSWER',
@@ -612,16 +612,23 @@ describe('12. the proven normal-chat routing and the UI surface agree', () => {
       }),
     }));
     expect(html()).toContain('data-surface="browser"');
+    expect(text()).toContain('Two cats.');
 
-    // The adapter clears interaction/provenance on startTask; the new chat
-    // answer then renders on the conversation surface with a fresh log.
+    // The second turn appends rather than replacing conversation history.
     workspace.update(chatAnswer('Hello again!', 'hi'));
-    const markup = html();
-    expect(markup).toContain('data-surface="conversation"');
-    expect(markup).not.toContain('timeline-entry');
-    expectNoBrowserChrome(markup);
+    const turns = workspace.getTurns();
+    expect(turns.length).toBe(2);
+
+    // Turn 1 remains preserved in history
+    expect(text()).toContain('Two cats.');
+    // Turn 2 is appended
     expect(text()).toContain('Hello again!');
-    expect(text()).not.toContain('Two cats.');
+
+    // Turn 2 surface specifically has no browser residue
+    const turn2El = container.querySelector(`[data-turn-id="${turns[1]!.id}"]`)!;
+    expect(turn2El.innerHTML).toContain('data-surface="conversation"');
+    expect(turn2El.innerHTML).not.toContain('timeline-entry');
+    expectNoBrowserChrome(turn2El.innerHTML);
   });
 
   it('12d. startTask clears the previous run interaction and provenance', async () => {
@@ -647,5 +654,89 @@ describe('12. the proven normal-chat routing and the UI surface agree', () => {
     expect(s.answerSource).toBeUndefined();
     expect(s.steps).toEqual([]);
     adapter.destroy();
+  });
+
+  it('12e. preserves history after FAILED, NEEDS_CLARIFICATION, and PROVIDER_UNAVAILABLE', () => {
+    const { workspace, text } = makeWorkspace();
+    // 1. Failed task
+    workspace.update(base({
+      runId: 1,
+      status: 'FAILED',
+      task: 'open leetcode',
+      interaction: interaction({
+        outcome: 'FAILED',
+        terminal: { outcome: 'FAILED', reason: 'TARGET_TAB_NOT_FOUND', headline: 'Target tab not found.' },
+      }),
+    }));
+    expect(text()).toContain('open leetcode');
+
+    // 2. Needs clarification
+    workspace.update(base({
+      runId: 2,
+      status: 'NEEDS_CLARIFICATION',
+      task: 'what about that',
+      interaction: interaction({
+        outcome: 'FAILED',
+        terminal: { outcome: 'FAILED', reason: 'NEEDS_CLARIFICATION', headline: 'Needs clarification.' },
+      }),
+    }));
+    expect(text()).toContain('open leetcode');
+    expect(text()).toContain('what about that');
+
+    // 3. Provider unavailable
+    workspace.update(base({
+      runId: 3,
+      status: 'PROVIDER_UNAVAILABLE',
+      task: 'open google',
+      interaction: interaction({
+        outcome: 'FAILED',
+        terminal: { outcome: 'FAILED', reason: 'REASONER_FAILED', headline: 'Reasoning service unavailable.' },
+      }),
+    }));
+    expect(text()).toContain('open leetcode');
+    expect(text()).toContain('what about that');
+    expect(text()).toContain('open google');
+    expect(workspace.getTurns().length).toBe(3);
+
+    // 4. Explicit clearHistory action empties workspace
+    workspace.clearHistory();
+    expect(workspace.getTurns().length).toBe(0);
+    expect(text()).toContain('How can PrivAgent help?');
+  });
+
+  it('12f. prevents duplicate turns and ignores regressions on completed turns', () => {
+    const { workspace } = makeWorkspace();
+    workspace.update(base({
+      runId: 1,
+      status: 'RUNNING',
+      task: 'open google',
+    }));
+    expect(workspace.getTurns().length).toBe(1);
+
+    // Progress for same runId updates in-place, does not duplicate turn
+    workspace.update(base({
+      runId: 1,
+      status: 'RUNNING',
+      task: 'open google',
+      currentPipelineStage: 'LLM_REASONING',
+    }));
+    expect(workspace.getTurns().length).toBe(1);
+
+    // Terminal update
+    workspace.update(base({
+      runId: 1,
+      status: 'SUCCESS',
+      task: 'open google',
+    }));
+    expect(workspace.getTurns().length).toBe(1);
+    expect(workspace.getTurns()[0]!.state.status).toBe('SUCCESS');
+
+    // Stale delayed RUNNING update with same runId is rejected
+    workspace.update(base({
+      runId: 1,
+      status: 'RUNNING',
+      task: 'open google',
+    }));
+    expect(workspace.getTurns()[0]!.state.status).toBe('SUCCESS');
   });
 });

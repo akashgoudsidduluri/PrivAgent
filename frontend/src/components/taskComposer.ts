@@ -107,6 +107,10 @@ export class TaskComposer {
     const text = this.textarea.value.trim();
     if (!text) return;
 
+    // Clear input immediately upon submission
+    this.textarea.value = '';
+    this.textarea.style.height = 'auto';
+
     this.callbacks.onSubmitTask(text);
   }
 

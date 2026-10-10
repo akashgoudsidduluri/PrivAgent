@@ -434,6 +434,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     this.state = {
       ...this.state,
       status,
+      runId: typeof data.runId === 'number' ? data.runId : this.currentRunId,
       currentStep: data.currentStep || steps.length,
       currentPipelineStage: stage,
       currentUrl,
@@ -740,6 +741,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       this.state = {
         ...this.state,
         task,
+        runId: thisRunId,
         status: 'RUNNING',
         currentStep: 0,
         currentUrl: '',

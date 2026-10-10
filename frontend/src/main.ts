@@ -153,6 +153,7 @@ class App {
       supersededPreviousTask: undefined,
       currentPipelineStage: 'IDLE',
     };
+    this.workspace.clearHistory();
     this.workspace.update(emptyState);
     this.sidebar.update(emptyState);
     this.topHeader.update(emptyState, this.isConnected, this.latestHealth ?? undefined);

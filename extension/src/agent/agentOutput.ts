@@ -140,6 +140,7 @@ export type AgentTerminalReason =
    * that never read a page.
    */
   | 'CONVERSATIONAL_ANSWER'
+  | 'TARGET_TAB_NOT_FOUND'
   | 'UNKNOWN';
 
 export interface AgentActivity {
@@ -307,6 +308,7 @@ const TERMINAL_HEADLINE: Record<AgentTerminalReason, string> = {
     'Stopped: whether the last action went through could not be confirmed.',
   FRESHNESS_UNVERIFIED:
     'Stopped: the page was no longer the one that step was planned on.',
+  TARGET_TAB_NOT_FOUND: 'Target tab was not found among open tabs.',
   UNKNOWN: 'Failed.',
 };
 
@@ -362,6 +364,7 @@ const FAILURE_EXPLANATION = Object.freeze({
   LLM_RATE_LIMIT: userFacingMessageForStatus('PROVIDER_UNAVAILABLE'),
   INVALID_MODEL_RESPONSE: userFacingMessageForStatus('PROVIDER_UNAVAILABLE'),
   PERCEPTION_FAILED: "I couldn't read the page, so I stopped without changing anything.",
+  TARGET_TAB_NOT_FOUND: 'No matching target tab was found open in your browser. Please open the requested page and try again.',
 });
 
 /**
@@ -385,6 +388,13 @@ function failureExplanationFor(category: string | undefined): string | undefined
  */
 function userSafeFailureExplanation(s: AgentTaskState): string {
   const category = s.lastFailure?.category;
+  if (category === 'TARGET_TAB_NOT_FOUND') {
+    const err = (s.lastFailure as any)?.error || s.lastFailure?.reason;
+    if (err && (/^Target tab for/i.test(err) || /^No target web tab/i.test(err))) {
+      return err;
+    }
+    return FAILURE_EXPLANATION.TARGET_TAB_NOT_FOUND;
+  }
   if (category === 'RECOVERY_EXHAUSTED') {
     const records = Array.isArray(s.recoveryRecords) ? s.recoveryRecords : [];
     const last = records.length > 0 ? records[records.length - 1] : undefined;
@@ -644,12 +654,17 @@ function classifyTerminalReason(s: AgentTaskState): AgentTerminalReason {
       : 'STEP_BOUND_EXHAUSTED';
   }
 
-  const lastCategory = s.lastFailure?.category;  if (lastCategory) {
+  const lastCategory = s.lastFailure?.category;
+  if (lastCategory) {
+    if (lastCategory === 'TARGET_TAB_NOT_FOUND') return 'TARGET_TAB_NOT_FOUND';
     if (REASONER_FAILURES.has(lastCategory)) return 'REASONER_FAILED';
     if (lastCategory === 'RECOVERY_EXHAUSTED') return 'RECOVERY_EXHAUSTED';
     if (lastCategory === 'CONTAINMENT_DENIED') return 'CONTAINMENT_DENIED';
   }
 
+  if (/^Target tab for/i.test(s.reason ?? '') || /^No target web tab/i.test(s.reason ?? '')) {
+    return 'TARGET_TAB_NOT_FOUND';
+  }
   if (/^Perception failed/i.test(s.reason ?? '')) return 'PERCEPTION_FAILED';
   if (/^Agent reasoning failed/i.test(s.reason ?? '')) return 'REASONER_FAILED';
   //

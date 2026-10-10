@@ -46,6 +46,16 @@ const escapeHtml = (s: string): string =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string),
   );
 
+export interface WorkspaceTurn {
+  id: string;
+  runId?: number;
+  task: string;
+  state: DashboardAgentState;
+  ui: UiModel;
+  activityLog: ActivityLog;
+  timestamp: number;
+}
+
 export class AgentWorkspace {
   private container: HTMLElement;
   private callbacks: AgentWorkspaceCallbacks;
@@ -55,6 +65,10 @@ export class AgentWorkspace {
   private activityOpen = false;
   private lastUi: UiModel | null = null;
   private activityLog: ActivityLog = EMPTY_LOG;
+
+  private turns: WorkspaceTurn[] = [];
+  private activeTurnId: string | null = null;
+  private turnCounter = 0;
 
   constructor(container: HTMLElement, callbacks: AgentWorkspaceCallbacks) {
     this.container = container;
@@ -72,47 +86,95 @@ export class AgentWorkspace {
     `;
   }
 
+  clearHistory(): void {
+    this.turns = [];
+    this.activeTurnId = null;
+    this.latestState = null;
+    this.activityLog = EMPTY_LOG;
+    this.lastUi = null;
+    const content = this.container.querySelector('#workspace-content') as HTMLElement | null;
+    if (content) {
+      content.innerHTML = this.renderEmptyState();
+      this.attachEmptyStateEvents(content);
+    }
+  }
+
+  getTurns(): readonly WorkspaceTurn[] {
+    return this.turns;
+  }
+
   update(state: DashboardAgentState): void {
     this.latestState = state;
     const content = this.container.querySelector('#workspace-content') as HTMLElement | null;
     if (!content) return;
 
-    // A new run on the same message starts a fresh activity history: the old
-    // run reached a terminal state and this one is running again.
-    if (this.lastUi?.terminal && state.status === 'RUNNING') {
-      this.activityLog = { task: state.task || '', items: [], seen: [] };
-      this.activityOpen = false;
-    }
-
-    // Fold this runtime report into the event-driven activity log (pure).
-    this.activityLog = mergeActivities(this.activityLog, state);
-    const ui = projectUi(state, this.activityLog);
-    this.lastUi = ui;
-
-    if (ui.surface === 'IDLE') {
+    // Empty state when there is no task and no history
+    if ((!state.task || state.status === 'IDLE') && this.turns.length === 0) {
+      this.lastUi = projectUi(state, EMPTY_LOG);
       content.innerHTML = this.renderEmptyState();
       this.attachEmptyStateEvents(content);
       return;
     }
 
-    if (ui.surface === 'CONVERSATION') {
-      content.innerHTML = `
-        <div class="conversation-thread">
-          ${this.renderUserMessage(state)}
-          ${this.renderConversationResponse(state, ui)}
-        </div>
-      `;
-      return;
+    // Match existing turn or start a new turn
+    let turn: WorkspaceTurn | undefined;
+
+    if (typeof state.runId === 'number') {
+      turn = this.turns.find((t) => t.runId === state.runId);
     }
 
-    content.innerHTML = `
-      <div class="conversation-thread">
-        ${this.renderUserMessage(state)}
-        ${this.renderBrowserTaskCard(state, ui)}
-      </div>
-    `;
+    if (!turn && this.activeTurnId) {
+      const active = this.turns.find((t) => t.id === this.activeTurnId);
+      if (active) {
+        if (!state.runId && (active.task === state.task || !active.task)) {
+          turn = active;
+        }
+      }
+    }
 
-    this.attachInteractiveEvents(content, state);
+    if (!turn) {
+      // If idle with empty task, ignore
+      if (!state.task && state.status === 'IDLE') {
+        return;
+      }
+
+      // Start new turn
+      const turnId = `turn-${++this.turnCounter}-${Date.now()}`;
+      const log = mergeActivities(EMPTY_LOG, state);
+      const ui = projectUi(state, log);
+      turn = {
+        id: turnId,
+        runId: state.runId,
+        task: state.task || '',
+        state: { ...state },
+        ui,
+        activityLog: log,
+        timestamp: Date.now(),
+      };
+      this.turns.push(turn);
+      this.activeTurnId = turnId;
+    } else {
+      // Stale regression protection: do not allow terminal turn to regress to RUNNING with same runId
+      if (turn.ui.terminal && state.status === 'RUNNING' && turn.runId === state.runId) {
+        return;
+      }
+
+      if (turn.runId === undefined && typeof state.runId === 'number') {
+        turn.runId = state.runId;
+      }
+      if (state.task && !turn.task) {
+        turn.task = state.task;
+      }
+      // Fold runtime report into turn's event-driven activity log
+      turn.activityLog = mergeActivities(turn.activityLog, state);
+      turn.state = { ...turn.state, ...state };
+      turn.ui = projectUi(turn.state, turn.activityLog);
+    }
+
+    this.lastUi = turn.ui;
+    this.activityLog = turn.activityLog;
+
+    this.renderTurns();
   }
 
   showHistoricalReceipt(receipt: {
@@ -168,21 +230,73 @@ export class AgentWorkspace {
       },
     };
 
-    this.activityLog = mergeActivities(
+    const log = mergeActivities(
       { task: receipt.task, items: [], seen: [] },
       pseudoState,
     );
-    const ui = projectUi(pseudoState, this.activityLog);
-    this.lastUi = ui;
+    const ui = projectUi(pseudoState, log);
+    const histTurn: WorkspaceTurn = {
+      id: `receipt-${Date.now()}`,
+      task: receipt.task,
+      state: pseudoState,
+      ui,
+      activityLog: log,
+      timestamp: receipt.timestamp || Date.now(),
+    };
 
-    content.innerHTML = `
-      <div class="conversation-thread">
-        ${this.renderUserMessage(pseudoState)}
-        ${this.renderBrowserTaskCard(pseudoState, ui)}
+    this.turns = [histTurn];
+    this.activeTurnId = histTurn.id;
+    this.renderTurns();
+  }
+
+  private renderTurns(): void {
+    const content = this.container.querySelector('#workspace-content') as HTMLElement | null;
+    if (!content) return;
+
+    if (this.turns.length === 0) {
+      content.innerHTML = this.renderEmptyState();
+      this.attachEmptyStateEvents(content);
+      return;
+    }
+
+    let threadHtml = `<div class="conversation-thread" id="conversation-thread">`;
+    for (let i = 0; i < this.turns.length; i++) {
+      const turn = this.turns[i];
+      if (!turn) continue;
+      const isLatest = i === this.turns.length - 1;
+      threadHtml += this.renderTurn(turn, isLatest);
+    }
+    threadHtml += `</div>`;
+    content.innerHTML = threadHtml;
+
+    this.attachInteractiveEvents(content);
+    this.scrollToBottom();
+  }
+
+  private renderTurn(turn: WorkspaceTurn, isLatest: boolean): string {
+    const { state, ui } = turn;
+    if (ui.surface === 'CONVERSATION') {
+      return `
+        <div class="conversation-turn" data-turn-id="${turn.id}">
+          ${this.renderUserMessage(state, turn.timestamp)}
+          ${this.renderConversationResponse(state, ui)}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="conversation-turn" data-turn-id="${turn.id}">
+        ${this.renderUserMessage(state, turn.timestamp)}
+        ${this.renderBrowserTaskCard(state, ui, isLatest, turn.id)}
       </div>
     `;
+  }
 
-    this.attachInteractiveEvents(content, pseudoState);
+  private scrollToBottom(): void {
+    const scrollEl = this.container.querySelector('#workspace-scroll') as HTMLElement | null;
+    if (scrollEl) {
+      scrollEl.scrollTop = scrollEl.scrollHeight;
+    }
   }
 
   private renderEmptyState(): string {
@@ -230,7 +344,11 @@ export class AgentWorkspace {
     });
   }
 
-  private renderUserMessage(state: DashboardAgentState): string {
+  private renderUserMessage(state: DashboardAgentState, timestamp?: number): string {
+    const timeStr = timestamp
+      ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : 'Just now';
+
     return `
       <div class="user-message-row">
         <div class="user-message-bubble">
@@ -238,7 +356,7 @@ export class AgentWorkspace {
           <div class="user-message-meta">
             <span>You</span>
             <span>·</span>
-            <span>Just now</span>
+            <span>${timeStr}</span>
           </div>
         </div>
       </div>
@@ -280,12 +398,17 @@ export class AgentWorkspace {
 
   // ── BROWSER ACTIVITY SURFACE ───────────────────────────────────────────────
 
-  private renderBrowserTaskCard(state: DashboardAgentState, ui: UiModel): string {
+  private renderBrowserTaskCard(
+    state: DashboardAgentState,
+    ui: UiModel,
+    isLatest = true,
+    turnId = '',
+  ): string {
     const statusBadgeClass = state.status;
     const statusText = state.status === 'RUNNING' ? 'WORKING' : state.status.replace(/_/g, ' ');
 
     return `
-      <div class="agent-response-card" data-surface="browser">
+      <div class="agent-response-card" data-surface="browser" data-turn-id="${turnId}">
         <!-- Agent Identity & Status Header -->
         <div class="agent-card-header">
           <div class="agent-identity">
@@ -305,16 +428,16 @@ export class AgentWorkspace {
         ${this.renderLiveRow(ui)}
 
         ${this.renderSupersededNotice(ui)}
-        ${this.renderConfirmationBanner(state)}
+        ${this.renderConfirmationBanner(state, isLatest, turnId)}
 
         <!-- FINAL RESULT — primary visual focus once the run reaches a terminal state -->
-        ${this.renderFinalResult(state, ui)}
+        ${this.renderFinalResult(state, ui, isLatest, turnId)}
 
         <!-- Event-driven activity list: only what actually happened -->
-        ${this.renderActivitySection(ui)}
+        ${this.renderActivitySection(ui, isLatest, turnId)}
 
         <!-- Diagnostics folded away: the answer comes first, the machinery second -->
-        ${this.renderDiagnostics(state)}
+        ${this.renderDiagnostics(state, isLatest, turnId)}
       </div>
     `;
   }
@@ -377,7 +500,7 @@ export class AgentWorkspace {
     `;
   }
 
-  private renderConfirmationBanner(state: DashboardAgentState): string {
+  private renderConfirmationBanner(state: DashboardAgentState, isLatest = true, turnId = ''): string {
     const req = state.requiresUserConfirmationAction || state.interaction?.awaitingConfirmation;
     if (!req || (state.status !== 'NEEDS_USER_CONFIRMATION' && state.interaction?.outcome !== 'AWAITING_CONFIRMATION')) {
       return '';
@@ -401,8 +524,8 @@ export class AgentWorkspace {
           Navigation to external destinations or consequential actions must be approved.
         </div>
         <div class="confirmation-actions">
-          <button id="btn-confirm-action" class="btn-confirm-action">Confirm &amp; Proceed</button>
-          <button id="btn-cancel-action" class="btn-cancel-action">Cancel Action</button>
+          <button id="${isLatest ? 'btn-confirm-action' : `btn-confirm-action-${turnId}`}" class="btn-confirm-action">Confirm &amp; Proceed</button>
+          <button id="${isLatest ? 'btn-cancel-action' : `btn-cancel-action-${turnId}`}" class="btn-cancel-action">Cancel Action</button>
         </div>
       </div>
     `;
@@ -414,7 +537,7 @@ export class AgentWorkspace {
    * cancelled, superseded) say what happened; failures are concise with a
    * retry. `state.reason` is internal by contract and is never rendered.
    */
-  private renderFinalResult(state: DashboardAgentState, ui: UiModel): string {
+  private renderFinalResult(state: DashboardAgentState, ui: UiModel, isLatest = true, turnId = ''): string {
     const t = ui.terminal;
     if (!t) return '';
 
@@ -438,7 +561,7 @@ export class AgentWorkspace {
 
     const retry =
       t.tone === 'failure'
-        ? `<button id="btn-retry-task" class="retry-action-btn">Try Again</button>`
+        ? `<button id="${isLatest ? 'btn-retry-task' : `btn-retry-task-${turnId}`}" class="retry-action-btn" data-task="${escapeHtml(state.task || '')}">Try Again</button>`
         : '';
 
     return `
@@ -481,7 +604,7 @@ export class AgentWorkspace {
    * run is going it is open; at a terminal state it collapses behind a
    * disclosure so the answer stays primary.
    */
-  private renderActivitySection(ui: UiModel): string {
+  private renderActivitySection(ui: UiModel, isLatest = true, turnId = ''): string {
     if (ui.activityCount === 0) return '';
 
     const entries = ui.activities.map((a) => this.renderActivityEntry(a)).join('');
@@ -489,7 +612,7 @@ export class AgentWorkspace {
 
     if (ui.terminal) {
       return `
-        <details class="activity-section collapsed-activity" id="activity-details" ${this.activityOpen ? 'open' : ''}>
+        <details class="activity-section collapsed-activity activity-details" id="${isLatest ? 'activity-details' : `activity-details-${turnId}`}" ${this.activityOpen ? 'open' : ''}>
           <summary class="section-label-row activity-summary-row">
             <span>Activity</span>
             ${count}
@@ -533,19 +656,19 @@ export class AgentWorkspace {
    * telemetry) are real and useful — but second. They live behind one
    * disclosure so a short task looks short.
    */
-  private renderDiagnostics(state: DashboardAgentState): string {
+  private renderDiagnostics(state: DashboardAgentState, isLatest = true, turnId = ''): string {
     return `
-      <details class="diagnostics-details" id="diagnostics-details" ${this.diagnosticsOpen ? 'open' : ''}>
+      <details class="diagnostics-details" id="${isLatest ? 'diagnostics-details' : `diagnostics-details-${turnId}`}" ${this.diagnosticsOpen ? 'open' : ''}>
         <summary class="accordion-toggle">
           <span>Browser &amp; privacy diagnostics</span>
-          <span id="diagnostics-icon">${this.diagnosticsOpen ? '▲ Hide' : '▼ Expand'}</span>
+          <span class="diagnostics-toggle-icon" id="${isLatest ? 'diagnostics-icon' : `diagnostics-icon-${turnId}`}">${this.diagnosticsOpen ? '▲ Hide' : '▼ Expand'}</span>
         </summary>
         <div class="diagnostics-body">
           <div class="agent-status-cards-grid">
             ${this.renderBrowserCard(state)}
             ${this.renderPrivacyCard(state)}
           </div>
-          ${this.renderTechnicalDetails(state)}
+          ${this.renderTechnicalDetails(state, isLatest, turnId)}
         </div>
       </details>
     `;
@@ -572,7 +695,7 @@ export class AgentWorkspace {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
           </svg>
         </div>
 
@@ -637,17 +760,17 @@ export class AgentWorkspace {
     `;
   }
 
-  private renderTechnicalDetails(state: DashboardAgentState): string {
+  private renderTechnicalDetails(state: DashboardAgentState, isLatest = true, turnId = ''): string {
     const latestStep = state.steps?.length ? state.steps[state.steps.length - 1] : undefined;
 
     return `
       <div class="technical-details-accordion">
-        <button id="btn-toggle-tech-details" class="accordion-toggle">
+        <button id="${isLatest ? 'btn-toggle-tech-details' : `btn-toggle-tech-details-${turnId}`}" class="accordion-toggle">
           <span>Technical Telemetry Details</span>
-          <span id="tech-accordion-icon">${this.technicalDetailsExpanded ? '▲ Hide' : '▼ Expand'}</span>
+          <span class="tech-accordion-icon" id="${isLatest ? 'tech-accordion-icon' : `tech-accordion-icon-${turnId}`}">${this.technicalDetailsExpanded ? '▲ Hide' : '▼ Expand'}</span>
         </button>
 
-        <div id="tech-accordion-content" class="accordion-content ${this.technicalDetailsExpanded ? 'expanded' : ''}">
+        <div id="${isLatest ? 'tech-accordion-content' : `tech-accordion-content-${turnId}`}" class="accordion-content ${this.technicalDetailsExpanded ? 'expanded' : ''}">
           <div class="tech-grid">
             <div class="tech-item">
               <span class="tech-key">Agent State</span>
@@ -679,60 +802,59 @@ export class AgentWorkspace {
     `;
   }
 
-  private attachInteractiveEvents(content: HTMLElement, state: DashboardAgentState): void {
-    // Retry button on failure
-    const retryBtn = content.querySelector('#btn-retry-task');
-    if (retryBtn) {
-      retryBtn.addEventListener('click', () => {
-        if (state.task) this.callbacks.onRetryTask(state.task);
+  private attachInteractiveEvents(content: HTMLElement): void {
+    // Retry buttons across all turns
+    content.querySelectorAll<HTMLElement>('.retry-action-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const task = btn.getAttribute('data-task');
+        if (task) this.callbacks.onRetryTask(task);
       });
-    }
+    });
 
-    // Confirmation buttons
-    const confirmBtn = content.querySelector('#btn-confirm-action');
-    if (confirmBtn) {
-      confirmBtn.addEventListener('click', () => this.callbacks.onConfirmAction());
-    }
+    // Confirmation buttons across all turns
+    content.querySelectorAll<HTMLElement>('.btn-confirm-action').forEach((btn) => {
+      btn.addEventListener('click', () => this.callbacks.onConfirmAction());
+    });
 
-    const cancelBtn = content.querySelector('#btn-cancel-action');
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => this.callbacks.onCancelAction());
-    }
+    content.querySelectorAll<HTMLElement>('.btn-cancel-action').forEach((btn) => {
+      btn.addEventListener('click', () => this.callbacks.onCancelAction());
+    });
 
-    // Diagnostics disclosure — flag survives the per-payload re-render.
-    const diagnostics = content.querySelector('#diagnostics-details') as HTMLDetailsElement | null;
-    if (diagnostics) {
+    // Diagnostics disclosure
+    content.querySelectorAll<HTMLDetailsElement>('.diagnostics-details').forEach((diagnostics) => {
       diagnostics.addEventListener('toggle', () => {
         this.diagnosticsOpen = diagnostics.open;
-        const icon = content.querySelector('#diagnostics-icon');
+        const icon = diagnostics.querySelector('.diagnostics-toggle-icon, #diagnostics-icon');
         if (icon) icon.textContent = this.diagnosticsOpen ? '▲ Hide' : '▼ Expand';
       });
-    }
+    });
 
-    // Activity history disclosure — same, so an expanded history stays open
-    // while progress keeps arriving.
-    const activity = content.querySelector('#activity-details') as HTMLDetailsElement | null;
-    if (activity) {
+    // Activity history disclosure
+    content.querySelectorAll<HTMLDetailsElement>('.activity-details').forEach((activity) => {
       activity.addEventListener('toggle', () => {
         this.activityOpen = activity.open;
       });
-    }
+    });
 
     // Toggle technical details
-    const techToggle = content.querySelector('#btn-toggle-tech-details');
-    const techContent = content.querySelector('#tech-accordion-content');
-    const techIcon = content.querySelector('#tech-accordion-icon');
-    if (techToggle && techContent && techIcon) {
-      techToggle.addEventListener('click', () => {
+    content.querySelectorAll<HTMLElement>('.technical-details-accordion .accordion-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => {
         this.technicalDetailsExpanded = !this.technicalDetailsExpanded;
-        if (this.technicalDetailsExpanded) {
-          techContent.classList.add('expanded');
-          techIcon.textContent = '▲ Hide';
-        } else {
-          techContent.classList.remove('expanded');
-          techIcon.textContent = '▼ Expand';
+        const parent = btn.closest('.technical-details-accordion');
+        if (parent) {
+          const techContent = parent.querySelector('.accordion-content');
+          const techIcon = parent.querySelector('.tech-accordion-icon, #tech-accordion-icon');
+          if (techContent) {
+            if (this.technicalDetailsExpanded) {
+              techContent.classList.add('expanded');
+              if (techIcon) techIcon.textContent = '▲ Hide';
+            } else {
+              techContent.classList.remove('expanded');
+              if (techIcon) techIcon.textContent = '▼ Expand';
+            }
+          }
         }
       });
-    }
+    });
   }
 }

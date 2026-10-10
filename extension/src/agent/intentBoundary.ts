@@ -118,6 +118,7 @@ const GREETING_PHRASES: RegExp[] = [
   /^(thanks|thank you|thankyou|thx|ty|cheers|much appreciated)\b[\s!,.?]*$/i,
   /^(bye|goodbye|see you|see ya|later|cya|good ?night)\b[\s!,.?]*$/i,
   /^(ok|okay|k|sure|cool|nice|great|awesome|got it|understood|will do)\b[\s!,.?]*$/i,
+  /^(?:(?:hi|hey|hello|greetings|howdy)\s+)?(?:i am|i'm|im|my name is)\s+[a-z0-9'-]+[\s!,.?]*$/i,
 ];
 
 /**

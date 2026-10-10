@@ -323,6 +323,7 @@ export class AgentView {
       runBtn.addEventListener('click', () => {
         const val = input.value.trim();
         if (val) {
+          input.value = '';
           this.adapter.startTask(val);
         }
       });

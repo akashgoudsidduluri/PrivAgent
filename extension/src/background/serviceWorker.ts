@@ -786,6 +786,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         refusalCode: intentDecision.refusal ?? null,
         reason: refusalReason,
       };
+      const refusalRunId = typeof message.runId === 'number' ? message.runId : ++activeTaskRunId;
+      activeTaskRunId = refusalRunId;
       // The message port MUST be answered before returning.
       //
       // This was found by REAL BROWSER testing, not by the unit suite: an early
@@ -812,6 +814,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           intent: intentDecision.intent,
           refusalCode: intentDecision.refusal ?? null,
           reason: refusalReason,
+          runId: refusalRunId,
         },
         dashboardTabId
       );
@@ -944,9 +947,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
           console.info('[AgentTrace] terminal progress emitted', { status: 'FAILED' });
           const failReason =
-            resolution.failureCode === 'DESTINATION_REQUIRED'
+            resolution.reason ||
+            (resolution.failureCode === 'DESTINATION_REQUIRED'
               ? 'No target web tab is open and no destination could be determined from the task. Name a site explicitly (for example "open https://example.com" or "open google and search for cats"), or open the page you want PrivAgent to work with.'
-              : resolution.reason || 'No target web tab found. Please open http://localhost:4173.';
+              : 'No target web tab found. Please open http://localhost:4173.');
           try {
             sendResponse({
               started: false,
@@ -965,6 +969,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               task,
               steps: [],
               reason: failReason,
+              lastFailure: {
+                category: 'TARGET_TAB_NOT_FOUND',
+                error: failReason,
+                timestamp: Date.now(),
+              },
               runId: taskOwnershipToken,
             },
             dashboardTabId
@@ -1019,7 +1028,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             /* port closed */
           }
           await sendToDashboard(
-            { status: 'FAILED', currentStep: 0, maxSteps: 10, task, steps: [], reason },
+            {
+              status: 'FAILED',
+              currentStep: 0,
+              maxSteps: 10,
+              task,
+              steps: [],
+              reason,
+              lastFailure: {
+                category: 'CONTAINMENT_DENIED',
+                error: reason,
+                timestamp: Date.now(),
+              },
+              runId: taskOwnershipToken,
+            },
             dashboardTabId
           );
           return;
@@ -1062,6 +1084,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               task,
               steps: [],
               reason: notReadyReason,
+              lastFailure: {
+                category: 'PERCEPTION_FAILED',
+                error: notReadyReason,
+                timestamp: Date.now(),
+              },
+              runId: taskOwnershipToken,
             },
             dashboardTabId
           );
@@ -1096,6 +1124,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             targetTabId,
             steps: [],
             reason: 'Target tab discovered and ready. Starting visual privacy perception...',
+            runId: taskOwnershipToken,
           },
           dashboardTabId
         );

@@ -83,6 +83,7 @@ import {
   CandidateProductItem,
   ExpectedStateChange,
   FailureRecord,
+  type FailureCategory,
   createAgentTaskState,
   advancePageGeneration,
   invalidatePageGenerationState,
@@ -2047,6 +2048,18 @@ export class AgentLoop {
           const terminal = first?.exhausted ? first : this.planRecoveryForLastStep('PROVIDER_UNAVAILABLE');
           this.state.status = terminalStateForProviderFailure(category);
           this.state.reason = userFacingMessageForStatus(this.state.status);
+          const failureCat: FailureCategory =
+            category === 'NETWORK_FAILURE'
+              ? 'PROVIDER_TIMEOUT'
+              : (category as FailureCategory) || 'PROVIDER_TIMEOUT';
+          this.state.lastFailure = {
+            category: failureCat,
+            reason: err.message,
+            pageGeneration: this.state.currentPageGeneration || 0,
+            recoveryAttempted: false,
+            finalState: this.state.status,
+            timestamp: Date.now(),
+          };
           this.notifyProgress();
           console.warn('[AgentTrace] reasoning provider unavailable', {
             category,

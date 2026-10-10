@@ -47,10 +47,15 @@ import { scanForRawSensitiveValues } from '../extension/src/privacy/rawValueScan
 // @ts-expect-error -- untyped fixture module
 import { servePhase176Fixture } from '../scratch/phase176_fixture.mjs';
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const BACKEND_DIR = resolve(process.cwd(), 'backend');
-const BACKEND_PYTHON = resolve(BACKEND_DIR, '.venv/bin/python');
+const VENV_PYTHON =
+  process.platform === 'win32'
+    ? resolve(BACKEND_DIR, '.venv/Scripts/python.exe')
+    : resolve(BACKEND_DIR, '.venv/bin/python');
+const BACKEND_PYTHON = existsSync(VENV_PYTHON) ? VENV_PYTHON : (process.env.PYTHON || 'python');
 
 /**
  * Runs the REAL backend payload scanner (`app.security.verify_payload_invariants`)

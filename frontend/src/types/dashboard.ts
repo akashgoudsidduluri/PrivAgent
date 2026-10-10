@@ -229,7 +229,8 @@ export type AgentTerminalReason =
   /** PHASE 18.8 / A14 — the run ended with a consequential commit unconfirmed. */
   | 'COMMIT_UNVERIFIED'
   /** PHASE 18.8 / A16 — the run ended because the view had moved on. */
-  | 'FRESHNESS_UNVERIFIED';
+  | 'FRESHNESS_UNVERIFIED'
+  | 'TARGET_TAB_NOT_FOUND';
 
 export interface AgentActivity {
   phase: AgentActivityPhase;
@@ -320,6 +321,7 @@ export interface AgentInteractionState {
 export interface DashboardAgentState {
   status: UIAgentStatus;
   task: string;
+  runId?: number;
   currentStep: number;
   maxSteps: number;
   currentPipelineStage: PipelineStage;
