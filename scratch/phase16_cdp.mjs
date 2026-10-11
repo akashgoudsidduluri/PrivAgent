@@ -11,10 +11,12 @@ export const REPO_ROOT = path.resolve(path.dirname(__filename), '..');
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const playwrightWinChromium = path.join(os.homedir(), 'AppData', 'Local', 'ms-playwright', 'chromium-1243', 'chrome-win64', 'chrome.exe');
+const defaultWindowsChrome = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 export const CHROME_BIN =
   process.env.PRIVAGENT_CHROME_BIN ||
-  path.join(os.homedir(), '.cache/ms-playwright/chromium-1243/chrome-linux64/chrome');
-export const PYTHON = path.join(REPO_ROOT, 'backend', '.venv', 'bin', 'python');
+  (fs.existsSync(playwrightWinChromium) ? playwrightWinChromium : (fs.existsSync(defaultWindowsChrome) ? defaultWindowsChrome : path.join(os.homedir(), '.cache/ms-playwright/chromium-1243/chrome-linux64/chrome')));
+export const PYTHON = process.platform === 'win32' ? 'python' : path.join(REPO_ROOT, 'backend', '.venv', 'bin', 'python');
 
 export function cdpGet(port, endpoint, method = 'GET') {
   return new Promise((resolve, reject) => {
@@ -106,13 +108,18 @@ export async function waitForBackend(port, tries = 120) {
 }
 
 export function launchChrome(cdpPort, extraArgs = []) {
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'privagent-p16-'));
-  const proc = spawn(CHROME_BIN, [
-    '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'privagent-real-chrome-'));
+  const isHeadless = process.env.HEADLESS === 'true';
+  const args = [
+    '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
     '--window-size=1280,900', `--remote-debugging-port=${cdpPort}`, `--user-data-dir=${profile}`,
     '--no-first-run', '--no-default-browser-check', '--no-proxy-server', '--proxy-bypass-list=*',
     ...extraArgs, 'about:blank',
-  ], { stdio: ['ignore', 'ignore', 'ignore'] });
+  ];
+  if (isHeadless) {
+    args.unshift('--headless=new');
+  }
+  const proc = spawn(CHROME_BIN, args, { stdio: ['ignore', 'ignore', 'ignore'] });
   return { proc, profile };
 }
 
@@ -131,7 +138,14 @@ export function readReasonerConfig() {
 
 /** Attach to the extension service worker and record reasoner wire traffic. */
 export async function attachServiceWorker(cdpPort) {
-  const t = (await cdpGet(cdpPort, '/json/list')).find((x) => x.url && x.url.includes('serviceWorker.js'));
+  const list = await cdpGet(cdpPort, '/json/list');
+  const t = list.find(
+    (x) =>
+      x.url &&
+      x.url.includes('serviceWorker.js') &&
+      !x.url.includes('fignfifoniblkonapihmkfakmlgkbkcf') &&
+      !(x.title && x.title.includes('Google Network Speech'))
+  );
   if (!t || !t.webSocketDebuggerUrl) return null;
   const s = await openSession(t.webSocketDebuggerUrl);
   await s.send('Runtime.enable');
