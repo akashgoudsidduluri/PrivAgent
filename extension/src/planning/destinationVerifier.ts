@@ -257,6 +257,14 @@ function verifyUrl(
     };
   }
 
+  if (obs.semantic?.pageType === 'ERROR') {
+    return {
+      channel: 'url',
+      kind: 'MISMATCH',
+      reason: `The observed page at ${observed.origin}${observed.path} is an error page, not a valid destination.`,
+    };
+  }
+
   const same = observed.origin === declared.origin && observed.path === declared.path;
   return same
     ? {

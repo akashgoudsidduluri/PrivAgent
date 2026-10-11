@@ -150,3 +150,35 @@ def test_history_payload_round_trips_through_the_agent_request():
     # And it serialises back without losing the fields that caused the 422.
     dumped = json.loads(req.model_dump_json(by_alias=True))
     assert "effect" in dumped["history"][0]
+
+
+def test_historical_type_action_with_stripped_text_is_accepted():
+    """Historical type actions strip sensitive text for privacy; model must accept them."""
+    from app.models import BrowserActionModel
+
+    entry = {
+        "action": "type",
+        "target": "enquiry-reference",
+        "effect": "ACTION_CHANGED",
+    }
+    parsed = BrowserActionModel.model_validate(entry)
+    assert parsed.action == "type"
+    assert parsed.target == "enquiry-reference"
+    assert parsed.text is None
+    assert parsed.effect == "ACTION_CHANGED"
+
+
+def test_historical_select_action_with_stripped_option_is_accepted():
+    """Historical select actions strip option for privacy; model must accept them."""
+    from app.models import BrowserActionModel
+
+    entry = {
+        "action": "select",
+        "target": "shipping-method",
+        "effect": "ACTION_CHANGED",
+    }
+    parsed = BrowserActionModel.model_validate(entry)
+    assert parsed.action == "select"
+    assert parsed.target == "shipping-method"
+    assert parsed.option is None
+    assert parsed.effect == "ACTION_CHANGED"

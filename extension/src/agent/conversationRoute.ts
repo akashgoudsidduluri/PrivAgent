@@ -98,14 +98,14 @@ export const CONVERSATIONAL_CODES: ReadonlySet<MessageRouteCode> = new Set<Messa
 
 /** A search/navigation/interaction construction that only a browser can serve. */
 const BROWSER_VERB =
-  /\b(search for|search(?:es|ing)? the|search on|search up|search the web|google|find the|find me|find out about|find the latest|look up the|open the|open up|go to the|navigate to|visit the|browse the|click (?:the|on)|tap the|press the|scroll (?:down|up|to)|download the|upload|add to (?:the )?cart|log ?in|sign ?in)\b/i;
+  /\b(read the|read from|inspect the|check the|search for|search(?:es|ing)? the|search on|search up|search the web|google|find the|find me|find out about|find the latest|look up the|open the|open up|go to the|navigate to|visit the|browse the|click (?:the|on)|tap the|press the|scroll (?:down|up|to)|download the|upload|add to (?:the )?cart|log ?in|sign ?in)\b/i;
 
 /**
  * Page deixis. The message points at the CURRENT document, or at an artefact of
  * a live session, so the answer depends on a page only the browser can read.
  */
 const PAGE_DEIXIS =
-  /\b(this page|that page|the page|this site|that site|the site|this product|that product|the product|this result|that result|the result|the results|first result|second result|third result|fourth result|fifth result|this listing|that listing|the listing|this item|that item|the item|this cart|the cart|my cart|my account|my order|my orders|this order|that order|the order|this screen|that screen|the screen|this fixture|the fixture|shopping fixture|this tab|the tab|current page|this document|here on|on this)\b/i;
+  /\b((?:this|that|the)\s+[a-z0-9_-]+\s+page|this page|that page|the page|this site|that site|the site|this product|that product|the product|this result|that result|the result|the results|first result|second result|third result|fourth result|fifth result|this listing|that listing|the listing|this item|that item|the item|this cart|the cart|my cart|my account|my order|my orders|this order|that order|the order|this screen|that screen|the screen|this fixture|the fixture|shopping fixture|this tab|the tab|current page|this document|here on|on this)\b/i;
 
 /**
  * A bare deictic object — a pronoun standing in for something the message never

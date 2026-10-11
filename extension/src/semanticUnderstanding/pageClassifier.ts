@@ -63,14 +63,14 @@ export function classifyPageSemantics(
   // ──────────────────────────────────────────────────────────────────────────
   const isChromeError = rawUrl.includes('chrome-error://');
   const errorTitle = rawTitle.includes('404') || rawTitle.includes('not found') || rawTitle.includes('error');
-  const errorH1 = primaryH1.includes('404') || primaryH1.includes('not found') || primaryH1.includes('access denied');
+  const errorH1 = primaryH1.includes('404') || primaryH1.includes('not found') || primaryH1.includes('access denied') || primaryH1.includes('error');
   const errorDom = targetDoc?.querySelector('.error-page, [data-error], .error-container, #error-message');
 
   if (errorDom) {
     signals.push({ type: 'ERROR', weight: 0.8, evidence: 'DOM contains explicit error container (.error-page / [data-error])' });
   }
-  if (errorH1 && (errorTitle || errorDom || rawUrl.includes('error'))) {
-    signals.push({ type: 'ERROR', weight: 0.7, evidence: `Error heading: "${primaryH1.slice(0, 40)}"` });
+  if (errorH1 && (errorTitle || errorDom || rawUrl.includes('error') || primaryH1.includes('error'))) {
+    signals.push({ type: 'ERROR', weight: 0.8, evidence: `Error heading: "${primaryH1.slice(0, 40)}"` });
   }
   if (isChromeError) {
     signals.push({ type: 'ERROR', weight: 0.9, evidence: 'Internal browser error URL scheme (chrome-error://)' });

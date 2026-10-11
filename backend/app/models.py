@@ -321,6 +321,9 @@ class BrowserActionModel(StrictModel):
         # 2. Require the fields this action type needs.
         for name in required:
             if provided[name] is None:
+                # Historical action metadata strips sensitive input values (text/option) for privacy
+                if (self.effect is not None or self.scroll_delta is not None) and name in ("text", "option"):
+                    continue
                 raise ValueError(
                     f"[PrivAgent Security] Action '{self.action.value}' requires "
                     f"a non-empty '{name}' field."

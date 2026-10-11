@@ -1811,55 +1811,106 @@ class GroqReasoner:
         }
 
         started = time.perf_counter()
-        try:
-            response = httpx.post(
-                self.base_url,
-                json=payload_schema,
-                headers=headers,
-                timeout=self.timeout_seconds,
-            )
-        except httpx.TimeoutException as err:
-            raise ReasoningError(
-                f"Groq request timed out after {self.timeout_seconds:.0f}s.",
-                retryable=True,
-                kind="timeout",
-            ) from err
-        except httpx.HTTPError as err:
-            raise ReasoningError(
-                f"Groq network error: {type(err).__name__}",
-                retryable=True,
-                kind="network",
-            ) from err
-
-        # If 400 with schema or grammar validation error, fallback to prompt-directed JSON
-        if response.status_code == 400 and any(
-            term in response.text.lower()
-            for term in ("json_schema", "json_validate_failed", "failed to validate json", "schema")
-        ):
-            logger.info(
-                "Groq model '%s' rejected strict response_format; falling back to prompt-directed format.",
-                self.model,
-            )
-            payload_plain = dict(payload_schema)
-            payload_plain.pop("response_format", None)
+        max_rate_limit_retries = 3
+        attempts = 0
+        response = None
+        for attempt in range(max_rate_limit_retries + 1):
+            attempts += 1
             try:
                 response = httpx.post(
                     self.base_url,
-                    json=payload_plain,
+                    json=payload_schema,
                     headers=headers,
                     timeout=self.timeout_seconds,
                 )
-            except Exception as e:
-                logger.warning("Groq prompt-directed retry failed: %s", e)
+            except httpx.TimeoutException as err:
+                raise ReasoningError(
+                    f"Groq request timed out after {self.timeout_seconds:.0f}s.",
+                    retryable=True,
+                    kind="timeout",
+                ) from err
+            except httpx.HTTPError as err:
+                raise ReasoningError(
+                    f"Groq network error: {type(err).__name__}",
+                    retryable=True,
+                    kind="network",
+                ) from err
 
-        if response.status_code == 200:
-            content = self._extract_content(response.json())
-            return _result_from_content(
-                content,
-                model=self.model,
-                latency_ms=(time.perf_counter() - started) * 1000.0,
-                attempts=1,
-            )
+            # If 400 with schema or grammar validation error, fallback to prompt-directed JSON
+            if response.status_code == 400 and any(
+                term in response.text.lower()
+                for term in ("json_schema", "json_validate_failed", "failed to validate json", "schema")
+            ):
+                logger.info(
+                    "Groq model '%s' rejected strict response_format; falling back to prompt-directed format.",
+                    self.model,
+                )
+                payload_plain = dict(payload_schema)
+                payload_plain.pop("response_format", None)
+                try:
+                    response = httpx.post(
+                        self.base_url,
+                        json=payload_plain,
+                        headers=headers,
+                        timeout=self.timeout_seconds,
+                    )
+                except Exception as e:
+                    logger.warning("Groq prompt-directed retry failed: %s", e)
+
+            if response.status_code == 200:
+                content = self._extract_content(response.json())
+                return _result_from_content(
+                    content,
+                    model=self.model,
+                    latency_ms=(time.perf_counter() - started) * 1000.0,
+                    attempts=attempts,
+                )
+
+            # Check if this is a transient TPM rate limit (429) that can be waited out
+            if response.status_code == 429 and attempt < max_rate_limit_retries:
+                wait_s: Optional[float] = None
+                # Check x-ratelimit-reset-tokens (e.g. '2.737s' or '350ms')
+                reset_tokens = response.headers.get("x-ratelimit-reset-tokens", "")
+                if reset_tokens:
+                    if "ms" in reset_tokens:
+                        try:
+                            wait_s = float(reset_tokens.replace("ms", "").strip()) / 1000.0
+                        except ValueError:
+                            pass
+                    elif "s" in reset_tokens:
+                        try:
+                            wait_s = float(reset_tokens.replace("s", "").strip())
+                        except ValueError:
+                            pass
+                if wait_s is None:
+                    header_val = response.headers.get("retry-after")
+                    if header_val:
+                        try:
+                            wait_s = float(header_val)
+                        except ValueError:
+                            pass
+                if wait_s is None:
+                    match = re.search(r"try again in ([\d\.]+)s", response.text)
+                    if match:
+                        wait_s = float(match.group(1))
+
+                # If wait time is reasonable (under 15s), wait and retry
+                if wait_s is not None and 0.0 < wait_s <= 15.0:
+                    sleep_time = wait_s + 0.5
+                    logger.info(
+                        "Groq token rate limit (429) received; sleeping %.2fs before retry (attempt %d/%d)...",
+                        sleep_time,
+                        attempt + 1,
+                        max_rate_limit_retries,
+                    )
+                    time.sleep(sleep_time)
+                    continue
+
+            # If not 200 and not retrying 429, exit to error handling
+            break
+
+        if response is None:
+            raise ReasoningError("Groq request produced no response.", kind="network")
 
         # HTTP error handling
         detail = self._safe_error_detail(response)

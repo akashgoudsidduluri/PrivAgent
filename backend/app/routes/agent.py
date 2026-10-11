@@ -212,10 +212,11 @@ async def generate_action(
             and err.kind in ("rate_limit", "timeout", "network", "not_configured", "http_server_error")
         )
         if can_fallback:
-            logger.info(
-                "Primary reasoner '%s' failed (%s); attempting fallback to '%s'.",
+            logger.warning(
+                "Primary reasoner '%s' failed (%s): %s; attempting fallback to '%s'.",
                 primary_name,
                 err.kind,
+                err,
                 fallback_name,
             )
             fallback_reasoner = build_reasoner(fallback_name)

@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-10-10T14:37:46.675Z",
+  "work": "START_TASK localhost-port target resolution — real Chrome diagnostic",
+  "tag": "POSTFIX",
+  "evidencePolicy": "Metadata, booleans and counts only. No page content or PII values are recorded.",
+  "environment": {
+    "realChrome": true,
+    "stubbedTargetPath": false,
+    "reasonerInvoked": false,
+    "chromeVersion": "Chrome/154.0.8037.98",
+    "extensionLoaded": true
+  },
+  "inputs": {
+    "dashboardOrigin": "http://localhost:5173",
+    "requestedTargetOrigin": "http://localhost:4174",
+    "unrelatedTabOrigin": null,
+    "task": "open http://localhost:4174 and fill the contact form",
+    "targetTabOpenBeforeStartTask": false
+  },
+  "boundaries": {
+    "dashboardServed": {
+      "status": 200,
+      "ok": true
+    },
+    "targetFixtureServed": {
+      "status": 200,
+      "ok": true
+    },
+    "dashboardTabUrl": "http://localhost:5173/",
+    "tabsBeforeStartTask": [
+      {
+        "id": 1403262129,
+        "origin": null,
+        "port": null
+      },
+      {
+        "id": 1403262130,
+        "origin": null,
+        "port": null
+      }
+    ],
+    "dashboardTabId": null,
+    "targetTabOpenBeforeStartTask": false,
+    "tabsAfterStartTask": [
+      {
+        "id": 1403262129,
+        "origin": null,
+        "active": false,
+        "status": "complete"
+      },
+      {
+        "id": 1403262130,
+        "origin": null,
+        "active": true,
+        "status": "complete"
+      }
+    ],
+    "targetTabId": null,
+    "resolvedTargetUrl": null,
+    "dashboardTabStillOnDashboard": false,
+    "noArbitraryTabSelected": true,
+    "resolver": {
+      "started": false,
+      "candidates": null,
+      "failureLine": null,
+      "selected": null,
+      "provisioned": null,
+      "ready": null
+    },
+    "containment": {
+      "logged": false
+    },
+    "agentLoop": {
+      "constructed": false,
+      "perceptionEntered": false,
+      "targetResolvedMarker": false,
+      "contentScriptReadyMarker": false
+    }
+  },
+  "perception": {},
+  "outcome": {
+    "progressEnvelopes": [],
+    "envelopeCount": 0,
+    "firstEnvelopeStatus": null,
+    "firstEnvelopeCurrentStep": null,
+    "firstEnvelopeStepCount": null,
+    "anyStep0TerminalFailed": false,
+    "reachedStepOne": false,
+    "finalStatus": null,
+    "finalReason": null,
+    "reportedTargetTabId": null,
+    "reasonerReached": false,
+    "actionDispatched": false,
+    "agentTraceLines": []
+  },
+  "verdict": "NOT_PROVEN"
+}
