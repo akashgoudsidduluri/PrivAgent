@@ -212,15 +212,29 @@ export interface InteractionOutcome {
 }
 
 /**
- * Deterministic duplicate-click suppression. A target freshly interacted with
- * within the window is not clicked again — a repeated identical dispatch is
- * the signature of a loop, and Phase 10 recovery should see NO_EFFECT rather
- * than compounding clicks.
+ * Deterministic duplicate-click suppression.
+ *
+ * A target freshly interacted with within the window is not clicked again — a
+ * repeated identical dispatch is the signature of a broken loop, and
+ * Phase 10 recovery should see NO_EFFECT rather than compounding clicks.
+ *
+ * A single window covers only ~1-2 loop steps (a no-effect action is
+ * dispatched, the loop samples, and re-perceives before the next dispatch).
+ * Any longer-lived guard would survive into a healthy human-like recovery
+ * — re-perceiving the page and picking a fresh or different target — and
+ * silently swap a broken interaction for a no-op. That is the bug the
+ * regression exists to prevent. Set per-instance if a fixture needs a longer
+ * window than the product default.
  */
 export class DuplicateClickGuard {
   private readonly recent = new Map<string, number>();
 
-  constructor(private readonly windowMs = 1200) {}
+  /**
+   * Default window = 2.5s. This is longer than a single step, so a rapid
+   * readback under the same action still counts as a duplicate, but short
+   * enough that a healthy re-perceive + next-action cycle moves past it.
+   */
+  constructor(private readonly windowMs = 2500) {}
 
   /** Returns true when the click is allowed (not a duplicate). */
   shouldClick(targetId: string, now = Date.now()): boolean {

@@ -15,6 +15,25 @@ import { fusePrivacyFindings, candidateFromDOMPageDetection, candidateFromContex
 import { detectContextualForDomDetections } from '../privacy/contextualPii';
 import { assessInteractability, isSafeKey, DuplicateClickGuard } from '../agent/humanInteraction';
 
+// ── DUPLICATE-INJECTION GUARD ────────────────────────────────────────────────────
+// This content script reaches a page through THREE paths: the manifest's
+// declarative document_idle injection, the service worker's tabs.onUpdated
+// auto-inject, and ensureTargetTabReady's probe-then-inject recovery. The
+// probe RACES the declarative injection: if the SW probe arrives before the
+// manifest instance has registered its runtime listener, the 1.5s probe
+// times out and a SECOND instance is injected into the same document.
+//
+// Observed consequence (docs/evidence/e2e-acceptance-20261011-post-click-fix):
+// every dashboard START_TASK was forwarded TWICE, so two concurrent agent
+// loops drove one tab — doubling provider load (which exhausted the org's
+// rate-limit budget mid-acceptance-run) and racing duplicate browser actions
+// on the same elements. Each listener below no-ops when its instance is a
+// duplicate, so whichever instance loaded first remains authoritative and
+// later injections become inert.
+const privAgentWindow = window as unknown as { __privagentContentScriptLoaded?: boolean };
+const isDuplicateInjection = Boolean(privAgentWindow.__privagentContentScriptLoaded);
+privAgentWindow.__privagentContentScriptLoaded = true;
+
 const currentUrl = window.location.href;
 const isCurrentSiteExcluded = isUrlExcluded(currentUrl);
 const exclusionReason = isCurrentSiteExcluded ? getExclusionReason(currentUrl) : null;
@@ -289,8 +308,11 @@ function performPrivacyScan(mode: RedactionMode = currentMode): PrivacyScanRepor
   return lastReport;
 }
 
-// Listen for messages from popup or background worker
-chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
+// Listen for messages from popup or background worker.
+// Duplicate-injection guard: the first instance on this page owns the
+// runtime bridge; a later-injected instance registers nothing, so the
+// service worker never receives two answers to one query.
+if (!isDuplicateInjection) chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
   if (message.type === 'PRIVAGENT_SCAN_REQUEST') {
     console.info('[ContentScript] message received', { type: message.type });
     console.info('[ContentScript] perception started');
@@ -468,9 +490,43 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
  * set the live interactability check already relies on, so a modal that would
  * occlude a target is also visible to effect verification.
  */
+// The modal selectors used BOTH for the effect-snapshot modal count and for
+// the click occlusion pre-flight. Real pages ship hidden dialog shells in
+// their markup: on google.com the only match was a `display:none` menu
+// container, which made every click on the page look occluded (observed in
+// docs/evidence/e2e-acceptance-20261011-post-click-fix: all three clicks in
+// the run failed pre-flight while `type`, which does not check occlusion,
+// succeeded). A hidden shell paints nothing and intercepts nothing, so it can
+// neither count as an open modal nor occlude a target.
+const MODAL_SELECTOR = 'dialog[open], [aria-modal="true"], [role="dialog"]';
+
+/**
+ * True when the element is actually rendered as an overlay: no display:none /
+ * visibility:hidden anywhere in its ancestor chain, and it can receive
+ * pointer events. On any style-reading failure this fails CLOSED (treated as
+ * rendered), preserving the original never-click-through-an-overlay stance.
+ */
+function isRenderedOverlay(el: HTMLElement): boolean {
+  try {
+    const win = el.ownerDocument?.defaultView || window;
+    for (let e: HTMLElement | null = el; e; e = e.parentElement) {
+      const s = win.getComputedStyle(e);
+      if (s.display === 'none') return false;
+      if (s.visibility === 'hidden' || s.visibility === 'collapse') return false;
+    }
+    return win.getComputedStyle(el).pointerEvents !== 'none';
+  } catch {
+    return true;
+  }
+}
+
 function countOpenModals(): number {
   try {
-    return document.querySelectorAll('dialog[open], [aria-modal="true"], [role="dialog"]').length;
+    let count = 0;
+    for (const m of document.querySelectorAll<HTMLElement>(MODAL_SELECTOR)) {
+      if (isRenderedOverlay(m)) count += 1;
+    }
+    return count;
   } catch {
     return 0;
   }
@@ -581,7 +637,10 @@ function isExtensionContextValid(): boolean {
 }
 
 // ── Dashboard Web UI Bridge ─────────────────────────────────────────────────
-window.addEventListener('message', (event) => {
+// Dashboard web UI bridge.
+// Duplicate-injection guard: only the first instance forwards dashboard
+// START_TASK/PING messages, so one click can never start two agent loops.
+if (!isDuplicateInjection) window.addEventListener('message', (event) => {
   if (event.source !== window || !event.data || event.data.source !== 'privagent-dashboard') return;
 
   const { type, task, allowed } = event.data;
@@ -927,16 +986,19 @@ export function assessLiveInteractability(el: HTMLElement): {
   const centreX = rect.left + rect.width / 2;
   const centreY = rect.top + rect.height / 2;
   const inViewport = centreY >= 0 && centreY <= vh && centreX >= 0 && centreX <= vw;
-  // Modal occlusion: reuse the scanner's deterministic modal detection.
+  // Modal occlusion: a modal blocks the target only when it is RENDERED and
+  // does not contain the target. Hidden dialog shells (display:none) are
+  // skipped — see MODAL_SELECTOR above for why this matters on real pages.
+  // Any style-reading failure keeps the old fail-closed behaviour via
+  // isRenderedOverlay's catch.
   const modal = (() => {
     try {
-      const modalQuery = [
-        'dialog[open]',
-        '[aria-modal="true"]',
-        '[role="dialog"]',
-      ].join(', ');
-      const m = document.querySelector<HTMLElement>(modalQuery);
-      return m && !m.contains(el) ? m : null;
+      for (const m of document.querySelectorAll<HTMLElement>(MODAL_SELECTOR)) {
+        if (m.contains(el)) continue;
+        if (!isRenderedOverlay(m)) continue;
+        return m;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -1154,7 +1216,7 @@ export function executeBrowserAction(action: import('../agent/actionTypes').Brow
 
 
 // Auto-run initial lightweight scan when DOM is ready (only on non-excluded sites)
-if (!isCurrentSiteExcluded) {
+if (!isCurrentSiteExcluded && !isDuplicateInjection) {
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(() => {
       performPrivacyScan('blackout');

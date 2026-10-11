@@ -167,6 +167,62 @@ describe('P11-6 the agent never clicks through an overlay', () => {
     expect(report.interactable).toBe(false);
     expect(report.reason).toMatch(/detached/i);
   });
+
+  // Regression: real pages ship HIDDEN dialog shells in their markup. On
+  // google.com the only modal-selector match was a display:none menu
+  // container, and the occlusion pre-flight treated it as an overlay — every
+  // click on the page failed while `type` (no occlusion check) succeeded
+  // (docs/evidence/e2e-acceptance-20261011-post-click-fix).
+  it('6.4 a HIDDEN (display:none) dialog shell does not occlude', () => {
+    const btn = addControl('button-under-hidden-shell', 'button');
+    let clicks = 0;
+    btn.addEventListener('click', () => { clicks += 1; });
+
+    const shell = document.createElement('div');
+    shell.setAttribute('role', 'dialog');
+    shell.style.display = 'none';
+    document.body.appendChild(shell);
+
+    const res = cs.executeBrowserAction({ action: 'click', target: 'button-under-hidden-shell' });
+    expect(res.success).toBe(true);
+    expect(clicks).toBe(1);
+  });
+
+  it('6.5 a dialog hidden through an ancestor does not occlude', () => {
+    const btn = addControl('button-under-ancestor-hidden', 'button');
+    let clicks = 0;
+    btn.addEventListener('click', () => { clicks += 1; });
+
+    const wrap = document.createElement('div');
+    wrap.style.display = 'none';
+    const shell = document.createElement('div');
+    shell.setAttribute('aria-modal', 'true');
+    wrap.appendChild(shell);
+    document.body.appendChild(wrap);
+
+    const res = cs.executeBrowserAction({ action: 'click', target: 'button-under-ancestor-hidden' });
+    expect(res.success).toBe(true);
+    expect(clicks).toBe(1);
+  });
+
+  it('6.6 a hidden shell plus a rendered modal: the RENDERED modal occludes', () => {
+    const behind = addControl('behind-rendered-modal', 'button');
+    let clicks = 0;
+    behind.addEventListener('click', () => { clicks += 1; });
+
+    const hidden = document.createElement('div');
+    hidden.setAttribute('role', 'dialog');
+    hidden.style.display = 'none';
+    document.body.appendChild(hidden);
+    const rendered = document.createElement('dialog');
+    rendered.setAttribute('open', '');
+    document.body.appendChild(rendered);
+
+    const res = cs.executeBrowserAction({ action: 'click', target: 'behind-rendered-modal' });
+    expect(res.success).toBe(false);
+    expect(failureCode(res)).toMatch(/modal/i);
+    expect(clicks).toBe(0);
+  });
 });
 
 describe('P11-7 a repeated click on one target is suppressed', () => {

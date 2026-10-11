@@ -368,6 +368,33 @@ describe('P0-1 snapshot observation is genuinely used by the loop', () => {
     expect(getEffectSnapshot.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
+  it('7b. an effect that lands AFTER dispatch is still verified (effect-settle window)', async () => {
+    // Regression: the post-action sample used to be taken once, immediately
+    // after dispatch. A click/Enter that triggers navigation (or async DOM)
+    // was therefore reported ACTION_NO_EFFECT even though the page really did
+    // change — the loop then recovered against a change that was already
+    // happening (docs/evidence/e2e-acceptance-20261011-post-click-fix: Enter
+    // submitted the search and the tab navigated, but the step recorded
+    // ACTION_NO_EFFECT). The loop must re-observe, bounded, until the effect
+    // is visible.
+    const before = snap({ activeElementSelector: 'body' });
+    const after = snap({ activeElementSelector: 'body', url: 'http://localhost:4196/results', timestamp: 5 });
+    let calls = 0;
+    const { loop } = loopWithSnapshots(
+      [{ action: 'click', target: 'el-btn', reason: 'click the control' } as BrowserAction],
+      () => {
+        calls += 1;
+        // call 0 = pre, call 1 = immediate post (unchanged), polls 2-3 still
+        // unchanged, poll 4 sees the navigation commit.
+        return calls <= 3 ? { ...before } : { ...after };
+      }
+    );
+    const state = await loop.runTask('click the control');
+    expect(state.steps[0]?.effectStatus ?? 'ACTION_NO_EFFECT').not.toBe('ACTION_NO_EFFECT');
+    // The channel was polled beyond the single immediate post-sample.
+    expect(calls).toBeGreaterThan(2);
+  });
+
   it('8. a host with NO snapshot channel keeps the previous context-derived behaviour', async () => {
     // Non-browser embeddings have no tab to observe. This path is unchanged.
     const provider_ = new MockAgentProvider([

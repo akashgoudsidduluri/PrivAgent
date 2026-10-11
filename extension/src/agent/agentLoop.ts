@@ -441,6 +441,18 @@ export interface AgentLoopOptions {
   longHorizonStore?: LongHorizonStore;
   maxRetries?: number;
   delayBetweenStepsMs?: number;
+  /**
+   * Effect-settle window for click / pressKey (see §7 in runTask). A click or
+   * Enter can start work that lands AFTER dispatch returns — a form
+   * submission navigates ~0.5-2s later, AJAX mutates the DOM asynchronously —
+   * so the immediate post-action sample can miss an effect that is really
+   * happening. While no observable effect has been seen, re-observe up to
+   * `effectSettleMaxPolls` times, `effectSettlePollMs` apart (total window =
+   * product of both). A genuine no-op still becomes ACTION_NO_EFFECT after the
+   * bounded window. Set `effectSettleMaxPolls: 0` to disable.
+   */
+  effectSettlePollMs?: number;
+  effectSettleMaxPolls?: number;
   requireConfirmationForExternalNavigation?: boolean;
   /**
    * M7: bounded retries for RETRYABLE provider failures (network, 5xx, rate
@@ -538,6 +550,8 @@ export class AgentLoop {
   private maxSteps: number;
   private maxRetries: number;
   private delayBetweenStepsMs: number;
+  private effectSettlePollMs: number;
+  private effectSettleMaxPolls: number;
   private requireConfirmationForExternalNavigation: boolean;
   private providerRetries: number;
   /** PHASE 18.7 / A8. True when `providerRetries` was set by the caller. */
@@ -817,6 +831,11 @@ export class AgentLoop {
     this.maxSteps = options.maxSteps ?? 10;
     this.maxRetries = options.maxRetries ?? 2;
     this.delayBetweenStepsMs = options.delayBetweenStepsMs ?? 200;
+    // Effect-settle window: 10 polls x 150ms = 1.5s max. Long enough to cover
+    // a form-submission navigation committing in a slow environment, bounded
+    // so a real no-op pays at most one window per dispatched action.
+    this.effectSettlePollMs = options.effectSettlePollMs ?? 150;
+    this.effectSettleMaxPolls = options.effectSettleMaxPolls ?? 10;
     this.requireConfirmationForExternalNavigation =
       options.requireConfirmationForExternalNavigation ?? true;
     this.providerRetries = options.providerRetries ?? 2;
@@ -3017,7 +3036,7 @@ export class AgentLoop {
           true,
           validation.reason,
           false,
-          execResult.error,
+          execResult.error || (healingResult?.recovered ? `Self-healing proposed ${healingResult.recoveredTargetId ?? 'an alternative'}.` : 'Execution error'),
           targetDet?.type,
           risk,
           semantic,
@@ -3081,6 +3100,36 @@ export class AgentLoop {
       let postSnapshot: PostActionSnapshot | undefined = (execResult as any).postSnapshot;
       if (!postSnapshot && this.callbacks.getEffectSnapshot) {
         postSnapshot = (await this.observeEffectSnapshot(actionTarget, 'post')) ?? undefined;
+
+        // ── EFFECT SETTLE WINDOW ────────────────────────────────────────────
+        // A click or Enter can start work that lands AFTER dispatch returns:
+        // a form submission navigates ~0.5-2s later, and menus/AJAX mutate the
+        // DOM asynchronously. Sampling once, immediately after dispatch,
+        // reported those real effects as ACTION_NO_EFFECT and sent the loop
+        // into recovery for a change that was already happening (observed in
+        // docs/evidence/e2e-acceptance-20261011-post-click-fix: Enter submitted
+        // the search, the tab genuinely navigated to the results page, and the
+        // step was still recorded ACTION_NO_EFFECT because the post-sample was
+        // taken ~50ms after dispatch). Re-observe, BOUNDED, only while no
+        // observable effect has been seen; the authoritative verification
+        // below then runs against the settled state. A genuine no-op still
+        // becomes ACTION_NO_EFFECT after the window.
+        if (
+          postSnapshot &&
+          preSnapshot &&
+          this.effectSettleMaxPolls > 0 &&
+          (action.action === 'click' || action.action === 'pressKey')
+        ) {
+          for (let i = 0; i < this.effectSettleMaxPolls; i += 1) {
+            const probe = verifyActionEffect(action, preSnapshot, postSnapshot);
+            if (probe.hasEffect) break;
+            await this.delay(this.effectSettlePollMs);
+            if (!this.owns(token)) break;
+            const settled = (await this.observeEffectSnapshot(actionTarget, 'post')) ?? undefined;
+            if (settled) postSnapshot = settled;
+          }
+        }
+
         if (!postSnapshot || !preSnapshot) {
           // The host HAS an observation channel but could not observe. Do NOT
           // fall back to deriving the post-state from the requested action: that
@@ -3089,9 +3138,15 @@ export class AgentLoop {
           //
           // FAIL CLOSED, bounded exactly like any other post-dispatch failure.
           console.warn('[AgentTrace] browser state could not be observed on both sides of the action; failing closed');
+          // The step is recorded with the EXACT call/failure reason, so downstream
+          // diagnostics (and the harness) can name the ERRED target, not just the
+          // step number. `execResult.error` already carries the content-script
+          // dispatch reason (`Target element 'X' not found in DOM.`,
+          // `INTERACTABILITY_BLOCKED: ...`, `DUPLICATE_CLICK_SUPPRESSED: ...`).
+          const execErr = execResult.error || 'Execution error (no detail).';
           const unobservableRecord: FailureRecord = {
             category: 'ACTION_NO_EFFECT',
-            reason: `${preSnapshot ? 'Post-action' : 'Pre-action'} browser state could not be observed for '${action.action}'; effect treated as unverified.`,
+            reason: `${preSnapshot ? 'Post-action' : 'Pre-action'} browser state could not be observed for '${action.action}' (err: ${execErr}); effect treated as unverified.`,
             pageGeneration: this.state.currentPageGeneration,
             attemptedAction: action,
             recoveryAttempted: false,
@@ -3103,7 +3158,7 @@ export class AgentLoop {
           this.state.lastFailure = unobservableRecord;
           this.state.lastActionResult = {
             success: false,
-            error: `EFFECT_UNVERIFIABLE: ${preSnapshot ? 'post-action' : 'pre-action'} browser state could not be observed.`,
+            error: `EFFECT_UNVERIFIABLE: ${preSnapshot ? 'post-action' : 'pre-action'} browser state could not be observed (err: ${execErr}).`,
           };
           this.state.retryCount++;
           this.state.failureCount++;
