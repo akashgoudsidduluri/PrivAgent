@@ -94,11 +94,12 @@ const GREETING_WORDS = new Set([
   'good', 'morning', 'evening', 'night', 'afternoon',
   'howdy', 'greetings', 'please', 'sorry', 'yes', 'no', 'yep', 'nope',
   'lol', 'haha', 'welcome',
-  // Filler that appears in real greetings ("hello there", "hi everyone").
+  // Filler that appears in real greetings ("hello there", "hi everyone", "hi man", "hello bro").
   // These carry no instruction, so allowing them here does not let a real
   // command through: every token must still be smalltalk.
   'there', 'you', 'your', 'u', 'all', 'everyone', 'folks', 'team', 'friend',
-  'mate', 'buddy', 'again', 'noted', 'right', 'sounds',
+  'mate', 'buddy', 'again', 'noted', 'right', 'sounds', 'man', 'bro', 'dude',
+  'sir', 'pal', 'assistant', 'bot', 'privagent',
 ]);
 
 /**
@@ -114,6 +115,7 @@ import { isKnownSearchPortalAlias } from '../planning/searchCapability';
 /** Pure smalltalk that has no actionable content at all. */
 const GREETING_PHRASES: RegExp[] = [
   /^(hi|hey|hello|helo|hiya|howdy|greetings|yo|sup)\b[\s!,.?]*$/i,
+  /^(?:hi|hey|hello|helo|hiya|howdy|greetings|yo|sup)\s+(?:man|bro|dude|friend|there|mate|buddy|team|all|sir|pal|privagent|bot)[\s!,.?]*$/i,
   /^(how are you|how're you|how r u|whats up|what's up|how u doing)\b[\s!,.?]*$/i,
   /^(thanks|thank you|thankyou|thx|ty|cheers|much appreciated)\b[\s!,.?]*$/i,
   /^(bye|goodbye|see you|see ya|later|cya|good ?night)\b[\s!,.?]*$/i,

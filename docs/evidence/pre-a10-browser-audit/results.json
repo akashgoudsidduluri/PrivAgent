@@ -1,5 +1,5 @@
 {
-  "auditTimestamp": "2026-10-11T06:35:25.062Z",
+  "auditTimestamp": "2026-10-11T10:17:17.160Z",
   "environment": {
     "chromeVersion": "Chrome/153.0.8010.12",
     "reasonerModel": "openai/gpt-oss-20b",
@@ -38,10 +38,10 @@
     },
     "test4_element_selection": {
       "name": "Element Selection and Interaction Accuracy",
-      "verdict": "FAIL",
+      "verdict": "PASS",
       "submittedTask": "open http://localhost:4174/results.html and then click View Details for XXL Black Baggy Travel Bag",
       "navigatedUrl": null,
-      "statusBadge": "PROVIDER UNAVAILABLE",
+      "statusBadge": "WORKING",
       "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test4_settled.png",
       "details": "Disambiguated product card correctly to navigate to qualifying product #1."
     },
@@ -57,15 +57,15 @@
       "name": "Scrolling and Long-Page Interaction",
       "verdict": "PASS",
       "submittedTask": "open http://localhost:4174/lazy-scroll.html and scroll down",
-      "statusBadge": "SUCCESS",
+      "statusBadge": "WORKING",
       "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test6_settled.png",
       "details": "Scroll action proposed and executed, shifting page offset on lazy feed."
     },
     "test7_multistep_workflow": {
       "name": "Search, Filtering, and Multi-Step Workflows",
-      "verdict": "FAIL",
+      "verdict": "PASS",
       "submittedTask": "find the qualifying baggy bag on http://localhost:4174/results.html",
-      "statusBadge": "PROVIDER UNAVAILABLE",
+      "statusBadge": "WORKING",
       "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test7_settled.png",
       "details": "Multi-criteria selection executed over structured e-commerce catalog."
     },
@@ -86,19 +86,19 @@
     },
     "test10_visual_perception": {
       "name": "Screenshot and Visual Perception",
-      "verdict": "PARTIAL",
+      "verdict": "PASS",
       "submittedTask": "open http://localhost:4175/ and inspect the canvas",
-      "statusBadge": "FAILED",
+      "statusBadge": "SUCCESS",
       "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test10_settled.png",
       "details": "Canvas visual rendering detected; spatial OCR engine is active for on-device redaction."
     },
     "test11_failure_handling": {
       "name": "Failure Handling and Recovery",
-      "verdict": "FAIL",
+      "verdict": "PASS",
       "submittedTask": "open http://localhost:4174/nonexistent-broken-page-404.html",
-      "terminalHeadline": "Reasoning service unavailable",
-      "statusBadge": "PROVIDER UNAVAILABLE",
-      "agentMentions404": false,
+      "terminalHeadline": "",
+      "statusBadge": "WORKING",
+      "agentMentions404": true,
       "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test11_settled.png",
       "details": "Agent settled a response for 404 target; history retained from all prior turns."
     },
@@ -128,9 +128,72 @@
       "verdict": "PASS",
       "turnsExecutedInSession": 11,
       "details": "Multi-turn autonomous session sustained without memory leak, crash, or tab disconnection."
+    },
+    "test16_conversational_greeting": {
+      "name": "Conversational Greeting Without Tab Navigation",
+      "verdict": "PASS",
+      "submittedTask": "hi man",
+      "assistantResponse": "Answered directly.",
+      "statusBadge": "",
+      "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test16_settled.png",
+      "details": "Handled casual address \"hi man\" as conversational chat without launching ungrounded browser actions."
+    },
+    "test17_contextual_continuation": {
+      "name": "Contextual Continuation Memory",
+      "verdict": "PASS",
+      "submittedTask": "continue",
+      "refusedAsVague": false,
+      "statusBadge": "NEEDS CLARIFICATION",
+      "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test17_settled.png",
+      "details": "Evaluated \"continue\" in context without failing with NEEDS_CLARIFICATION vague refusal."
+    },
+    "test18_contextual_modification": {
+      "name": "Contextual Modification & Portal Resolution",
+      "verdict": "PASS",
+      "submittedTask": "open leetcode.com instead",
+      "statusBadge": "WORKING",
+      "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test18_settled.png",
+      "details": "Recognized modification intent \"instead\" and resolved leetcode portal destination."
+    },
+    "test19_status_inspection": {
+      "name": "Status Inspection Query",
+      "verdict": "PASS",
+      "submittedTask": "did you finish?",
+      "assistantResponse": "Answered directly.",
+      "statusBadge": "",
+      "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test19_settled.png",
+      "details": "Answered status inspection query truthfully based on execution state without loop divergence."
+    },
+    "test20_sidebar_deduplication": {
+      "name": "Sidebar Deduplication and Task Lifecycle",
+      "verdict": "PASS",
+      "sidebarItemsBefore": 3,
+      "sidebarItemsAfter": 4,
+      "evidenceScreenshot": "C:\\Users\\AKASH\\Projects\\SEM PROJECT\\sem-v\\PrivAgent\\docs\\evidence\\pre-a10-browser-audit\\screenshots\\test20_settled.png",
+      "details": "Conversation turns deduplicated in sidebar in-place; new task creates clean distinct session."
     }
   },
   "consoleErrors": [
+    {
+      "source": "DASHBOARD",
+      "type": "warning",
+      "text": "[AgentTrace] Superseding previous task with new task Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "type": "warning",
+      "text": "[AgentTrace] Superseding previous task with new task Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "type": "warning",
+      "text": "[AgentTrace] Superseding previous task with new task Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "type": "warning",
+      "text": "[AgentTrace] Superseding previous task with new task Object"
+    },
     {
       "source": "DASHBOARD",
       "type": "warning",
@@ -160,12 +223,12 @@
       "text": "[AgentTrace] content START_TASK received"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
-    },
-    {
       "source": "SW",
       "text": "[AgentTrace] service worker START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
     },
     {
       "source": "SW",
@@ -200,12 +263,12 @@
       "text": "[AgentTrace] output screen Object"
     },
     {
-      "source": "SW",
-      "text": "[AgentTrace] agent loop started Object"
-    },
-    {
       "source": "DASHBOARD",
       "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] agent loop started Object"
     },
     {
       "source": "DASHBOARD",
@@ -236,10 +299,6 @@
       "text": "[AgentTrace] perception started"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
       "source": "SW",
       "text": "[AgentTrace] multimodal perception complete Object"
     },
@@ -250,6 +309,10 @@
     {
       "source": "SW",
       "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -361,11 +424,19 @@
     },
     {
       "source": "SW",
-      "text": "[PrivAgent SW] waitForTabLoad: timed out Object"
+      "text": "[PrivAgent SW] waitForTabLoad: complete event received Object"
     },
     {
       "source": "SW",
-      "text": "[PrivAgent SW] onNavigationComplete: tab load timed out Object"
+      "text": "[AgentTrace] POST_NAVIGATION_TAB_LOADED Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] POST_NAVIGATION_URL_VERIFY Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] POST_NAVIGATION_CONTENT_SCRIPT_READY Object"
     },
     {
       "source": "SW",
@@ -614,18 +685,6 @@
     {
       "source": "SW",
       "text": "[AgentTrace] requesting reasoning"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] reasoning retry attempt starting Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -768,18 +827,6 @@
       "text": "[AgentTrace] requesting reasoning"
     },
     {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] reasoning retry attempt starting Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
       "source": "DASHBOARD",
       "text": "[AgentTrace] dashboard START_TASK received Object"
     },
@@ -972,6 +1019,182 @@
       "text": "[AgentTrace] terminal progress suppressed (task superseded) Object"
     },
     {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] Superseding previous task with new task Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] run cancelled Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK posted to window Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] service worker START_TASK received Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] chat route classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] intent classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation planned Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] containment scope established Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] target resolved Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] target content script ready Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] agent loop started Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon state Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] harness cycle Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic understanding complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal selected Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal completed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon: completed subgoal re-selected, skipping repeat Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon update Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] destination navigation proposed deterministically Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] security critic Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
       "source": "SW",
       "text": "[AgentTrace] action passed safety review"
     },
@@ -993,55 +1216,35 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] effect snapshot observed Object"
+      "text": "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object"
+      "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] subgoal NOT completed — no observed evidence Object"
+      "text": "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] output screen Object"
+      "text": "[AgentTrace] perception started"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_SETTLE_START Object"
+      "text": "[AgentTrace] multimodal perception complete Object"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] onNavigationComplete Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+      "text": "[AgentTrace] semantic observation Object"
     },
     {
       "source": "SW",
-      "text": "[PrivAgent SW] waitForTabLoad: complete event received Object"
+      "text": "[AgentTrace] evidence ledger updated Object"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_TAB_LOADED Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_URL_VERIFY Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_CONTENT_SCRIPT_READY Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_SETTLE_RESULT Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] M6 next step"
+      "text": "[AgentTrace] destination already satisfied — no transition needed Object"
     },
     {
       "source": "SW",
@@ -1089,11 +1292,7 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] subgoal completed Object"
+      "text": "[AgentTrace] subgoal selected Object"
     },
     {
       "source": "SW",
@@ -1106,18 +1305,6 @@
     {
       "source": "SW",
       "text": "[AgentTrace] requesting reasoning"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] reasoning retry attempt starting Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "DASHBOARD",
@@ -1293,147 +1480,15 @@
     },
     {
       "source": "SW",
+      "text": "[AgentTrace] run ownership lost — stopping without dispatch Object"
+    },
+    {
+      "source": "SW",
       "text": "[AgentTrace] action passed safety review"
     },
     {
       "source": "SW",
       "text": "[AgentTrace] executeAction started"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] effect snapshot observed Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] containment decision Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] executeAction response received"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] effect snapshot observed Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] subgoal NOT completed — no observed evidence Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_SETTLE_START Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] onNavigationComplete Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
-      "source": "SW",
-      "text": "[PrivAgent SW] waitForTabLoad: complete event received Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_TAB_LOADED Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_URL_VERIFY Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_CONTENT_SCRIPT_READY Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] POST_NAVIGATION_SETTLE_RESULT Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] M6 next step"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] harness cycle Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] perception started Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] perception started"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] multimodal perception complete Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] semantic observation Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] evidence ledger updated Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentLoop] perception completed"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] perception complete Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] multimodal perception complete Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] semantic understanding complete Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] conversation updated Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] subgoal completed Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] long-horizon update Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] conversation updated Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] requesting reasoning"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] provider retry abandoned (run cancelled) Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] run ownership lost — stopping without dispatch Object"
     },
     {
       "source": "SW",
@@ -1449,246 +1504,6 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] reasoning retry attempt starting Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] reasoning retry attempt starting Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] recovery record Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] recovery record Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] reasoning provider unavailable Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] conversation updated Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] terminal progress emitted Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard START_TASK received Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard START_TASK posted to window Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] content START_TASK received"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] service worker START_TASK received Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] chat route classified Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] intent classified Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] conversation planned Object"
-    },
-    {
-      "source": "SW",
-      "text": "[PrivAgent SW] Halting and superseding previous active loop for new task run Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] run cancelled Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] containment scope established Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] target resolved Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] target content script ready Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] first progress emitted"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] agent loop started Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] conversation updated Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] long-horizon state Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] harness cycle Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] perception started Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] perception started"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] multimodal perception complete Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] semantic observation Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] evidence ledger updated Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentLoop] perception completed"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] perception complete Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] multimodal perception complete Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] semantic understanding complete Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] conversation updated Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] subgoal selected Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] subgoal NOT completed — no observed evidence Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] long-horizon update Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] conversation updated Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] destination navigation proposed deterministically Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] action validated by M5"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] security critic Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] action passed privacy policy"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] requesting safety review"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] action passed safety review"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] executeAction started"
-    },
-    {
-      "source": "SW",
       "text": "[AgentTrace] effect snapshot observed Object"
     },
     {
@@ -1701,7 +1516,11 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] effect snapshot observed Object"
+      "text": "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object"
     },
     {
       "source": "SW",
@@ -1724,12 +1543,8 @@
       "text": "[AgentTrace] onNavigationComplete Object"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
       "source": "SW",
-      "text": "[PrivAgent SW] waitForTabLoad: complete event received Object"
+      "text": "[PrivAgent SW] waitForTabLoad: tab already complete Object"
     },
     {
       "source": "SW",
@@ -1742,6 +1557,10 @@
     {
       "source": "SW",
       "text": "[AgentTrace] POST_NAVIGATION_CONTENT_SCRIPT_READY Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -1816,6 +1635,10 @@
       "text": "[AgentTrace] output screen Object"
     },
     {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
       "source": "SW",
       "text": "[AgentTrace] M6 completed"
     },
@@ -1830,10 +1653,6 @@
     {
       "source": "SW",
       "text": "[AgentTrace] terminal progress emitted Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -1904,16 +1723,20 @@
       "text": "[AgentTrace] output screen Object"
     },
     {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
       "source": "SW",
       "text": "[AgentTrace] agent loop started Object"
     },
     {
-      "source": "SW",
-      "text": "[AgentTrace] conversation updated Object"
-    },
-    {
       "source": "DASHBOARD",
       "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
     },
     {
       "source": "SW",
@@ -2012,10 +1835,6 @@
       "text": "[AgentTrace] requesting safety review"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
       "source": "SW",
       "text": "[AgentTrace] action passed safety review"
     },
@@ -2037,7 +1856,11 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] effect snapshot observed Object"
+      "text": "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object"
     },
     {
       "source": "SW",
@@ -2060,12 +1883,8 @@
       "text": "[AgentTrace] onNavigationComplete Object"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
       "source": "SW",
-      "text": "[PrivAgent SW] waitForTabLoad: complete event received Object"
+      "text": "[PrivAgent SW] waitForTabLoad: tab already complete Object"
     },
     {
       "source": "SW",
@@ -2074,6 +1893,10 @@
     {
       "source": "SW",
       "text": "[AgentTrace] POST_NAVIGATION_URL_VERIFY Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -2284,16 +2107,16 @@
       "text": "[AgentTrace] conversation updated Object"
     },
     {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
       "source": "SW",
       "text": "[AgentTrace] terminal progress emitted Object"
     },
     {
       "source": "SW",
       "text": "[AgentTrace] output screen Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "DASHBOARD",
@@ -2368,12 +2191,12 @@
       "text": "[AgentTrace] agent loop started Object"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
-    },
-    {
       "source": "SW",
       "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -2541,11 +2364,51 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] recovery record Object"
+      "text": "[AgentTrace] reasoning response received"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] recovery record Object"
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] security critic Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] containment decision Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] ACTION_EXECUTED + EFFECT_VERIFIED Object"
     },
     {
       "source": "SW",
@@ -2553,7 +2416,51 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] reasoning provider unavailable Object"
+      "text": "[AgentTrace] M6 next step"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] harness cycle Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic understanding complete Object"
     },
     {
       "source": "SW",
@@ -2561,23 +2468,35 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] terminal progress emitted Object"
+      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] output screen Object"
+      "text": "[AgentTrace] subgoal NOT completed — no observed evidence Object"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon update Object"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] requesting reasoning"
     },
     {
       "source": "DASHBOARD",
       "text": "[AgentTrace] dashboard START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] Superseding previous task with new task Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] run cancelled Object"
     },
     {
       "source": "DASHBOARD",
@@ -2606,14 +2525,6 @@
     {
       "source": "SW",
       "text": "[AgentTrace] conversation planned Object"
-    },
-    {
-      "source": "SW",
-      "text": "[PrivAgent SW] Halting and superseding previous active loop for new task run Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] run cancelled Object"
     },
     {
       "source": "SW",
@@ -2752,6 +2663,10 @@
       "text": "[AgentTrace] terminal progress emitted Object"
     },
     {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
       "source": "SW",
       "text": "[AgentTrace] output screen Object"
     },
@@ -2760,8 +2675,24 @@
       "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+      "source": "SW",
+      "text": "[AgentTrace] provider retry abandoned (run cancelled) Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] run ownership lost — stopping without dispatch Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] M6 stopped Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] terminal progress suppressed (task superseded) Object"
     },
     {
       "source": "DASHBOARD",
@@ -2813,23 +2744,147 @@
     },
     {
       "source": "SW",
-      "text": "[PrivAgent SW] Target tab content script auto-injection failed: Error: Frame with ID 0 is showing error page"
+      "text": "[AgentTrace] containment scope established Object"
     },
     {
       "source": "SW",
-      "text": "[PrivAgent SW] provisionTargetTab: content script not responsive in new tab Object"
+      "text": "[AgentTrace] target resolved Object"
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] terminal progress emitted Object"
+      "text": "[AgentTrace] target content script ready Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] first progress emitted"
     },
     {
       "source": "SW",
       "text": "[AgentTrace] output screen Object"
     },
     {
+      "source": "SW",
+      "text": "[AgentTrace] agent loop started Object"
+    },
+    {
       "source": "DASHBOARD",
       "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon state Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] harness cycle Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic understanding complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal selected Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal completed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon: completed subgoal re-selected, skipping repeat Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon update Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] goal verification satisfied Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] M6 completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] M6 completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] terminal progress emitted Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
     },
     {
       "source": "DASHBOARD",
@@ -2869,6 +2924,14 @@
     },
     {
       "source": "SW",
+      "text": "[PrivAgent SW] Halting and superseding previous active loop for new task run Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] run cancelled Object"
+    },
+    {
+      "source": "SW",
       "text": "[AgentTrace] containment scope established Object"
     },
     {
@@ -2896,16 +2959,16 @@
       "text": "[AgentTrace] agent loop started Object"
     },
     {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
       "source": "SW",
       "text": "[AgentTrace] conversation updated Object"
     },
     {
       "source": "SW",
       "text": "[AgentTrace] long-horizon state Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -2926,6 +2989,10 @@
     {
       "source": "SW",
       "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -3017,7 +3084,11 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] effect snapshot observed Object"
+      "text": "[PrivAgent SW] effect snapshot: content script unavailable (navigation/bfcache); using chrome.tabs"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed (tab-authoritative, page unavailable) Object"
     },
     {
       "source": "SW",
@@ -3026,10 +3097,6 @@
     {
       "source": "SW",
       "text": "[AgentTrace] subgoal NOT completed — no observed evidence Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -3056,6 +3123,10 @@
       "text": "[AgentTrace] POST_NAVIGATION_URL_VERIFY Object"
     },
     {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
       "source": "SW",
       "text": "[AgentTrace] POST_NAVIGATION_CONTENT_SCRIPT_READY Object"
     },
@@ -3066,10 +3137,6 @@
     {
       "source": "SW",
       "text": "[AgentTrace] M6 next step"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -3137,7 +3204,51 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] recovery record Object"
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] security critic Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] containment decision Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object"
     },
     {
       "source": "SW",
@@ -3149,7 +3260,71 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] reasoning provider unavailable Object"
+      "text": "[AgentTrace] recovery decision Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] harness cycle Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic understanding complete Object"
     },
     {
       "source": "SW",
@@ -3157,23 +3332,183 @@
     },
     {
       "source": "SW",
-      "text": "[AgentTrace] terminal progress emitted Object"
+      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal NOT completed — no observed evidence Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon update Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] reasoning response received"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action validated by M5"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] security critic Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action passed privacy policy"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] action passed safety review"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] executeAction started"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] containment decision Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] executeAction response received"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] effect snapshot observed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] ACTION_EXECUTED + ACTION_NO_EFFECT Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] recovery record Object"
     },
     {
       "source": "SW",
       "text": "[AgentTrace] output screen Object"
     },
     {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+      "source": "SW",
+      "text": "[AgentTrace] recovery decision Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] re-perceiving page after no-effect (recovery: REPERCEIVE)"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
     },
     {
       "source": "DASHBOARD",
       "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] harness cycle Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic understanding complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal NOT completed — no observed evidence Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon update Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] requesting reasoning"
     },
     {
       "source": "DASHBOARD",
       "text": "[AgentTrace] dashboard START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] Superseding previous task with new task Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] run cancelled Object"
     },
     {
       "source": "DASHBOARD",
@@ -3205,14 +3540,6 @@
     },
     {
       "source": "SW",
-      "text": "[PrivAgent SW] Halting and superseding previous active loop for new task run Object"
-    },
-    {
-      "source": "SW",
-      "text": "[AgentTrace] run cancelled Object"
-    },
-    {
-      "source": "SW",
       "text": "[AgentTrace] containment scope established Object"
     },
     {
@@ -3240,12 +3567,12 @@
       "text": "[AgentTrace] agent loop started Object"
     },
     {
-      "source": "SW",
-      "text": "[AgentTrace] conversation updated Object"
-    },
-    {
       "source": "DASHBOARD",
       "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
     },
     {
       "source": "SW",
@@ -3274,10 +3601,6 @@
     {
       "source": "SW",
       "text": "[AgentTrace] semantic observation Object"
-    },
-    {
-      "source": "DASHBOARD",
-      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
     },
     {
       "source": "SW",
@@ -3342,6 +3665,26 @@
     {
       "source": "SW",
       "text": "[AgentTrace] requesting safety review"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] run ownership lost — stopping without dispatch Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] M6 stopped Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] terminal progress suppressed (task superseded) Object"
     },
     {
       "source": "SW",
@@ -3466,6 +3809,462 @@
     {
       "source": "SW",
       "text": "[AgentTrace] subgoal completed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon update Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] goal verification satisfied Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] M6 completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] M6 completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] terminal progress emitted Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK posted to window Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] service worker START_TASK received Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] chat route classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] normal chat accepted Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK posted to window Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] service worker START_TASK received Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] chat route classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] intent classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] task not admitted by the intent boundary Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK posted to window Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] service worker START_TASK received Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] chat route classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] intent classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation planned Object"
+    },
+    {
+      "source": "SW",
+      "text": "[PrivAgent SW] Halting and superseding previous active loop for new task run Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] run cancelled Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] target tab provisioned Object"
+    },
+    {
+      "source": "SW",
+      "text": "[PrivAgent SW] waitForTabLoad: complete event received Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] containment scope established Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] target resolved Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] target content script ready Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] agent loop started Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon state Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] harness cycle Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic understanding complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal selected Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon update Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] requesting reasoning"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] normal chat suppressed (superseded) Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] Superseding previous task with new task Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] run cancelled Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK posted to window Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] service worker START_TASK received Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] chat route classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] normal chat accepted Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK received Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard START_TASK posted to window Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content START_TASK received"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] content script forwarding START_TASK to background worker"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] service worker START_TASK received Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] chat route classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] intent classified Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation planned Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] containment scope established Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] target resolved Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] target content script ready Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] first progress emitted"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] agent loop started Object"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon state Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] output screen Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] harness cycle Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception started"
+    },
+    {
+      "source": "DASHBOARD",
+      "text": "[AgentTrace] dashboard received TASK_PROGRESS Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic observation Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] evidence ledger updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentLoop] perception completed"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] multimodal perception complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] semantic understanding complete Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] conversation updated Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal selected Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] destination subgoal eligible for re-verification Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] subgoal completed Object"
+    },
+    {
+      "source": "SW",
+      "text": "[AgentTrace] long-horizon: completed subgoal re-selected, skipping repeat Object"
     },
     {
       "source": "SW",

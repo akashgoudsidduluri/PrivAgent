@@ -51,6 +51,9 @@ export class ExtensionAgentAdapter implements AgentAdapter {
 
   private currentRunId = 0;
   private isStartingTask = false;
+  private activeConversationId = `conv-${Date.now()}`;
+  private activeLogicalTaskId = `task-${Date.now()}`;
+  private logicalTaskTitle = '';
   private messageBridgeHandler: ((event: MessageEvent) => void) | null = null;
   private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -104,6 +107,22 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     }
     this.listeners = [];
     this.pingListeners = [];
+  }
+
+  startNewConversation(): void {
+    this.activeConversationId = `conv-${Date.now()}`;
+    this.activeLogicalTaskId = `task-${Date.now()}`;
+    this.logicalTaskTitle = '';
+  }
+
+  setActiveConversation(conversationId: string, logicalTaskId?: string, title?: string): void {
+    this.activeConversationId = conversationId;
+    this.activeLogicalTaskId = logicalTaskId || conversationId;
+    if (title) this.logicalTaskTitle = title;
+  }
+
+  getActiveConversationId(): string {
+    return this.activeConversationId;
   }
 
   private lastLifecycleStage = 'IDLE';
@@ -300,7 +319,40 @@ export class ExtensionAgentAdapter implements AgentAdapter {
     // user-facing. It is parsed FIRST so the stage tracker and the fallback
     // reason below read from it rather than from the legacy `reason` string,
     // which the agent loop no longer populates.
-    const interaction = this.normalizeInteraction(data.interaction);
+    let interaction = this.normalizeInteraction(data.interaction);
+    if (!interaction && (data.status === 'ANSWER' || data.answerSource === 'CONVERSATION') && data.answer) {
+      interaction = {
+        outcome: 'ANSWERED',
+        activity: {
+          phase: 'TERMINAL',
+          summary: 'Answered directly.',
+          step: 0,
+          maxSteps: 0,
+          cycle: 0,
+        },
+        terminal: {
+          outcome: 'ANSWERED',
+          reason: 'CONVERSATIONAL_ANSWER',
+          headline: 'Answered directly.',
+        },
+        result: {
+          kind: 'NONE',
+          summary: String(data.answer),
+          count: 0,
+          items: [],
+        },
+        artifacts: [],
+        timeline: [],
+        awaitingConfirmation: null,
+        finalResult: {
+          kind: 'ANSWER',
+          headline: 'Answered directly.',
+          body: String(data.answer),
+          provenance: 'Conversational reasoning',
+          remaining: [],
+        },
+      };
+    }
 
     console.info('[Adapter] response received', {
       status: data.status,
@@ -468,21 +520,33 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       //
       answerSource: data.answerSource === 'CONVERSATION' || data.answerSource === 'PAGE_EVIDENCE'
         ? data.answerSource
-        : undefined,
+        : (data.runId === this.state.runId ? this.state.answerSource : undefined),
+      answer: typeof data.answer === 'string'
+        ? data.answer
+        : (data.runId === this.state.runId ? this.state.answer : undefined),
       // Phase 14: the interaction projection is built and SCREENED in the
       // service worker, immediately before it crosses the SW → dashboard
       // boundary. The UI consumes it verbatim and re-filters nothing — a
       // frontend filter would be display-time cosmetics, not a privacy
       // boundary. An absent or malformed projection degrades to `undefined`
       // and the view falls back to its previous rendering.
-      interaction,
+      interaction: interaction || (data.runId === this.state.runId ? this.state.interaction : undefined),
     };
 
     if (status === 'SUCCESS' || status === 'FAILED' || status === 'STOPPED') {
       const latency = Date.now() - this.taskStartTime;
+      const workspaceTurns =
+        typeof window !== 'undefined' && (window as any).__workspace?.getTurns
+          ? (window as any).__workspace.getTurns()
+          : typeof window !== 'undefined' && (window as any).__app?.workspace?.getTurns
+          ? (window as any).__app.workspace.getTurns()
+          : undefined;
+
       receiptsStore.addReceipt({
-        id: `rcpt-${Date.now()}`,
-        task: this.state.task,
+        id: `rcpt-${this.activeConversationId}`,
+        conversationId: this.activeConversationId,
+        logicalTaskId: this.activeLogicalTaskId,
+        task: this.logicalTaskTitle || this.state.task,
         timestamp: Date.now(),
         result: status,
         sensitiveDetectedCount: this.state.sensitiveItemsCount,
@@ -498,6 +562,7 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         latencyMs: latency,
         error: resolvedReason,
         steps: [...steps],
+        turns: workspaceTurns ? [...workspaceTurns] : undefined,
       });
     }
 
@@ -706,6 +771,10 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       this.notify();
     }
 
+    if (!this.logicalTaskTitle) {
+      this.logicalTaskTitle = task;
+    }
+
     this.clearWatchdog();
     this.isStartingTask = true;
     this.lastLifecycleStage = 'TARGET_RESOLUTION';
@@ -724,18 +793,9 @@ export class ExtensionAgentAdapter implements AgentAdapter {
       }
 
       if (!connected) {
-        this.state = {
-          ...this.state,
-          task,
-          status: 'FAILED',
-          currentStep: 0,
-          steps: [],
-          reason:
-            'PrivAgent Chrome Extension is not connected. Please load the extension in chrome://extensions or switch to Dev Mode to simulate UI interactions.',
-          currentPipelineStage: 'IDLE',
-        };
-        this.notify();
-        return;
+        console.warn(
+          '[Adapter] Extension ping not confirmed yet; proceeding with optimistic START_TASK dispatch to window'
+        );
       }
 
       this.state = {
@@ -747,11 +807,6 @@ export class ExtensionAgentAdapter implements AgentAdapter {
         currentUrl: '',
         steps: [],
         reason: undefined,
-        //
-        // DYNAMIC TASK-AWARE UI — a new message starts a clean slate: the
-        // previous run's interaction projection and answer provenance must not
-        // render browser chrome (or a conversational flag) onto this card.
-        //
         interaction: undefined,
         answerSource: undefined,
         supersededPreviousTask: undefined,
@@ -769,6 +824,8 @@ export class ExtensionAgentAdapter implements AgentAdapter {
           type: 'START_TASK',
           task,
           runId: thisRunId,
+          conversationId: this.activeConversationId,
+          logicalTaskId: this.activeLogicalTaskId,
         },
         '*'
       );

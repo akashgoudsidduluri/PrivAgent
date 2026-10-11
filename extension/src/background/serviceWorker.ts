@@ -6,7 +6,7 @@ import { ModelRouter } from '../agent/modelRouter';
 import { buildAgentPayload, PrivacyScanReport, AgentContextPayload, VisualCaptureReport } from '../privacy/types';
 import { minimizeAgentContext } from '../privacy/contextMinimizer';
 import { BrowserAction } from '../agent/actionTypes';
-import { resolveTargetWebTab, isEligibleWebTab, isDashboardUrl } from './targetResolver';
+import { resolveTargetWebTab, isEligibleWebTab, isDashboardUrl, type MinimalTab } from './targetResolver';
 import { classifyIntent, refusalUserMessage } from '../agent/intentBoundary';
 import { EvidenceLedger } from '../evidence/evidenceLedger';
 import {
@@ -24,6 +24,7 @@ import { AgentHarness } from '../agent/harness';
 // false) rather than silently. Never falls back to chrome.storage.local, which
 // would put task state on disk.
 import { createSessionStore } from '../agent/longHorizonPersistence';
+import { createConversationStore } from '../agent/conversationPersistence';
 import { projectAgentOutput, screenAgentOutput, describeOutputScreen } from '../agent/agentOutput';
 import { BrowserWorldModel, ActiveWorldModelRef } from '../worldModel/types';
 import { assertWorldModelSafe } from '../worldModel/worldModelSanitizer';
@@ -42,8 +43,12 @@ import {
   eligibleCandidates,
   type ConversationContext,
 } from '../agent/conversationContext';
-import { createConversationStore } from '../agent/conversationPersistence';
 import { planConversation, detectReference } from '../agent/referenceResolver';
+import {
+  resolveContextualIntent,
+  type TaskExecutionState,
+  type ContextualIntentResult,
+} from '../agent/contextualIntentResolver';
 
 /**
  * PHASE 18.8 / B2 + A13 — MAY A CONVERSATIONAL TURN PAST THE INTENT BOUNDARY?
@@ -100,6 +105,7 @@ let currentDashboardTabId: number | null = null;
 let activeConversation: ConversationContext | null = null;
 const conversationStore = createConversationStore();
 let conversationCounter = 0;
+let lastTaskExecutionState: TaskExecutionState | null = null;
 
 const sharedOffscreenOcrEngine = new OffscreenOCREngine({ timeoutMs: 15_000 });
 
@@ -342,6 +348,44 @@ async function ensureTargetTabReady(tabId: number): Promise<boolean> {
     console.warn('[PrivAgent SW] Target tab content script auto-injection failed:', e);
     return false;
   }
+}
+
+/**
+ * Auto-inject content script into localhost and web tabs whenever they finish loading.
+ * Guarantees that dashboard tabs (such as port 5173) and fixture tabs have contentScript.js active.
+ */
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab?.url) {
+    const url = tab.url;
+    if (
+      url.startsWith('http://localhost:') ||
+      url.startsWith('http://127.0.0.1:') ||
+      url.startsWith('https://') ||
+      url.startsWith('http://')
+    ) {
+      ensureTargetTabReady(tabId).catch(() => {});
+    }
+  }
+});
+
+// Startup scan: auto-inject into all pre-existing matching tabs
+try {
+  chrome.tabs.query({}).then((tabs) => {
+    for (const t of tabs) {
+      if (
+        t?.id &&
+        t.url &&
+        (t.url.startsWith('http://localhost:') ||
+          t.url.startsWith('http://127.0.0.1:') ||
+          t.url.startsWith('https://') ||
+          t.url.startsWith('http://'))
+      ) {
+        ensureTargetTabReady(t.id).catch(() => {});
+      }
+    }
+  }).catch(() => {});
+} catch {
+  // Ignored if tabs API not available at startup
 }
 
 /**
@@ -711,6 +755,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               steps: [],
               reason: 'Answered directly.',
               runId: chatRunId,
+              interaction: {
+                outcome: 'ANSWER',
+                activity: {
+                  phase: 'COMPLETE',
+                  summary: 'Answered directly.',
+                  step: 0,
+                  maxSteps: 0,
+                  cycle: 0,
+                },
+                terminal: {
+                  outcome: 'ANSWER',
+                  reason: 'CONVERSATIONAL_ANSWER',
+                  headline: 'Answered directly.',
+                },
+                finalResult: {
+                  kind: 'ANSWER',
+                  headline: 'Answered directly.',
+                  body: answer,
+                  provenance: 'Conversational reasoning (no browser activity)',
+                  remaining: [],
+                },
+              },
             },
             dashboardTabId
           );
@@ -744,21 +810,81 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return;
     }
 
-    // ── PHASE 18.7 / I-1: THE INTENT BOUNDARY ────────────────────────────
-    //
-    // Deterministic, local, no model call. It is placed HERE, before target
-    // resolution and before the active-task-ownership block, for two reasons
-    // that are both acceptance criteria rather than style:
-    //
-    //   * Target-tab provisioning runs in resolveTargetWebTab /
-    //     provisionTargetTab below. A gate placed inside AgentLoop would
-    //     therefore still have OPENED A TAB for "hi".
-    //   * Sitting before the ownership block means a casual message does not
-    //     supersede and halt a task that is genuinely running.
-    //
-    // A refusal costs zero provider calls and zero tab provisioning, and is
-    // reported truthfully as NEEDS_CLARIFICATION rather than as a failure.
-    const intentDecision = classifyIntent(task);
+    // ── PHASE 18.7 / I-1: THE INTENT BOUNDARY + CONTEXTUAL RESOLUTION ─────
+    const resolvedConversationId =
+      (typeof message.conversationId === 'string' && message.conversationId) ||
+      activeConversation?.conversationId ||
+      `conv-${activeTaskRunId}`;
+
+    const contextualResolution = resolveContextualIntent(
+      task,
+      lastTaskExecutionState,
+      resolvedConversationId
+    );
+
+    if (contextualResolution.category === 'INSPECTION') {
+      const chatRunId = typeof message.runId === 'number' ? message.runId : ++activeTaskRunId;
+      activeTaskRunId = chatRunId;
+      let inspectionAnswer = 'No previous task found to inspect.';
+      if (lastTaskExecutionState) {
+        const { originalTask, status, failureReason, lastVerifiedUrl, stepsCount } = lastTaskExecutionState;
+        if (status === 'SUCCESS') {
+          inspectionAnswer = `The task "${originalTask}" completed successfully. Verified destination: ${lastVerifiedUrl || 'target page'}. Total steps: ${stepsCount}.`;
+        } else if (status === 'PROVIDER_UNAVAILABLE') {
+          inspectionAnswer = `The previous task "${originalTask}" paused due to reasoning service unavailability. The page state was retained at ${lastVerifiedUrl || 'target tab'}. Say "continue" to resume.`;
+        } else if (status === 'STOPPED') {
+          inspectionAnswer = `The task "${originalTask}" was stopped by user request.`;
+        } else {
+          inspectionAnswer = `The task "${originalTask}" ended with status ${status}${failureReason ? `: ${failureReason}` : ''}.`;
+        }
+      }
+      try {
+        sendResponse({ started: true, success: true, status: 'ANSWER', conversational: true, answerSource: 'CONVERSATION' });
+      } catch {}
+      void sendToDashboard(
+        {
+          status: 'ANSWER',
+          task,
+          answer: inspectionAnswer,
+          answerSource: 'CONVERSATION',
+          currentStep: 0,
+          maxSteps: 0,
+          steps: [],
+          reason: 'Inspected previous task execution state.',
+          runId: chatRunId,
+        },
+        dashboardTabId
+      );
+      return;
+    }
+
+    if (contextualResolution.category === 'CANCELLED_REFUSAL') {
+      const refusalRunId = typeof message.runId === 'number' ? message.runId : ++activeTaskRunId;
+      activeTaskRunId = refusalRunId;
+      const refusalReason = contextualResolution.explanation || 'The previous task was cancelled and cannot be resumed.';
+      try {
+        sendResponse({ started: false, success: false, status: 'NEEDS_CLARIFICATION', reason: refusalReason });
+      } catch {}
+      void sendToDashboard(
+        {
+          status: 'NEEDS_CLARIFICATION',
+          currentStep: 0,
+          maxSteps: 0,
+          task,
+          steps: [],
+          reason: refusalReason,
+          runId: refusalRunId,
+        },
+        dashboardTabId
+      );
+      return;
+    }
+
+    const effectiveTask = contextualResolution.effectiveTask || task;
+    const isContinuationTurn = contextualResolution.category === 'CONTINUATION' || contextualResolution.category === 'RETRY';
+
+    const rawIntentDecision = classifyIntent(task);
+    const intentDecision = isContinuationTurn ? classifyIntent(effectiveTask) : rawIntentDecision;
     console.info('[AgentTrace] intent classified', {
       intent: intentDecision.intent,
       confidence: intentDecision.confidence,
@@ -766,12 +892,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       requiresEvidence: intentDecision.requiresEvidence,
       admitsBrowserAutomation: intentDecision.admitsBrowserAutomation,
       refusal: intentDecision.refusal ?? null,
+      contextualCategory: contextualResolution.category,
+      effectiveTask,
     });
 
     if (
       !intentDecision.admitsBrowserAutomation &&
       !(intentDecision.refusal === 'AMBIGUOUS_NO_GUESS' &&
-        conversationSettlesAmbiguity(task, activeConversation, Date.now()))
+        conversationSettlesAmbiguity(effectiveTask, activeConversation, Date.now()))
     ) {
       console.info('[AgentTrace] task not admitted by the intent boundary', {
         intent: intentDecision.intent,
@@ -856,10 +984,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // into an unrelated task.
     conversationCounter += 1;
     const conversationPlan = planConversation({
-      task,
+      task: effectiveTask,
       current: activeConversation,
       conversationId: nextConversationId(`${taskOwnershipToken}:${conversationCounter}:${Date.now()}`),
       now: Date.now(),
+      isContinuation: isContinuationTurn,
     });
     activeConversation = conversationPlan.context;
     const turnConversation = activeConversation;
@@ -888,6 +1017,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     (async () => {
+      let targetTab: MinimalTab | { id: number; url: string } | null = null;
       try {
         if (taskOwnershipToken !== activeTaskRunId) {
           console.info('[PrivAgent SW] Task aborted before target resolution (superseded)', { taskOwnershipToken, activeTaskRunId });
@@ -901,7 +1031,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         const resolution = resolveTargetWebTab(
           allTabs,
-          task,
+          effectiveTask,
           resolveDashboardOrigin(message.originUrl),
           dashboardTabId ?? undefined
         );
@@ -912,7 +1042,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // Target Tab Provisioning: only when resolution found NO eligible tab AND
         // extracted a deterministic destination from the task. An existing eligible
         // tab always wins (the resolver returns it above, so this never runs).
-        let targetTab = resolution.selectedTab;
+        targetTab = resolution.selectedTab;
         if (dashboardTabId && targetTab?.id === dashboardTabId) {
           console.warn('[PrivAgent SW] Target tab resolved to dashboardTabId; rejecting', { dashboardTabId });
           targetTab = null;
@@ -1781,8 +1911,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         (globalThis as any).__privagentActiveLoop = thisLoop;
 
         console.info('[AgentTrace] agent loop started', { runId: taskOwnershipToken });
-        const finalState = await thisLoop.runTask(task);
+        const finalState = await thisLoop.runTask(effectiveTask);
         (globalThis as any).__privagentLastState = finalState;
+
+        lastTaskExecutionState = {
+          conversationId: resolvedConversationId,
+          runId: taskOwnershipToken,
+          originalTask: task,
+          effectiveTask,
+          targetTabId: targetTab?.id ?? null,
+          targetUrl: targetTab?.url || (targetTab as any)?.pendingUrl,
+          status: finalState.status as any,
+          failureReason: finalState.reason,
+          stepsCount: finalState.steps?.length || 0,
+          completedActions: (finalState.steps || []).map((s) => ({
+            actionType: (s.action as any)?.action || (s.action as any)?.type || 'action',
+            target: (s.action as any)?.target?.selector || (s.action as any)?.target || '',
+            success: s.executionSuccess ?? (s as any).success !== false,
+          })),
+          lastVerifiedUrl: targetTab?.url,
+          cancelled: finalState.status === 'STOPPED',
+          timestamp: Date.now(),
+        };
+
         if (taskOwnershipToken !== activeTaskRunId) {
           console.info('[AgentTrace] terminal progress suppressed (task superseded)', {
             taskOwnershipToken,
@@ -1798,6 +1949,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         const errReason = err instanceof Error ? err.message : String(err);
         console.error('[AgentTrace] M6 failed', { reason: errReason });
+
+        lastTaskExecutionState = {
+          conversationId: resolvedConversationId,
+          runId: taskOwnershipToken,
+          originalTask: task,
+          effectiveTask,
+          targetTabId: targetTab?.id ?? null,
+          targetUrl: targetTab?.url,
+          status: 'FAILED',
+          failureReason: errReason,
+          stepsCount: activeLoop?.getState().currentStep || 0,
+          completedActions: [],
+          cancelled: false,
+          timestamp: Date.now(),
+        };
+
         console.info('[AgentTrace] terminal progress emitted', { status: 'FAILED' });
         await sendToDashboard(
           {
@@ -1834,6 +2001,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         activeLoop.stop();
       }
       activeLoop = null;
+    }
+    if (lastTaskExecutionState) {
+      lastTaskExecutionState.status = 'STOPPED';
+      lastTaskExecutionState.cancelled = true;
     }
     sendResponse({ stopped: true });
     return false;

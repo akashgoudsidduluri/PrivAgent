@@ -190,6 +190,7 @@ export function planConversation(input: {
   conversationId: string;
   now: number;
   pageUrl?: string | null;
+  isContinuation?: boolean;
 }): ConversationPlan {
   const task = typeof input.task === 'string' ? input.task : '';
   if (NEW_CONVERSATION_RE.test(task)) {
@@ -230,6 +231,10 @@ export function planConversation(input: {
       }),
       reason: 'UNUSABLE_CONTEXT',
     };
+  }
+
+  if (input.isContinuation) {
+    return { mode: 'CONTINUE', context: input.current, reason: 'CONTINUATION' };
   }
 
   const hasReference = detectReference(task) !== null;

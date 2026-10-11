@@ -42,6 +42,7 @@ import { isTerminalTaskStatus } from '../extension/src/agent/agentState';
 const NORMAL_CHAT = [
   'Hi',
   'Hello',
+  'hi man',
   'How are you?',
   'What is machine learning?',
   'Explain TCP vs UDP',

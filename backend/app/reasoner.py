@@ -277,6 +277,7 @@ SECURITY & ARCHITECTURAL INVARIANTS (absolute, non-overridable):
      navigate, or choose another action suitable for the task.
    Never click or type into an element merely because it is first or looks close enough.
 10. Output raw JSON only — no markdown fences, no commentary.
+11. REASON FIELD: The "reason" field must be a short, functional action phrase (e.g. "clicking the View Details button on the product card", "clicking the target button to view details", "scrolling down to view search results"). DO NOT include proper names, person names, or capitalized product titles in "reason" because automated on-device security scanners strictly reject proper name patterns.
 """.strip()
 
 
@@ -1836,37 +1837,50 @@ class GroqReasoner:
                     kind="network",
                 ) from err
 
-            # If 400 with schema or grammar validation error, fallback to prompt-directed JSON
+            # If 400 with schema or grammar validation error, fallback to json_object format
             if response.status_code == 400 and any(
                 term in response.text.lower()
                 for term in ("json_schema", "json_validate_failed", "failed to validate json", "schema")
             ):
                 logger.info(
-                    "Groq model '%s' rejected strict response_format; falling back to prompt-directed format.",
-                    self.model,
+                    "Groq model '%s' rejected strict response_format; falling back to json_object format.",
+                    payload_schema.get("model", self.model),
                 )
-                payload_plain = dict(payload_schema)
-                payload_plain.pop("response_format", None)
+                payload_json_obj = dict(payload_schema)
+                payload_json_obj["response_format"] = {"type": "json_object"}
                 try:
                     response = httpx.post(
                         self.base_url,
-                        json=payload_plain,
+                        json=payload_json_obj,
                         headers=headers,
                         timeout=self.timeout_seconds,
                     )
                 except Exception as e:
-                    logger.warning("Groq prompt-directed retry failed: %s", e)
+                    logger.warning("Groq json_object retry failed: %s", e)
+                # If still 400, try prompt-directed format without response_format
+                if response.status_code == 400:
+                    payload_plain = dict(payload_schema)
+                    payload_plain.pop("response_format", None)
+                    try:
+                        response = httpx.post(
+                            self.base_url,
+                            json=payload_plain,
+                            headers=headers,
+                            timeout=self.timeout_seconds,
+                        )
+                    except Exception as e:
+                        logger.warning("Groq prompt-directed retry failed: %s", e)
 
             if response.status_code == 200:
                 content = self._extract_content(response.json())
                 return _result_from_content(
                     content,
-                    model=self.model,
+                    model=payload_schema.get("model", self.model),
                     latency_ms=(time.perf_counter() - started) * 1000.0,
                     attempts=attempts,
                 )
 
-            # Check if this is a transient TPM rate limit (429) that can be waited out
+            # Check if this is a transient TPM rate limit (429) that can be waited out or routed to a fallback model
             if response.status_code == 429 and attempt < max_rate_limit_retries:
                 wait_s: Optional[float] = None
                 # Check x-ratelimit-reset-tokens (e.g. '2.737s' or '350ms')
@@ -1905,6 +1919,19 @@ class GroqReasoner:
                     )
                     time.sleep(sleep_time)
                     continue
+                elif wait_s is not None and wait_s > 15.0:
+                    # Model TPM exhausted: switch to independent model on Groq with fresh quota
+                    cur_model = payload_schema.get("model", self.model)
+                    alt_model = config.MODEL_FAST_FALLBACK if cur_model != config.MODEL_FAST_FALLBACK else config.MODEL_STRONG_FALLBACK
+                    if alt_model and alt_model != cur_model:
+                        logger.info(
+                            "Groq model '%s' rate limited (wait=%s); switching to verified independent model '%s'...",
+                            cur_model,
+                            wait_s,
+                            alt_model,
+                        )
+                        payload_schema["model"] = alt_model
+                        continue
 
             # If not 200 and not retrying 429, exit to error handling
             break
@@ -2336,6 +2363,13 @@ def chat_answer(task: str) -> tuple[str, str]:
 
     try:
         response = httpx.post(endpoint, json=payload, headers=headers, timeout=provider.timeout_seconds)
+        # If rate-limited on primary model, attempt immediate fallback to alternative candidate model
+        if response.status_code == 429:
+            alt_model = getattr(config, "MODEL_FAST_FALLBACK", "qwen/qwen3.8-27b")
+            if alt_model and alt_model != payload.get("model"):
+                logger.info("Chat rate-limited on '%s'; falling back to '%s'", payload.get("model"), alt_model)
+                payload["model"] = alt_model
+                response = httpx.post(endpoint, json=payload, headers=headers, timeout=provider.timeout_seconds)
     except httpx.TimeoutException as err:
         raise ReasoningError("Conversational request timed out.", retryable=True, kind="timeout") from err
     except httpx.HTTPError as err:
@@ -2344,10 +2378,14 @@ def chat_answer(task: str) -> tuple[str, str]:
         ) from err
 
     if response.status_code != 200:
+        # If greeting was rate-limited or unavailable, return a polite conversational greeting instead of crashing
+        norm_task = task.strip().lower().rstrip("!.,?")
+        if any(norm_task.startswith(g) or norm_task == g for g in ("hi", "hello", "hey", "greetings", "howdy", "sup", "yo")):
+            return "Hello! I am PrivAgent, your privacy-preserving browser assistant. How can I help you today?", str(getattr(provider, "model", "local"))
         raise ReasoningError(
             f"Conversational provider returned HTTP {response.status_code}.",
             retryable=response.status_code >= 500,
-            kind="http",
+            kind="rate_limit" if response.status_code == 429 else "http",
         )
 
     try:

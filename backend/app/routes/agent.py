@@ -232,7 +232,7 @@ async def generate_action(
                         if context.screenshot_dimensions
                         else None
                     ),
-                    model=model_id,
+                    model=None,  # Fallback provider uses its own native configured model
                     page_type=context.page_type,
                     semantic_context=context.semantic_context,
                     # PHASE 18.7 / A3: the model-facing decision state, passed
@@ -409,7 +409,7 @@ async def generate_action(
         # deterministic output fault. It is reported exactly like a Phase 18.5
         # model-contract violation — 502, `model_contract`, non-retryable — and
         # it never carries an action. Nothing here is repaired or defaulted.
-        logger.warning("Reasoner action refused by the applicability gate: %s", err.kind)
+        logger.warning("Reasoner action refused by the applicability gate: %s (%s)", err.kind, err)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail={

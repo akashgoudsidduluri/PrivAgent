@@ -114,10 +114,38 @@ class ReceiptsStore {
   }
 
   addReceipt(receipt: PrivacyReceipt): void {
-    this.receipts.unshift(receipt);
-    // Keep max 50 receipts
-    if (this.receipts.length > 50) {
-      this.receipts = this.receipts.slice(0, 50);
+    const existingIndex = this.receipts.findIndex(
+      (r) =>
+        (receipt.conversationId && r.conversationId && r.conversationId === receipt.conversationId) ||
+        (receipt.logicalTaskId && r.logicalTaskId && r.logicalTaskId === receipt.logicalTaskId) ||
+        r.id === receipt.id
+    );
+
+    if (existingIndex >= 0) {
+      const existing = this.receipts[existingIndex];
+      if (existing) {
+        const updatedItem: PrivacyReceipt = {
+          ...existing,
+          ...receipt,
+          id: existing.id,
+          task: existing.task || receipt.task, // preserve logical task title
+          result: receipt.result,
+          timestamp: receipt.timestamp,
+          error: receipt.error,
+          steps: receipt.steps && receipt.steps.length > 0 ? receipt.steps : existing.steps,
+          turns: receipt.turns && receipt.turns.length > 0 ? receipt.turns : existing.turns,
+        };
+        this.receipts.splice(existingIndex, 1);
+        this.receipts.unshift(updatedItem);
+      } else {
+        this.receipts.unshift(receipt);
+      }
+    } else {
+      this.receipts.unshift(receipt);
+      // Keep max 50 receipts
+      if (this.receipts.length > 50) {
+        this.receipts = this.receipts.slice(0, 50);
+      }
     }
     this.save();
   }

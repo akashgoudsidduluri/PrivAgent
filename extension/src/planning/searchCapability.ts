@@ -55,6 +55,7 @@ const SEARCH_PORTAL_REGISTRY: ReadonlyArray<readonly [string, string]> = [
   ['ddg', 'https://duckduckgo.com'],
   ['wikipedia', 'https://en.wikipedia.org'],
   ['wiki', 'https://en.wikipedia.org'],
+  ['leetcode', 'https://leetcode.com'],
 ];
 
 /** Query-string parameters that carry an OBSERVED search, across real engines. */
@@ -69,6 +70,7 @@ const SEARCH_PORTAL_HOSTS: readonly string[] = [
   'duckduckgo.com',
   'www.duckduckgo.com',
   'en.wikipedia.org',
+  'leetcode.com',
 ];
 
 const ALIAS_TO_ORIGIN: ReadonlyMap<string, string> = new Map(SEARCH_PORTAL_REGISTRY);

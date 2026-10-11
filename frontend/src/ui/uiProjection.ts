@@ -347,8 +347,17 @@ export function projectUi(state: DashboardAgentState, log: ActivityLog = EMPTY_L
   if (isConversational(state)) {
     // Pending until the ANSWER payload with its final result has arrived: the
     // port ack carries the provenance but no body yet.
-    const hasResultCard = Boolean(ix?.finalResult && ix.finalResult.kind !== 'NONE');
-    const pending = !terminal || (terminal.kind === 'ANSWER' && !hasResultCard);
+    const hasResultCard = Boolean(
+      (ix?.finalResult && ix.finalResult.kind !== 'NONE' && ix.finalResult.body) ||
+      (state.answer && String(state.answer).trim()) ||
+      (ix?.result?.summary && String(ix.result.summary).trim() && ix.result.summary !== 'No result yet.')
+    );
+    const answerBody =
+      ix?.finalResult?.body ||
+      state.answer ||
+      (ix?.result?.summary && ix.result.summary !== 'No result yet.' ? ix.result.summary : null) ||
+      (terminal ? (terminal.body ?? terminal.headline) : null);
+    const pending = !hasResultCard && state.status !== 'PROVIDER_UNAVAILABLE';
     return {
       surface: 'CONVERSATION',
       pending,
@@ -358,7 +367,18 @@ export function projectUi(state: DashboardAgentState, log: ActivityLog = EMPTY_L
       activeCount: 0,
       // A chat that could not be produced is still a conversation: the notice
       // renders as the assistant's message, not as browser chrome.
-      terminal: terminal ? { ...terminal, body: terminal.body ?? terminal.headline } : null,
+      terminal: terminal
+        ? { ...terminal, body: answerBody ?? terminal.body ?? terminal.headline }
+        : hasResultCard
+        ? {
+            kind: 'ANSWER',
+            tone: 'success',
+            headline: 'Answered directly.',
+            body: answerBody,
+            remaining: [],
+            provenance: null,
+          }
+        : null,
       awaitingConfirmation: null,
       supersededNotice: null,
       stepCounter: null,

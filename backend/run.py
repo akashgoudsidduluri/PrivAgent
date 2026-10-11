@@ -24,6 +24,6 @@ if __name__ == "__main__":
         "app.main:app",
         host="127.0.0.1",
         port=8010,
-        reload=True,
+        reload=False,
         log_level="info",
     )

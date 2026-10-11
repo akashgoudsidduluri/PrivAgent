@@ -221,6 +221,22 @@ describe('targetResolver', () => {
       const result = resolveTargetWebTab(tabs, 'click something', 'http://localhost:5173', 10);
       expect(result.selectedTab).toBeNull();
     });
+
+    it('provisions dedicated tab when task explicitly says "open http://localhost:4173" and no matching tab exists', () => {
+      const tabs = [dashboardTab];
+      const result = resolveTargetWebTab(tabs, 'open http://localhost:4173', 'http://localhost:5173', 10);
+      expect(result.selectedTab).toBeNull();
+      expect(result.provisioning).toBeDefined();
+      expect(result.provisioning?.url).toBe('http://localhost:4173/');
+    });
+
+    it('provisions dedicated tab when task explicitly says "open leetcode.com" and no matching tab exists', () => {
+      const tabs = [dashboardTab];
+      const result = resolveTargetWebTab(tabs, 'open leetcode.com', 'http://localhost:5173', 10);
+      expect(result.selectedTab).toBeNull();
+      expect(result.provisioning).toBeDefined();
+      expect(result.provisioning?.url).toBe('https://leetcode.com');
+    });
   });
 });
 

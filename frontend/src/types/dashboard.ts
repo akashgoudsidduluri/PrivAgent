@@ -173,6 +173,8 @@ export interface StepTelemetry {
 
 export interface PrivacyReceipt {
   id: string;
+  conversationId?: string;
+  logicalTaskId?: string;
   task: string;
   timestamp: number;
   result: 'SUCCESS' | 'FAILED' | 'STOPPED';
@@ -187,6 +189,7 @@ export interface PrivacyReceipt {
   latencyMs: number;
   error?: string;
   steps: StepTelemetry[];
+  turns?: any[];
 }
 
 /**
@@ -358,6 +361,7 @@ export interface DashboardAgentState {
    * never guesses it from prose. Cleared on every new task.
    */
   answerSource?: 'CONVERSATION' | 'PAGE_EVIDENCE';
+  answer?: string;
   /**
    * Set only when a genuinely running task was replaced by a newer request,
    * so the new card can say so truthfully. Never set otherwise.

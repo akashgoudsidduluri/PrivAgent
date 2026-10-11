@@ -138,13 +138,18 @@ export class ModelRouter implements AgentProvider {
     const pageComplexity = candidateCount > 50 ? 'high' : 'low';
     const taskComplexity = (task.length > 50 || task.split(' ').length > 10) ? 'complex' : 'simple';
     
+    const hasVisualNeed =
+      /\b(inspect\s+(?:the\s+)?canvas|canvas|visual|screenshot|diagram|chart|graph|look\s+at\s+the\s+image)\b/i.test(task) ||
+      context.page_type === 'canvas' ||
+      context.page_type === 'visual';
+
     return {
       taskComplexity,
       pageComplexity,
       pageType: context.page_type || 'general',
       candidateCount,
       ambiguity: false,
-      visualRequirement: context.screenshot_dimensions !== undefined,
+      visualRequirement: hasVisualNeed,
       longHorizonRequirement: history.length > 5,
       recoveryCount: 0,
       previousFailures: this.currentEscalation,
@@ -157,11 +162,17 @@ export class ModelRouter implements AgentProvider {
   }
 
   private determineRole(input: RouterInput): ModelRole {
-    if (this.currentEscalation === 2 || input.visualRequirement) {
+    if (this.currentEscalation >= 2 || input.visualRequirement) {
       return 'VISION';
     }
     
-    if (this.currentEscalation === 1 || input.taskComplexity === 'complex' || input.pageComplexity === 'high' || input.longHorizonRequirement || input.recoveryCount > 0) {
+    if (
+      this.currentEscalation >= 1 ||
+      input.taskComplexity === 'complex' ||
+      input.pageComplexity === 'high' ||
+      input.longHorizonRequirement ||
+      input.recoveryCount > 0
+    ) {
       return 'STRONG';
     }
     

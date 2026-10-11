@@ -9,11 +9,15 @@ import {
 } from '../extension/src/background/targetResolver';
 
 describe('PrivAgent Intent Routing & Target Tab Resolution', () => {
-  // -- Test 1: "hi" ? CHAT ----------------------------------------------------
-  it('1. classifies "hi" as CHAT', () => {
+  // -- Test 1: "hi" → CHAT ----------------------------------------------------
+  it('1. classifies "hi" and "hi man" as CHAT', () => {
     const res = classifyUserIntent('hi');
     expect(res.intent).toBe('CHAT');
     expect(res.suggestedResponse).toBeDefined();
+
+    const res2 = classifyUserIntent('hi man');
+    expect(res2.intent).toBe('CHAT');
+    expect(res2.suggestedResponse).toBeDefined();
   });
 
   // -- Test 2: "hello" ? CHAT -------------------------------------------------

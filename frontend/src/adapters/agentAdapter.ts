@@ -11,6 +11,9 @@ export interface AgentAdapter {
   isExtensionConnected?(): boolean;
   checkExtensionConnected?(): Promise<boolean>;
   onExtensionStatusChange?(callback: (connected: boolean) => void): () => void;
+  startNewConversation?(): void;
+  setActiveConversation?(conversationId: string, logicalTaskId?: string, title?: string): void;
+  getActiveConversationId?(): string;
   destroy?(): void;
 }
 

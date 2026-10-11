@@ -103,6 +103,20 @@ export class AgentWorkspace {
     return this.turns;
   }
 
+  setTurns(turns: WorkspaceTurn[]): void {
+    this.turns = [...turns];
+    const lastTurn = this.turns[this.turns.length - 1];
+    if (lastTurn) {
+      this.activeTurnId = lastTurn.id;
+      this.latestState = { ...lastTurn.state };
+      this.lastUi = lastTurn.ui;
+      this.activityLog = lastTurn.activityLog;
+      this.renderTurns();
+    } else {
+      this.clearHistory();
+    }
+  }
+
   update(state: DashboardAgentState): void {
     this.latestState = state;
     const content = this.container.querySelector('#workspace-content') as HTMLElement | null;
@@ -167,7 +181,12 @@ export class AgentWorkspace {
       }
       // Fold runtime report into turn's event-driven activity log
       turn.activityLog = mergeActivities(turn.activityLog, state);
-      turn.state = { ...turn.state, ...state };
+      turn.state = {
+        ...turn.state,
+        ...state,
+        answer: state.answer !== undefined ? state.answer : turn.state.answer,
+        interaction: state.interaction !== undefined ? state.interaction : turn.state.interaction,
+      };
       turn.ui = projectUi(turn.state, turn.activityLog);
     }
 

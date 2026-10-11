@@ -93,6 +93,9 @@ class App {
         this.adapter.startTask(task);
       },
     });
+    if (typeof window !== 'undefined') {
+      (window as any).__workspace = this.workspace;
+    }
 
     // 5. Instantiate Task Composer
     this.composer = new TaskComposer(composerEl, {
@@ -139,6 +142,9 @@ class App {
     if (state.status === 'RUNNING') {
       this.adapter.stopTask();
     }
+    if (this.adapter.startNewConversation) {
+      this.adapter.startNewConversation();
+    }
     // Show empty state hero
     const emptyState: DashboardAgentState = {
       ...this.adapter.getState(),
@@ -163,7 +169,14 @@ class App {
   private handleSelectHistoricalTask(receiptId: string): void {
     const receipt = receiptsStore.getById(receiptId);
     if (!receipt) return;
-    this.workspace.showHistoricalReceipt(receipt);
+    if (receipt.conversationId && this.adapter.setActiveConversation) {
+      this.adapter.setActiveConversation(receipt.conversationId, receipt.logicalTaskId, receipt.task);
+    }
+    if (receipt.turns && Array.isArray(receipt.turns) && receipt.turns.length > 0) {
+      this.workspace.setTurns(receipt.turns);
+    } else {
+      this.workspace.showHistoricalReceipt(receipt);
+    }
   }
 
   private setupKeyboardShortcuts(): void {

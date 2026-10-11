@@ -1,5 +1,5 @@
 /**
- * PrivAgent — Deterministic Intent Classification Layer
+ * PrivAgent â€” Deterministic Intent Classification Layer
  *
  * Classifies incoming user messages into:
  *  - CHAT: Conversational, greetings, capability inquiries, explanations
@@ -78,7 +78,7 @@ export function classifyUserIntent(rawInput: string): IntentClassification {
   const lower = text.toLowerCase();
 
   // 1. Pure greetings and social pleasantries
-  const greetingPattern = /^(hi|hello|helo|hey|howdy|greetings|good\s+(morning|afternoon|evening|day)|sup|yo)[\s!?,.]*$/i;
+  const greetingPattern = /^(hi|hello|helo|hey|howdy|greetings|good\s+(morning|afternoon|evening|day)|sup|yo)(?:\s+(?:man|bro|dude|friend|there|mate|buddy|team|all|sir|pal|privagent|bot))?[\s!?,.]*$/i;
   if (greetingPattern.test(lower)) {
     return {
       intent: 'CHAT',
@@ -105,7 +105,7 @@ export function classifyUserIntent(rawInput: string): IntentClassification {
       intent: 'CHAT',
       confidence: 0.95,
       reason: 'Capability inquiry',
-      suggestedResponse: 'I am PrivAgent, an on-device privacy-preserving browser agent. I can perform browser tasks such as navigating websites, extracting data, filling forms, and finding information — all while redacting and protecting your credentials, financial data, and PII locally before any context is shared.',
+      suggestedResponse: 'I am PrivAgent, an on-device privacy-preserving browser agent. I can perform browser tasks such as navigating websites, extracting data, filling forms, and finding information â€” all while redacting and protecting your credentials, financial data, and PII locally before any context is shared.',
     };
   }
 
