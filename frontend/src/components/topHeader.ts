@@ -36,7 +36,7 @@ export class TopHeader {
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
-        <div class="topbar-brand">
+        <div class="topbar-brand" id="topbar-brand" style="cursor: pointer;" title="Back to PrivAgent Website">
           <div class="brand-icon-shield">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -45,6 +45,13 @@ export class TopHeader {
           <span>PrivAgent</span>
         </div>
         <span class="topbar-pill-tag">Privacy Browser Agent</span>
+        <button id="topbar-btn-website" class="topbar-back-link-btn" title="Back to PrivAgent Website" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.14);color:var(--text-secondary);font-size:12px;padding:4px 10px;border-radius:4px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-left:10px;transition:all 0.15s ease;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Website</span>
+        </button>
       </div>
 
       <div class="topbar-right">
@@ -62,6 +69,22 @@ export class TopHeader {
         </button>
       </div>
     `;
+
+    const brandBtn = this.container.querySelector('#topbar-brand');
+    if (brandBtn) {
+      brandBtn.addEventListener('click', () => {
+        window.history.pushState(null, '', '/');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
+    }
+
+    const websiteBtn = this.container.querySelector('#topbar-btn-website');
+    if (websiteBtn) {
+      websiteBtn.addEventListener('click', () => {
+        window.history.pushState(null, '', '/');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
+    }
 
     const toggleBtn = this.container.querySelector('#topbar-sidebar-toggle');
     if (toggleBtn) {

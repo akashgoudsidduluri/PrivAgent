@@ -116,6 +116,13 @@ export class Sidebar {
             </svg>
             <span>Arch</span>
           </button>
+          <button id="sidebar-btn-homepage" class="sidebar-tool-btn" title="Back to Homepage">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Home</span>
+          </button>
         </div>
       </div>
     `;
@@ -123,6 +130,14 @@ export class Sidebar {
     const newBtn = this.container.querySelector('#sidebar-btn-new-task');
     if (newBtn) {
       newBtn.addEventListener('click', () => this.callbacks.onNewTask());
+    }
+
+    const homeBtn = this.container.querySelector('#sidebar-btn-homepage');
+    if (homeBtn) {
+      homeBtn.addEventListener('click', () => {
+        window.history.pushState(null, '', '/');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
     }
 
     const privBtn = this.container.querySelector('#sidebar-btn-privacy');

@@ -14,11 +14,14 @@
 
 import './styles/theme.css';
 import './styles/main.css';
+import './styles/homepage.css';
 
 import { DashboardAgentState, BackendHealthState } from './types/dashboard';
 import { AgentAdapter } from './adapters/agentAdapter';
 import { ExtensionAgentAdapter } from './adapters/extensionAdapter';
 import { receiptsStore } from './state/receiptsStore';
+import { appRouter, AppRoute } from './routing/appRouter';
+import { MarketingHomepage } from './views/marketingHomepage';
 
 import { TopHeader } from './components/topHeader';
 import { Sidebar } from './components/sidebar';
@@ -225,9 +228,61 @@ class App {
   }
 }
 
+export class RootOrchestrator {
+  private agentApp: App | null = null;
+  private marketingPage: MarketingHomepage | null = null;
+  private marketingContainer: HTMLElement | null = null;
+  private agentAppContainer: HTMLElement | null = null;
+
+  constructor() {
+    this.init();
+  }
+
+  private init(): void {
+    this.marketingContainer = document.getElementById('marketing-container');
+    this.agentAppContainer = document.getElementById('app');
+
+    if (typeof window !== 'undefined') {
+      (window as any).__orchestrator = this;
+      (window as any).__router = appRouter;
+    }
+
+    appRouter.subscribe((route) => this.handleRouteChange(route));
+  }
+
+  private handleRouteChange(route: AppRoute): void {
+    if (!this.marketingContainer || !this.agentAppContainer) return;
+
+    if (route === '/app') {
+      // Show Agent Workspace experience
+      document.documentElement.classList.remove('marketing-route');
+      document.body.classList.remove('marketing-route');
+      this.marketingContainer.style.display = 'none';
+      this.agentAppContainer.style.display = 'flex';
+
+      // Initialize App if not already created
+      if (!this.agentApp) {
+        this.agentApp = new App();
+      }
+    } else {
+      // Show Public Marketing Homepage experience
+      document.documentElement.classList.add('marketing-route');
+      document.body.classList.add('marketing-route');
+      this.agentAppContainer.style.display = 'none';
+      this.marketingContainer.style.display = 'block';
+
+      // Initialize MarketingHomepage if not already created
+      if (!this.marketingPage) {
+        this.marketingPage = new MarketingHomepage(this.marketingContainer);
+      }
+    }
+  }
+}
+
 // Bootstrap application on DOM ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => new App());
+  document.addEventListener('DOMContentLoaded', () => new RootOrchestrator());
 } else {
-  new App();
+  new RootOrchestrator();
 }
+
