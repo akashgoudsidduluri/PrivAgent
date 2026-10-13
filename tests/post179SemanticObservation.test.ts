@@ -45,7 +45,7 @@ import { validateAction } from '../extension/src/agent/actionValidator';
 import { scanForRawSensitiveValues } from '../extension/src/privacy/rawValueScanner';
 // The existing Phase 17.6 fixture, used UNMODIFIED. Plain JS, no declarations.
 // @ts-expect-error -- untyped fixture module
-import { servePhase176Fixture } from '../scratch/phase176_fixture.mjs';
+import { servePhase176Fixture } from './fixtures/phase176_fixture.mjs';
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';

@@ -361,6 +361,7 @@ function makeHarness(options: {
       maxSteps: options.maxSteps ?? 4,
       maxRetries: options.maxRetries ?? 3,
       delayBetweenStepsMs: 1,
+      effectSettleMaxPolls: 0,
     }
   );
 
